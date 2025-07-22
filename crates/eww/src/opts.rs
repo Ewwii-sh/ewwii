@@ -1,3 +1,5 @@
+// TODO: Yuck found, have to replace with lua
+
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use eww_shared_util::VarName;

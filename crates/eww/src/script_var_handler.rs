@@ -18,6 +18,8 @@ use tokio::{
     sync::mpsc::UnboundedSender,
 };
 use tokio_util::sync::CancellationToken;
+
+// TODO: Yuck found, have to replace with lua
 use yuck::config::script_var_definition::{ListenScriptVar, PollScriptVar, ScriptVarDefinition, VarSource};
 
 /// Initialize the script var handler, and return a handle to that handler, which can be used to control
