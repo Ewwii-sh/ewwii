@@ -48,7 +48,7 @@ define_builtin_vars! {
         match get_battery_capacity() {
             Err(e) => {
                 log::error!("Couldn't get the battery capacity: {:?}", e);
-                "Error: Check `eww log` for more details".to_string()
+                "Error: Check `ewwii log` for more details".to_string()
             }
             Ok(o) => o,
         }
@@ -87,12 +87,12 @@ define_magic_constants! { eww_paths,
     // @desc EWW_CMD - eww command running in the current configuration, useful in event handlers. I.e.: `:onclick "${EWW_CMD} update foo=bar"`
     "EWW_CMD" => DynVal::from_string(
         format!("\"{}\" --config \"{}\"",
-            std::env::current_exe().map(|x| x.to_string_lossy().into_owned()).unwrap_or_else(|_| "eww".to_string()),
+            std::env::current_exe().map(|x| x.to_string_lossy().into_owned()).unwrap_or_else(|_| "ewwii".to_string()),
             eww_paths.get_config_dir().to_string_lossy().into_owned()
         )
     ),
     // @desc EWW_EXECUTABLE - Full path of the eww executable
     "EWW_EXECUTABLE" => DynVal::from_string(
-        std::env::current_exe().map(|x| x.to_string_lossy().into_owned()).unwrap_or_else(|_| "eww".to_string()),
+        std::env::current_exe().map(|x| x.to_string_lossy().into_owned()).unwrap_or_else(|_| "ewwii".to_string()),
     ),
 }

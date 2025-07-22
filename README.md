@@ -1,40 +1,26 @@
 [![dependency status](https://deps.rs/repo/github/elkowar/eww/status.svg)](https://deps.rs/repo/github/elkowar/eww)
 
-# Eww
+# Ewwii
 
 <img src="./.github/EwwLogo.svg" height="100" align="left"/>
 
-Elkowars Wacky Widgets is a standalone widget system made in Rust that allows you to implement
-your own, custom widgets in any window manager.
-
-Documentation **and instructions on how to install** can be found [here](https://elkowar.github.io/eww).
-
-Dharmx also wrote a nice, beginner friendly introductory guide for eww [here](https://dharmx.is-a.dev/eww-powermenu/).
-
-## Check out another cool project by me
-
-<img src="https://raw.githubusercontent.com/elkowar/yolk/refs/heads/main/.github/images/yolk_logo.svg" height="100" align="right"/>
-
-I'm currently busy working [yolk](https://github.com/elkowar/yolk),
-which is a dotfile management solution that supports a unique spin on templating: *templating without template files*.
-
-To find out more, check out the [website and documentation](https://elkowar.github.io/yolk)!
+Elkowars Wacky Widgets Imporved Interface is a fork of Elkowars Wacky Widgets which is a standalone widget system made in Rust that allows you to implement your own, custom widgets in any window manager.
 
 ## Examples
 
 (Note that some of these still make use of the old configuration syntax.)
 
-* A basic bar, see [examples](./examples/eww-bar)
-![Example 1](./examples/eww-bar/eww-bar.png)
+-   A basic bar, see [examples](./examples/eww-bar)
+    ![Example 1](./examples/eww-bar/eww-bar.png)
 
-* [Some setups by Druskus20](https://github.com/druskus20/eugh)
-![Druskus20-bar](https://raw.githubusercontent.com/druskus20/eugh/master/polybar-replacement/.github/preview.png)
+-   [Some setups by Druskus20](https://github.com/druskus20/eugh)
+    ![Druskus20-bar](https://raw.githubusercontent.com/druskus20/eugh/master/polybar-replacement/.github/preview.png)
 
-* [My own vertical bar](https://github.com/elkowar/dots-of-war/tree/master/eww-bar/.config/eww-bar)
+-   [My own vertical bar](https://github.com/elkowar/dots-of-war/tree/master/eww-bar/.config/eww-bar)
 
 <img src="https://raw.githubusercontent.com/elkowar/dots-of-war/master/eww-bar/.config/eww-bar/showcase.png" height="400" width="auto"/>
 
-* [Vertical Bar by Rxyhn](https://github.com/rxyhn/bspdots)
+-   [Vertical Bar by Rxyhn](https://github.com/rxyhn/bspdots)
 
 <div align="left">
 
@@ -42,20 +28,20 @@ To find out more, check out the [website and documentation](https://elkowar.gith
 
 </div>
 
-* [Setup by Axarva](https://github.com/Axarva/dotfiles-2.0)
-![Axarva-rice](https://raw.githubusercontent.com/Axarva/dotfiles-2.0/main/screenshots/center.png)
+-   [Setup by Axarva](https://github.com/Axarva/dotfiles-2.0)
+    ![Axarva-rice](https://raw.githubusercontent.com/Axarva/dotfiles-2.0/main/screenshots/center.png)
 
-* [Setup by adi1090x](https://github.com/adi1090x/widgets)
-![Nordic](https://raw.githubusercontent.com/adi1090x/widgets/main/previews/dashboard.png)
+-   [Setup by adi1090x](https://github.com/adi1090x/widgets)
+    ![Nordic](https://raw.githubusercontent.com/adi1090x/widgets/main/previews/dashboard.png)
 
-* [i3 Bar replacement by owenrumney](https://github.com/owenrumney/eww-bar)
-![Top bar](https://raw.githubusercontent.com/owenrumney/eww-bar/master/.github/topbar.gif)
-![Bottom bar](https://raw.githubusercontent.com/owenrumney/eww-bar/master/.github/bottombar.gif)
+-   [i3 Bar replacement by owenrumney](https://github.com/owenrumney/eww-bar)
+    ![Top bar](https://raw.githubusercontent.com/owenrumney/eww-bar/master/.github/topbar.gif)
+    ![Bottom bar](https://raw.githubusercontent.com/owenrumney/eww-bar/master/.github/bottombar.gif)
 
-* [Setups by iSparsh](https://github.com/iSparsh/gross)
-![iSparsh-gross](https://user-images.githubusercontent.com/57213270/140309158-e65cbc1d-f3a8-4aec-848c-eef800de3364.png)
+-   [Setups by iSparsh](https://github.com/iSparsh/gross)
+    ![iSparsh-gross](https://user-images.githubusercontent.com/57213270/140309158-e65cbc1d-f3a8-4aec-848c-eef800de3364.png)
 
-* [topbar by saimoomedits](https://github.com/Saimoomedits/eww-widgets)
+-   [topbar by saimoomedits](https://github.com/Saimoomedits/eww-widgets)
 
 <div align="center">
 
@@ -63,7 +49,7 @@ To find out more, check out the [website and documentation](https://elkowar.gith
 
 </div>
 
-* [Activate Linux by Nycta](https://github.com/Nycta-b424b3c7/eww_activate-linux)
+-   [Activate Linux by Nycta](https://github.com/Nycta-b424b3c7/eww_activate-linux)
 
 <div align="left">
 
@@ -71,7 +57,7 @@ To find out more, check out the [website and documentation](https://elkowar.gith
 
 </div>
 
-## Contribewwting
+## Contribewwtiing
 
 If you want to contribute anything, like adding new widgets, features, or subcommands (including sample configs), you should definitely do so.
 

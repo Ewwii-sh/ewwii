@@ -43,13 +43,13 @@ fn main() {
         pretty_env_logger::init_timed();
     } else {
         pretty_env_logger::formatted_timed_builder()
-            .filter(Some("eww"), log_level_filter)
+            .filter(Some("ewwii"), log_level_filter)
             .filter(Some("notifier_host"), log_level_filter)
             .init();
     }
 
     if let opts::Action::ShellCompletions { shell } = opts.action {
-        clap_complete::generate(shell, &mut opts::RawOpt::command(), "eww", &mut std::io::stdout());
+        clap_complete::generate(shell, &mut opts::RawOpt::command(), "ewwii", &mut std::io::stdout());
         return;
     }
 
@@ -68,7 +68,7 @@ fn main() {
     #[cfg(all(not(feature = "wayland"), feature = "x11"))]
     let result = {
         if use_wayland {
-            log::warn!("Eww compiled without wayland support. Falling back to X11, eventhough wayland was requested.");
+            log::warn!("Ewwii compiled without wayland support. Falling back to X11, eventhough wayland was requested.");
         }
         run::<display_backend::X11Backend>(opts, eww_binary_name)
     };
@@ -96,7 +96,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
         .config_path
         .map(EwwPaths::from_config_dir)
         .unwrap_or_else(EwwPaths::default)
-        .context("Failed to initialize eww paths")?;
+        .context("Failed to initialize ewwii paths")?;
 
     let should_restart = match &opts.action {
         opts::Action::ShellCompletions { .. } => unreachable!(),
@@ -121,11 +121,11 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
 
         // make sure that there isn't already a Eww daemon running.
         opts::Action::Daemon if check_server_running(paths.get_ipc_socket_file()) => {
-            eprintln!("Eww server already running.");
+            eprintln!("Ewwii server already running.");
             true
         }
         opts::Action::Daemon => {
-            log::info!("Initializing Eww server. ({})", paths.get_ipc_socket_file().display());
+            log::info!("Initializing Ewwii server. ({})", paths.get_ipc_socket_file().display());
             let _ = std::fs::remove_file(paths.get_ipc_socket_file());
 
             if !opts.show_logs {
@@ -155,7 +155,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
                 Err(err) if action.can_start_daemon() && !opts.no_daemonize => {
                     // connecting to the daemon failed. Thus, start the daemon here!
                     log::warn!("Failed to connect to daemon: {}", err);
-                    log::info!("Initializing eww server. ({})", paths.get_ipc_socket_file().display());
+                    log::info!("Initializing ewwii server. ({})", paths.get_ipc_socket_file().display());
                     let _ = std::fs::remove_file(paths.get_ipc_socket_file());
                     if !opts.show_logs {
                         println!("Run `{} logs` to see any errors while editing your configuration.", eww_binary_name);
@@ -198,7 +198,7 @@ fn listen_for_daemon_response(mut recv: DaemonResponseReceiver) {
 fn handle_server_command(paths: &EwwPaths, action: &ActionWithServer, connect_attempts: usize) -> Result<Option<DaemonResponse>> {
     log::debug!("Trying to find server process at socket {}", paths.get_ipc_socket_file().display());
     let mut stream = attempt_connect(paths.get_ipc_socket_file(), connect_attempts).context("Failed to connect to daemon")?;
-    log::debug!("Connected to Eww server ({}).", &paths.get_ipc_socket_file().display());
+    log::debug!("Connected to Ewwii server ({}).", &paths.get_ipc_socket_file().display());
     client::do_server_call(&mut stream, action).context("Error while forwarding command to server")
 }
 

@@ -8,8 +8,8 @@ use crate::{error_handling_ctx, util::replace_env_var_references};
 /// then parse it into css.
 /// Also adds the CSS to the [`crate::file_database::FileDatabase`]
 pub fn parse_scss_from_config(path: &Path) -> anyhow::Result<(usize, String)> {
-    let css_file = path.join("eww.css");
-    let scss_file = path.join("eww.scss");
+    let css_file = path.join("ewwii.css");
+    let scss_file = path.join("ewwii.scss");
     if css_file.exists() && scss_file.exists() {
         return Err(anyhow!("Encountered both an SCSS and CSS file. Only one of these may exist at a time"));
     }

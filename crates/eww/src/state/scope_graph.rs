@@ -557,7 +557,7 @@ mod internal {
                     scope.name,
                     format!(
                         "data: {:?}, listeners: {:?}",
-                        scope.data.iter().filter(|(k, _v)| !k.0.starts_with("EWW")).collect::<Vec<_>>(),
+                        scope.data.iter().filter(|(k, _v)| !k.0.starts_with("EWWII")).collect::<Vec<_>>(),
                         scope
                             .listeners
                             .iter()
