@@ -1,0 +1,15 @@
+[package]
+name = "eww_shared_util"
+version = "0.1.0"
+authors = ["elkowar <5300871+elkowar@users.noreply.github.com>"]
+edition = "2021"
+license = "MIT"
+description = "Utility crate used in eww"
+repository = "https://github.com/elkowar/eww"
+homepage = "https://github.com/elkowar/eww"
+
+[dependencies]
+serde.workspace = true
+derive_more.workspace = true
+ref-cast.workspace = true
+chrono = { workspace = true, features = ["unstable-locales"] }
