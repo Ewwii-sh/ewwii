@@ -1,0 +1,37 @@
+[package]
+name = "yuck"
+version = "0.1.0"
+authors = ["elkowar <5300871+elkowar@users.noreply.github.com>"]
+edition = "2021"
+license = "MIT"
+description = "Implementation of the yuck language, the declarative UI description language used by eww"
+repository = "https://github.com/elkowar/eww"
+homepage = "https://github.com/elkowar/eww"
+
+build = "build.rs"
+
+[dependencies]
+simplexpr.workspace = true
+eww_shared_util.workspace = true
+
+anyhow.workspace = true
+codespan-reporting.workspace = true
+derive_more.workspace = true
+itertools.workspace = true
+lalrpop-util.workspace = true
+maplit.workspace = true
+once_cell.workspace = true
+regex.workspace = true
+serde = {workspace = true, features = ["derive"]}
+smart-default.workspace = true
+static_assertions.workspace = true
+strum = { workspace = true, features = ["derive"] }
+thiserror.workspace = true
+
+
+[build-dependencies]
+lalrpop.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+pretty_assertions.workspace = true
