@@ -1,6 +1,9 @@
 //! Disgusting global state.
 //! I hate this, but [buffet](https://github.com/buffet) told me that this is what I should do for peak maintainability!
 
+// TODO: Yuck found, have to replace with lua
+
+
 use std::sync::{Arc, RwLock};
 
 use codespan_reporting::{
