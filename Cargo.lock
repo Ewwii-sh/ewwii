@@ -974,7 +974,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "eww"
+name = "eww_shared_util"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "derive_more",
+ "ref-cast",
+ "serde",
+]
+
+[[package]]
+name = "ewwii"
 version = "0.6.0"
 dependencies = [
  "anyhow",
@@ -1015,16 +1025,6 @@ dependencies = [
  "x11rb",
  "yuck",
  "zbus",
-]
-
-[[package]]
-name = "eww_shared_util"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "derive_more",
- "ref-cast",
- "serde",
 ]
 
 [[package]]
@@ -1904,6 +1904,34 @@ name = "log"
 version = "0.4.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
+
+[[package]]
+name = "luaxpr"
+version = "0.1.0"
+dependencies = [
+ "bytesize",
+ "cached",
+ "chrono",
+ "chrono-tz",
+ "eww_shared_util",
+ "insta",
+ "itertools",
+ "jaq-core",
+ "jaq-interpret",
+ "jaq-parse",
+ "jaq-std",
+ "jaq-syn",
+ "lalrpop",
+ "lalrpop-util",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_json",
+ "static_assertions",
+ "strsim",
+ "strum",
+ "thiserror",
+]
 
 [[package]]
 name = "maplit"

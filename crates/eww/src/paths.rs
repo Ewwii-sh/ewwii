@@ -37,7 +37,7 @@ impl EwwPaths {
         let ipc_socket_file = std::env::var("XDG_RUNTIME_DIR")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|_| std::path::PathBuf::from("/tmp"))
-            .join(format!("eww-server_{}", daemon_id));
+            .join(format!("ewwii-server_{}", daemon_id));
 
         // 100 as the limit isn't quite 108 everywhere (i.e 104 on BSD or mac)
         if format!("{}", ipc_socket_file.display()).len() > 100 {
@@ -47,7 +47,7 @@ impl EwwPaths {
         let log_dir = std::env::var("XDG_CACHE_HOME")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from(std::env::var("HOME").unwrap()).join(".cache"))
-            .join("eww");
+            .join("ewwii");
 
         if !log_dir.exists() {
             log::info!("Creating log dir");
@@ -61,7 +61,7 @@ impl EwwPaths {
         let config_dir = std::env::var("XDG_CONFIG_HOME")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from(std::env::var("HOME").unwrap()).join(".config"))
-            .join("eww");
+            .join("ewwii");
 
         Self::from_config_dir(config_dir)
     }
@@ -82,6 +82,7 @@ impl EwwPaths {
         self.config_dir.as_path()
     }
 
+    // TODO: MODIFY THIS TO WORK WITH LUA
     pub fn get_yuck_path(&self) -> PathBuf {
         self.config_dir.join("eww.yuck")
     }

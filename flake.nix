@@ -45,13 +45,13 @@
         rec {
           eww = rustPlatform.buildRustPackage {
             version = "${version}-dirty";
-            pname = "eww";
+            pname = "ewwii";
 
             src = ./.;
             cargoLock.lockFile = ./Cargo.lock;
             cargoBuildFlags = [
               "--bin"
-              "eww"
+              "ewwii"
             ];
 
             nativeBuildInputs = with pkgs; [

@@ -54,14 +54,14 @@ pub fn initialize_server<B: DisplayBackend>(
 
     println!(
         r#"
-┏━━━━━━━━━━━━━━━━━━━━━━━┓
-┃Initializing eww daemon┃
-┗━━━━━━━━━━━━━━━━━━━━━━━┛
+┏━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃Initializing ewwii daemon┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━┛
 "#
     );
 
     simple_signal::set_handler(&[simple_signal::Signal::Int, simple_signal::Signal::Term], move |_| {
-        log::info!("Shutting down eww daemon...");
+        log::info!("Shutting down ewwii daemon...");
         if let Err(e) = crate::application_lifecycle::send_exit() {
             log::error!("Failed to send application shutdown event to workers: {:?}", e);
             std::process::exit(1);
@@ -211,6 +211,7 @@ fn init_async_part(paths: EwwPaths, ui_send: UnboundedSender<app::DaemonCommand>
 async fn run_filewatch<P: AsRef<Path>>(config_dir: P, evt_send: UnboundedSender<app::DaemonCommand>) -> Result<()> {
     use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
+    // TODO: yuck seen here, so possibly replace it with lua
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
     let mut watcher: RecommendedWatcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
         Ok(notify::Event { kind: notify::EventKind::Modify(_), paths, .. }) => {
@@ -302,7 +303,7 @@ fn cleanup_log_dir(log_dir: impl AsRef<Path>) -> Result<()> {
             let entry = entry.ok()?;
             let path = entry.path();
             if let Some(file_name) = path.file_name() {
-                if file_name.to_string_lossy().starts_with("eww_") && file_name.to_string_lossy().ends_with(".log") {
+                if file_name.to_string_lossy().starts_with("ewwii_") && file_name.to_string_lossy().ends_with(".log") {
                     Some(path)
                 } else {
                     None

@@ -1,8 +1,8 @@
 [package]
-name = "eww"
+name = "ewwii"
 version = "0.6.0"
 authors = ["elkowar <5300871+elkowar@users.noreply.github.com>"]
-description = "Widgets for everyone!"
+description = "Widgets for everyone made easy!"
 license = "MIT"
 repository = "https://github.com/elkowar/eww"
 homepage = "https://github.com/elkowar/eww"
