@@ -31,15 +31,15 @@ pub struct Opt {
 #[clap(author = "ElKowar")]
 #[clap(version, about)]
 pub(super) struct RawOpt {
-    /// Write out debug logs. (To read the logs, run `eww logs`).
+    /// Write out debug logs. (To read the logs, run `ewwii logs`).
     #[arg(long = "debug", global = true)]
     log_debug: bool,
 
-    /// Force eww to use wayland. This is a no-op if eww was compiled without wayland support.
+    /// Force ewwii to use wayland. This is a no-op if ewwii was compiled without wayland support.
     #[arg(long = "force-wayland", global = true)]
     force_wayland: bool,
 
-    /// override path to configuration directory (directory that contains eww.yuck and eww.(s)css)
+    /// override path to configuration directory (directory that contains ewwii.lua and eww.(s)css)
     #[arg(short, long, global = true)]
     config: Option<std::path::PathBuf>,
 
@@ -47,7 +47,7 @@ pub(super) struct RawOpt {
     #[arg(long = "logs", global = true)]
     show_logs: bool,
 
-    /// Avoid daemonizing eww.
+    /// Avoid daemonizing ewwii.
     #[arg(long = "no-daemonize", global = true)]
     no_daemonize: bool,
 
@@ -68,7 +68,7 @@ pub enum Action {
         shell: clap_complete::shells::Shell,
     },
 
-    /// Start the Eww daemon.
+    /// Start the Ewwii daemon.
     #[command(name = "daemon", alias = "d")]
     Daemon,
 
@@ -81,18 +81,18 @@ pub enum Action {
 
 #[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ActionClientOnly {
-    /// Print and watch the eww logs
+    /// Print and watch the ewwii logs
     #[command(name = "logs")]
     Logs,
 }
 
 #[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq)]
 pub enum ActionWithServer {
-    /// Ping the eww server, checking if it is reachable.
+    /// Ping the ewwii server, checking if it is reachable.
     #[clap(name = "ping")]
     Ping,
 
-    /// Update the value of a variable, in a running eww instance
+    /// Update the value of a variable, in a running ewwii instance
     #[clap(name = "update", alias = "u")]
     Update {
         /// variable_name="new_value"-pairs that will be updated
@@ -154,7 +154,7 @@ pub enum ActionWithServer {
     },
 
     /// Open multiple windows at once.
-    /// NOTE: This will in the future be part of eww open, and will then be removed.
+    /// NOTE: This will in the future be part of ewwii open, and will then be removed.
     #[command(name = "open-many")]
     OpenMany {
         /// List the windows to open, optionally including their id, i.e.: `--window "window_name:window_id"`
@@ -178,7 +178,7 @@ pub enum ActionWithServer {
     #[command(name = "reload", alias = "r")]
     Reload,
 
-    /// Kill the eww daemon
+    /// Kill the ewwii daemon
     #[command(name = "kill", alias = "k")]
     KillServer,
 
@@ -206,10 +206,10 @@ pub enum ActionWithServer {
     #[command(name = "active-windows")]
     ListActiveWindows,
 
-    /// Print out the widget structure as seen by eww.
+    /// Print out the widget structure as seen by ewwii.
     ///
-    /// This may be useful if you are facing issues with how eww is interpreting your configuration,
-    /// and to provide additional context to the eww developers if you are filing a bug.
+    /// This may be useful if you are facing issues with how ewwii is interpreting your configuration,
+    /// and to provide additional context to the ewwii developers if you are filing a bug.
     #[command(name = "debug")]
     ShowDebug,
 
