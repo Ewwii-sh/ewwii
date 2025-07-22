@@ -1,3 +1,5 @@
+// TODO: Yuck found, have to replace with lua
+
 use anyhow::{bail, Context, Result};
 use eww_shared_util::VarName;
 use std::collections::HashMap;
