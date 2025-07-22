@@ -155,7 +155,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
                 Err(err) if action.can_start_daemon() && !opts.no_daemonize => {
                     // connecting to the daemon failed. Thus, start the daemon here!
                     log::warn!("Failed to connect to daemon: {}", err);
-                    log::info!("Initializing eww server. ({})", paths.get_ipc_socket_file().display());
+                    log::info!("Initializing ewwii server. ({})", paths.get_ipc_socket_file().display());
                     let _ = std::fs::remove_file(paths.get_ipc_socket_file());
                     if !opts.show_logs {
                         println!("Run `{} logs` to see any errors while editing your configuration.", eww_binary_name);
