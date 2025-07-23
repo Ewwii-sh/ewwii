@@ -1,9 +1,19 @@
+/*
+    NOTE to future me or anyone else reading this code.
+    If you are wondering why there are so many comments, just know that
+    its just me marking things down to learn the eww source code.
+    This is huge! The moment I look at something else, My brain just gives up.
+    So I rely on comments to know what the things do.
+*/
+
 #![allow(rustdoc::private_intra_doc_links)]
 
+// getting gtk stuff
 extern crate gtk;
 #[cfg(feature = "wayland")]
 extern crate gtk_layer_shell as gtk_layer_shell;
 
+// imporing dependencies
 use anyhow::{Context, Result};
 use clap::CommandFactory as _;
 use daemon_response::{DaemonResponse, DaemonResponseReceiver};
@@ -14,6 +24,7 @@ use std::{os::unix::net, path::Path, time::Duration};
 
 use crate::server::ForkResult;
 
+// importing all local modules
 mod app;
 mod application_lifecycle;
 mod client;
@@ -35,8 +46,10 @@ mod window_arguments;
 mod window_initiator;
 
 fn main() {
+    // gets the eww binary
     let eww_binary_name = std::env::args().next().unwrap();
     let opts: opts::Opt = opts::Opt::from_env();
+    println!("{opts}");
 
     let log_level_filter = if opts.log_debug { log::LevelFilter::Debug } else { log::LevelFilter::Info };
     if std::env::var("RUST_LOG").is_ok() {
