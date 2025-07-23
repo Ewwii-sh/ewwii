@@ -1,6 +1,6 @@
 [package]
 name = "ewwii"
-version = "0.6.0"
+version = "0.1.0"
 authors = ["elkowar <5300871+elkowar@users.noreply.github.com>"]
 description = "Widgets for everyone made easy!"
 license = "MIT"
