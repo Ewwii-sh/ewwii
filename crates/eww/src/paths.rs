@@ -15,6 +15,7 @@ pub struct EwwPaths {
     pub config_dir: PathBuf,
 }
 
+// all the eww paths i suppose from the name?
 impl EwwPaths {
     pub fn from_config_dir<P: AsRef<Path>>(config_dir: P) -> Result<Self> {
         let config_dir = config_dir.as_ref();
@@ -82,9 +83,9 @@ impl EwwPaths {
         self.config_dir.as_path()
     }
 
-    // TODO: MODIFY THIS TO WORK WITH LUA
-    pub fn get_yuck_path(&self) -> PathBuf {
-        self.config_dir.join("eww.yuck")
+    // Modified this code with rhai (the new yuck replacer in ewwii)
+    pub fn get_rhai_path(&self) -> PathBuf {
+        self.config_dir.join("eww.rhai")
     }
 }
 

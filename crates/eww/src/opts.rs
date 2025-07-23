@@ -28,7 +28,7 @@ pub struct Opt {
 }
 
 #[derive(Parser, Debug, Serialize, Deserialize, PartialEq)]
-#[clap(author = "ElKowar")]
+#[clap(author = "Byson94")]
 #[clap(version, about)]
 pub(super) struct RawOpt {
     /// Write out debug logs. (To read the logs, run `ewwii logs`).

@@ -1,9 +1,12 @@
 /*
-    NOTE to future me or anyone else reading this code.
+    NOTE to future me or anyone else reading this codebase.
     If you are wondering why there are so many comments, just know that
     its just me marking things down to learn the eww source code.
     This is huge! The moment I look at something else, My brain just gives up.
     So I rely on comments to know what the things do.
+
+    So, what i find is that this file mostly contains clap argument parsing...
+    Might be just better to skip.
 */
 
 #![allow(rustdoc::private_intra_doc_links)]
@@ -48,10 +51,9 @@ mod window_initiator;
 fn main() {
     // gets the eww binary
     let eww_binary_name = std::env::args().next().unwrap();
-    let opts: opts::Opt = opts::Opt::from_env();
-    println!("{opts}");
+    let opts: opts::Opt = opts::Opt::from_env(); // opts of clap (from ./opts.rs)
 
-    let log_level_filter = if opts.log_debug { log::LevelFilter::Debug } else { log::LevelFilter::Info };
+    let log_level_filter = if opts.log_debug { log::LevelFilter::Debug } else { log::LevelFilter::Info }; // the level to log
     if std::env::var("RUST_LOG").is_ok() {
         pretty_env_logger::init_timed();
     } else {
@@ -98,6 +100,7 @@ fn main() {
     }
 }
 
+// function to detect wayland/x11
 fn detect_wayland() -> bool {
     let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
     let wayland_display = std::env::var("WAYLAND_DISPLAY").unwrap_or_default();
@@ -137,6 +140,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
             eprintln!("Ewwii server already running.");
             true
         }
+        // initializing the eww server i see..
         opts::Action::Daemon => {
             log::info!("Initializing Ewwii server. ({})", paths.get_ipc_socket_file().display());
             let _ = std::fs::remove_file(paths.get_ipc_socket_file());
