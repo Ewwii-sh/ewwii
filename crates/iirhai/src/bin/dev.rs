@@ -2,7 +2,7 @@ use iirhai::parse_widget_code;
 
 fn main() {
     let input = r#"
-        box("vertical", [
+        box([
             label("CPU Usage"),
             row([ label("Load:"), label("75%") ])
         ])
