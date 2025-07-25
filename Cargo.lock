@@ -886,30 +886,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "duck"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "codespan-reporting",
- "derive_more",
- "eww_shared_util",
- "insta",
- "itertools",
- "lalrpop",
- "lalrpop-util",
- "maplit",
- "once_cell",
- "pretty_assertions",
- "regex",
- "serde",
- "simplexpr",
- "smart-default",
- "static_assertions",
- "strum",
- "thiserror",
-]
-
-[[package]]
 name = "dyn-clone"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
