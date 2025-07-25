@@ -28,7 +28,7 @@ use std::{os::unix::net, path::Path, time::Duration};
 use crate::server::ForkResult;
 
 // importing all local modules
-mod app;
+mod app; // major thing here
 mod application_lifecycle;
 mod client;
 mod config;
