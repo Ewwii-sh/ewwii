@@ -2,7 +2,7 @@ use iirhai::parser::parse_widget_code;
 use std::fs;
 
 fn main() {
-    let input = fs::read_to_string("examples/eww-bar/eww.rhai") // run from root of ewwii/
+    let input = fs::read_to_string("examples/eww-bar/ewwii.rhai") // run from root of ewwii/
         .expect("Should have been able to read the file");
 
     let result = parse_widget_code(&input);
