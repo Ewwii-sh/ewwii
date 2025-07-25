@@ -85,7 +85,7 @@ impl EwwPaths {
 
     // Modified this code with rhai (the new yuck replacer in ewwii)
     pub fn get_rhai_path(&self) -> PathBuf {
-        self.config_dir.join("eww.rhai")
+        self.config_dir.join("ewwii.rhai")
     }
 }
 

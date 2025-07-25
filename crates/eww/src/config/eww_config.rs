@@ -40,11 +40,11 @@ pub struct EwwConfig {
 impl EwwConfig {
     /// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`], reading the main config file.
     pub fn read_from_dir(files: &mut FileDatabase, eww_paths: &EwwPaths) -> Result<Self> {
-        let yuck_path = eww_paths.get_rhai_path();
-        if !yuck_path.exists() {
-            bail!("The configuration file `{}` does not exist", yuck_path.display());
+        let rhai_path = eww_paths.get_rhai_path();
+        if !rhai_path.exists() {
+            bail!("The configuration file `{}` does not exist", rhai_path.display());
         }
-        let config = Config::generate_from_main_file(files, yuck_path)?;
+        let config = Config::generate_from_main_file(files, rhai_path)?;
 
         // run some validations on the configuration
         let magic_globals: Vec<_> =
