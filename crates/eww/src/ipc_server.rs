@@ -2,14 +2,16 @@ use crate::{app, opts};
 use anyhow::{Context, Result};
 use std::time::Duration;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{AsyncReadExt, AsyncWriteExt, AsyncBufReadExt},
     sync::mpsc::*,
 };
 
-pub async fn run_server<P: AsRef<std::path::Path>>(evt_send: UnboundedSender<app::DaemonCommand>, socket_path: P) -> Result<()> {
+/// ewwii ipc
+
+pub async fn run_ewwii_server<P: AsRef<std::path::Path>>(evt_send: UnboundedSender<app::DaemonCommand>, socket_path: P) -> Result<()> {
     let socket_path = socket_path.as_ref();
     let listener = { tokio::net::UnixListener::bind(socket_path)? };
-    log::info!("IPC server initialized");
+    log::info!("Ewwii IPC server initialized");
     crate::loop_select_exiting! {
         connection = listener.accept() => match connection {
             Ok((stream, _addr)) => {
@@ -29,7 +31,7 @@ pub async fn run_server<P: AsRef<std::path::Path>>(evt_send: UnboundedSender<app
 async fn handle_connection(mut stream: tokio::net::UnixStream, evt_send: UnboundedSender<app::DaemonCommand>) -> Result<()> {
     let (mut stream_read, mut stream_write) = stream.split();
 
-    let action: opts::ActionWithServer = read_action_from_stream(&mut stream_read).await?;
+    let action: opts::ActionWithServer = read_ewwii_action_from_stream(&mut stream_read).await?;
 
     log::debug!("received command from IPC: {:?}", &action);
 
@@ -51,7 +53,7 @@ async fn handle_connection(mut stream: tokio::net::UnixStream, evt_send: Unbound
 
 /// Read a single message from a unix stream, and parses it into a `ActionWithServer`
 /// The format here requires the first 4 bytes to be the size of the rest of the message (in big-endian), followed by the rest of the message.
-async fn read_action_from_stream(stream_read: &'_ mut tokio::net::unix::ReadHalf<'_>) -> Result<opts::ActionWithServer> {
+async fn read_ewwii_action_from_stream(stream_read: &'_ mut tokio::net::unix::ReadHalf<'_>) -> Result<opts::ActionWithServer> {
     let mut message_byte_length = [0u8; 4];
     stream_read.read_exact(&mut message_byte_length).await.context("Failed to read message size header in IPC message")?;
     let message_byte_length = u32::from_be_bytes(message_byte_length);
@@ -61,4 +63,27 @@ async fn read_action_from_stream(stream_read: &'_ mut tokio::net::unix::ReadHalf
     }
 
     bincode::deserialize(&raw_message).context("Failed to parse client message")
+}
+
+
+/// iirhai ipc
+
+pub async fn run_iirhai_server(socket_path: P, config_path: P) -> anyhow::Result<()> {
+    let daemon = IIRhaiDaemon::new(socket_path.clone(), config_path);
+
+    // Run the server in the background
+    tokio::spawn(async move {
+        daemon.run_ewwii_server().await.expect("Failed to run the iirhai daemon.");
+    });
+
+    log::info!("iirhai IPC server initialized");
+
+    Ok(())
+}
+
+pub async fn read_iirhai_json_line(stream_read: &mut ReadHalf<'_>) -> Result<opts::ActionWithServer> {
+    let mut buf = tokio::io::BufReader::new(stream_read);
+    let mut line = String::new();
+    buf.read_line(&mut line).await?;
+    serde_json::from_str(&line.trim()).context("Failed to parse JSON message")
 }

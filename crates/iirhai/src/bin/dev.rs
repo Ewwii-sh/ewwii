@@ -28,6 +28,6 @@ async fn start_daemon() -> Result<(), anyhow::Error> {
     let config_path = PathBuf::from("examples/eww-bar/ewwii.rhai");
     let daemon = IIRhaiDaemon::new(socket_path, config_path);
 
-    daemon.run_server().await.expect("Failed to run the iirhai daemon.");
+    daemon.run_ewwii_server().await.expect("Failed to run the iirhai daemon.");
     Ok(())
 }
