@@ -1,5 +1,8 @@
 // TODO: Yuck found, have to replace with lua
 
+
+// WHY THE HECK IS YUCK SO HARD TO REPLACE?
+// I am losing my sanity replacing it!
 use anyhow::{bail, Context, Result};
 use eww_shared_util::VarName;
 use std::collections::HashMap;
