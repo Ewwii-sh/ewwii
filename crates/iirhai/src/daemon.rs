@@ -29,7 +29,7 @@ impl IIRhaiDaemon {
         }
     }
 
-    pub async fn run_server(&self) -> anyhow::Result<()> {
+    pub async fn run_ewwii_server(&self) -> anyhow::Result<()> {
         let _ = std::fs::remove_file(&self.socket_path); // cleanup stale socket
 
         let listener = UnixListener::bind(&self.socket_path)?;
