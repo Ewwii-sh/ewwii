@@ -3,10 +3,6 @@
 use anyhow::{bail, Context, Result};
 use eww_shared_util::VarName;
 use std::collections::HashMap;
-
-// thing that replaced yuck and simplexpr
-use iirhai::parser::ParseConfig;
-
 use yuck::{
     config::{
         script_var_definition::ScriptVarDefinition, validate::ValidationError, widget_definition::WidgetDefinition,
@@ -48,9 +44,7 @@ impl EwwConfig {
         if !rhai_path.exists() {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
         }
-        let config = Config::generate_from_main_file(files, rhai_path.clone())?;
-        let rhai_config = ParseConfig::new().parse_widget_from_file(rhai_path.clone())?;
-        println!("{:#?}", rhai_config);
+        let config = Config::generate_from_main_file(files, rhai_path)?;
 
         // run some validations on the configuration
         let magic_globals: Vec<_> =
