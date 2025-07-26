@@ -12,6 +12,7 @@ pub struct EwwPaths {
     pub log_file: PathBuf,
     pub log_dir: PathBuf,
     pub ipc_socket_file: PathBuf,
+    pub iirhai_ipc_socket_file: PathBuf,
     pub config_dir: PathBuf,
 }
 
@@ -40,9 +41,18 @@ impl EwwPaths {
             .unwrap_or_else(|_| std::path::PathBuf::from("/tmp"))
             .join(format!("ewwii-server_{}", daemon_id));
 
+        let iirhai_ipc_socket_file = std::env::var("XDG_RUNTIME_DIR")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|_| std::path::PathBuf::from("/tmp"))
+            .join(format!("ewwii_iirhai-server_{}", daemon_id));
+
         // 100 as the limit isn't quite 108 everywhere (i.e 104 on BSD or mac)
         if format!("{}", ipc_socket_file.display()).len() > 100 {
             log::warn!("The IPC socket file's absolute path exceeds 100 bytes, the socket may fail to create.");
+        }
+
+        if format!("{}", iirhai_ipc_socket_file.display()).len() > 100 {
+            log::warn!("The iirhai IPC socket file's absolute path exceeds 100 bytes, the socket may fail to create.");
         }
 
         let log_dir = std::env::var("XDG_CACHE_HOME")
@@ -55,7 +65,7 @@ impl EwwPaths {
             std::fs::create_dir_all(&log_dir)?;
         }
 
-        Ok(EwwPaths { config_dir, log_file: log_dir.join(format!("eww_{}.log", daemon_id)), log_dir, ipc_socket_file })
+        Ok(EwwPaths { config_dir, log_file: log_dir.join(format!("eww_{}.log", daemon_id)), log_dir, ipc_socket_file, iirhai_ipc_socket_file })
     }
 
     pub fn default() -> Result<Self> {
@@ -77,6 +87,10 @@ impl EwwPaths {
 
     pub fn get_ipc_socket_file(&self) -> &Path {
         self.ipc_socket_file.as_path()
+    }
+
+    pub fn get_iirhai_ipc_socket_file(&self) -> &Path {
+        self.iirhai_ipc_socket_file.as_path()
     }
 
     pub fn get_config_dir(&self) -> &Path {

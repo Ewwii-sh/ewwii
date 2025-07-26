@@ -52,8 +52,10 @@ impl EwwConfig {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
         }
         let config = Config::generate_from_main_file(files, rhai_path.clone())?;
-        let rhai_config = ParseConfig::new().parse_widget_from_file(rhai_path.clone())?;
-        println!("{:#?}", rhai_config);
+
+        // Gets iirhai ipc socket file
+        // let paths = EwwPaths::default()?;
+        // println!("{}", paths.get_iirhai_ipc_socket_file().display());
 
         // run some validations on the configuration
         let magic_globals: Vec<_> =

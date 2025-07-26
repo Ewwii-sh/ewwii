@@ -262,8 +262,6 @@ impl<B: DisplayBackend> App<B> {
             } => {
                 let instance_id = instance_id.unwrap_or_else(|| window_name.clone());
 
-                println!("{}", instance_id);
-
                 let is_open = self.open_windows.contains_key(&instance_id);
 
                 let result = if should_toggle && is_open {
