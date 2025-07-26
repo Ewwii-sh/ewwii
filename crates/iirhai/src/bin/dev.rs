@@ -8,6 +8,7 @@ use std::{
     path::PathBuf
 };
 
+#[allow(unused_must_use)]
 fn main() {
     let input = fs::read_to_string("examples/eww-bar/ewwii.rhai") // run from root of ewwii/
         .expect("Should have been able to read the file");

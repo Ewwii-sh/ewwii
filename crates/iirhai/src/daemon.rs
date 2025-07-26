@@ -2,10 +2,10 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tokio::{
     signal,
-    net::{UnixListener, UnixStream, unix::OwnedWriteHalf},
+    net::{UnixListener, unix::OwnedWriteHalf},
     io::AsyncWriteExt,
 };
-use anyhow::Result;
+// use anyhow::Result;
 use log::info;
 use serde_json::Value;
 
