@@ -40,7 +40,6 @@ mod geometry;
 mod ipc_server;
 mod opts;
 mod paths;
-mod script_var_handler;
 mod server;
 mod state;
 mod util;

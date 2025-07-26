@@ -6,7 +6,6 @@ use crate::{
     error_handling_ctx,
     gtk::prelude::{ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt},
     paths::EwwPaths,
-    script_var_handler::ScriptVarHandlerHandle,
     state::scope_graph::{ScopeGraph, ScopeIndex},
     widgets::window::Window,
     window_arguments::WindowArguments,
@@ -128,7 +127,6 @@ pub struct App<B: DisplayBackend> {
 
     /// Sender to send [`DaemonCommand`]s
     pub app_evt_send: UnboundedSender<DaemonCommand>,
-    pub script_var_handler: ScriptVarHandlerHandle,
 
     /// Senders that will cancel a windows auto-close timer when started with --duration.
     pub window_close_timer_abort_senders: HashMap<String, futures::channel::oneshot::Sender<()>>,
@@ -187,11 +185,6 @@ impl<B: DisplayBackend> App<B> {
             DaemonCommand::UpdateVars(mappings) => {
                 for (var_name, new_value) in mappings {
                     self.update_global_variable(var_name, new_value);
-                }
-            }
-            DaemonCommand::PollVars(names) => {
-                for var_name in names {
-                    self.force_poll_variable(var_name);
                 }
             }
             DaemonCommand::ReloadConfigAndCss(sender) => {
@@ -364,23 +357,6 @@ impl<B: DisplayBackend> App<B> {
                     Ok(Err(err)) => error_handling_ctx::print_error(anyhow!(err)),
                     Err(err) => error_handling_ctx::print_error(anyhow!(err)),
                 };
-            }
-        }
-    }
-
-    fn force_poll_variable(&mut self, name: VarName) {
-        match self.eww_config.get_script_var(&name) {
-            Err(err) => error_handling_ctx::print_error(err),
-            Ok(var) => {
-                if let ScriptVarDefinition::Poll(poll_var) = var {
-                    log::debug!("force-polling var {}", &name);
-                    match script_var_handler::run_poll_once(&poll_var) {
-                        Err(err) => error_handling_ctx::print_error(err),
-                        Ok(value) => self.update_global_variable(name, value),
-                    }
-                } else {
-                    error_handling_ctx::print_error(anyhow!("Script var '{}' is not polling", name))
-                }
             }
         }
     }

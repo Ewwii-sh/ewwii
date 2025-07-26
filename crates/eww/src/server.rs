@@ -2,7 +2,7 @@ use crate::{
     app::{self, App, DaemonCommand},
     config, daemon_response,
     display_backend::DisplayBackend,
-    error_handling_ctx, ipc_server, script_var_handler,
+    error_handling_ctx, ipc_server,
     state::scope_graph::ScopeGraph,
     EwwPaths,
 };
@@ -73,9 +73,6 @@ pub fn initialize_server<B: DisplayBackend>(
     }
     gtk::init()?;
 
-    log::debug!("Initializing script var handler");
-    let script_var_handler = script_var_handler::init(ui_send.clone());
-
     let (scope_graph_evt_send, mut scope_graph_evt_recv) = tokio::sync::mpsc::unbounded_channel();
 
     let mut app: App<B> = app::App {
@@ -88,7 +85,6 @@ pub fn initialize_server<B: DisplayBackend>(
         failed_windows: HashSet::new(),
         instance_id_to_args: HashMap::new(),
         css_provider: gtk::CssProvider::new(),
-        script_var_handler,
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
         paths,
