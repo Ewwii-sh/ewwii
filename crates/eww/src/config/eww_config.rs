@@ -3,27 +3,35 @@
 
 // WHY THE HECK IS YUCK SO HARD TO REPLACE?
 // I am losing my sanity replacing it!
-use anyhow::{bail, Context, Result};
+// I wonder how honorificabilitudinitatibus will I feel after replacing yuck...
+use anyhow::{bail, Result};
 use eww_shared_util::VarName;
-use std::collections::HashMap;
-
-// thing that replaced yuck and simplexpr
-use iirhai::parser::ParseConfig;
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+};
 
 use yuck::{
     config::{
-        script_var_definition::ScriptVarDefinition, validate::ValidationError, widget_definition::WidgetDefinition,
+        script_var_definition::ScriptVarDefinition, 
+        widget_definition::WidgetDefinition,
         window_definition::WindowDefinition, Config,
     },
-    error::DiagError,
-    format_diagnostic::ToDiagnostic,
 };
 
 use simplexpr::dynval::DynVal;
 
-use crate::{config::inbuilt, error_handling_ctx, file_database::FileDatabase, paths::EwwPaths, widgets::widget_definitions};
+use crate::{
+    error_handling_ctx, 
+    file_database::FileDatabase, 
+    paths::EwwPaths, 
+    ipc_server,
+};
 
-use super::script_var;
+use tokio::{
+    runtime::Runtime,
+    net::UnixStream
+};
 
 /// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
@@ -54,79 +62,27 @@ impl EwwConfig {
         let config = Config::generate_from_main_file(files, rhai_path.clone())?;
 
         // Gets iirhai ipc socket file
-        // let paths = EwwPaths::default()?;
-        // println!("{}", paths.get_iirhai_ipc_socket_file().display());
+        let paths = EwwPaths::default()?;
+        let iirhai_socket_file = paths.get_iirhai_ipc_socket_file().to_path_buf();
 
-        // run some validations on the configuration
-        let magic_globals: Vec<_> =
-            inbuilt::INBUILT_VAR_NAMES.iter().chain(inbuilt::MAGIC_CONSTANT_NAMES).map(|x| VarName::from(*x)).collect();
-        yuck::config::validate::validate(&config, magic_globals)?;
+        // starts iirhai ipc server
+        // a tokio runtime is used because we are calling async function
+        let tokio_rt = Runtime::new().unwrap();
+        let result = tokio_rt.block_on(ipc_server::run_iirhai_server(iirhai_socket_file, rhai_path));
 
-        for (name, def) in &config.widget_definitions {
-            if widget_definitions::BUILTIN_WIDGET_NAMES.contains(&name.as_str()) {
-                return Err(
-                    DiagError(ValidationError::AccidentalBuiltinOverride(def.span, name.to_string()).to_diagnostic()).into()
-                );
-            }
-        }
-
-        let Config { widget_definitions, window_definitions, mut var_definitions, mut script_vars } = config;
-        script_vars.extend(inbuilt::get_inbuilt_vars());
-        var_definitions.extend(inbuilt::get_magic_constants(eww_paths));
-
-        let mut run_while_mentions = HashMap::<VarName, Vec<VarName>>::new();
-        for var in script_vars.values() {
-            if let ScriptVarDefinition::Poll(var) = var {
-                for name in var.run_while_expr.collect_var_refs() {
-                    run_while_mentions.entry(name.clone()).or_default().push(var.name.clone())
-                }
-            }
-        }
-
-        Ok(EwwConfig {
-            windows: window_definitions,
-            widgets: widget_definitions,
-            initial_variables: var_definitions.into_iter().map(|(k, v)| (k, v.initial_value)).collect(),
-            script_vars,
-            run_while_mentions,
-        })
+        match result {
+            Ok(()) => tokio_rt.block_on(run_ipc_reader(iirhai_socket_file)),
+            Err(e) => bail!("Failed to run the iirhai IPC server.")
+        };
     }
+}
 
-    // TODO this is kinda ugly
-    pub fn generate_initial_state(&self) -> Result<HashMap<VarName, DynVal>> {
-        let mut vars = self
-            .script_vars
-            .iter()
-            .map(|(name, var)| Ok((name.clone(), script_var::initial_value(var)?)))
-            .collect::<Result<HashMap<_, _>>>()?;
-        vars.extend(self.initial_variables.clone());
-        Ok(vars)
-    }
+async fn run_ipc_reader(socket_path: PathBuf) -> Result<()> {
+    let stream = UnixStream::connect(&socket_path).await?;
+    let (mut stream_read, _) = tokio::io::split(stream);
 
-    pub fn get_windows(&self) -> &HashMap<String, WindowDefinition> {
-        &self.windows
-    }
-
-    pub fn get_window(&self, name: &str) -> Result<&WindowDefinition> {
-        self.windows.get(name).with_context(|| {
-            format!(
-                "No window named '{}' exists in config.\nThis may also be caused by your config failing to load properly, \
-                 please check for any other errors in that case.",
-                name
-            )
-        })
-    }
-
-    pub fn get_script_var(&self, name: &VarName) -> Result<&ScriptVarDefinition> {
-        self.script_vars.get(name).with_context(|| format!("No script var named '{}' exists", name))
-    }
-
-    pub fn get_widget_definitions(&self) -> &HashMap<String, WidgetDefinition> {
-        &self.widgets
-    }
-
-    /// Given a variable name, get the names of all variables that reference that variable in their run-while (active/inactive) state
-    pub fn get_run_while_mentions_of(&self, name: &VarName) -> Option<&Vec<VarName>> {
-        self.run_while_mentions.get(name)
+    loop {
+        let line = ipc_server::read_iirhai_line_from_stream(&mut stream_read).await?;
+        // pass this to mpsc::channel used by ewwii later
     }
 }
