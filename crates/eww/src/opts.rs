@@ -104,11 +104,11 @@ pub enum ActionWithServer {
     ///
     /// This will force the variable to be updated even if its
     /// automatic polling is disabled.
-    #[command(name = "poll")]
-    Poll {
-        /// Variables to be polled
-        names: Vec<VarName>,
-    },
+    // #[command(name = "poll")]
+    // Poll {
+    //     /// Variables to be polled
+    //     names: Vec<VarName>,
+    // },
 
     /// Open the GTK debugger
     #[command(name = "inspector", alias = "debugger")]

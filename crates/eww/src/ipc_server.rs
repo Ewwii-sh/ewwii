@@ -84,7 +84,7 @@ pub async fn run_iirhai_server(socket_path: PathBuf, config_path: PathBuf) -> an
     Ok(())
 }
 
-pub async fn read_iirhai_lines_from_stream(stream_read: &mut ReadHalf<UnixStream>) -> Result<opts::ActionWithServer> {
+pub async fn read_iirhai_line_from_stream(stream_read: &mut ReadHalf<UnixStream>) -> Result<opts::ActionWithServer> {
     let mut buf = tokio::io::BufReader::new(stream_read);
     let mut line = String::new();
     buf.read_line(&mut line).await?;
