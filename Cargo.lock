@@ -1643,27 +1643,9 @@ name = "iirhai"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bytesize",
- "cached",
- "chrono",
- "chrono-tz",
- "eww_shared_util",
- "itertools",
- "jaq-core",
- "jaq-interpret",
- "jaq-parse",
- "jaq-std",
- "jaq-syn",
- "lalrpop-util",
- "once_cell",
- "regex",
  "rhai",
  "serde",
  "serde_json",
- "static_assertions",
- "strsim",
- "strum",
- "thiserror",
 ]
 
 [[package]]

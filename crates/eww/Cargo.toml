@@ -1,11 +1,11 @@
 [package]
 name = "ewwii"
 version = "0.1.0"
-authors = ["elkowar <5300871+elkowar@users.noreply.github.com>"]
+authors = ["byson94 <byson94wastaken@gmail.com>"]
 description = "Widgets for everyone made easy!"
-license = "MIT"
-repository = "https://github.com/elkowar/eww"
-homepage = "https://github.com/elkowar/eww"
+license = "Apache 2.0"
+repository = "https://github.com/byson94/ewwii"
+homepage = "https://github.com/byson94/ewwii"
 edition = "2021"
 
 
