@@ -6,7 +6,7 @@ use tokio::{
     sync::mpsc::*,
 };
 
-pub async fn run_server<P: AsRef<std::path::Path>>(evt_send: UnboundedSender<app::DaemonCommand>, socket_path: P) -> Result<()> {
+pub async fn run_ewwii_server<P: AsRef<std::path::Path>>(evt_send: UnboundedSender<app::DaemonCommand>, socket_path: P) -> Result<()> {
     let socket_path = socket_path.as_ref();
     let listener = { tokio::net::UnixListener::bind(socket_path)? };
     log::info!("IPC server initialized");
@@ -29,7 +29,7 @@ pub async fn run_server<P: AsRef<std::path::Path>>(evt_send: UnboundedSender<app
 async fn handle_connection(mut stream: tokio::net::UnixStream, evt_send: UnboundedSender<app::DaemonCommand>) -> Result<()> {
     let (mut stream_read, mut stream_write) = stream.split();
 
-    let action: opts::ActionWithServer = read_action_from_stream(&mut stream_read).await?;
+    let action: opts::ActionWithServer = read_ewwii_action_from_stream(&mut stream_read).await?;
 
     log::debug!("received command from IPC: {:?}", &action);
 
@@ -51,7 +51,7 @@ async fn handle_connection(mut stream: tokio::net::UnixStream, evt_send: Unbound
 
 /// Read a single message from a unix stream, and parses it into a `ActionWithServer`
 /// The format here requires the first 4 bytes to be the size of the rest of the message (in big-endian), followed by the rest of the message.
-async fn read_action_from_stream(stream_read: &'_ mut tokio::net::unix::ReadHalf<'_>) -> Result<opts::ActionWithServer> {
+async fn read_ewwii_action_from_stream(stream_read: &'_ mut tokio::net::unix::ReadHalf<'_>) -> Result<opts::ActionWithServer> {
     let mut message_byte_length = [0u8; 4];
     stream_read.read_exact(&mut message_byte_length).await.context("Failed to read message size header in IPC message")?;
     let message_byte_length = u32::from_be_bytes(message_byte_length);

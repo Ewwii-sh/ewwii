@@ -181,7 +181,7 @@ fn init_async_part(paths: EwwPaths, ui_send: UnboundedSender<app::DaemonCommand>
 
                 let ipc_server_join_handle = {
                     let ui_send = ui_send.clone();
-                    tokio::spawn(async move { ipc_server::run_server(ui_send, paths.get_ipc_socket_file()).await })
+                    tokio::spawn(async move { ipc_server::run_ewwii_server(ui_send, paths.get_ipc_socket_file()).await })
                 };
 
                 let forward_exit_to_app_handle = {
