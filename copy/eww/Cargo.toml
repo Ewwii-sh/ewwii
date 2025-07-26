@@ -18,7 +18,6 @@ wayland = ["gtk-layer-shell"]
 simplexpr.workspace = true
 eww_shared_util.workspace = true
 yuck.workspace = true
-iirhai.workspace = true
 notifier_host.workspace = true
 
 gtk-layer-shell = { version = "0.8.1", optional = true, features=["v0_6"] }

@@ -11,6 +11,7 @@ homepage = "https://github.com/byson94/ewwii"
 [dependencies]
 eww_shared_util.workspace = true
 
+anyhow.workspace = true
 bytesize.workspace = true
 cached.workspace = true
 chrono-tz.workspace = true
