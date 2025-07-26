@@ -1643,9 +1643,12 @@ name = "iirhai"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "log",
  "rhai",
  "serde",
  "serde_json",
+ "tokio",
+ "tokio-util",
 ]
 
 [[package]]
