@@ -13,3 +13,6 @@ anyhow.workspace = true
 serde_json.workspace = true
 serde = { workspace = true, features = ["derive"] }
 rhai = { version = "1.22.2", features = ["internals"] }
+tokio-util.workspace = true
+tokio = { workspace = true, features = ["full"] }
+log.workspace = true
