@@ -1,10 +1,13 @@
 use crate::{app, opts};
 use anyhow::{Context, Result};
 use std::time::Duration;
+use std::path::PathBuf;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, AsyncBufReadExt},
+    io::{AsyncReadExt, AsyncWriteExt, AsyncBufReadExt, ReadHalf},
     sync::mpsc::*,
+    net::UnixStream,
 };
+use iirhai::daemon::IIRhaiDaemon;
 
 /// ewwii ipc
 
@@ -68,7 +71,7 @@ async fn read_ewwii_action_from_stream(stream_read: &'_ mut tokio::net::unix::Re
 
 /// iirhai ipc
 
-pub async fn run_iirhai_server(socket_path: P, config_path: P) -> anyhow::Result<()> {
+pub async fn run_iirhai_server(socket_path: PathBuf, config_path: PathBuf) -> anyhow::Result<()> {
     let daemon = IIRhaiDaemon::new(socket_path.clone(), config_path);
 
     // Run the server in the background
@@ -81,7 +84,7 @@ pub async fn run_iirhai_server(socket_path: P, config_path: P) -> anyhow::Result
     Ok(())
 }
 
-pub async fn read_iirhai_json_line(stream_read: &mut ReadHalf<'_>) -> Result<opts::ActionWithServer> {
+pub async fn read_iirhai_lines_from_stream(stream_read: &mut ReadHalf<UnixStream>) -> Result<opts::ActionWithServer> {
     let mut buf = tokio::io::BufReader::new(stream_read);
     let mut line = String::new();
     buf.read_line(&mut line).await?;
