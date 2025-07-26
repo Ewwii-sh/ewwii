@@ -319,7 +319,6 @@ impl<B: DisplayBackend> App<B> {
     /// Fully stop eww:
     /// close all windows, stop the script_var_handler, quit the gtk appliaction and send the exit instruction to the lifecycle manager
     fn stop_application(&mut self) {
-        self.script_var_handler.stop_all();
         for (_, window) in self.open_windows.drain() {
             window.close();
         }
