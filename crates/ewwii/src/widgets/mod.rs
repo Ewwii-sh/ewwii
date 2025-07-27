@@ -2,11 +2,9 @@ use std::process::Command;
 
 pub mod build_widget;
 pub mod circular_progressbar;
-pub mod def_widget_macro;
 pub mod graph;
 mod systray;
 pub mod transform;
-pub mod widget_definitions;
 pub mod window;
 
 /// Run a command that was provided as an attribute.
