@@ -47,7 +47,6 @@ mod ipc_server;
 mod opts;
 mod paths;
 mod server;
-mod state;
 mod util;
 mod widgets;
 mod window_arguments;

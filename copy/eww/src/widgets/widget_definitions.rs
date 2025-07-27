@@ -1089,7 +1089,7 @@ fn build_gtk_literal(bargs: &mut BuilderArgs) -> Result<gtk::Box> {
                 let content_widget_use: DiagResult<_> = (||{
                     let ast = {
                         let mut yuck_files = error_handling_ctx::FILE_DATABASE.write().unwrap();
-                        let (span, asts) = yuck_files.load_yuck_str("<literal-content>".to_string(), content)?;
+                        let (span, asts) = yuck_files.load_rhai_str("<literal-content>".to_string(), content)?;
                         if let Some(file_id) = literal_file_id.replace(Some(span.2)) {
                             yuck_files.unload(file_id);
                         }
