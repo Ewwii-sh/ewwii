@@ -1031,6 +1031,7 @@ dependencies = [
  "ordered-stream",
  "pretty_env_logger",
  "regex",
+ "rhai",
  "serde",
  "serde_json",
  "simple-signal",

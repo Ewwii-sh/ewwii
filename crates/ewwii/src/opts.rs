@@ -194,10 +194,6 @@ pub enum ActionWithServer {
         all: bool,
     },
 
-    /// Get the value of a variable if defined
-    #[command(name = "get")]
-    GetVar { name: String },
-
     /// List the names of active windows
     #[command(name = "list-windows")]
     ListWindows,
@@ -266,7 +262,6 @@ impl ActionWithServer {
     pub fn into_daemon_command(self) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
             ActionWithServer::Update { mappings } => app::DaemonCommand::UpdateVars(mappings),
-            ActionWithServer::Poll { names } => app::DaemonCommand::PollVars(names),
             ActionWithServer::OpenInspector => app::DaemonCommand::OpenInspector,
 
             ActionWithServer::KillServer => app::DaemonCommand::KillServer,
@@ -301,9 +296,6 @@ impl ActionWithServer {
             ActionWithServer::ListActiveWindows => return with_response_channel(app::DaemonCommand::ListActiveWindows),
             ActionWithServer::ShowState { all } => {
                 return with_response_channel(|sender| app::DaemonCommand::PrintState { all, sender })
-            }
-            ActionWithServer::GetVar { name } => {
-                return with_response_channel(|sender| app::DaemonCommand::GetVar { name, sender })
             }
             ActionWithServer::ShowDebug => return with_response_channel(app::DaemonCommand::PrintDebug),
             ActionWithServer::ShowGraph => return with_response_channel(app::DaemonCommand::PrintGraph),

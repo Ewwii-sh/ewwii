@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use std::time::Duration;
 use std::path::PathBuf;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, AsyncBufReadExt, ReadHalf},
+    io::{AsyncReadExt, AsyncWriteExt, AsyncBufReadExt, ReadHalf, WriteHalf},
     sync::mpsc::*,
     net::UnixStream,
 };
@@ -71,7 +71,7 @@ async fn read_ewwii_action_from_stream(stream_read: &'_ mut tokio::net::unix::Re
 
 /// iirhai ipc
 
-pub async fn run_iirhai_server(socket_path: PathBuf,) -> anyhow::Result<()> {
+pub async fn run_iirhai_server(socket_path: &PathBuf,) -> anyhow::Result<()> {
     let daemon = IIRhaiDaemon::new(socket_path.clone());
 
     // Run the server in the background
@@ -84,16 +84,16 @@ pub async fn run_iirhai_server(socket_path: PathBuf,) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn read_iirhai_line_from_stream(stream_read: &mut ReadHalf<UnixStream>) -> Result<opts::ActionWithServer> {
+pub async fn read_iirhai_line_from_stream(stream_read: &mut ReadHalf<UnixStream>) -> Result<String> {
     let mut buf = tokio::io::BufReader::new(stream_read);
     let mut line = String::new();
     buf.read_line(&mut line).await?;
-    serde_json::from_str(&line.trim()).context("Failed to parse JSON message")
+    Ok(line)
 }
 
-pub async fn send_command_to_iirhai_ipc(stream_write: &mut WriteHalf<UnixStream>, message_str: String) -> Result<opts::ActionWithServer> {
+pub async fn send_command_to_iirhai_ipc(stream_write: &mut WriteHalf<UnixStream>, message_str: String) {
     let message_byte = message_str.as_bytes();
-    if let Err(e) = writer.write_all(message_byte).await {
+    if let Err(e) = stream_write.write_all(message_byte).await {
         eprintln!("Failed to write to iirhai IPC: {}", e);
     } else {
         log::info!("Message sent successfully.");

@@ -201,7 +201,7 @@ impl<B: DisplayBackend> App<B> {
                 wait_for_monitor_model().await;
                 let mut errors = Vec::new();
 
-                let config_result = config::read_from_eww_paths(&self.paths);
+                let config_result = config::read_from_ewwii_paths(&self.paths);
                 if let Err(e) = config_result.and_then(|new_config| self.load_config(new_config)) {
                     errors.push(e)
                 }
