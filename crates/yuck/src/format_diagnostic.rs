@@ -7,7 +7,7 @@ use diagnostic::*;
 use crate::config::{attributes::AttrError, validate::ValidationError};
 
 use super::parser::parse_error;
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 
 pub fn span_to_primary_label(span: Span) -> Label<usize> {
     Label::primary(span.2, span.0..span.1)

@@ -2,7 +2,7 @@
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use eww_shared_util::VarName;
+use ewwii_shared_util::VarName;
 use serde::{Deserialize, Serialize};
 use simplexpr::dynval::DynVal;
 use yuck::{

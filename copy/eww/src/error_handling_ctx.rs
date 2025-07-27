@@ -10,7 +10,7 @@ use codespan_reporting::{
     diagnostic::Diagnostic,
     term::{self, Chars},
 };
-use eww_shared_util::Span;
+use ewwii_shared_util::Span;
 use once_cell::sync::Lazy;
 use simplexpr::{dynval::ConversionError, eval::EvalError};
 use yuck::{config::validate::ValidationError, error::DiagError, format_diagnostic::ToDiagnostic};

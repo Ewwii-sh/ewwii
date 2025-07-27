@@ -1,4 +1,4 @@
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 use once_cell::sync::Lazy;
 use regex::{Regex, RegexSet};
 
@@ -291,7 +291,7 @@ impl std::fmt::Display for LexicalError {
 #[cfg(test)]
 mod test {
     use super::*;
-    use eww_shared_util::snapshot_string;
+    use ewwii_shared_util::snapshot_string;
     use itertools::Itertools;
 
     macro_rules! v {

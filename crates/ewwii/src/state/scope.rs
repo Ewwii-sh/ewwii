@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::{collections::HashMap, rc::Rc};
 
-use eww_shared_util::VarName;
+use ewwii_shared_util::VarName;
 use simplexpr::dynval::DynVal;
 
 use super::scope_graph::{ScopeGraph, ScopeIndex};

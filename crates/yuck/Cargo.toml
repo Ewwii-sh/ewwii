@@ -12,7 +12,7 @@ build = "build.rs"
 
 [dependencies]
 simplexpr.workspace = true
-eww_shared_util.workspace = true
+ewwii_shared_util.workspace = true
 
 anyhow.workspace = true
 codespan-reporting.workspace = true

@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use codespan_reporting::diagnostic::Severity;
-use eww_shared_util::{AttrName, Spanned};
+use ewwii_shared_util::{AttrName, Spanned};
 use gtk::{
     gdk::prelude::Cast,
     prelude::{BoxExt, ContainerExt, WidgetExt},

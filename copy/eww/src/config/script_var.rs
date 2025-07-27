@@ -4,7 +4,7 @@ use std::process::Command;
 
 use anyhow::{anyhow, bail, Context, Result};
 use codespan_reporting::diagnostic::Severity;
-use eww_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span, VarName};
 use simplexpr::dynval::DynVal;
 use yuck::{
     config::script_var_definition::{ScriptVarDefinition, VarSource},

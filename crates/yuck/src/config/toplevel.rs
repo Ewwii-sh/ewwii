@@ -22,7 +22,7 @@ use crate::{
         from_ast::{FromAst, FromAstElementContent},
     },
 };
-use eww_shared_util::{Span, Spanned, VarName};
+use ewwii_shared_util::{Span, Spanned, VarName};
 
 static TOP_LEVEL_DEFINITION_NAMES: &[&str] = &[
     WidgetDefinition::ELEMENT_NAME,

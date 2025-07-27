@@ -10,7 +10,7 @@ macro_rules! def_widget {
         $({
             $(
                 // explicitly box the function to not cause tons of monomorphization related duplications of Vec::retain
-                let retain_fn: Box<dyn Fn(&eww_shared_util::wrappers::AttrName, &mut yuck::config::attributes::AttrEntry) -> bool> =
+                let retain_fn: Box<dyn Fn(&ewwii_shared_util::wrappers::AttrName, &mut yuck::config::attributes::AttrEntry) -> bool> =
                     Box::new(|a, _| &a.0 != &::std::stringify!($attr_name).replace('_', "-"));
                 $args.unhandled_attrs.retain(retain_fn);
             )*
@@ -19,10 +19,10 @@ macro_rules! def_widget {
             // If an attribute is explicitly marked as optional (? appended to type)
             // the attribute will still show up here, as a `None` value. Otherwise, all values in this map
             // will be `Some`.
-            let attr_map: Result<HashMap<eww_shared_util::AttrName, Option<simplexpr::SimplExpr>>> = (|| {
+            let attr_map: Result<HashMap<ewwii_shared_util::AttrName, Option<simplexpr::SimplExpr>>> = (|| {
                 Ok(::maplit::hashmap! {
                     $(
-                        eww_shared_util::AttrName(::std::stringify!($attr_name).to_owned()) =>
+                        ewwii_shared_util::AttrName(::std::stringify!($attr_name).to_owned()) =>
                             def_widget!(@get_value $args, &::std::stringify!($attr_name).replace('_', "-"), $(? $($optional)?)? $(= $default)?)
                     ),*
                 })
@@ -33,7 +33,7 @@ macro_rules! def_widget {
                 if attr_map.values().any(|x| x.is_some()) {
 
                     // Get all the variables that are referred to in any of the attributes expressions
-                    let required_vars: Vec<eww_shared_util::VarName> = attr_map
+                    let required_vars: Vec<ewwii_shared_util::VarName> = attr_map
                         .values()
                         .flat_map(|expr| expr.as_ref().map(|x| x.collect_var_refs()).unwrap_or_default())
                         .collect();

@@ -14,7 +14,7 @@ use crate::{
     parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
     value::{coords, NumWithUnit},
 };
-use eww_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span, VarName};
 use simplexpr::dynval::ConversionError;
 
 use crate::error::{DiagError, DiagResultExt};

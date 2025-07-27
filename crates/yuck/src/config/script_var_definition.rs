@@ -5,7 +5,7 @@ use crate::{
     format_diagnostic::ToDiagnostic,
     parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
 };
-use eww_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span, VarName};
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub enum ScriptVarDefinition {

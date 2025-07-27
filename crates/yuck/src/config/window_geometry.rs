@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::window_definition::EnumParseError;
-use eww_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span, VarName};
 use serde::{Deserialize, Serialize};
 use simplexpr::{
     dynval::{DynVal, FromDynVal},
