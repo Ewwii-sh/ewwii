@@ -5,6 +5,8 @@ use std::{
     str::FromStr,
 };
 
+use crate::dynval::DynVal;
+
 fn parse_value_from_args<T: FromStr>(name: &str, args: &mut HashMap<VarName, DynVal>) -> Result<Option<T>, T::Err> {
     args.remove(&VarName(name.to_string())).map(|x| FromStr::from_str(&x.as_string().unwrap())).transpose()
 }
