@@ -10,10 +10,10 @@ use tokio::{
 use log::info;
 use serde_json::Value;
 
-use crate::{
-    parser::ParseConfig,
-    ipc_manager::IpcManager,
-};
+// use crate::{
+//     parser::ParseConfig,
+//     ipc_manager::IpcManager,
+// };
 
 pub struct IIRhaiDaemon {
     socket_path: PathBuf,
@@ -102,7 +102,7 @@ impl IIRhaiDaemon {
         }
     }
 
-    pub async fn send_if_running_static(
+    async fn send_if_running_static(
         msg: &str,
         clients: &Arc<Mutex<Vec<OwnedWriteHalf>>>,
         state: &Arc<Mutex<DaemonState>>,

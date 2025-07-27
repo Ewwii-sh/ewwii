@@ -2,7 +2,6 @@
 // I am losing my sanity replacing it!
 // I wonder how honorificabilitudinitatibus will I feel after replacing yuck...
 use anyhow::{bail, Result};
-use ewwii_shared_util::VarName;
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -20,19 +19,17 @@ use iirhai::{
     widgetnode::WidgetNode,
 };
 
+use rhai::Map;
+
 use tokio::{
     runtime::Runtime,
     net::UnixStream,
     sync::mpsc
 };
 
-use super::iirhai_structs::{
-    WindowDefinition,
-};
-
 /// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_eww_paths(eww_paths: &EwwPaths) -> Result<EwwConfig> {
+pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwConfig> {
     error_handling_ctx::clear_files();
     EwwConfig::read_from_dir(&mut error_handling_ctx::FILE_DATABASE.write().unwrap(), eww_paths)
 }
@@ -41,6 +38,12 @@ pub fn read_from_eww_paths(eww_paths: &EwwPaths) -> Result<EwwConfig> {
 #[derive(Debug, Clone, Default)]
 pub struct EwwConfig {
     windows: HashMap<String, WindowDefinition>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct WindowDefinition {
+    name: String,
+    props: Map,
 }
 
 impl EwwConfig {
@@ -52,7 +55,7 @@ impl EwwConfig {
         }
 
         // get the iirhai widget tree
-        let config_parser = ParseConfig::new();
+        let mut config_parser = ParseConfig::new();
         let config_tree = config_parser.parse_widget_from_file(rhai_path)?;
 
         // Create mpsc channel
@@ -65,7 +68,7 @@ impl EwwConfig {
         // starts iirhai ipc server
         // a tokio runtime is used because we are calling async function
         let tokio_rt = Runtime::new().unwrap();
-        let result = tokio_rt.block_on(ipc_server::run_iirhai_server(iirhai_socket_file));
+        let result = tokio_rt.block_on(ipc_server::run_iirhai_server(&iirhai_socket_file));
 
         match result {
             Ok(()) => {
@@ -76,14 +79,18 @@ impl EwwConfig {
 
                 let mut window_definitions = HashMap::new();
 
-                for node in config_tree {
-                    if let WidgetNode::DefWindow { name, props, .. } = node {
-                        let def = WindowDefinition {
-                            name: name.clone(),
-                            props: props.clone(),
-                        };
-                        window_definitions.insert(name.clone(), def);
+                if let WidgetNode::Enter(children) = config_tree {
+                    for node in children {
+                        if let WidgetNode::DefWindow { name, props, .. } = node {
+                            let def = WindowDefinition {
+                                name: name.clone(),
+                                props: props.clone(),
+                            };
+                            window_definitions.insert(name.clone(), def);
+                        }
                     }
+                } else {
+                    bail!("Expected root node to be `Enter`, but got something else.");
                 }
 
                 Ok(EwwConfig {
@@ -92,6 +99,10 @@ impl EwwConfig {
             }
             Err(_) => bail!("Failed to run the iirhai IPC server."),
         }
+    }
+
+    pub fn get_windows(&self) -> &HashMap<String, WindowDefinition> {
+        &self.windows
     }
 }
 

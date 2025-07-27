@@ -1,6 +1,6 @@
 use iirhai::{
     parser::ParseConfig,
-    ipc_manager::IpcManager,
+    // ipc_manager::IpcManager,
     daemon::IIRhaiDaemon
 };
 use std::{
@@ -24,7 +24,7 @@ fn main() {
 #[tokio::main]
 async fn start_daemon() -> Result<(), anyhow::Error> {
     let socket_path = PathBuf::from("/tmp/iirhai.sock");
-    let config_path = PathBuf::from("examples/eww-bar/ewwii.rhai");
+    let _config_path = PathBuf::from("examples/eww-bar/ewwii.rhai");
     let daemon = IIRhaiDaemon::new(socket_path);
 
     daemon.run_ewwii_server().await.expect("Failed to run the iirhai daemon.");
