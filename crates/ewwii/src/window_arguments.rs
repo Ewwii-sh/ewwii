@@ -5,11 +5,6 @@ use std::{
     collections::{HashMap, HashSet},
     str::FromStr,
 };
-// TODO: Yuck found, have to replace with lua
-use yuck::{
-    config::{monitor::MonitorIdentifier, window_definition::WindowDefinition, window_geometry::AnchorPoint},
-    value::Coords,
-};
 
 fn parse_value_from_args<T: FromStr>(name: &str, args: &mut HashMap<VarName, DynVal>) -> Result<Option<T>, T::Err> {
     args.remove(&VarName(name.to_string())).map(|x| FromStr::from_str(&x.as_string().unwrap())).transpose()

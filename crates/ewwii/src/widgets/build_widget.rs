@@ -8,17 +8,7 @@ use gtk::{
 };
 use itertools::Itertools;
 use maplit::hashmap;
-use simplexpr::{dynval::DynVal, SimplExpr};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use yuck::{
-    config::{
-        attributes::AttrEntry,
-        widget_definition::WidgetDefinition,
-        widget_use::{BasicWidgetUse, ChildrenWidgetUse, LoopWidgetUse, WidgetUse},
-    },
-    error::DiagError,
-    gen_diagnostic,
-};
 
 use crate::{
     error_handling_ctx,
