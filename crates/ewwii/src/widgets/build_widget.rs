@@ -12,23 +12,17 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     error_handling_ctx,
-    state::{
-        scope::Listener,
-        scope_graph::{ScopeGraph, ScopeGraphEvent, ScopeIndex},
-    },
+    dynval::DynVal,
     widgets::widget_definitions,
 };
 
 use super::widget_definitions::{resolve_orientable_attrs, resolve_range_attrs, resolve_widget_attrs};
 
-pub struct BuilderArgs<'a> {
-    pub calling_scope: ScopeIndex,
+pub struct BuilderArgs {
     pub widget_use: BasicWidgetUse,
-    pub scope_graph: &'a mut ScopeGraph,
-    pub unhandled_attrs: HashMap<AttrName, AttrEntry>,
     pub widget_defs: Rc<HashMap<String, WidgetDefinition>>,
-    pub custom_widget_invocation: Option<Rc<CustomWidgetInvocation>>,
 }
+
 
 // TODO in case of custom widgets, we should add a validation step where
 // warnings for unknown attributes (attributes not expected by the widget) are emitted.

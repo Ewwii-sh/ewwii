@@ -3,7 +3,6 @@ use crate::{
     config, daemon_response,
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server,
-    state::scope_graph::ScopeGraph,
     EwwPaths,
 };
 use anyhow::{Context, Result};
@@ -73,13 +72,7 @@ pub fn initialize_server<B: DisplayBackend>(
     }
     gtk::init()?;
 
-    let (scope_graph_evt_send, mut scope_graph_evt_recv) = tokio::sync::mpsc::unbounded_channel();
-
     let mut app: App<B> = app::App {
-        scope_graph: Rc::new(RefCell::new(ScopeGraph::from_global_vars(
-            ewwii_config.generate_initial_state()?,
-            scope_graph_evt_send,
-        ))),
         ewwii_config,
         open_windows: HashMap::new(),
         failed_windows: HashSet::new(),
@@ -114,9 +107,9 @@ pub fn initialize_server<B: DisplayBackend>(
 
         loop {
             tokio::select! {
-                Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
-                    app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
-                },
+                // Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
+                //     app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
+                // },
                 Some(ui_event) = ui_recv.recv() => {
                     app.handle_command(ui_event).await;
                 }

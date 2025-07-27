@@ -1,6 +1,5 @@
 use anyhow::Result;
 use ewwii_shared_util::{AttrName, VarName};
-use simplexpr::dynval::DynVal;
 use std::collections::HashMap;
 
 use crate::window_arguments::WindowArguments;
@@ -11,7 +10,6 @@ use crate::window_arguments::WindowArguments;
 pub struct WindowInitiator {
     pub backend_options: BackendWindowOptions,
     pub geometry: Option<WindowGeometry>,
-    pub local_variables: HashMap<VarName, DynVal>,
     pub monitor: Option<MonitorIdentifier>,
     pub name: String,
     pub resizable: bool,
@@ -34,11 +32,10 @@ impl WindowInitiator {
             name: window_def.name.clone(),
             resizable: window_def.eval_resizable(&vars)?,
             stacking: window_def.eval_stacking(&vars)?,
-            local_variables: vars,
         })
     }
 
-    pub fn get_scoped_vars(&self) -> HashMap<AttrName, DynVal> {
-        self.local_variables.iter().map(|(k, v)| (AttrName::from(k.clone()), v.clone())).collect()
-    }
+    // pub fn get_scoped_vars(&self) -> HashMap<AttrName, DynVal> {
+    //     self.local_variables.iter().map(|(k, v)| (AttrName::from(k.clone()), v.clone())).collect()
+    // }
 }

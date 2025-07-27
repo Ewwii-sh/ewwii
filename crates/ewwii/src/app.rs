@@ -1,5 +1,3 @@
-// TODO: Yuck found, have to replace with lua
-
 use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
@@ -9,6 +7,8 @@ use crate::{
     widgets::window::Window,
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
+    dynval::DynVal,
+    format_diagnostic,
     *,
 };
 use anyhow::anyhow;
