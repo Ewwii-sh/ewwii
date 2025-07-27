@@ -15,6 +15,10 @@ use crate::{
     ipc_server,
 };
 
+use iirhai::{
+    parser::ParseConfig,
+}
+
 use tokio::{
     runtime::Runtime,
     net::UnixStream,
@@ -42,6 +46,10 @@ impl EwwConfig {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
         }
 
+        // get the iirhai widget tree
+        let config_parser = ParseConfig::new();
+        let config_tree = config_parser.parse_widget_from_file(config_path)?;
+
         // Create mpsc channel
         let (tx, rx) = mpsc::channel::<String>(32);
 
@@ -52,7 +60,7 @@ impl EwwConfig {
         // starts iirhai ipc server
         // a tokio runtime is used because we are calling async function
         let tokio_rt = Runtime::new().unwrap();
-        let result = tokio_rt.block_on(ipc_server::run_iirhai_server(iirhai_socket_file, rhai_path));
+        let result = tokio_rt.block_on(ipc_server::run_iirhai_server(iirhai_socket_file));
 
         match result {
             Ok(()) => {
@@ -61,7 +69,22 @@ impl EwwConfig {
 
                 tokio_rt.spawn(iirhai_consumer(rx));
 
-                Ok(Self::default()) // Returning dummy config for now
+                let mut window_definitions = HashMap::new();
+
+                for node in config_tree {
+                    if let WidgetNode::DefWindow { name, props, _ } = node {
+                        let def = WindowDefinition {
+                            name.clone(),
+                            props.clone(),
+                        };
+                        window_definitions.insert(name.clone(), def);
+                    }
+                }
+
+
+                Ok(EwwConfig {
+                    windows: window_definitions,
+                })
             }
             Err(_) => bail!("Failed to run the iirhai IPC server."),
         }
