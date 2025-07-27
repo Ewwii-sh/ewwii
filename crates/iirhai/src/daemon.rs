@@ -85,6 +85,8 @@ impl IIRhaiDaemon {
                     if let DaemonState::Idle = *state_guard {
                         // transition to running
                         *state_guard = DaemonState::Running;
+                    } else if let DaemonState::Running = *state_guard {
+                        break Ok(());
                     }
 
                     drop(state_guard);
