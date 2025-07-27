@@ -82,11 +82,11 @@ impl EwwConfig {
 
                 if let WidgetNode::Enter(children) = config_tree {
                     for node in children {
-                        if let WidgetNode::DefWindow { name, props, widget } = node {
+                        if let WidgetNode::DefWindow { name, props, node } = node {
                             let win_def = WindowDefinition {
                                 name: name.clone(),
                                 props: props.clone(),
-                                node: widget.clone()
+                                root_widget: node.clone()
                             };
                             window_definitions.insert(name.clone(), win_def);
                         }
