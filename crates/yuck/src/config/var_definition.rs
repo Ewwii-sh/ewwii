@@ -4,7 +4,7 @@ use crate::{
     error::{DiagResult, DiagResultExt},
     parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
 };
-use eww_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span, VarName};
 
 #[derive(Debug, PartialEq, Eq, Clone, serde::Serialize)]
 pub struct VarDefinition {

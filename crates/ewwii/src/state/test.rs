@@ -4,7 +4,7 @@ use std::sync::{
     Arc,
 };
 
-use eww_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span, VarName};
 use maplit::hashmap;
 use simplexpr::{dynval::DynVal, SimplExpr};
 

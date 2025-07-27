@@ -9,7 +9,7 @@ use yuck::config::{
 };
 
 use crate::{config::system_stats::*, paths::EwwPaths};
-use eww_shared_util::VarName;
+use ewwii_shared_util::VarName;
 
 macro_rules! define_builtin_vars {
     ($($name:literal [$interval:literal] => $fun:expr),*$(,)?) => {
@@ -23,7 +23,7 @@ macro_rules! define_builtin_vars {
                     command: VarSource::Function($fun),
                     initial_value: None,
                     interval: std::time::Duration::from_secs($interval),
-                    name_span: eww_shared_util::span::Span::DUMMY,
+                    name_span: ewwii_shared_util::span::Span::DUMMY,
                 })
                 ),*
             }
@@ -76,7 +76,7 @@ macro_rules! define_magic_constants {
                 $(VarName::from($name) => VarDefinition {
                     name: VarName::from($name),
                     initial_value: $value,
-                    span: eww_shared_util::span::Span::DUMMY
+                    span: ewwii_shared_util::span::Span::DUMMY
                 }),*
             }
         }

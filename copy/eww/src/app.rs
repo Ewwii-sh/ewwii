@@ -15,7 +15,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use codespan_reporting::files::Files;
-use eww_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span, VarName};
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};

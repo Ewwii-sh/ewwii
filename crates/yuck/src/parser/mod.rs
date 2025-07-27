@@ -1,4 +1,4 @@
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 use lalrpop_util::lalrpop_mod;
 
 use crate::gen_diagnostic;

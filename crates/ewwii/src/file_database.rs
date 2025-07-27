@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use codespan_reporting::files::Files;
-use eww_shared_util::Span;
+use ewwii_shared_util::Span;
 use yuck::{
     config::file_provider::{FilesError, YuckFileProvider},
     error::DiagError,

@@ -16,7 +16,7 @@ wayland = ["gtk-layer-shell"]
 
 [dependencies]
 simplexpr.workspace = true
-eww_shared_util.workspace = true
+ewwii_shared_util.workspace = true
 yuck.workspace = true
 notifier_host.workspace = true
 
