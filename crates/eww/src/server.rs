@@ -34,7 +34,7 @@ pub fn initialize_server<B: DisplayBackend>(
 
     let read_config = config::read_from_eww_paths(&paths);
 
-    let eww_config = match read_config {
+    let ewwii_config = match read_config {
         Ok(config) => config,
         Err(err) => {
             error_handling_ctx::print_error(err);
@@ -77,10 +77,10 @@ pub fn initialize_server<B: DisplayBackend>(
 
     let mut app: App<B> = app::App {
         scope_graph: Rc::new(RefCell::new(ScopeGraph::from_global_vars(
-            eww_config.generate_initial_state()?,
+            ewwii_config.generate_initial_state()?,
             scope_graph_evt_send,
         ))),
-        eww_config,
+        ewwii_config,
         open_windows: HashMap::new(),
         failed_windows: HashSet::new(),
         instance_id_to_args: HashMap::new(),
