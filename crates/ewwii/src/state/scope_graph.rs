@@ -5,7 +5,6 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use ewwii_shared_util::{AttrName, VarName};
-use simplexpr::{dynval::DynVal, SimplExpr};
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::error_handling_ctx;

@@ -1,14 +1,7 @@
-// TODO: MAJOR Yuck found, have to replace with lua
-
 use std::collections::HashMap;
 
 use codespan_reporting::files::Files;
 use ewwii_shared_util::Span;
-use yuck::{
-    config::file_provider::{FilesError, YuckFileProvider},
-    error::DiagError,
-    parser::ast::Ast,
-};
 
 #[derive(Debug, Clone, Default)]
 pub struct FileDatabase {

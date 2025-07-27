@@ -2,13 +2,6 @@ use anyhow::Result;
 use ewwii_shared_util::{AttrName, VarName};
 use simplexpr::dynval::DynVal;
 use std::collections::HashMap;
-// TODO: Yuck found, have to replace with lua
-use yuck::config::{
-    backend_window_options::BackendWindowOptions,
-    monitor::MonitorIdentifier,
-    window_definition::{WindowDefinition, WindowStacking},
-    window_geometry::WindowGeometry,
-};
 
 use crate::window_arguments::WindowArguments;
 

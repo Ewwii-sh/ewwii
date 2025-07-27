@@ -1,9 +1,6 @@
 //! Disgusting global state.
 //! I hate this, but [buffet](https://github.com/buffet) told me that this is what I should do for peak maintainability!
 
-// TODO: Yuck found, have to replace with lua
-
-
 use std::sync::{Arc, RwLock};
 
 use codespan_reporting::{
@@ -12,9 +9,6 @@ use codespan_reporting::{
 };
 use ewwii_shared_util::Span;
 use once_cell::sync::Lazy;
-use simplexpr::{dynval::ConversionError, eval::EvalError};
-use yuck::{config::validate::ValidationError, error::DiagError, format_diagnostic::ToDiagnostic};
-
 use crate::file_database::FileDatabase;
 
 pub static FILE_DATABASE: Lazy<Arc<RwLock<FileDatabase>>> = Lazy::new(|| Arc::new(RwLock::new(FileDatabase::new())));
