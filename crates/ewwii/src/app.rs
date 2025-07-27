@@ -20,7 +20,6 @@ use glib::ObjectExt;
 use gtk::{gdk, glib};
 use itertools::Itertools;
 use once_cell::sync::Lazy;
-use simplexpr::{dynval::DynVal, SimplExpr};
 use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
@@ -28,16 +27,6 @@ use std::{
     rc::Rc,
 };
 use tokio::sync::mpsc::UnboundedSender;
-use yuck::{
-    config::{
-        monitor::MonitorIdentifier,
-        script_var_definition::ScriptVarDefinition,
-        window_geometry::{AnchorPoint, WindowGeometry},
-    },
-    error::DiagError,
-    gen_diagnostic,
-    value::Coords,
-};
 
 /// A command for the eww daemon.
 /// While these are mostly generated from eww CLI commands (see [`opts::ActionWithServer`]),
@@ -45,7 +34,6 @@ use yuck::{
 #[derive(Debug)]
 pub enum DaemonCommand {
     NoOp,
-    UpdateVars(Vec<(VarName, DynVal)>),
     ReloadConfigAndCss(DaemonResponseSender),
     OpenInspector,
     OpenMany {
@@ -75,10 +63,6 @@ pub enum DaemonCommand {
     CloseAll,
     PrintState {
         all: bool,
-        sender: DaemonResponseSender,
-    },
-    GetVar {
-        name: String,
         sender: DaemonResponseSender,
     },
     PrintDebug(DaemonResponseSender),
@@ -289,14 +273,6 @@ impl<B: DisplayBackend> App<B> {
                     .map(|(key, value)| format!("{}: {}", key, value))
                     .join("\n");
                 sender.send_success(output)?
-            }
-            DaemonCommand::GetVar { name, sender } => {
-                let scope_graph = &*self.scope_graph.borrow();
-                let vars = &scope_graph.global_scope().data;
-                match vars.get(name.as_str()) {
-                    Some(x) => sender.send_success(x.to_string())?,
-                    None => sender.send_failure(format!("Variable not found \"{}\"", name))?,
-                }
             }
             DaemonCommand::ListWindows(sender) => {
                 let output = self.ewwii_config.get_windows().keys().join("\n");

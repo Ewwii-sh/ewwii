@@ -23,13 +23,6 @@ use std::{
     rc::Rc,
     time::Duration,
 };
-use yuck::{
-    config::file_provider::YuckFileProvider,
-    error::{DiagError, DiagResult},
-    format_diagnostic::{span_to_secondary_label, DiagnosticExt},
-    gen_diagnostic,
-    parser::from_ast::FromAst,
-};
 
 /// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
 /// the previously connected singal handler first gets disconnected.

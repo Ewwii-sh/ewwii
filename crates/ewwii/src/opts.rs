@@ -1,14 +1,7 @@
-// TODO: Yuck found, have to replace with lua
-
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use ewwii_shared_util::VarName;
 use serde::{Deserialize, Serialize};
-use simplexpr::dynval::DynVal;
-use yuck::{
-    config::{monitor::MonitorIdentifier, window_geometry::AnchorPoint},
-    value::Coords,
-};
 
 use crate::{
     app,
