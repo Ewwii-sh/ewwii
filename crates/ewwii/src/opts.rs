@@ -93,16 +93,6 @@ pub enum ActionWithServer {
         mappings: Vec<(VarName, DynVal)>,
     },
 
-    /// Update a polling variable using its script.
-    ///
-    /// This will force the variable to be updated even if its
-    /// automatic polling is disabled.
-    // #[command(name = "poll")]
-    // Poll {
-    //     /// Variables to be polled
-    //     names: Vec<VarName>,
-    // },
-
     /// Open the GTK debugger
     #[command(name = "inspector", alias = "debugger")]
     OpenInspector,
