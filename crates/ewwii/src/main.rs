@@ -1,12 +1,18 @@
 /*
-    NOTE to future me or anyone else reading this codebase.
-    If you are wondering why there are so many comments, just know that
-    its just me marking things down to learn the eww source code.
-    This is huge! The moment I look at something else, My brain just gives up.
-    So I rely on comments to know what the things do.
+    Entry file of ewwii.
+    
+    This file mostly contains wayland/x11 setup and args stuff
+    If you are interesting in something like window rendering,
+    then you can read `app.rs`. It is like the heart of ewwii.
 
-    So, what i find is that this file mostly contains clap argument parsing...
-    Might be just better to skip.
+    The full options (arguments) are parsed in `opts.rs` as well as `app.rs`.
+
+    If you want to know about configuration loading (using iirhai),
+    then you can check `config/ewwii_config.rs` as it is the file that loads
+    and passes the widget tree to other compontents.
+
+    The ipc stuff are done in `ipc_server.rs`. This file holds the ipc 
+    for both ewwii daemon and iirhai.
 */
 
 #![allow(rustdoc::private_intra_doc_links)]
