@@ -15,9 +15,7 @@ x11 = ["gdkx11", "x11rb"]
 wayland = ["gtk-layer-shell"]
 
 [dependencies]
-simplexpr.workspace = true
 ewwii_shared_util.workspace = true
-yuck.workspace = true
 iirhai.workspace = true
 notifier_host.workspace = true
 

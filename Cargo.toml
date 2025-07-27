@@ -4,9 +4,7 @@ resolver = "2"
 
 [workspace.dependencies]
 
-simplexpr = { version = "0.1.0", path = "crates/simplexpr" }
 ewwii_shared_util = { version = "0.1.0", path = "crates/ewwii_shared_util" }
-yuck = { version = "0.1.0", path = "crates/yuck", default-features = false }
 iirhai = { version = "0.1.0", path = "crates/iirhai" }
 notifier_host = { version = "0.1.0", path = "crates/notifier_host" }
 

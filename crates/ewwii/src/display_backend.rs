@@ -1,5 +1,3 @@
-// TODO: Yuck found, have to replace with lua
-
 use crate::{widgets::window::Window, window_initiator::WindowInitiator};
 
 use gtk::gdk;
@@ -35,8 +33,6 @@ mod platform_wayland {
     use gtk::gdk;
     use gtk::prelude::*;
     use gtk_layer_shell::{KeyboardMode, LayerShell};
-    use yuck::config::backend_window_options::WlWindowFocusable;
-    use yuck::config::{window_definition::WindowStacking, window_geometry::AnchorAlignment};
 
     pub struct WaylandBackend;
 
@@ -144,10 +140,6 @@ mod platform_x11 {
         connection::Connection,
         protocol::xproto::*,
         rust_connection::{DefaultStream, RustConnection},
-    };
-    use yuck::config::{
-        backend_window_options::{Side, X11WindowType},
-        window_definition::WindowStacking,
     };
 
     use super::DisplayBackend;
