@@ -9,7 +9,6 @@ use std::{
 
 use crate::{
     error_handling_ctx, 
-    file_database::FileDatabase, 
     paths::EwwPaths, 
     ipc_server,
 };
