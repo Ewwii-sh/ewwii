@@ -42,7 +42,6 @@ mod daemon_response;
 mod display_backend;
 mod error_handling_ctx;
 mod dynval;
-mod format_diagnostic;
 mod geometry;
 mod ipc_server;
 mod opts;
