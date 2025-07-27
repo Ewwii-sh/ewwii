@@ -32,7 +32,7 @@ pub fn initialize_server<B: DisplayBackend>(
 
     log::info!("Loading paths: {}", &paths);
 
-    let read_config = config::read_from_eww_paths(&paths);
+    let read_config = config::read_from_ewwii_paths(&paths);
 
     let ewwii_config = match read_config {
         Ok(config) => config,

@@ -20,7 +20,7 @@ use super::script_var;
 
 /// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_eww_paths(eww_paths: &EwwPaths) -> Result<EwwConfig> {
+pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwConfig> {
     error_handling_ctx::clear_files();
     EwwConfig::read_from_dir(&mut error_handling_ctx::FILE_DATABASE.write().unwrap(), eww_paths)
 }
