@@ -1,3 +1,3 @@
-pub mod eww_config;
+pub mod ewwii_config;
 pub mod scss;
-pub use eww_config::*;
+pub use ewwii_config::*;

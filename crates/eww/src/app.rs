@@ -113,7 +113,7 @@ impl EwwWindow {
 
 pub struct App<B: DisplayBackend> {
     pub scope_graph: Rc<RefCell<ScopeGraph>>,
-    pub eww_config: config::EwwConfig,
+    pub ewwii_config: config::EwwConfig,
     /// Map of all currently open windows to their unique IDs
     /// If no specific ID was specified whilst starting the window,
     /// it will be the same as the window name.
@@ -139,7 +139,7 @@ impl<B: DisplayBackend> std::fmt::Debug for App<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("App")
             .field("scope_graph", &*self.scope_graph.borrow())
-            .field("eww_config", &self.eww_config)
+            .field("ewwii_config", &self.ewwii_config)
             .field("open_windows", &self.open_windows)
             .field("failed_windows", &self.failed_windows)
             .field("window_arguments", &self.instance_id_to_args)
@@ -300,7 +300,7 @@ impl<B: DisplayBackend> App<B> {
                 }
             }
             DaemonCommand::ListWindows(sender) => {
-                let output = self.eww_config.get_windows().keys().join("\n");
+                let output = self.ewwii_config.get_windows().keys().join("\n");
                 sender.send_success(output)?
             }
             DaemonCommand::ListActiveWindows(sender) => {
@@ -339,11 +339,11 @@ impl<B: DisplayBackend> App<B> {
     /// Thus, when a variable changes, the run-while conditions of all variables
     /// that mention the changed variable need to be reevaluated and reapplied.
     fn apply_run_while_expressions_mentioning(&mut self, name: &VarName) {
-        let mentioning_vars = match self.eww_config.get_run_while_mentions_of(name) {
+        let mentioning_vars = match self.ewwii_config.get_run_while_mentions_of(name) {
             Some(x) => x,
             None => return,
         };
-        let mentioning_vars = mentioning_vars.iter().filter_map(|name| self.eww_config.get_script_var(name).ok());
+        let mentioning_vars = mentioning_vars.iter().filter_map(|name| self.ewwii_config.get_script_var(name).ok());
         for var in mentioning_vars {
             if let ScriptVarDefinition::Poll(poll_var) = var {
                 let scope_graph = self.scope_graph.borrow();
@@ -411,7 +411,7 @@ impl<B: DisplayBackend> App<B> {
         let open_result: Result<_> = (|| {
             let window_name: &str = &window_args.window_name;
 
-            let window_def = self.eww_config.get_window(window_name)?.clone();
+            let window_def = self.ewwii_config.get_window(window_name)?.clone();
             assert_eq!(window_def.name, window_name, "window definition name did not equal the called window");
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
@@ -429,7 +429,7 @@ impl<B: DisplayBackend> App<B> {
 
             let root_widget = crate::widgets::build_widget::build_gtk_widget(
                 &mut self.scope_graph.borrow_mut(),
-                Rc::new(self.eww_config.get_widget_definitions().clone()),
+                Rc::new(self.ewwii_config.get_widget_definitions().clone()),
                 window_scope,
                 window_def.widget,
                 None,
@@ -445,7 +445,7 @@ impl<B: DisplayBackend> App<B> {
             // we can just start script vars that are already running without causing issues
             // TODO maybe this could be handled by having a track_newly_used_variables function in the scope tree?
             for used_var in self.scope_graph.borrow().variables_used_in_self_or_subscopes_of(eww_window.scope_index) {
-                if let Ok(script_var) = self.eww_config.get_script_var(&used_var) {
+                if let Ok(script_var) = self.ewwii_config.get_script_var(&used_var) {
                     self.script_var_handler.add(script_var.clone());
                 }
             }
@@ -523,8 +523,8 @@ impl<B: DisplayBackend> App<B> {
 
         log::trace!("loading config: {:#?}", config);
 
-        self.eww_config = config;
-        self.scope_graph.borrow_mut().clear(self.eww_config.generate_initial_state()?);
+        self.ewwii_config = config;
+        self.scope_graph.borrow_mut().clear(self.ewwii_config.generate_initial_state()?);
 
         let open_window_ids: Vec<String> =
             self.open_windows.keys().cloned().chain(self.failed_windows.iter().cloned()).dedup().collect();
