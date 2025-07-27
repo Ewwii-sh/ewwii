@@ -44,6 +44,7 @@ pub struct EwwConfig {
 pub struct WindowDefinition {
     name: String,
     props: Map,
+    root_widget: WidgetNode,
 }
 
 impl EwwConfig {
@@ -78,15 +79,17 @@ impl EwwConfig {
                 tokio_rt.spawn(iirhai_consumer(rx));
 
                 let mut window_definitions = HashMap::new();
+                let mut window_child_definitions = HashMap::new();
 
                 if let WidgetNode::Enter(children) = config_tree {
                     for node in children {
-                        if let WidgetNode::DefWindow { name, props, .. } = node {
-                            let def = WindowDefinition {
+                        if let WidgetNode::DefWindow { name, props, widget } = node {
+                            let win_def = WindowDefinition {
                                 name: name.clone(),
                                 props: props.clone(),
+                                node: widget.clone()
                             };
-                            window_definitions.insert(name.clone(), def);
+                            window_definitions.insert(name.clone(), win_def);
                         }
                     }
                 } else {
