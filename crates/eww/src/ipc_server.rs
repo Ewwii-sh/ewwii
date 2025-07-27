@@ -71,8 +71,8 @@ async fn read_ewwii_action_from_stream(stream_read: &'_ mut tokio::net::unix::Re
 
 /// iirhai ipc
 
-pub async fn run_iirhai_server(socket_path: PathBuf, config_path: PathBuf) -> anyhow::Result<()> {
-    let daemon = IIRhaiDaemon::new(socket_path.clone(), config_path);
+pub async fn run_iirhai_server(socket_path: PathBuf,) -> anyhow::Result<()> {
+    let daemon = IIRhaiDaemon::new(socket_path.clone());
 
     // Run the server in the background
     tokio::spawn(async move {
@@ -89,4 +89,13 @@ pub async fn read_iirhai_line_from_stream(stream_read: &mut ReadHalf<UnixStream>
     let mut line = String::new();
     buf.read_line(&mut line).await?;
     serde_json::from_str(&line.trim()).context("Failed to parse JSON message")
+}
+
+pub async fn send_command_to_iirhai_ipc(stream_write: &mut WriteHalf<UnixStream>, message_str: String) -> Result<opts::ActionWithServer> {
+    let message_byte = message_str.as_bytes();
+    if let Err(e) = writer.write_all(message_byte).await {
+        eprintln!("Failed to write to iirhai IPC: {}", e);
+    } else {
+        log::info!("Message sent successfully.");
+    }
 }
