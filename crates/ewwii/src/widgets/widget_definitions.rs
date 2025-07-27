@@ -4,6 +4,7 @@ use crate::{
     def_widget, enum_parse, error_handling_ctx,
     util::{self, list_difference},
     widgets::{build_widget::build_gtk_widget, systray},
+    gen_diagnostic,
 };
 use anyhow::{anyhow, Context, Result};
 use codespan_reporting::diagnostic::Severity;
