@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use std::time::Duration;
 use std::path::PathBuf;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, AsyncBufReadExt, ReadHalf},
+    io::{AsyncReadExt, AsyncWriteExt, AsyncBufReadExt, ReadHalf, WriteHalf},
     sync::mpsc::*,
     net::UnixStream,
 };
@@ -93,7 +93,7 @@ pub async fn read_iirhai_line_from_stream(stream_read: &mut ReadHalf<UnixStream>
 
 pub async fn send_command_to_iirhai_ipc(stream_write: &mut WriteHalf<UnixStream>, message_str: String) -> Result<opts::ActionWithServer> {
     let message_byte = message_str.as_bytes();
-    if let Err(e) = writer.write_all(message_byte).await {
+    if let Err(e) = stream_write.write_all(message_byte).await {
         eprintln!("Failed to write to iirhai IPC: {}", e);
     } else {
         log::info!("Message sent successfully.");

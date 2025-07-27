@@ -17,12 +17,17 @@ use crate::{
 
 use iirhai::{
     parser::ParseConfig,
+    widgetnode::WidgetNode,
 };
 
 use tokio::{
     runtime::Runtime,
     net::UnixStream,
     sync::mpsc
+};
+
+use super::iirhai_structs::{
+    WindowDefinition,
 };
 
 /// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`],
@@ -48,7 +53,7 @@ impl EwwConfig {
 
         // get the iirhai widget tree
         let config_parser = ParseConfig::new();
-        let config_tree = config_parser.parse_widget_from_file(config_path)?;
+        let config_tree = config_parser.parse_widget_from_file(rhai_path)?;
 
         // Create mpsc channel
         let (tx, rx) = mpsc::channel::<String>(32);
