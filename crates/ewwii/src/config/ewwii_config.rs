@@ -104,6 +104,16 @@ impl EwwConfig {
     pub fn get_windows(&self) -> &HashMap<String, WindowDefinition> {
         &self.windows
     }
+
+    pub fn get_window(&self, name: &str) -> Result<&WindowDefinition> {
+        self.windows.get(name).with_context(|| {
+            format!(
+                "No window named '{}' exists in config.\nThis may also be caused by your config failing to load properly, \
+                 please check for any other errors in that case.",
+                name
+            )
+        })
+    }
 }
 
 // channel that reads messages from 'run_ipc_reader'
