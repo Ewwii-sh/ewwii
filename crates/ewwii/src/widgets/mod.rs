@@ -5,6 +5,7 @@ pub mod circular_progressbar;
 pub mod graph;
 mod systray;
 pub mod transform;
+pub mod widget_definitions;
 pub mod window;
 
 /// Run a command that was provided as an attribute.

@@ -842,6 +842,7 @@ dependencies = [
  "serde_json",
  "simple-signal",
  "sysinfo",
+ "thiserror",
  "tokio",
  "tokio-util",
  "unescape",
