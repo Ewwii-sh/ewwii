@@ -7,7 +7,7 @@ use crate::{
 use anyhow::{anyhow, Result};
 use app::DaemonCommand;
 
-use eww_shared_util::VarName;
+use ewwii_shared_util::VarName;
 use nix::{
     sys::signal,
     unistd::{setpgid, Pid},

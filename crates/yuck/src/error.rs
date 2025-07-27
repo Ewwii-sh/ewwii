@@ -3,7 +3,7 @@ use crate::{
     parser::{lexer, parse_error},
 };
 use codespan_reporting::diagnostic;
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 use simplexpr::dynval;
 use thiserror::Error;
 

@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use eww_shared_util::VarName;
+use ewwii_shared_util::VarName;
 use simplexpr::dynval::DynVal;
 use std::{
     collections::{HashMap, HashSet},

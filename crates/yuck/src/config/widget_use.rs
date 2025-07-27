@@ -10,7 +10,7 @@ use crate::{
         from_ast::{FromAst, FromAstElementContent},
     },
 };
-use eww_shared_util::{AttrName, Span, Spanned, VarName};
+use ewwii_shared_util::{AttrName, Span, Spanned, VarName};
 
 use super::attributes::Attributes;
 

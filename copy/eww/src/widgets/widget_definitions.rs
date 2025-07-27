@@ -7,7 +7,7 @@ use crate::{
 };
 use anyhow::{anyhow, Context, Result};
 use codespan_reporting::diagnostic::Severity;
-use eww_shared_util::Spanned;
+use ewwii_shared_util::Spanned;
 
 use gdk::{ModifierType, NotifyType};
 use glib::translate::FromGlib;

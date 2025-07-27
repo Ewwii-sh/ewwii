@@ -12,7 +12,7 @@ homepage = "https://github.com/elkowar/eww"
 build = "build.rs"
 
 [dependencies]
-eww_shared_util.workspace = true
+ewwii_shared_util.workspace = true
 
 bytesize.workspace = true
 cached.workspace = true

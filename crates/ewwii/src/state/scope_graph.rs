@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Context, Result};
-use eww_shared_util::{AttrName, VarName};
+use ewwii_shared_util::{AttrName, VarName};
 use simplexpr::{dynval::DynVal, SimplExpr};
 use tokio::sync::mpsc::UnboundedSender;
 

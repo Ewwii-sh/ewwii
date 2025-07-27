@@ -1,9 +1,9 @@
 use crate::dynval::DynVal;
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use eww_shared_util::VarName;
+use ewwii_shared_util::VarName;
 
 #[rustfmt::skip]
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug, strum::EnumString, strum::Display)]

@@ -1,4 +1,4 @@
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ParseError {

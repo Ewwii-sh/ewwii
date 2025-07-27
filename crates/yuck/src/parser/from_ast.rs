@@ -1,6 +1,6 @@
 use super::{ast::Ast, ast_iterator::AstIterator};
 use crate::{error::*, format_diagnostic::ToDiagnostic, gen_diagnostic};
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 
 use simplexpr::ast::SimplExpr;
 

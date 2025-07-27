@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use simplexpr::ast::SimplExpr;
 
-use eww_shared_util::{Span, Spanned, VarName};
+use ewwii_shared_util::{Span, Spanned, VarName};
 use std::fmt::Display;
 
 use super::ast_iterator::AstIterator;

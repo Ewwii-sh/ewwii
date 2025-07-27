@@ -2,7 +2,7 @@
 // I am losing my sanity replacing it!
 // I wonder how honorificabilitudinitatibus will I feel after replacing yuck...
 use anyhow::{bail, Result};
-use eww_shared_util::VarName;
+use ewwii_shared_util::VarName;
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -17,7 +17,7 @@ use crate::{
 
 use iirhai::{
     parser::ParseConfig,
-}
+};
 
 use tokio::{
     runtime::Runtime,
@@ -72,10 +72,10 @@ impl EwwConfig {
                 let mut window_definitions = HashMap::new();
 
                 for node in config_tree {
-                    if let WidgetNode::DefWindow { name, props, _ } = node {
+                    if let WidgetNode::DefWindow { name, props, .. } = node {
                         let def = WindowDefinition {
-                            name.clone(),
-                            props.clone(),
+                            name: name.clone(),
+                            props: props.clone(),
                         };
                         window_definitions.insert(name.clone(), def);
                     }

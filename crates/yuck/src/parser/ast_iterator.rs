@@ -6,7 +6,7 @@ use crate::{
     ast_error::AstError,
     config::attributes::{AttrEntry, Attributes},
 };
-use eww_shared_util::{AttrName, Span, Spanned, VarName};
+use ewwii_shared_util::{AttrName, Span, Spanned, VarName};
 
 /// Iterator over [`crate::parser::ast::Ast`] nodes which allows to explicitly expect specific types of items
 pub struct AstIterator<I: Iterator<Item = Ast>> {
@@ -19,7 +19,7 @@ macro_rules! return_or_put_back {
         $(
             pub fn $name(&mut self) -> Result<$t, AstError> {
                 let expr_type = $expr_type;
-                use eww_shared_util::Spanned;
+                use ewwii_shared_util::Spanned;
                 match self.expect_any()? {
                     $p => Ok($ret),
                     other => {
