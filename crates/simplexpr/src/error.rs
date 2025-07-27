@@ -1,5 +1,5 @@
 use crate::parser::lexer::{self, LexicalError};
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 
 #[derive(thiserror::Error, Debug)]
 #[error("Error parsing expression: {source}")]

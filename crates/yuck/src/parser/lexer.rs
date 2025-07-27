@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use regex::{Regex, RegexSet};
 
 use super::parse_error;
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Token {
@@ -179,7 +179,7 @@ impl Iterator for Lexer {
 mod test {
 
     use super::*;
-    use eww_shared_util::snapshot_string;
+    use ewwii_shared_util::snapshot_string;
     use itertools::Itertools;
 
     macro_rules! v {

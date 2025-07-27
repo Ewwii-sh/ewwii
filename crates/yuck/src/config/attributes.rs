@@ -6,7 +6,7 @@ use crate::{
     error::{DiagError, DiagResult},
     parser::{ast::Ast, from_ast::FromAst},
 };
-use eww_shared_util::{AttrName, Span, Spanned};
+use ewwii_shared_util::{AttrName, Span, Spanned};
 
 #[derive(Debug, thiserror::Error)]
 pub enum AttrError {

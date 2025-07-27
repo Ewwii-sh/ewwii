@@ -8,7 +8,7 @@ use crate::{
         from_ast::{FromAst, FromAstElementContent},
     },
 };
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 
 use super::{attributes::AttrSpec, widget_use::WidgetUse};
 

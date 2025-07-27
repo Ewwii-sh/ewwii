@@ -9,7 +9,7 @@ use crate::{
         from_ast::{FromAst, FromAstElementContent},
     },
 };
-use eww_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span, VarName};
 use simplexpr::{
     dynval::{DynVal, FromDynVal},
     eval::EvalError,

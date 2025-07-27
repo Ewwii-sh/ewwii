@@ -1,4 +1,4 @@
-use eww_shared_util::{Span, Spanned};
+use ewwii_shared_util::{Span, Spanned};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::{convert::TryFrom, fmt, iter::FromIterator, str::FromStr};

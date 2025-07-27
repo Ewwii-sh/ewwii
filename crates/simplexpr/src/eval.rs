@@ -8,7 +8,7 @@ use crate::{
     ast::{AccessType, BinOp, SimplExpr, UnaryOp},
     dynval::{ConversionError, DynVal},
 };
-use eww_shared_util::{get_locale, Span, Spanned, VarName};
+use ewwii_shared_util::{get_locale, Span, Spanned, VarName};
 use std::{
     collections::HashMap,
     convert::{Infallible, TryFrom, TryInto},

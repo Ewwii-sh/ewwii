@@ -1,4 +1,4 @@
-use eww_shared_util::{AttrName, Span};
+use ewwii_shared_util::{AttrName, Span};
 
 use crate::{format_diagnostic::ToDiagnostic, gen_diagnostic, parser::ast::AstType};
 
@@ -44,7 +44,7 @@ impl ToDiagnostic for AstError {
     }
 }
 
-impl eww_shared_util::Spanned for AstError {
+impl ewwii_shared_util::Spanned for AstError {
     fn span(&self) -> Span {
         match self {
             AstError::NoMoreElementsExpected(span) => *span,
