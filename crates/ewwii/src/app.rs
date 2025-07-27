@@ -74,7 +74,6 @@ pub enum DaemonCommand {
 #[derive(Debug)]
 pub struct EwwWindow {
     pub name: String,
-    pub scope_index: ScopeIndex,
     pub gtk_window: Window,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
@@ -254,17 +253,6 @@ impl<B: DisplayBackend> App<B> {
                 // Ignore sending errors, as the channel might already be closed
                 let _ = sender.respond_with_error_list(errors);
             }
-            DaemonCommand::PrintState { all, sender } => {
-                let used_globals_names = scope_graph.currently_used_globals();
-                let output = scope_graph
-                    .global_scope()
-                    .data
-                    .iter()
-                    .filter(|(key, _)| all || used_globals_names.contains(*key))
-                    .map(|(key, value)| format!("{}: {}", key, value))
-                    .join("\n");
-                sender.send_success(output)?
-            }
             DaemonCommand::ListWindows(sender) => {
                 let output = self.ewwii_config.get_windows().keys().join("\n");
                 sender.send_success(output)?
@@ -305,11 +293,6 @@ impl<B: DisplayBackend> App<B> {
         let scope_index = eww_window.scope_index;
         eww_window.close();
 
-        for unused_var in unused_variables {
-            log::debug!("stopping script-var {}", &unused_var);
-            self.script_var_handler.stop_for_variable(unused_var.clone());
-        }
-
         if auto_reopen {
             self.failed_windows.insert(instance_id.to_string());
             // There might be an alternative monitor available already, so try to re-open it immediately.
@@ -345,8 +328,12 @@ impl<B: DisplayBackend> App<B> {
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
+            // TODO replace this
             let root_widget = crate::widgets::build_widget::build_gtk_widget(
+                &mut self.scope_graph.borrow_mut(),
                 Rc::new(self.ewwii_config.get_widget_definitions().clone()),
+                window_scope,
+                window_def.widget,
                 None,
             )?;
 
@@ -422,11 +409,6 @@ impl<B: DisplayBackend> App<B> {
     /// Load the given configuration, reloading all script-vars and attempting to reopen all windows that where opened.
     pub fn load_config(&mut self, config: config::EwwConfig) -> Result<()> {
         log::info!("Reloading windows");
-
-        self.script_var_handler.stop_all();
-        let old_handler = std::mem::replace(&mut self.script_var_handler, script_var_handler::init(self.app_evt_send.clone()));
-        old_handler.join_thread();
-
         log::trace!("loading config: {:#?}", config);
 
         self.ewwii_config = config;
