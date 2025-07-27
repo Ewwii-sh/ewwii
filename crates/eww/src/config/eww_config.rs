@@ -81,7 +81,6 @@ impl EwwConfig {
                     }
                 }
 
-
                 Ok(EwwConfig {
                     windows: window_definitions,
                 })
