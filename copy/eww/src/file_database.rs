@@ -1,3 +1,4 @@
+
 // TODO: MAJOR Yuck found, have to replace with lua
 
 use std::collections::HashMap;
@@ -41,7 +42,7 @@ impl FileDatabase {
 }
 
 impl YuckFileProvider for FileDatabase {
-    fn load_yuck_file(&mut self, path: std::path::PathBuf) -> Result<(Span, Vec<Ast>), FilesError> {
+    fn load_rhai_file(&mut self, path: std::path::PathBuf) -> Result<(Span, Vec<Ast>), FilesError> {
         let file_content = std::fs::read_to_string(&path)?;
         let line_starts = codespan_reporting::files::line_starts(&file_content).collect();
         let code_file = CodeFile {
@@ -54,7 +55,7 @@ impl YuckFileProvider for FileDatabase {
         Ok(yuck::parser::parse_toplevel(file_id, file_content)?)
     }
 
-    fn load_yuck_str(&mut self, name: String, content: String) -> Result<(Span, Vec<Ast>), DiagError> {
+    fn load_rhai_str(&mut self, name: String, content: String) -> Result<(Span, Vec<Ast>), DiagError> {
         let file_id = self.insert_string(name, content.clone())?;
         yuck::parser::parse_toplevel(file_id, content)
     }

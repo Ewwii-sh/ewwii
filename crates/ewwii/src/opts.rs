@@ -85,14 +85,6 @@ pub enum ActionWithServer {
     #[clap(name = "ping")]
     Ping,
 
-    /// Update the value of a variable, in a running ewwii instance
-    #[clap(name = "update", alias = "u")]
-    Update {
-        /// variable_name="new_value"-pairs that will be updated
-        #[arg(value_parser = parse_var_update_arg)]
-        mappings: Vec<(VarName, DynVal)>,
-    },
-
     /// Open the GTK debugger
     #[command(name = "inspector", alias = "debugger")]
     OpenInspector,

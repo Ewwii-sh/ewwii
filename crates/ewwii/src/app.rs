@@ -6,7 +6,6 @@ use crate::{
     error_handling_ctx,
     gtk::prelude::{ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt},
     paths::EwwPaths,
-    state::scope_graph::{ScopeGraph, ScopeIndex},
     widgets::window::Window,
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
@@ -95,7 +94,6 @@ impl EwwWindow {
 }
 
 pub struct App<B: DisplayBackend> {
-    pub scope_graph: Rc<RefCell<ScopeGraph>>,
     pub ewwii_config: config::EwwConfig,
     /// Map of all currently open windows to their unique IDs
     /// If no specific ID was specified whilst starting the window,
@@ -121,7 +119,6 @@ pub struct App<B: DisplayBackend> {
 impl<B: DisplayBackend> std::fmt::Debug for App<B> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("App")
-            .field("scope_graph", &*self.scope_graph.borrow())
             .field("ewwii_config", &self.ewwii_config)
             .field("open_windows", &self.open_windows)
             .field("failed_windows", &self.failed_windows)
@@ -164,11 +161,6 @@ impl<B: DisplayBackend> App<B> {
             DaemonCommand::NoOp => {}
             DaemonCommand::OpenInspector => {
                 gtk::Window::set_interactive_debugging(true);
-            }
-            DaemonCommand::UpdateVars(mappings) => {
-                for (var_name, new_value) in mappings {
-                    self.update_global_variable(var_name, new_value);
-                }
             }
             DaemonCommand::ReloadConfigAndCss(sender) => {
                 // Wait for all monitor models to be set. When a new monitor gets added, this
@@ -263,7 +255,6 @@ impl<B: DisplayBackend> App<B> {
                 let _ = sender.respond_with_error_list(errors);
             }
             DaemonCommand::PrintState { all, sender } => {
-                let scope_graph = self.scope_graph.borrow();
                 let used_globals_names = scope_graph.currently_used_globals();
                 let output = scope_graph
                     .global_scope()
@@ -301,40 +292,6 @@ impl<B: DisplayBackend> App<B> {
         let _ = crate::application_lifecycle::send_exit();
     }
 
-    fn update_global_variable(&mut self, name: VarName, value: DynVal) {
-        let result = self.scope_graph.borrow_mut().update_global_value(&name, value);
-        if let Err(err) = result {
-            error_handling_ctx::print_error(err);
-        }
-
-        self.apply_run_while_expressions_mentioning(&name);
-    }
-
-    /// Variables may be referenced in defpoll :run-while expressions.
-    /// Thus, when a variable changes, the run-while conditions of all variables
-    /// that mention the changed variable need to be reevaluated and reapplied.
-    fn apply_run_while_expressions_mentioning(&mut self, name: &VarName) {
-        let mentioning_vars = match self.ewwii_config.get_run_while_mentions_of(name) {
-            Some(x) => x,
-            None => return,
-        };
-        let mentioning_vars = mentioning_vars.iter().filter_map(|name| self.ewwii_config.get_script_var(name).ok());
-        for var in mentioning_vars {
-            if let ScriptVarDefinition::Poll(poll_var) = var {
-                let scope_graph = self.scope_graph.borrow();
-                let run_while_result = scope_graph
-                    .evaluate_simplexpr_in_scope(scope_graph.root_index, &poll_var.run_while_expr)
-                    .map(|v| v.as_bool());
-                match run_while_result {
-                    Ok(Ok(true)) => self.script_var_handler.add(var.clone()),
-                    Ok(Ok(false)) => self.script_var_handler.stop_for_variable(poll_var.name.clone()),
-                    Ok(Err(err)) => error_handling_ctx::print_error(anyhow!(err)),
-                    Err(err) => error_handling_ctx::print_error(anyhow!(err)),
-                };
-            }
-        }
-    }
-
     /// Close a window and do all the required cleanups in the scope_graph and script_var_handler
     fn close_window(&mut self, instance_id: &str, auto_reopen: bool) -> Result<()> {
         if let Some(old_abort_send) = self.window_close_timer_abort_senders.remove(instance_id) {
@@ -348,9 +305,6 @@ impl<B: DisplayBackend> App<B> {
         let scope_index = eww_window.scope_index;
         eww_window.close();
 
-        self.scope_graph.borrow_mut().remove_scope(scope_index);
-
-        let unused_variables = self.scope_graph.borrow().currently_unused_globals();
         for unused_var in unused_variables {
             log::debug!("stopping script-var {}", &unused_var);
             self.script_var_handler.stop_for_variable(unused_var.clone());
@@ -391,22 +345,8 @@ impl<B: DisplayBackend> App<B> {
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
-            let root_index = self.scope_graph.borrow().root_index;
-
-            let scoped_vars_literal = initiator.get_scoped_vars().into_iter().map(|(k, v)| (k, SimplExpr::Literal(v))).collect();
-
-            let window_scope = self.scope_graph.borrow_mut().register_new_scope(
-                instance_id.to_string(),
-                Some(root_index),
-                root_index,
-                scoped_vars_literal,
-            )?;
-
             let root_widget = crate::widgets::build_widget::build_gtk_widget(
-                &mut self.scope_graph.borrow_mut(),
                 Rc::new(self.ewwii_config.get_widget_definitions().clone()),
-                window_scope,
-                window_def.widget,
                 None,
             )?;
 
@@ -415,15 +355,6 @@ impl<B: DisplayBackend> App<B> {
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut eww_window = initialize_window::<B>(&initiator, monitor, root_widget, window_scope)?;
             eww_window.gtk_window.style_context().add_class(window_name);
-
-            // initialize script var handlers for variables. As starting a scriptvar with the script_var_handler is idempodent,
-            // we can just start script vars that are already running without causing issues
-            // TODO maybe this could be handled by having a track_newly_used_variables function in the scope tree?
-            for used_var in self.scope_graph.borrow().variables_used_in_self_or_subscopes_of(eww_window.scope_index) {
-                if let Ok(script_var) = self.ewwii_config.get_script_var(&used_var) {
-                    self.script_var_handler.add(script_var.clone());
-                }
-            }
 
             eww_window.destroy_event_handler_id = Some(eww_window.gtk_window.connect_destroy({
                 let app_evt_sender = self.app_evt_send.clone();
@@ -499,7 +430,6 @@ impl<B: DisplayBackend> App<B> {
         log::trace!("loading config: {:#?}", config);
 
         self.ewwii_config = config;
-        self.scope_graph.borrow_mut().clear(self.ewwii_config.generate_initial_state()?);
 
         let open_window_ids: Vec<String> =
             self.open_windows.keys().cloned().chain(self.failed_windows.iter().cloned()).dedup().collect();
