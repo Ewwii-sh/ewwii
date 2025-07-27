@@ -14,6 +14,7 @@ use crate::{
     error_handling_ctx,
     dynval::DynVal,
     widgets::widget_definitions,
+    gen_diagnostic,
 };
 
 use super::widget_definitions::{resolve_orientable_attrs, resolve_range_attrs, resolve_widget_attrs};
