@@ -8,7 +8,6 @@ use crate::{
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
     dynval::DynVal,
-    format_diagnostic,
     *,
 };
 use anyhow::anyhow;

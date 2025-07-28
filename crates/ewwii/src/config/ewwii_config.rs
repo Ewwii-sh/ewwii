@@ -1,7 +1,7 @@
 // WHY THE HECK IS YUCK SO HARD TO REPLACE?
 // I am losing my sanity replacing it!
 // I wonder how honorificabilitudinitatibus will I feel after replacing yuck...
-use anyhow::{bail, Result};
+use anyhow::{bail, Result, Context};
 use std::{
     collections::HashMap,
     path::PathBuf,
@@ -29,8 +29,7 @@ use tokio::{
 /// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
 pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwConfig> {
-    error_handling_ctx::clear_files();
-    EwwConfig::read_from_dir(&mut error_handling_ctx::FILE_DATABASE.write().unwrap(), eww_paths)
+    EwwConfig::read_from_dir(eww_paths)
 }
 
 /// Ewwii configuration structure.
@@ -85,7 +84,7 @@ impl EwwConfig {
                             let win_def = WindowDefinition {
                                 name: name.clone(),
                                 props: props.clone(),
-                                root_widget: node.clone()
+                                root_widget: *node.clone()
                             };
                             window_definitions.insert(name.clone(), win_def);
                         }
