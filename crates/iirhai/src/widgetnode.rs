@@ -2,7 +2,7 @@ use rhai::Map;
 
 #[derive(Debug, Clone)]
 pub enum WidgetNode {
-    Label(String),
+    Label { props: Map },
     Box { props: Map, children: Vec<WidgetNode> },
     CenterBox { props: Map, children: Vec<WidgetNode> },
     Button { props: Map, children: Vec<WidgetNode> },
