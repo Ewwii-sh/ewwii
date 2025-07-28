@@ -32,9 +32,9 @@ fn widget_to_json(widget: &WidgetNode) -> Value {
             "props": props.iter().map(|(k, v)| (k.to_string(), dynamic_to_json(v))).collect::<serde_json::Map<_, _>>(),
             "children": children.iter().map(widget_to_json).collect::<Vec<_>>()
         }),
-        WidgetNode::Label(string) => json!({
+        WidgetNode::Label { props } => json!({
             "type": "label",
-            "string": string
+            "props": props.iter().map(|(k, v)| (k.to_string(), dynamic_to_json(v))).collect::<serde_json::Map<_, _>>(),
         }),
         WidgetNode::CenterBox { props, children } => json!({
             "type": "center_box",

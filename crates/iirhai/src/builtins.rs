@@ -5,8 +5,10 @@ pub fn register_all_widgets(engine: &mut Engine) {
     engine.register_type::<WidgetNode>();
 
     // Primitive widgets
-    engine.register_fn("label", |text: &str| {
-        WidgetNode::Label(text.to_string())
+    engine.register_fn("label", |props: Map| {
+        WidgetNode::Label {
+            props,
+        }
     });
 
     engine.register_fn("box", |props: Map, children: Array| {
@@ -24,22 +26,10 @@ pub fn register_all_widgets(engine: &mut Engine) {
     });
 
     engine.register_fn("button", |props: Map, children: Array| {
-        let children = children
-            .into_iter()
-            .map(|v| {
-                if v.is::<WidgetNode>() {
-                    v.cast::<WidgetNode>()
-                } else if v.is::<String>() {
-                    WidgetNode::Label(v.cast::<String>())
-                } else if v.is::<&str>() {
-                    WidgetNode::Label(v.cast::<String>())
-                } else {
-                    panic!("Unsupported child type in button");
-                }
-            })
-            .collect::<Vec<_>>();
-
-        WidgetNode::Button { props, children }
+        WidgetNode::Button { 
+            props, 
+            children: children.into_iter().map(|v| v.cast()).collect(), 
+        }
     });
 
 
