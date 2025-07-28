@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     app,
     daemon_response::{self, DaemonResponse, DaemonResponseSender},
+    dynval::DynVal,
 };
 
 /// Struct that gets generated from `RawOpt`.
@@ -287,7 +288,7 @@ where
     (f(sender), Some(recv))
 }
 
-fn parse_duration(s: &str) -> Result<std::time::Duration, simplexpr::dynval::ConversionError> {
+fn parse_duration(s: &str) -> Result<std::time::Duration, crate::dynval::ConversionError> {
     DynVal::from_string(s.to_owned()).as_duration()
 }
 
