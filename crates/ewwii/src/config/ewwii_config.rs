@@ -48,7 +48,7 @@ pub struct WindowDefinition {
 
 impl EwwConfig {
     /// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`], reading the main config file.
-    pub fn read_from_dir(files: &mut FileDatabase, eww_paths: &EwwPaths) -> Result<Self> {
+    pub fn read_from_dir(eww_paths: &EwwPaths) -> Result<Self> {
         let rhai_path = eww_paths.get_rhai_path();
         if !rhai_path.exists() {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
@@ -78,7 +78,6 @@ impl EwwConfig {
                 tokio_rt.spawn(iirhai_consumer(rx));
 
                 let mut window_definitions = HashMap::new();
-                let mut window_child_definitions = HashMap::new();
 
                 if let WidgetNode::Enter(children) = config_tree {
                     for node in children {
