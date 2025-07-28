@@ -1,4 +1,4 @@
-# Eww - Widgets for everyone!
+# Ewwii - Widgets for everyone!
 
 Ewwii (ElKowar's Wacky Widgets improved interface, pronounced with sufficient amounts of disgust)
 is a widget system made in [Rust](https://www.rust-lang.org/),
