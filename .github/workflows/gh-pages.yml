@@ -2,7 +2,7 @@ name: Build and deploy Github pages
 on:
     push:
         branches:
-            - master
+            - main
         paths:
             - "docs/**"
             - "gen-docs.ts"
@@ -28,7 +28,7 @@ jobs:
             - name: build mdBook page
               uses: peaceiris/actions-mdbook@v1
               with:
-                  mdbook-version: '0.4.8'
+                  mdbook-version: "0.4.8"
             - run: mdbook build docs
 
             - name: Deploy

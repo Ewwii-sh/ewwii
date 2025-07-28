@@ -9,4 +9,4 @@ title = "eww documentation"
 [output.html]
 default-theme = "ayu"
 no-section-label = true
-git-repository-url = "https://github.com/elkowar/eww/tree/master/docs"
+git-repository-url = "https://github.com/byson94/ewwii/tree/master/docs"
