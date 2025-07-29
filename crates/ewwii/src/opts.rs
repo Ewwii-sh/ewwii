@@ -7,6 +7,11 @@ use crate::{
     app,
     daemon_response::{self, DaemonResponse, DaemonResponseSender},
     dynval::DynVal,
+    window::{
+        monitor::MonitorIdentifier,
+        coords::Coords,
+        window_geometry::AnchorPoint
+    },
 };
 
 /// Struct that gets generated from `RawOpt`.
