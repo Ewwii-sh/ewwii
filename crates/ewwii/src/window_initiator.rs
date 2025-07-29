@@ -3,8 +3,12 @@ use ewwii_shared_util::{AttrName, VarName};
 use std::collections::HashMap;
 use rhai::Map;
 
-use crate::window_arguments::WindowArguments;
-use crate::config::WindowDefinition;
+use crate::{
+    window_arguments::WindowArguments,
+    config::WindowDefinition,
+    window::monitor,
+};
+
 /// This stores all the information required to create a window and is created
 /// via combining information from the [`WindowDefinition`] and the [`WindowInitiator`]
 #[derive(Debug, Clone)]
