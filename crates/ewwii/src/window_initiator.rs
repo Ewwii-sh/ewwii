@@ -2,13 +2,18 @@ use anyhow::Result;
 use ewwii_shared_util::{AttrName, VarName};
 use std::collections::HashMap;
 use rhai::Map;
-use crate::window::coords::Coords;
-use crate::window::window_geometry::WindowGeometry;
 
 use crate::{
     window_arguments::WindowArguments,
     config::WindowDefinition,
-    window::monitor,
+    window::{
+        monitor,
+        window_geometry::WindowGeometry,
+        coords::Coords,
+        monitor::MonitorIdentifier,
+        backend_window_options::BackendWindowOptions,
+        window_geometry::AnchorPoint,
+    },
 };
 
 /// This stores all the information required to create a window and is created
