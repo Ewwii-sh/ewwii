@@ -125,8 +125,8 @@ pub enum ActionWithServer {
         duration: Option<std::time::Duration>,
 
         /// Define a variable for the window, i.e.: `--arg "var_name=value"`
-        #[arg(long = "arg", value_parser = parse_var_update_arg)]
-        args: Option<Vec<(VarName, DynVal)>>,
+        // #[arg(long = "arg", value_parser = parse_var_update_arg)]
+        // args: Option<Vec<(VarName, DynVal)>>,
     },
 
     /// Open multiple windows at once.
@@ -138,8 +138,8 @@ pub enum ActionWithServer {
         windows: Vec<(String, String)>,
 
         /// Define a variable for the window, i.e.: `--arg "window_id:var_name=value"`
-        #[arg(long = "arg", value_parser = parse_window_id_args)]
-        args: Vec<(String, VarName, DynVal)>,
+        // #[arg(long = "arg", value_parser = parse_window_id_args)]
+        // args: Vec<(String, VarName, DynVal)>,
 
         /// If a window is already open, close it instead
         #[arg(long = "toggle")]
@@ -213,22 +213,22 @@ fn parse_window_config_and_id(s: &str) -> Result<(String, String)> {
 
 /// Parse a window-id specific variable value declaration with the syntax `window-id:variable_name="new_value"`
 /// into a tuple of `(id, variable_name, new_value)`.
-fn parse_window_id_args(s: &str) -> Result<(String, VarName, DynVal)> {
-    // Parse the = first so we know if an id has not been given
-    let (name, value) = parse_var_update_arg(s)?;
+// fn parse_window_id_args(s: &str) -> Result<(String, VarName, DynVal)> {
+//     // Parse the = first so we know if an id has not been given
+//     let (name, value) = parse_var_update_arg(s)?;
 
-    let (id, var_name) = name.0.split_once(':').unwrap_or(("", &name.0));
+//     let (id, var_name) = name.0.split_once(':').unwrap_or(("", &name.0));
 
-    Ok((id.to_string(), var_name.into(), value))
-}
+//     Ok((id.to_string(), var_name.into(), value))
+// }
 
 /// Split the input string at `=`, parsing the value into a [`DynVal`].
-fn parse_var_update_arg(s: &str) -> Result<(VarName, DynVal)> {
-    let (name, value) = s
-        .split_once('=')
-        .with_context(|| format!("arguments must be in the shape `variable_name=\"new_value\"`, but got: {}", s))?;
-    Ok((name.into(), DynVal::from_string(value.to_owned())))
-}
+// fn parse_var_update_arg(s: &str) -> Result<(VarName, DynVal)> {
+//     let (name, value) = s
+//         .split_once('=')
+//         .with_context(|| format!("arguments must be in the shape `variable_name=\"new_value\"`, but got: {}", s))?;
+//     Ok((name.into(), DynVal::from_string(value.to_owned())))
+// }
 
 impl ActionWithServer {
     pub fn can_start_daemon(&self) -> bool {
