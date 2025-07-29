@@ -1,18 +1,11 @@
 use anyhow::{Result, anyhow, bail};
-use codespan_reporting::diagnostic::Severity;
-use ewwii_shared_util::{AttrName, Spanned};
 use std::path::PathBuf;
 use std::path::Path;
 use iirhai::parser::ParseConfig;
 use std::hash::DefaultHasher;
-use gtk::{
-    gdk::prelude::Cast,
-    prelude::{BoxExt, ContainerExt, WidgetExt},
-    Orientation,
-};
+use gtk::prelude::WidgetExt;
 use itertools::Itertools;
-use maplit::hashmap;
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{collections::HashMap, rc::Rc};
 use tokio::sync::mpsc;
 use tokio::runtime::Runtime;
 use std::hash::Hash;
