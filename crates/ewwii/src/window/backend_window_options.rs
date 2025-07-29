@@ -7,7 +7,7 @@ use crate::{
     enum_parse,
     error::DiagResult,
     parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
-    window::{coords, NumWithUnit},
+    window::{coords, coords::NumWithUnit},
 };
 use ewwii_shared_util::{Span, VarName};
 

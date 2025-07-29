@@ -8,7 +8,7 @@ use std::{fmt, str::FromStr};
 
 use crate::enum_parse;
 use super::window_definition::EnumParseError;
-use crate::window::{Coords, NumWithUnit};
+// use crate::window::coords::{Coords, NumWithUnit};
 
 /// A number with an optional unit (% or px)
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Display, Debug, SmartDefault)]
