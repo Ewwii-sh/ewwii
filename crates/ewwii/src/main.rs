@@ -51,6 +51,7 @@ mod paths;
 mod server;
 mod util;
 mod widgets;
+mod window;
 mod window_arguments;
 mod window_initiator;
 

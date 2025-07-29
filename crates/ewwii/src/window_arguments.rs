@@ -5,7 +5,11 @@ use std::{
     str::FromStr,
 };
 
-use crate::dynval::DynVal;
+use crate::{
+    dynval::DynVal,
+    window::monitor,
+    config::coords::Coords,
+};
 
 fn parse_value_from_args<T: FromStr>(name: &str, args: &mut HashMap<VarName, DynVal>) -> Result<Option<T>, T::Err> {
     args.remove(&VarName(name.to_string())).map(|x| FromStr::from_str(&x.as_string().unwrap())).transpose()
@@ -46,8 +50,8 @@ impl WindowArguments {
         Ok(initiator)
     }
 
-    /// Return a hashmap of all arguments the window was passed and expected, returning
-    /// an error in case required arguments are missing or unexpected arguments are passed.
+    // /// Return a hashmap of all arguments the window was passed and expected, returning
+    // /// an error in case required arguments are missing or unexpected arguments are passed.
     // pub fn get_local_window_variables(&self, window_def: &WindowDefinition) -> Result<HashMap<VarName, DynVal>> {
     //     let expected_args: HashSet<&String> = window_def.expected_args.iter().map(|x| &x.name.0).collect();
     //     let mut local_variables: HashMap<VarName, DynVal> = HashMap::new();

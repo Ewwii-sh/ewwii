@@ -12,7 +12,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use crate::{
     error_handling_ctx,
     dynval::DynVal,
-    widgets::widget_definitions,
+    widgets::widget_definitions::*,
     // gen_diagnostic_macro,
 };
 
@@ -25,11 +25,11 @@ pub fn build_gtk_widget(window_defs: Rc<HashMap<String, WindowDefinition>>) -> R
     let root_node = &def.root_widget;
 
     // build_gtk_widget_from_node(root_node)
-    build_gtk_widget_from_node(root_node)
+    Ok(build_gtk_widget_from_node(root_node))
 }
 
 // TODO: implement the commented lines
-fn build_gtk_widget_from_node(root_node: WidgetNode) {
+fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<(gtk::Widget), Box<dyn std::error::Error>> {
     let gtk_widget = match root_node {
         WidgetNode::Box { props, children } => build_gtk_box(props, children)?.upcast(),
         WidgetNode::CenterBox { props, children } => build_center_box(props, children)?.upcast(),
