@@ -13,6 +13,7 @@ use crate::{
     error_handling_ctx,
     dynval::DynVal,
     widgets::widget_definitions::*,
+    config::WindowDefinition,
     // gen_diagnostic_macro,
 };
 

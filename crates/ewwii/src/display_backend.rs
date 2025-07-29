@@ -34,6 +34,7 @@ mod platform_wayland {
     use super::DisplayBackend;
     use crate::{widgets::window::Window, window_initiator::WindowInitiator};
     use crate::window::backend_window_options::WlWindowFocusable;
+    use crate::window::window_geometry::AnchorAlignment;
     use gtk::gdk;
     use gtk::prelude::*;
     use gtk_layer_shell::{KeyboardMode, LayerShell};
@@ -133,6 +134,8 @@ mod platform_wayland {
 #[cfg(feature = "x11")]
 mod platform_x11 {
     use crate::{widgets::window::Window, window_initiator::WindowInitiator};
+    use crate::window::backend_window_options::Side;
+    use crate::window::backend_window_options::X11WindowType;
     use anyhow::{Context, Result};
     use gdk::Monitor;
     use gtk::gdk;
