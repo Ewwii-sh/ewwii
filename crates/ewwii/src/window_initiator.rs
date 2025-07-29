@@ -1,9 +1,10 @@
 use anyhow::Result;
 use ewwii_shared_util::{AttrName, VarName};
 use std::collections::HashMap;
+use rhai::Map;
 
 use crate::window_arguments::WindowArguments;
-
+use crate::config::WindowDefinition;
 /// This stores all the information required to create a window and is created
 /// via combining information from the [`WindowDefinition`] and the [`WindowInitiator`]
 #[derive(Debug, Clone)]
@@ -17,10 +18,9 @@ pub struct WindowInitiator {
 }
 
 impl WindowInitiator {
+    // pass `EwwConfig::read_from_dir(&eww_paths).windows.into()` here
     pub fn new(window_def: &WindowDefinition, args: &WindowArguments) -> Result<Self> {
-        let vars = args.get_local_window_variables(window_def)?;
-
-        let geometry = match &window_def.geometry {
+        let geometry = match &window_def.props.get("geometry") {
             Some(geo) => Some(geo.eval(&vars)?.override_if_given(args.anchor, args.pos, args.size)),
             None => None,
         };
