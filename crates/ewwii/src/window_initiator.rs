@@ -54,7 +54,7 @@ impl WindowInitiator {
     // }
 }
 
-fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override: bool) -> Result<WindowGeometry> {
+fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bool) -> Result<WindowGeometry> {
     let map = val.clone().cast::<rhai::Map>();
     let mut geom = WindowGeometry {
         pos: Some(Coords::from_map(&map)?),
@@ -62,7 +62,7 @@ fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override: bool) -
         anchor: Some(AnchorPoint::TopLeft),
     };
 
-    if override {
+    if override_geom {
         // You apply CLI args if passed:
         geom = geom.override_if_given(args.anchor, args.pos, args.size);
     }
