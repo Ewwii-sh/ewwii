@@ -8,7 +8,7 @@ use crate::{
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
     dynval::DynVal,
-    config::coords::Coords,
+    window::coords::Coords,
     *,
 };
 use anyhow::anyhow;
