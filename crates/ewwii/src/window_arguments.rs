@@ -8,7 +8,7 @@ use std::{
 use crate::{
     dynval::DynVal,
     window::monitor,
-    config::coords::Coords,
+    window::coords::Coords,
 };
 
 fn parse_value_from_args<T: FromStr>(name: &str, args: &mut HashMap<VarName, DynVal>) -> Result<Option<T>, T::Err> {
