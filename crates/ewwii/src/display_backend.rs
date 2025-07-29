@@ -35,6 +35,7 @@ mod platform_wayland {
     use crate::{widgets::window::Window, window_initiator::WindowInitiator};
     use crate::window::backend_window_options::WlWindowFocusable;
     use crate::window::window_geometry::AnchorAlignment;
+    use crate::window::window_definition::WindowStacking;
     use gtk::gdk;
     use gtk::prelude::*;
     use gtk_layer_shell::{KeyboardMode, LayerShell};
@@ -136,6 +137,7 @@ mod platform_x11 {
     use crate::{widgets::window::Window, window_initiator::WindowInitiator};
     use crate::window::backend_window_options::Side;
     use crate::window::backend_window_options::X11WindowType;
+    use crate::window::window_definition::WindowStacking;
     use anyhow::{Context, Result};
     use gdk::Monitor;
     use gtk::gdk;
