@@ -1,4 +1,7 @@
-use crate::{widgets::window::Window, window_initiator::WindowInitiator};
+use crate::{
+    widgets::window::Window, 
+    window_initiator::WindowInitiator,
+};
 
 use gtk::gdk;
 
@@ -30,6 +33,7 @@ impl DisplayBackend for NoBackend {
 mod platform_wayland {
     use super::DisplayBackend;
     use crate::{widgets::window::Window, window_initiator::WindowInitiator};
+    use crate::window::backend_window_options::WlWindowFocusable;
     use gtk::gdk;
     use gtk::prelude::*;
     use gtk_layer_shell::{KeyboardMode, LayerShell};

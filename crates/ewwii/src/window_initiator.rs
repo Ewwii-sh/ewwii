@@ -2,6 +2,8 @@ use anyhow::Result;
 use ewwii_shared_util::{AttrName, VarName};
 use std::collections::HashMap;
 use rhai::Map;
+use crate::window::coords::Coords;
+use crate::window::window_geometry::WindowGeometry;
 
 use crate::{
     window_arguments::WindowArguments,
