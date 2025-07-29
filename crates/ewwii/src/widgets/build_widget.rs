@@ -25,7 +25,7 @@ pub fn build_gtk_widget(window_defs: Rc<HashMap<String, WindowDefinition>>) -> R
     let root_node = &def.root_widget;
 
     // build_gtk_widget_from_node(root_node)
-    Ok(build_gtk_widget_from_node(root_node))
+    Ok(build_gtk_widget_from_node(root_node)?)
 }
 
 // TODO: implement the commented lines
