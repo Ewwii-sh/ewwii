@@ -8,8 +8,14 @@ use crate::{
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
     dynval::DynVal,
-    window::coords::Coords,
-    window::window_geometry::WindowGeometry,
+    window::{
+        coords::Coords,
+        window_geometry::{
+            WindowGeometry, 
+            AnchorPoint,
+        },
+        monitor::MonitorIdentifier,
+    },
     *,
 };
 use anyhow::anyhow;
@@ -489,7 +495,7 @@ fn initialize_window<B: DisplayBackend>(
     if B::IS_X11 {
         if let Some(geometry) = window_init.geometry {
             let _ = apply_window_position(geometry, monitor_geometry, &window);
-            if window_init.backend_options.x11.window_type != yuck::config::backend_window_options::X11WindowType::Normal {
+            if window_init.backend_options.x11.window_type != crate::window::backend_window_options::X11WindowType::Normal {
                 window.connect_configure_event(move |window, _| {
                     let _ = apply_window_position(geometry, monitor_geometry, window);
                     false

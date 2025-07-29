@@ -1,13 +1,24 @@
 # Changelog
 
-All notable changes to ewwii will be listed here, starting at changes since version 0.1.0.
+All notable changes to `ewwii` are documented here.
 
-## [0.1.0] - NEED TO ADD DATE HERE
+This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
-### Features
+## [0.1.0] - [Unreleased]
 
--   Added rhai as the new configuration language.
+### Added
 
-### Notable Internal changes
+-   Introduced new programmable configuration system based on Rhai, replacing the Yuck syntax.
+-   New widget tree system using Rhai functions like `box`, `centerbox`, `defwidget`, etc.
 
--   Reworked eww entirely.
+### Changed
+
+-   Complete rewrite of the internal widget compiler to support declarative Rhai input.
+-   GTK widget construction is redesigned to work with the new tree.
+-   Replaced `Simplexpr` and Yuck AST with Rhai's built in expression system and widget trees.
+-   Removed dependency on Yuck parser.
+
+### Removed
+
+-   Entire Yuck and Simplexpr code from the parsing and rendering codebase.
