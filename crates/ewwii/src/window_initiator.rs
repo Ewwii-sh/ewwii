@@ -29,7 +29,9 @@ impl WindowInitiator {
             // Some(geo) => Some(geo.eval(&vars)?.override_if_given(args.anchor, args.pos, args.size)),
             None => None,
         };
-        let monitor = if args.monitor.is_none() { window_def.eval_monitor(&vars)? } else { args.monitor.clone() };
+        let monitor = args.monitor.clone().or_else(|| {
+            window_def.props.get("monitor")?.clone().try_cast::<i64>().map(|n| MonitorIdentifier::Index(n as usize))
+        });
         Ok(WindowInitiator {
             backend_options: window_def.backend_options.eval(&vars)?,
             geometry,
@@ -45,6 +47,18 @@ impl WindowInitiator {
     // }
 }
 
-fn parse_geometry(val: rhai::Map, args: &WindowArguments, override_str: bool) {
-    todo!("Implement parse_geometry");
+fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override: bool) -> Result<WindowGeometry> {
+    let map = val.clone().cast::<rhai::Map>();
+    let mut geom = WindowGeometry {
+        pos: Some(Coords::from_map(&map)?),
+        size: Some(Size::from_map(&map)?),
+        anchor: Some(AnchorPoint::TopLeft),
+    };
+
+    if override {
+        // You apply CLI args if passed:
+        geom = geom.override_if_given(args.anchor, args.pos, args.size);
+    }
+
+    Ok(geom)
 }
