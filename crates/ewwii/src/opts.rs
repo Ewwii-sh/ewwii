@@ -124,7 +124,7 @@ pub enum ActionWithServer {
         #[arg(long, value_parser=parse_duration)]
         duration: Option<std::time::Duration>,
 
-        /// Define a variable for the window, i.e.: `--arg "var_name=value"`
+        // /// Define a variable for the window, i.e.: `--arg "var_name=value"`
         // #[arg(long = "arg", value_parser = parse_var_update_arg)]
         // args: Option<Vec<(VarName, DynVal)>>,
     },
