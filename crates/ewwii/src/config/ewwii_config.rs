@@ -40,9 +40,9 @@ pub struct EwwConfig {
 
 #[derive(Debug, Clone, Default)]
 pub struct WindowDefinition {
-    name: String,
-    props: Map,
-    root_widget: WidgetNode,
+    pub name: String,
+    pub props: Map,
+    pub root_widget: WidgetNode,
 }
 
 impl EwwConfig {
