@@ -9,6 +9,7 @@ use crate::{
     window_initiator::WindowInitiator,
     dynval::DynVal,
     window::coords::Coords,
+    window::window_geometry::WindowGeometry,
     *,
 };
 use anyhow::anyhow;
