@@ -1,14 +1,12 @@
-# Writing your eww configuration
+# Writing your ewwii configuration
 
-(For a list of all built-in widgets (i.e. `box`, `label`, `button`),  see [Widget Documentation](widgets.md).)\
-Eww is configured using its own language called `yuck`.
-Using yuck, you declare the structure and content of your widgets, the geometry, position, and behavior of any windows,
+(For a list of all built-in widgets (i.e. `box`, `label`, `button`), see [Widget Documentation](widgets.md).)\
+Eww is configured using its own language called `rhai`.
+Using rhai, you declare the structure and content of your widgets, the geometry, position, and behavior of any windows,
 as well as any state and data that will be used in your widgets.
-Yuck is based around S-expressions, which you may know from lisp-like languages.
-If you're using vim, you can make use of [yuck.vim](https://github.com/elkowar/yuck.vim) for editor support.
-If you're using VSCode, you can get syntax highlighting and formatting from [yuck-vscode](https://marketplace.visualstudio.com/items?itemName=eww-yuck.yuck).
-It is also recommended to use [parinfer](https://shaunlebron.github.io/parinfer/),
-which makes working with S-expressions delightfully easy!
+Rhai is based around imparative syntax, which you may know from programming languages like C, Rust etc.
+If you're using vim, you can make use of [vim-rhai](https://github.com/rhaiscript/vim-rhai) for editor support.
+If you're using VSCode, you can get syntax highlighting and formatting from [vscode-rhai](https://marketplace.visualstudio.com/items?itemName=rhaiscript.vscode-rhai).
 
 Additionally, any styles are defined in CSS or SCSS (which is mostly just slightly improved CSS syntax).
 While eww supports a significant portion of the CSS you know from the web,
@@ -16,8 +14,8 @@ not everything is supported, as eww relies on GTK's own CSS engine.
 Notably, some animation features are unsupported,
 as well as most layout-related CSS properties such as flexbox, `float`, absolute position or `width`/`height`.
 
-To get started, you'll need to create two files: `eww.yuck` and `eww.scss` (or `eww.css`, if you prefer).
-These files must be placed under `$XDG_CONFIG_HOME/eww` (this is most likely `~/.config/eww`).
+To get started, you'll need to create two files: `ewwii.rhai` and `ewwii.scss` (or `ewwii.css`, if you prefer).
+These files must be placed under `$XDG_CONFIG_HOME/ewwii` (this is most likely `~/.config/ewwii`).
 
 Now that those files are created, you can start writing your first widget!
 
@@ -27,19 +25,21 @@ Firstly, you will need to create a top-level window. Here, you configure things 
 
 Let's look at an example window definition:
 
-```lisp
-(defwindow example
-           :monitor 0
-           :geometry (geometry :x "0%"
-                               :y "20px"
-                               :width "90%"
-                               :height "30px"
-                               :anchor "top center")
-           :stacking "fg"
-           :reserve (struts :distance "40px" :side "top")
-           :windowtype "dock"
-           :wm-ignore false
-  "example content")
+```js
+defwindow("example", #{
+    monitor: 0,
+    windowtype: "dock",
+    stacking: "fg",
+    wm_ignore: false,
+    geometry: #{
+      x: "0%",
+      y: "2px",
+      width: "90%",
+      height: "30px",
+      anchor: "top center"
+    },
+    reserve: #{ distance: "40px" side: "top" }
+}, root_widget())
 ```
 
 Here, we are defining a window named `example`, which we then define a set of properties for. Additionally, we set the content of the window to be the text `"example content"`.
@@ -48,28 +48,26 @@ You can now open your first window by running `eww open example`! Glorious!
 
 ### `defwindow`-properties
 
-|   Property | Description                                                  |
-| ---------: | ------------------------------------------------------------ |
-|  `monitor` | Which monitor this window should be displayed on. See below for details.|
-| `geometry` | Geometry of the window.  |
-
+|   Property | Description                                                              |
+| ---------: | ------------------------------------------------------------------------ |
+|  `monitor` | Which monitor this window should be displayed on. See below for details. |
+| `geometry` | Geometry of the window.                                                  |
 
 **`monitor`-property**
 
 This field can be:
 
-- the string `<primary>`, in which case eww tries to identify the primary display (which may fail, especially on wayland)
-- an integer, declaring the monitor index
-- the name of the monitor
-- a string containing a JSON-array of monitor matchers, such as: `'["<primary>", "HDMI-A-1", "PHL 345B1C", 0]'`. Eww will try to find a match in order, allowing you to specify fallbacks.
-
+-   the string `<primary>`, in which case eww tries to identify the primary display (which may fail, especially on wayland)
+-   an integer, declaring the monitor index
+-   the name of the monitor
+-   a string containing a JSON-array of monitor matchers, such as: `'["<primary>", "HDMI-A-1", "PHL 345B1C", 0]'`. Eww will try to find a match in order, allowing you to specify fallbacks.
 
 **`geometry`-properties**
 
-| Property          | Description |
-| -----------------:| ------------------------------------------------------------ |
-|          `x`, `y` | Position of the window. Values may be provided in `px` or `%`. Will be relative to `anchor`. |
-| `width`, `height` | Width and height of the window. Values may be provided in `px` or `%`. |
+|          Property | Description                                                                                                             |
+| ----------------: | ----------------------------------------------------------------------------------------------------------------------- |
+|          `x`, `y` | Position of the window. Values may be provided in `px` or `%`. Will be relative to `anchor`.                            |
+| `width`, `height` | Width and height of the window. Values may be provided in `px` or `%`.                                                  |
 |          `anchor` | Anchor-point of the window. Either `center` or combinations of `top`, `center`, `bottom` and `left`, `center`, `right`. |
 
 <br/>
@@ -77,23 +75,21 @@ Depending on if you are using X11 or Wayland, some additional properties exist:
 
 #### X11
 
-|     Property | Description                                                  |
-| -----------: | ------------------------------------------------------------ |
-|   `stacking` | Where the window should appear in the stack. Possible values: `fg`, `bg`. |
-|  `wm-ignore` | Whether the window manager should ignore this window. This is useful for dashboard-style widgets that don't need to interact with other windows at all. Note that this makes some of the other properties not have any effect. Either `true` or `false`. |
-|    `reserve` | Specify how the window manager should make space for your window. This is useful for bars, which should not overlap any other windows. |
+|     Property | Description                                                                                                                                                                                                                                                    |
+| -----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   `stacking` | Where the window should appear in the stack. Possible values: `fg`, `bg`.                                                                                                                                                                                      |
+|  `wm_ignore` | Whether the window manager should ignore this window. This is useful for dashboard-style widgets that don't need to interact with other windows at all. Note that this makes some of the other properties not have any effect. Either `true` or `false`.       |
+|    `reserve` | Specify how the window manager should make space for your window. This is useful for bars, which should not overlap any other windows.                                                                                                                         |
 | `windowtype` | Specify what type of window this is. This will be used by your window manager to determine how it should handle your window. Possible values: `normal`, `dock`, `toolbar`, `dialog`, `desktop`. Default: `dock` if `reserve` is specified, `normal` otherwise. |
 
 #### Wayland
 
 |    Property | Description                                                                                                                                                            |
-| ----------: |------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 |  `stacking` | Where the window should appear in the stack. Possible values: `fg`, `bg`, `overlay`, `bottom`.                                                                         |
 | `exclusive` | Whether the compositor should reserve space for the window automatically. Either `true` or `false`. If `true` `:anchor` has to include `center`.                       |
 | `focusable` | Whether the window should be able to be focused. This is necessary for any widgets that use the keyboard to work. Possible values: `none`, `exclusive` and `ondemand`. |
 | `namespace` | Set the wayland layersurface namespace eww uses. Accepts a `string` value.                                                                                             |
-
-
 
 ## Your first widget
 
@@ -138,18 +134,21 @@ To then use our widget, we call it just like we would use any other built-in wid
 
 As you may have noticed, we are using a couple predefined widgets here. These are all listed and explained in the [widgets chapter](widgets.md).
 
-
 ### Rendering children in your widgets
+
 As your configuration grows, you might want to improve the structure of your config by factoring out functionality into basic reusable widgets.
 Eww allows you to create custom wrapper widgets that can themselves take children, just like some of the built-in widgets like `box` or `button` can.
 For this, use the `children` placeholder:
+
 ```lisp
 (defwidget labeled-container [name]
   (box :class "container"
     name
     (children)))
 ```
+
 Now you can use this widget as expected:
+
 ```lisp
 (labeled-container :name "foo"
   (button :onclick "notify-send hey ho"
@@ -157,6 +156,7 @@ Now you can use this widget as expected:
 ```
 
 You can also create more complex structure by referring to specific children with the `nth`-attribute:
+
 ```lisp
 (defwidget two-boxes []
   (box
@@ -340,12 +340,12 @@ So, now you know the basics, I shall introduce you to some of these "special"
 parameters, which are set slightly differently. However these can all be
 overridden by the `--arg` option.
 
-- `id` - If `id` is included in the argument list, it will be set to the id
-  specified by `--id` or will be set to the name of the config. This can be
-  used when closing the current window through eww commands.
-- `screen` - If `screen` is specified it will be set to the value given by
-  `--screen`, so you can use this in other widgets to access screen specific
-  information.
+-   `id` - If `id` is included in the argument list, it will be set to the id
+    specified by `--id` or will be set to the name of the config. This can be
+    used when closing the current window through eww commands.
+-   `screen` - If `screen` is specified it will be set to the value given by
+    `--screen`, so you can use this in other widgets to access screen specific
+    information.
 
 ### Further insight into args in `open-many`
 
@@ -371,6 +371,7 @@ eww open-many my_primary_bar --arg my_primary_bar:screen=0
 ## Generating a list of widgets from JSON using `for`
 
 If you want to display a list of values, you can use the `for`-Element to fill a container with a list of elements generated from a JSON-array.
+
 ```lisp
 (defvar my-json "[1, 2, 3]")
 
