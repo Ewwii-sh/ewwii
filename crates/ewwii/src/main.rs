@@ -36,6 +36,7 @@ use crate::server::ForkResult;
 // importing all local modules
 mod app; // major thing here
 mod application_lifecycle;
+mod file_database;
 mod client;
 mod config;
 mod daemon_response;
