@@ -47,6 +47,7 @@ mod gen_diagnostic_macro;
 mod geometry;
 mod ipc_server;
 mod opts;
+mod diag_error;
 mod paths;
 mod server;
 mod util;

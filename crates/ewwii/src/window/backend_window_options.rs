@@ -2,17 +2,17 @@ use std::{collections::HashMap, str::FromStr};
 
 use anyhow::{Result, anyhow};
 
-use super::{attributes::Attributes, window_definition::EnumParseError};
+use super::{window_definition::EnumParseError};
 use crate::{
     enum_parse,
-    error::DiagResult,
-    parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
+    diag_error::{DiagResult, DiagError, DiagResultExt},
+    // parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
     window::{coords, coords::NumWithUnit},
 };
 use ewwii_shared_util::{Span, VarName};
 
 use crate::dynval::{DynVal, FromDynVal, ConversionError};
-use crate::error::{DiagError, DiagResultExt};
+// use crate::error::{DiagError, DiagResultExt};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -77,10 +77,10 @@ pub struct X11BackendWindowOptions {
 /// Unevaluated form of [`X11BackendWindowOptions`]
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct X11BackendWindowOptionsDef {
-    pub sticky: Option<SimplExpr>,
+    pub sticky: Option<NumWithUnit>,
     pub struts: Option<X11StrutDefinitionExpr>,
-    pub window_type: Option<SimplExpr>,
-    pub wm_ignore: Option<SimplExpr>,
+    pub window_type: Option<NumWithUnit>,
+    pub wm_ignore: Option<NumWithUnit>,
 }
 
 impl X11BackendWindowOptionsDef {
@@ -114,9 +114,9 @@ pub struct WlBackendWindowOptions {
 /// Unevaluated form of [`WlBackendWindowOptions`]
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct WlBackendWindowOptionsDef {
-    pub exclusive: Option<SimplExpr>,
-    pub focusable: Option<SimplExpr>,
-    pub namespace: Option<SimplExpr>,
+    pub exclusive: Option<NumWithUnit>,
+    pub focusable: Option<NumWithUnit>,
+    pub namespace: Option<NumWithUnit>,
 }
 
 impl WlBackendWindowOptionsDef {
@@ -136,7 +136,7 @@ impl WlBackendWindowOptionsDef {
 }
 
 fn eval_opt_expr_as_bool(
-    opt_expr: &Option<SimplExpr>,
+    opt_expr: &Option<NumWithUnit>,
     default: bool,
     local_variables: &HashMap<VarName, DynVal>,
 ) -> Result<bool, EvalError> {
@@ -221,8 +221,8 @@ impl FromStr for Side {
 /// Unevaluated form of [`X11StrutDefinition`]
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct X11StrutDefinitionExpr {
-    pub side: Option<SimplExpr>,
-    pub distance: SimplExpr,
+    pub side: Option<NumWithUnit>,
+    pub distance: NumWithUnit,
 }
 
 impl X11StrutDefinitionExpr {

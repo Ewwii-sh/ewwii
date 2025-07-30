@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use codespan_reporting::files::Files;
 use ewwii_shared_util::Span;
+use crate::diag_error::DiagError;
 
 use iirhai::widgetnode::WidgetNode;
 
@@ -9,6 +10,15 @@ use iirhai::widgetnode::WidgetNode;
 pub struct FileDatabase {
     files: HashMap<usize, CodeFile>,
     latest_id: usize,
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum FilesError {
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    DiagError(#[from] DiagError),
 }
 
 pub trait RhaiFileProvider {
