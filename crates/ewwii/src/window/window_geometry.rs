@@ -10,21 +10,6 @@ use crate::enum_parse;
 use super::window_definition::EnumParseError;
 use crate::window::coords::{NumWithUnit};
 
-impl FromStr for NumWithUnit {
-    type Err = ParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        static PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(-?\d+(?:\.\d+)?)(.*)$").unwrap());
-        let caps = PATTERN.captures(s).ok_or(ParseError::NumParseFailed(s.to_owned()))?;
-        let value = caps[1].parse::<f32>().map_err(|_| ParseError::NumParseFailed(s.to_owned()))?;
-        match &caps[2] {
-            "" | "px" => Ok(NumWithUnit::Pixels(value.floor() as i32)),
-            "%" => Ok(NumWithUnit::Percent(value)),
-            unit => Err(ParseError::InvalidUnit(unit.to_string())),
-        }
-    }
-}
-
 /// Errors encountered when parsing numeric values or coordinates
 #[derive(Debug, thiserror::Error)]
 pub enum ParseError {
@@ -34,16 +19,6 @@ pub enum ParseError {
     InvalidUnit(String),
     #[error("Invalid format. Coordinates must be formatted like '200x100' or '50%x50%' ")]
     MalformedCoords,
-}
-
-impl NumWithUnit {
-    /// Convert to absolute pixels given a max dimension
-    pub fn to_pixels(&self, max: i32) -> i32 {
-        match *self {
-            NumWithUnit::Percent(p) => (max as f64 * (p as f64 / 100.0)) as i32,
-            NumWithUnit::Pixels(px) => px,
-        }
-    }
 }
 
 /// A pair of [NumWithUnit] values for x and y
