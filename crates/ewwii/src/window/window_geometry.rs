@@ -8,18 +8,7 @@ use std::{fmt, str::FromStr};
 
 use crate::enum_parse;
 use super::window_definition::EnumParseError;
-// use crate::window::coords::{Coords, NumWithUnit};
-
-/// A number with an optional unit (% or px)
-#[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Display, Debug, SmartDefault)]
-#[display("{}%", _0)]
-#[default]
-pub enum NumWithUnit {
-    #[display("{}%", _0)]
-    Percent(f32),
-    #[display("{}px", _0)]
-    Pixels(i32),
-}
+use crate::window::coords::{NumWithUnit};
 
 impl FromStr for NumWithUnit {
     type Err = ParseError;
@@ -51,7 +40,7 @@ impl NumWithUnit {
     /// Convert to absolute pixels given a max dimension
     pub fn to_pixels(&self, max: i32) -> i32 {
         match *self {
-            NumWithUnit::Percent(p) => ((max as f64 * (p as f64 / 100.0)) as i32),
+            NumWithUnit::Percent(p) => (max as f64 * (p as f64 / 100.0)) as i32,
             NumWithUnit::Pixels(px) => px,
         }
     }
