@@ -263,15 +263,15 @@ pub struct X11StrutDefinitionExpr {
 //     }
 // }
 
-impl FromAstElementContent for X11StrutDefinitionExpr {
-    const ELEMENT_NAME: &'static str = "struts";
+// impl FromAstElementContent for X11StrutDefinitionExpr {
+//     const ELEMENT_NAME: &'static str = "struts";
 
-    fn from_tail<I: Iterator<Item = Ast>>(_span: Span, mut iter: AstIterator<I>) -> DiagResult<Self> {
-        let mut attrs = iter.expect_key_values()?;
-        iter.expect_done().map_err(DiagError::from).note("Check if you are missing a colon in front of a key")?;
-        Ok(X11StrutDefinitionExpr { side: attrs.ast_optional("side")?, distance: attrs.ast_required("distance")? })
-    }
-}
+//     fn from_tail<I: Iterator<Item = Ast>>(_span: Span, mut iter: AstIterator<I>) -> DiagResult<Self> {
+//         let mut attrs = iter.expect_key_values()?;
+//         iter.expect_done().map_err(DiagError::from).note("Check if you are missing a colon in front of a key")?;
+//         Ok(X11StrutDefinitionExpr { side: attrs.ast_optional("side")?, distance: attrs.ast_required("distance")? })
+//     }
+// }
 
 #[derive(Debug, Clone, Copy, PartialEq, Default, serde::Serialize)]
 pub struct X11StrutDefinition {
