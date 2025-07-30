@@ -33,6 +33,7 @@ use std::{
     rc::Rc,
 };
 use tokio::sync::mpsc::UnboundedSender;
+use crate::diag_error::DiagError;
 
 /// A command for the eww daemon.
 /// While these are mostly generated from eww CLI commands (see [`opts::ActionWithServer`]),
@@ -249,7 +250,6 @@ impl<B: DisplayBackend> App<B> {
                         monitor,
                         anchor,
                         duration,
-                        args: args.unwrap_or_default().into_iter().collect(),
                     })
                 };
 
