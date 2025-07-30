@@ -12,11 +12,12 @@ pub struct DiagError(pub diagnostic::Diagnostic<usize>);
 static_assertions::assert_impl_all!(DiagError: Send, Sync);
 static_assertions::assert_impl_all!(dynval::ConversionError: Send, Sync);
 
-impl<T: ToDiagnostic> From<T> for DiagError {
-    fn from(x: T) -> Self {
-        Self(x.to_diagnostic())
-    }
-}
+/// Code used by yuck I suppose.
+// impl<T: ToDiagnostic> From<T> for DiagError {
+//     fn from(x: T) -> Self {
+//         Self(x.to_diagnostic())
+//     }
+// }
 
 impl DiagError {
     pub fn note(self, note: &str) -> Self {
