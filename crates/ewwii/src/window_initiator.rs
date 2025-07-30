@@ -12,8 +12,8 @@ use crate::{
         coords::Coords,
         monitor::MonitorIdentifier,
         backend_window_options::BackendWindowOptions,
-        window_geometry::AnchorPoint,
-        window_definition::WindowStacking,
+        window_geometry::{AnchorPoint, AnchorAlignment},
+        window_definition::{WindowStacking, EnumParseError},
     },
 };
 
@@ -57,10 +57,16 @@ impl WindowInitiator {
 
 fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bool) -> Result<WindowGeometry> {
     let map = val.clone().cast::<rhai::Map>();
+
+    let anchor = map.get("anchor")
+        .map(|dyn_value| anchor_point_from_str(&dyn_value.to_string()))
+        .transpose()?;
+
+
     let mut geom = WindowGeometry {
-        pos: Some(Coords::from_map(&map)?),
-        size: Some(Size::from_map(&map)?),
-        anchor: Some(AnchorPoint::TopLeft),
+        offset: get_coords_from_map(&map, "x", "y"),
+        size: get_coords_from_map(&map, "width", "height"),
+        anchor: anchor.unwrap_or(AnchorPoint::TopLeft),
     };
 
     if override_geom {
@@ -69,4 +75,41 @@ fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bo
     }
 
     Ok(geom)
+}
+
+fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str) -> Result<Coords> {
+    let key1 = map.get(x_key)
+        .ok_or("Missing field x")?
+        .as_int()?;
+
+    let key2 = map.get(y_key)
+        .ok_or("Missing field y")?
+        .as_int()?;
+    
+    Ok(Coords { key1, key2 })
+}
+
+fn anchor_point_from_str(s: &str) -> Result<AnchorPoint, EnumParseError> {
+    let parts: Vec<_> = s.trim().to_lowercase().split_whitespace().collect();
+
+    match parts.as_slice() {
+        [single] => {
+            // Apply to both x and y
+            let alignment = AnchorAlignment::from_x_alignment(single)
+                .or_else(|_| AnchorAlignment::from_y_alignment(single))?;
+            Ok(AnchorPoint {
+                x: alignment,
+                y: alignment,
+            })
+        }
+        [y_part, x_part] => {
+            let y = AnchorAlignment::from_y_alignment(y_part)?;
+            let x = AnchorAlignment::from_x_alignment(x_part)?;
+            Ok(AnchorPoint { x, y })
+        }
+        _ => Err(EnumParseError::UnknownValue {
+            expected: "1 or 2 words like 'center' or 'top left'".to_string(),
+            got: s.to_string(),
+        }),
+    }
 }
