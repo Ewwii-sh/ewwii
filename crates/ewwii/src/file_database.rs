@@ -62,7 +62,7 @@ impl RhaiFileProvider for FileDatabase {
             source: CodeSource::File(path),
         };
         // let file_id = self.insert_code_file(code_file);
-        Ok(iirhai::parser::ParseConfig::new().parse_widget_code(file_content)?)
+        Ok(iirhai::parser::ParseConfig::new().parse_widget_code(&file_content)?)
     }
 
     fn load_rhai_str(&mut self, name: String, content: String) -> Result<(Span, WidgetNode), DiagError> {
