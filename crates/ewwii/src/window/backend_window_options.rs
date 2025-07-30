@@ -12,6 +12,7 @@ use crate::{
 use ewwii_shared_util::{Span, VarName};
 
 use crate::dynval::{DynVal, FromDynVal, ConversionError};
+use rhai::Map;
 // use crate::error::{DiagError, DiagResultExt};
 
 #[derive(Debug, thiserror::Error)]
@@ -35,28 +36,53 @@ pub struct BackendWindowOptionsDef {
 }
 
 impl BackendWindowOptionsDef {
-    pub fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<BackendWindowOptions, Error> {
-        Ok(BackendWindowOptions { wayland: self.wayland.eval(local_variables)?, x11: self.x11.eval(local_variables)? })
-    }
+    // pub fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<BackendWindowOptions, Error> {
+    //     Ok(BackendWindowOptions { wayland: self.wayland.eval(local_variables)?, x11: self.x11.eval(local_variables)? })
+    // }
 
-    pub fn from_attrs(attrs: &mut Attributes) -> DiagResult<Self> {
-        let struts = attrs.ast_optional("reserve")?;
-        let window_type = attrs.ast_optional("windowtype")?;
-        let focusable = attrs.ast_optional("focusable")?;
+    // pub fn from_attrs(attrs: &mut Attributes) -> DiagResult<Self> {
+    //     let struts = attrs.ast_optional("reserve")?;
+    //     let window_type = attrs.ast_optional("windowtype")?;
+    //     let focusable = attrs.ast_optional("focusable")?;
+    //     let x11 = X11BackendWindowOptionsDef {
+    //         sticky: attrs.ast_optional("sticky")?,
+    //         struts,
+    //         window_type,
+    //         wm_ignore: attrs.ast_optional("wm-ignore")?,
+    //     };
+    //     let wayland = WlBackendWindowOptionsDef {
+    //         exclusive: attrs.ast_optional("exclusive")?,
+    //         focusable,
+    //         namespace: attrs.ast_optional("namespace")?,
+    //     };
+
+    //     Ok(Self { wayland, x11 })
+    // }
+
+    // pass rhai map from WindowDefinition here
+    pub fn from_map(map: &Map) -> Result<Self> {
+        let get = |key: &str| map.get(key).cloned();
+
+        let struts = get("reserve").map(|v| v.try_cast()).transpose()?;
+        let window_type = get("windowtype").map(|v| v.try_cast()).transpose()?;
+        let focusable = get("focusable").map(|v| v.try_cast()).transpose()?;
+
         let x11 = X11BackendWindowOptionsDef {
-            sticky: attrs.ast_optional("sticky")?,
+            sticky: get("sticky").map(|v| v.try_cast()).transpose()?,
             struts,
             window_type,
-            wm_ignore: attrs.ast_optional("wm-ignore")?,
+            wm_ignore: get("wm-ignore").map(|v| v.try_cast()).transpose()?,
         };
+
         let wayland = WlBackendWindowOptionsDef {
-            exclusive: attrs.ast_optional("exclusive")?,
+            exclusive: get("exclusive").map(|v| v.try_cast()).transpose()?,
             focusable,
-            namespace: attrs.ast_optional("namespace")?,
+            namespace: get("namespace").map(|v| v.try_cast()).transpose()?,
         };
 
         Ok(Self { wayland, x11 })
     }
+
 }
 
 /// Backend-specific options of a window that are backend
@@ -83,26 +109,26 @@ pub struct X11BackendWindowOptionsDef {
     pub wm_ignore: Option<NumWithUnit>,
 }
 
-impl X11BackendWindowOptionsDef {
-    fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<X11BackendWindowOptions, Error> {
-        Ok(X11BackendWindowOptions {
-            sticky: eval_opt_expr_as_bool(&self.sticky, true, local_variables)?,
-            struts: match &self.struts {
-                Some(expr) => expr.eval(local_variables)?,
-                None => X11StrutDefinition::default(),
-            },
-            window_type: match &self.window_type {
-                Some(expr) => X11WindowType::from_dynval(&expr.eval(local_variables)?)?,
-                None => X11WindowType::default(),
-            },
-            wm_ignore: eval_opt_expr_as_bool(
-                &self.wm_ignore,
-                self.window_type.is_none() && self.struts.is_none(),
-                local_variables,
-            )?,
-        })
-    }
-}
+// impl X11BackendWindowOptionsDef {
+//     fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<X11BackendWindowOptions, Error> {
+//         Ok(X11BackendWindowOptions {
+//             sticky: eval_opt_expr_as_bool(&self.sticky, true, local_variables)?,
+//             struts: match &self.struts {
+//                 Some(expr) => expr.eval(local_variables)?,
+//                 None => X11StrutDefinition::default(),
+//             },
+//             window_type: match &self.window_type {
+//                 Some(expr) => X11WindowType::from_dynval(&expr.eval(local_variables)?)?,
+//                 None => X11WindowType::default(),
+//             },
+//             wm_ignore: eval_opt_expr_as_bool(
+//                 &self.wm_ignore,
+//                 self.window_type.is_none() && self.struts.is_none(),
+//                 local_variables,
+//             )?,
+//         })
+//     }
+// }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct WlBackendWindowOptions {
@@ -119,32 +145,32 @@ pub struct WlBackendWindowOptionsDef {
     pub namespace: Option<NumWithUnit>,
 }
 
-impl WlBackendWindowOptionsDef {
-    fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<WlBackendWindowOptions, Error> {
-        Ok(WlBackendWindowOptions {
-            exclusive: eval_opt_expr_as_bool(&self.exclusive, false, local_variables)?,
-            focusable: match &self.focusable {
-                Some(expr) => WlWindowFocusable::from_dynval(&expr.eval(local_variables)?)?,
-                None => WlWindowFocusable::default(),
-            },
-            namespace: match &self.namespace {
-                Some(expr) => Some(expr.eval(local_variables)?.as_string()?),
-                None => None,
-            },
-        })
-    }
-}
+// impl WlBackendWindowOptionsDef {
+//     fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<WlBackendWindowOptions, Error> {
+//         Ok(WlBackendWindowOptions {
+//             exclusive: eval_opt_expr_as_bool(&self.exclusive, false, local_variables)?,
+//             focusable: match &self.focusable {
+//                 Some(expr) => WlWindowFocusable::from_dynval(&expr.eval(local_variables)?)?,
+//                 None => WlWindowFocusable::default(),
+//             },
+//             namespace: match &self.namespace {
+//                 Some(expr) => Some(expr.eval(local_variables)?.as_string()?),
+//                 None => None,
+//             },
+//         })
+//     }
+// }
 
-fn eval_opt_expr_as_bool(
-    opt_expr: &Option<NumWithUnit>,
-    default: bool,
-    local_variables: &HashMap<VarName, DynVal>,
-) -> Result<bool, EvalError> {
-    Ok(match opt_expr {
-        Some(expr) => expr.eval(local_variables)?.as_bool()?,
-        None => default,
-    })
-}
+// fn eval_opt_expr_as_bool(
+//     opt_expr: &Option<NumWithUnit>,
+//     default: bool,
+//     local_variables: &HashMap<VarName, DynVal>,
+// ) -> Result<bool, EvalError> {
+//     Ok(match opt_expr {
+//         Some(expr) => expr.eval(local_variables)?.as_bool()?,
+//         None => default,
+//     })
+// }
 
 #[derive(Debug, Clone, PartialEq, Eq, smart_default::SmartDefault, serde::Serialize)]
 pub enum WlWindowFocusable {
