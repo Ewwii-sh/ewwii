@@ -86,7 +86,7 @@ fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str) -> Result<Coor
         .ok_or("Missing field y")?
         .as_int()?;
     
-    Ok(Coords { key1, key2 })
+    Ok(Coords { x: key1, y: key2 })
 }
 
 fn anchor_point_from_str(s: &str) -> Result<AnchorPoint, EnumParseError> {

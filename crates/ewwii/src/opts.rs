@@ -242,7 +242,6 @@ impl ActionWithServer {
 
     pub fn into_daemon_command(self) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
-            ActionWithServer::Update { mappings } => app::DaemonCommand::UpdateVars(mappings),
             ActionWithServer::OpenInspector => app::DaemonCommand::OpenInspector,
 
             ActionWithServer::KillServer => app::DaemonCommand::KillServer,
@@ -252,10 +251,10 @@ impl ActionWithServer {
                 let _ = send.send(DaemonResponse::Success("pong".to_owned()));
                 return (app::DaemonCommand::NoOp, Some(recv));
             }
-            ActionWithServer::OpenMany { windows, args, should_toggle } => {
+            ActionWithServer::OpenMany { windows, should_toggle } => {
                 return with_response_channel(|sender| app::DaemonCommand::OpenMany { windows, args, should_toggle, sender });
             }
-            ActionWithServer::OpenWindow { window_name, id, pos, size, screen, anchor, should_toggle, duration, args } => {
+            ActionWithServer::OpenWindow { window_name, id, pos, size, screen, anchor, should_toggle, duration } => {
                 return with_response_channel(|sender| app::DaemonCommand::OpenWindow {
                     window_name,
                     instance_id: id,
