@@ -108,7 +108,7 @@ impl fmt::Display for AnchorPoint {
 /// Final window geometry with anchor, offset, and size
 #[derive(Clone, Copy, Debug, PartialEq, Default, Serialize)]
 pub struct WindowGeometry {
-    pub anchor: AnchorPoint,
+    pub anchor_point: AnchorPoint,
     pub offset: Coords,
     pub size: Coords,
 }
@@ -116,14 +116,14 @@ pub struct WindowGeometry {
 impl WindowGeometry {
     pub fn override_with(
         &self,
-        anchor: Option<AnchorPoint>,
+        anchor_point: Option<AnchorPoint>,
         offset: Option<Coords>,
         // if you are wondering why this is coords, ig that its because they watned to 
         // reuse coords? I dont know. It works so I am keeping it.
         size: Option<Coords>,
     ) -> Self {
         WindowGeometry {
-            anchor: anchor.unwrap_or(self.anchor),
+            anchor_point: anchor_point.unwrap_or(self.anchor),
             offset: offset.unwrap_or(self.offset),
             size: size.unwrap_or(self.size),
         }
