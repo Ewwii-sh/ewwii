@@ -67,7 +67,7 @@ impl RhaiFileProvider for FileDatabase {
 
     fn load_rhai_str(&mut self, name: String, content: String) -> Result<(Span, WidgetNode), DiagError> {
         // let file_id = self.insert_string(name, content.clone())?;
-        iirhai::parser::ParseConfig::new().parse_widget_code(content)
+        iirhai::parser::ParseConfig::new().parse_widget_code(&content)
     }
 
     fn unload(&mut self, id: usize) {
