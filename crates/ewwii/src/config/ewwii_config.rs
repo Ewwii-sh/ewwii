@@ -38,7 +38,7 @@ pub struct EwwConfig {
     windows: HashMap<String, WindowDefinition>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct WindowDefinition {
     pub name: String,
     pub props: Map,

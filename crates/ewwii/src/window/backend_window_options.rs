@@ -63,26 +63,29 @@ impl BackendWindowOptionsDef {
     pub fn from_map(map: &Map) -> Result<Self> {
         let get = |key: &str| map.get(key).cloned();
 
-        let struts = get("reserve").map(|v| v.try_cast()).transpose()?;
-        let window_type = get("windowtype").map(|v| v.try_cast()).transpose()?;
-        let focusable = get("focusable").map(|v| v.try_cast()).transpose()?;
+        let struts = Self::get_optional(map, "reserve")?;
+        let window_type = Self::get_optional(map, "windowtype")?;
+        let focusable = Self::get_optional(map, "focusable")?;
 
         let x11 = X11BackendWindowOptionsDef {
-            sticky: get("sticky").map(|v| v.try_cast()).transpose()?,
+            sticky: Self::get_optional(map, "sticky")?;
             struts,
             window_type,
-            wm_ignore: get("wm-ignore").map(|v| v.try_cast()).transpose()?,
+            wm_ignore: Self::get_optional(map, "wm-ignore")?;
         };
 
         let wayland = WlBackendWindowOptionsDef {
-            exclusive: get("exclusive").map(|v| v.try_cast()).transpose()?,
+            exclusive: Self::get_optional(map, "exclusive")?;
             focusable,
-            namespace: get("namespace").map(|v| v.try_cast()).transpose()?,
+            namespace: Self::get_optional(map, "namespace")?;
         };
 
         Ok(Self { wayland, x11 })
     }
 
+    fn get_optional<T: Clone + 'static>(map: &Map, key: &str) -> Result<Option<T>> {
+        Ok(map.get(key).cloned().and_then(|v| v.try_cast::<T>()))
+    }
 }
 
 /// Backend-specific options of a window that are backend
