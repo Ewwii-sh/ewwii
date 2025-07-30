@@ -13,6 +13,7 @@ use crate::{
         monitor::MonitorIdentifier,
         backend_window_options::BackendWindowOptions,
         window_geometry::AnchorPoint,
+        window_definition::WindowStacking,
     },
 };
 
