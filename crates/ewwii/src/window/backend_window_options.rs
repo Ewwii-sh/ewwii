@@ -29,7 +29,7 @@ use rhai::Map;
 
 /// Backend-specific options of a window
 /// Unevaluated form of [`BackendWindowOptions`]
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
 pub struct BackendWindowOptionsDef {
     pub wayland: WlBackendWindowOptionsDef,
     pub x11: X11BackendWindowOptionsDef,
@@ -104,7 +104,7 @@ pub struct X11BackendWindowOptions {
 }
 
 /// Unevaluated form of [`X11BackendWindowOptions`]
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct X11BackendWindowOptionsDef {
     pub sticky: Option<NumWithUnit>,
     pub struts: Option<X11StrutDefinitionExpr>,
@@ -133,7 +133,7 @@ pub struct X11BackendWindowOptionsDef {
 //     }
 // }
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct WlBackendWindowOptions {
     pub exclusive: bool,
     pub focusable: WlWindowFocusable,
@@ -141,7 +141,7 @@ pub struct WlBackendWindowOptions {
 }
 
 /// Unevaluated form of [`WlBackendWindowOptions`]
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct WlBackendWindowOptionsDef {
     pub exclusive: Option<NumWithUnit>,
     pub focusable: Option<NumWithUnit>,
@@ -248,7 +248,7 @@ impl FromStr for Side {
 }
 
 /// Unevaluated form of [`X11StrutDefinition`]
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct X11StrutDefinitionExpr {
     pub side: Option<NumWithUnit>,
     pub distance: NumWithUnit,
