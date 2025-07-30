@@ -27,10 +27,12 @@ use std::{
     time::Duration,
 };
 
+use super::widget_definitions_helper::*;
+
 pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Box> {
     let orientation = props.get("orientation")
         .and_then(|v| v.clone().try_cast::<String>().ok())
-        .map(|s| parse_orientation(&s))
+        .map(|s| parse_orientation(&s)) // from widget_definitions_helper
         .transpose()?
         .unwrap_or(gtk::Orientation::Horizontal);
 
