@@ -40,7 +40,7 @@ fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<(gtk::Widget), Bo
         WidgetNode::Graph { props } => build_graph(props)?.upcast(),
         // WIDGET_NAME_TRANSFORM => build_transform(node)?.upcast(),
         // WIDGET_NAME_SCALE => build_gtk_scale(node)?.upcast(),
-        WidgetNode::Progress { props } => build_gtk_progress(props, children)?.upcast(),
+        WidgetNode::Progress { props } => build_gtk_progress(props)?.upcast(),
         WidgetNode::Image { props } => build_gtk_image(props)?.upcast(),
         WidgetNode::Button { props, children } => build_gtk_button(props, children)?.upcast(),
         WidgetNode::Label { props } => build_gtk_label(props)?.upcast(),

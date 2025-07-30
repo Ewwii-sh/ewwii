@@ -15,17 +15,17 @@ use crate::dynval::{DynVal, FromDynVal, ConversionError};
 use rhai::Map;
 // use crate::error::{DiagError, DiagResultExt};
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error(transparent)]
-    EnumParseError(#[from] EnumParseError),
-    #[error(transparent)]
-    CoordsError(#[from] coords::Error),
-    #[error(transparent)]
-    EvalError(#[from] EvalError),
-    #[error(transparent)]
-    ConversionError(#[from] ConversionError),
-}
+// #[derive(Debug, thiserror::Error)]
+// pub enum Error {
+//     #[error(transparent)]
+//     EnumParseError(#[from] EnumParseError),
+//     #[error(transparent)]
+//     CoordsError(#[from] coords::Error),
+//     #[error(transparent)]
+//     EvalError(#[from] EvalError),
+//     #[error(transparent)]
+//     ConversionError(#[from] ConversionError),
+// }
 
 /// Backend-specific options of a window
 /// Unevaluated form of [`BackendWindowOptions`]
@@ -251,17 +251,17 @@ pub struct X11StrutDefinitionExpr {
     pub distance: NumWithUnit,
 }
 
-impl X11StrutDefinitionExpr {
-    fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<X11StrutDefinition, Error> {
-        Ok(X11StrutDefinition {
-            side: match &self.side {
-                Some(expr) => Side::from_dynval(&expr.eval(local_variables)?)?,
-                None => Side::default(),
-            },
-            distance: NumWithUnit::from_dynval(&self.distance.eval(local_variables)?)?,
-        })
-    }
-}
+// impl X11StrutDefinitionExpr {
+//     fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<X11StrutDefinition, Error> {
+//         Ok(X11StrutDefinition {
+//             side: match &self.side {
+//                 Some(expr) => Side::from_dynval(&expr.eval(local_variables)?)?,
+//                 None => Side::default(),
+//             },
+//             distance: NumWithUnit::from_dynval(&self.distance.eval(local_variables)?)?,
+//         })
+//     }
+// }
 
 impl FromAstElementContent for X11StrutDefinitionExpr {
     const ELEMENT_NAME: &'static str = "struts";
