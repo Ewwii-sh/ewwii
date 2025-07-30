@@ -842,6 +842,7 @@ dependencies = [
  "serde_json",
  "simple-signal",
  "smart-default",
+ "static_assertions",
  "sysinfo",
  "thiserror",
  "tokio",
