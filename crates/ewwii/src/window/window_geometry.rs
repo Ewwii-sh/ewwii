@@ -118,6 +118,8 @@ impl WindowGeometry {
         &self,
         anchor: Option<AnchorPoint>,
         offset: Option<Coords>,
+        // if you are wondering why this is coords, ig that its because they watned to 
+        // reuse coords? I dont know. It works so I am keeping it.
         size: Option<Coords>,
     ) -> Self {
         WindowGeometry {
