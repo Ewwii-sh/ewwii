@@ -10,6 +10,8 @@ use codespan_reporting::{
 use ewwii_shared_util::Span;
 use once_cell::sync::Lazy;
 use crate::file_database::FileDatabase;
+use crate::diag_error::DiagError;
+use crate::dynval::ConversionError;
 
 pub static FILE_DATABASE: Lazy<Arc<RwLock<FileDatabase>>> = Lazy::new(|| Arc::new(RwLock::new(FileDatabase::new())));
 
@@ -37,10 +39,10 @@ pub fn anyhow_err_to_diagnostic(err: &anyhow::Error) -> Option<Diagnostic<usize>
         Some(err.0.clone())
     } else if let Some(err) = err.downcast_ref::<ConversionError>() {
         Some(err.to_diagnostic())
-    } else if let Some(err) = err.downcast_ref::<ValidationError>() {
-        Some(err.to_diagnostic())
-    } else if let Some(err) = err.downcast_ref::<EvalError>() {
-        Some(err.to_diagnostic())
+    // } else if let Some(err) = err.downcast_ref::<ValidationError>() {
+    //     Some(err.to_diagnostic())
+    // } else if let Some(err) = err.downcast_ref::<EvalError>() {
+    //     Some(err.to_diagnostic())
     } else {
         None
     }
