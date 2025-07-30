@@ -6,9 +6,22 @@ use serde::{Deserialize, Serialize};
 use smart_default::SmartDefault;
 use std::{fmt, str::FromStr};
 
-use crate::enum_parse;
 use super::window_definition::EnumParseError;
 use crate::window::coords::{NumWithUnit};
+
+#[macro_export]
+macro_rules! cstm_enum_parse {
+    ($name:literal, $input:expr, $($($s:literal)|* => $val:expr),* $(,)?) => {
+        let input = $input.to_lowercase();
+        match input.as_str() {
+            $( $( $s )|* => Ok($val) ),*,
+            _ => Err(EnumParseError {
+                input,
+                expected: vec![$($($s),*),*],
+            })
+        }
+    };
+}
 
 /// Errors encountered when parsing numeric values or coordinates
 #[derive(Debug, thiserror::Error)]
@@ -67,14 +80,14 @@ pub enum AnchorAlignment {
 
 impl AnchorAlignment {
     pub fn from_x_alignment(s: &str) -> Result<Self, EnumParseError> {
-        enum_parse! { "x-alignment", s,
+        cstm_enum_parse! { "x-alignment", s,
             "l" | "left" => AnchorAlignment::START,
             "c" | "center" => AnchorAlignment::CENTER,
             "r" | "right" => AnchorAlignment::END,
         }
     }
     pub fn from_y_alignment(s: &str) -> Result<Self, EnumParseError> {
-        enum_parse! { "y-alignment", s,
+        cstm_enum_parse! { "y-alignment", s,
             "t" | "top" => AnchorAlignment::START,
             "c" | "center" => AnchorAlignment::CENTER,
             "b" | "bottom" => AnchorAlignment::END,
