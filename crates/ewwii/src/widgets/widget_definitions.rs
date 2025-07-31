@@ -33,17 +33,17 @@ use super::widget_definitions_helper::*;
 
 pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Box> {
     let orientation = props.get("orientation")
-        .and_then(|v| v.clone().try_cast::<String>().ok())
+        .and_then(|v| v.clone().try_cast::<String>())
         .map(|s| parse_orientation(&s)) // from widget_definitions_helper
         .transpose()?
         .unwrap_or(gtk::Orientation::Horizontal);
 
     let spacing = props.get("spacing")
-        .and_then(|v| v.clone().try_cast::<i64>().ok())
+        .and_then(|v| v.clone().try_cast::<i64>())
         .unwrap_or(0) as i32;
 
     let space_evenly = props.get("space_evenly")
-        .and_then(|v| v.clone().try_cast::<bool>().ok())
+        .and_then(|v| v.clone().try_cast::<bool>())
         .unwrap_or(true);
 
     let gtk_widget = gtk::Box::new(orientation, spacing);
