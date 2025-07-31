@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{fmt::Display};
 use crate::enum_parse;
 use anyhow::anyhow;
 

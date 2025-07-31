@@ -1,5 +1,5 @@
 use rhai::{Engine, Scope};
-use crate::builtins::{register_all_widgets, register_all_variables};
+use crate::builtins::{register_all_widgets};
 use crate::widgetnode::WidgetNode;
 use std::fs;
 use std::path::Path;
@@ -13,7 +13,7 @@ pub struct ParseConfig {
 impl ParseConfig {
     pub fn new() -> Self {
         let mut engine = Engine::new();
-        let mut scope = Scope::new();
+        let scope = Scope::new();
         engine.set_max_expr_depths(128, 128);
         register_all_widgets(&mut engine);
         // register_all_variables(&mut scope);

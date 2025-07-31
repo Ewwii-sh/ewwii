@@ -1,17 +1,17 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{str::FromStr};
 
 use anyhow::{Result, anyhow};
 
 use super::{window_definition::EnumParseError};
 use crate::{
     enum_parse,
-    diag_error::{DiagResult, DiagError, DiagResultExt},
+    // diag_error::{DiagResult, DiagError, DiagResultExt},
     // parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
-    window::{coords, coords::NumWithUnit},
+    window::{coords::NumWithUnit},
 };
-use ewwii_shared_util::{Span, VarName};
+// use ewwii_shared_util::{Span, VarName};
 
-use crate::dynval::{DynVal, FromDynVal, ConversionError};
+// use crate::dynval::{DynVal, FromDynVal, ConversionError};
 use rhai::Map;
 // use crate::error::{DiagError, DiagResultExt};
 

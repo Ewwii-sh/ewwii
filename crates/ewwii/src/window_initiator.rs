@@ -1,13 +1,13 @@
 use anyhow::Result;
-use ewwii_shared_util::{AttrName, VarName};
-use std::collections::HashMap;
-use rhai::Map;
+// use ewwii_shared_util::{AttrName, VarName};
+// use std::collections::HashMap;
+// use rhai::Map;
 
 use crate::{
     window_arguments::WindowArguments,
     config::WindowDefinition,
     window::{
-        monitor,
+        // monitor,
         window_geometry::WindowGeometry,
         coords::Coords,
         monitor::MonitorIdentifier,
