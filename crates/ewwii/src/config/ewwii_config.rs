@@ -26,15 +26,15 @@ use tokio::{
     sync::mpsc
 };
 
-/// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`],
+/// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwConfig> {
-    EwwConfig::read_from_dir(eww_paths)
+pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwiiConfig> {
+    EwwiiConfig::read_from_dir(eww_paths)
 }
 
 /// Ewwii configuration structure.
 #[derive(Debug, Clone, Default)]
-pub struct EwwConfig {
+pub struct EwwiiConfig {
     windows: HashMap<String, WindowDefinition>,
 }
 
@@ -45,8 +45,8 @@ pub struct WindowDefinition {
     pub root_widget: WidgetNode,
 }
 
-impl EwwConfig {
-    /// Load an [`EwwConfig`] from the config dir of the given [`crate::EwwPaths`], reading the main config file.
+impl EwwiiConfig {
+    /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwPaths`], reading the main config file.
     pub fn read_from_dir(eww_paths: &EwwPaths) -> Result<Self> {
         let rhai_path = eww_paths.get_rhai_path();
         if !rhai_path.exists() {
@@ -93,7 +93,7 @@ impl EwwConfig {
                     bail!("Expected root node to be `Enter`, but got something else.");
                 }
 
-                Ok(EwwConfig {
+                Ok(EwwiiConfig {
                     windows: window_definitions,
                 })
             }
