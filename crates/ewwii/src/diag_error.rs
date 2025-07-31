@@ -21,7 +21,7 @@ static_assertions::assert_impl_all!(dynval::ConversionError: Send, Sync);
 
 impl DiagError {
     pub fn note(self, note: &str) -> Self {
-        DiagError(self.0.with_note(note.to_string()))
+        DiagError(self.0.with_notes(vec![note.to_string()]))
     }
 }
 
