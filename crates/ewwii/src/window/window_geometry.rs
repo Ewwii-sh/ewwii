@@ -7,7 +7,7 @@ use smart_default::SmartDefault;
 use std::{fmt, str::FromStr};
 
 use super::window_definition::EnumParseError;
-use crate::window::coords::{NumWithUnit};
+use crate::window::coords::{NumWithUnit, Error};
 
 #[macro_export]
 macro_rules! cstm_enum_parse {
@@ -23,17 +23,6 @@ macro_rules! cstm_enum_parse {
     };
 }
 
-/// Errors encountered when parsing numeric values or coordinates
-#[derive(Debug, thiserror::Error)]
-pub enum ParseError {
-    #[error("Failed to parse '{0}' as a length value")]
-    NumParseFailed(String),
-    #[error("Invalid unit '{0}', must be '%' or 'px'")]
-    InvalidUnit(String),
-    #[error("Invalid format. Coordinates must be formatted like '200x100' or '50%x50%' ")]
-    MalformedCoords,
-}
-
 /// A pair of [NumWithUnit] values for x and y
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Display, Debug, Default)]
 #[display("{}x{}", x, y)]
@@ -43,11 +32,11 @@ pub struct Coords {
 }
 
 impl FromStr for Coords {
-    type Err = ParseError;
+    type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (sx, sy) = s.split_once(|c: char| c == 'x' || c == '*')
-            .ok_or(ParseError::MalformedCoords)?;
+            .ok_or(Error::MalformedCoords)?;
         Ok(Coords { x: sx.parse()?, y: sy.parse()? })
     }
 }
