@@ -1,17 +1,17 @@
-use anyhow::{Result, anyhow};
-use codespan_reporting::diagnostic::Severity;
-use ewwii_shared_util::{AttrName, Spanned};
+use anyhow::{Result};
+// use codespan_reporting::diagnostic::Severity;
+// use ewwii_shared_util::{AttrName, Spanned};
 use gtk::{
     gdk::prelude::Cast,
-    prelude::{BoxExt, ContainerExt, WidgetExt},
-    Orientation,
+    // prelude::{BoxExt, ContainerExt, WidgetExt},
+    // Orientation,
 };
-use maplit::hashmap;
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+// use maplit::hashmap;
+// use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
-    error_handling_ctx,
-    dynval::DynVal,
+    // error_handling_ctx,
+    // dynval::DynVal,
     widgets::widget_definitions::*,
     config::WindowDefinition,
     // gen_diagnostic_macro,
@@ -36,7 +36,7 @@ pub fn build_gtk_widget(input: WidgetInput) -> Result<gtk::Widget> {
 }
 
 // TODO: implement the commented lines
-fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<(gtk::Widget)> {
+fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<gtk::Widget> {
     let gtk_widget = match root_node {
         WidgetNode::Box { props, children } => build_gtk_box(props, children)?.upcast(),
         WidgetNode::CenterBox { props, children } => build_center_box(props, children)?.upcast(),

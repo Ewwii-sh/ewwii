@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use codespan_reporting::files::Files;
-use ewwii_shared_util::Span;
+// use ewwii_shared_util::Span;
 use crate::diag_error::DiagError;
 
 use iirhai::widgetnode::WidgetNode;
