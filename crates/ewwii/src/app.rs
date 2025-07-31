@@ -7,7 +7,7 @@ use crate::{
     widgets::window::Window,
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
-    dynval::DynVal,
+    // dynval::DynVal,
     widgets::{
         build_widget::build_gtk_widget,
         build_widget::WidgetInput
@@ -24,7 +24,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use codespan_reporting::files::Files;
-use ewwii_shared_util::{Span, VarName};
+use ewwii_shared_util::{Span};
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
