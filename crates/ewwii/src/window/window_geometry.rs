@@ -66,6 +66,15 @@ impl Coords {
     }
 }
 
+impl NumWithUnit {
+    pub fn to_pixels(&self, container_size: i32) -> i32 {
+        match self {
+            NumWithUnit::Pixels(px) => *px,
+            NumWithUnit::Percent(p) => (p * container_size as f64).round() as i32,
+        }
+    }
+}
+
 /// Alignment options for anchoring
 #[derive(Debug, Clone, Copy, Eq, PartialEq, SmartDefault, Serialize, Deserialize, Display)]
 pub enum AnchorAlignment {
