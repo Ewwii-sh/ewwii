@@ -5,8 +5,8 @@
 */
 
 use crate::widgetnode::WidgetNode;
+use rhai::{Array, Dynamic, Map};
 use serde_json::{json, Value};
-use rhai::{Dynamic, Map, Array};
 
 pub struct IpcManager {
     widgetnode: WidgetNode,
@@ -117,7 +117,7 @@ fn widget_to_json(widget: &WidgetNode) -> Value {
         WidgetNode::Enter(children) => json!({
             "type": "enter",
             "children": children.iter().map(widget_to_json).collect::<Vec<_>>()
-        })
+        }),
     }
 }
 
@@ -133,9 +133,7 @@ fn dynamic_to_json(value: &Dynamic) -> Value {
         json!(s)
     } else if value.is::<Map>() {
         let map = value.clone_cast::<Map>();
-        let converted = map.into_iter()
-            .map(|(k, v)| (k.to_string(), dynamic_to_json(&v)))
-            .collect::<serde_json::Map<_, _>>();
+        let converted = map.into_iter().map(|(k, v)| (k.to_string(), dynamic_to_json(&v))).collect::<serde_json::Map<_, _>>();
         Value::Object(converted)
     } else if value.is::<Array>() {
         let array = value.clone_cast::<Array>();

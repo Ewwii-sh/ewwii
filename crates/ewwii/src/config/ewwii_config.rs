@@ -1,31 +1,21 @@
 // WHY THE HECK IS YUCK SO HARD TO REPLACE?
 // I am losing my sanity replacing it!
 // I wonder how honorificabilitudinitatibus will I feel after replacing yuck...
-use anyhow::{bail, Result, Context};
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-};
+use anyhow::{bail, Context, Result};
+use std::{collections::HashMap, path::PathBuf};
 
 use crate::{
-    // error_handling_ctx, 
-    paths::EwwPaths, 
     ipc_server,
+    // error_handling_ctx,
+    paths::EwwPaths,
     window::backend_window_options::BackendWindowOptionsDef,
 };
 
-use iirhai::{
-    parser::ParseConfig,
-    widgetnode::WidgetNode,
-};
+use iirhai::{parser::ParseConfig, widgetnode::WidgetNode};
 
 use rhai::Map;
 
-use tokio::{
-    runtime::Runtime,
-    net::UnixStream,
-    sync::mpsc
-};
+use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
@@ -87,7 +77,7 @@ impl EwwiiConfig {
                                 name: name.clone(),
                                 props: props.clone(),
                                 backend_options: BackendWindowOptionsDef::from_map(&props)?,
-                                root_widget: *node.clone()
+                                root_widget: *node.clone(),
                             };
                             window_definitions.insert(name.clone(), win_def);
                         }
@@ -96,9 +86,7 @@ impl EwwiiConfig {
                     bail!("Expected root node to be `Enter`, but got something else.");
                 }
 
-                Ok(EwwiiConfig {
-                    windows: window_definitions,
-                })
+                Ok(EwwiiConfig { windows: window_definitions })
             }
             Err(_) => bail!("Failed to run the iirhai IPC server."),
         }

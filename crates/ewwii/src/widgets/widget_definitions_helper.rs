@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 
 pub(super) fn parse_orientation(ori: &str) -> Result<gtk::Orientation> {
     match ori.to_ascii_lowercase().as_str() {
