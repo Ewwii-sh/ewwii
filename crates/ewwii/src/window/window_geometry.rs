@@ -52,6 +52,15 @@ impl FromStr for Coords {
     }
 }
 
+impl From<crate::window::coords::Coords> for Coords {
+    fn from(c: crate::window::coords::Coords) -> Self {
+        Self {
+            x: c.x,
+            y: c.y,
+        }
+    }
+}
+
 impl Coords {
     /// Create from absolute pixel values
     pub fn from_pixels((x, y): (i32, i32)) -> Self {
