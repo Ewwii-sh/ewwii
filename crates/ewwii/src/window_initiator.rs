@@ -41,7 +41,9 @@ impl WindowInitiator {
             None => None,
         };
         let monitor = args.monitor.clone().or_else(|| {
-            properties.get("monitor")?.clone().try_cast::<i64>().map(|n| MonitorIdentifier::Index(n as usize))
+            properties.get("monitor")?.clone()
+                .try_cast::<i64>()
+                .map(|n| MonitorIdentifier::Numeric(n as i32))
         });
         Ok(WindowInitiator {
             backend_options: window_def.backend_options.eval(&vars)?,
