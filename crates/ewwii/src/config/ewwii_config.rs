@@ -40,7 +40,6 @@ pub struct WindowDefinition {
 impl EwwiiConfig {
     /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwPaths`], reading the main config file.
     pub fn read_from_dir(eww_paths: &EwwPaths) -> Result<Self> {
-        // TODO: Implement ipc server
         let rhai_path = eww_paths.get_rhai_path();
         if !rhai_path.exists() {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
@@ -49,28 +48,6 @@ impl EwwiiConfig {
         // get the iirhai widget tree
         let mut config_parser = ParseConfig::new();
         let config_tree = config_parser.parse_widget_from_file(rhai_path)?;
-
-        // Create mpsc channel
-        // let (tx, rx) = mpsc::channel::<String>(32);
-
-        // Gets iirhai ipc socket file
-        // let paths = EwwPaths::default()?;
-        // let iirhai_socket_file = paths.get_iirhai_ipc_socket_file().to_path_buf();
-
-        // starts iirhai ipc server
-        // a tokio runtime is used because we are calling async function
-        // let tokio_rt = Runtime::new().unwrap();
-        // let result = tokio_rt.block_on(ipc_server::run_iirhai_server(&iirhai_socket_file));
-
-        // match result {
-            // Ok(()) => {
-                // starting the reader and passing the sender
-                // tokio_rt.spawn(run_ipc_reader(iirhai_socket_file, tx));
-
-                // tokio_rt.spawn(iirhai_consumer(rx));
-            // }
-            // Err(_) => bail!("Failed to run the iirhai IPC server."),
-        // };
 
         let mut window_definitions = HashMap::new();
 
@@ -105,24 +82,5 @@ impl EwwiiConfig {
                 name
             )
         })
-    }
-}
-
-// channel that reads messages from 'run_ipc_reader'
-async fn iirhai_consumer(mut rx: mpsc::Receiver<String>) {
-    while let Some(message) = rx.recv().await {
-        println!("[iirhai] Received: {}", message);
-
-        // TODO: parse tree & call GTK update logic
-    }
-}
-
-async fn run_ipc_reader(socket_path: PathBuf, tx: mpsc::Sender<String>) -> Result<()> {
-    let stream = UnixStream::connect(&socket_path).await?;
-    let (mut stream_read, _) = tokio::io::split(stream);
-
-    loop {
-        let line = ipc_server::read_iirhai_line_from_stream(&mut stream_read).await?;
-        tx.send(line).await.unwrap(); // Forward the message
     }
 }
