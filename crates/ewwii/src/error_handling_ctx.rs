@@ -33,16 +33,31 @@ pub fn format_error(err: &anyhow::Error) -> String {
     anyhow_err_to_diagnostic(err).and_then(|diag| stringify_diagnostic(diag).ok()).unwrap_or_else(|| format!("{:?}", err))
 }
 
+// * OLD
+// pub fn anyhow_err_to_diagnostic(err: &anyhow::Error) -> Option<Diagnostic<usize>> {
+//     #[allow(clippy::manual_map)]
+//     if let Some(err) = err.downcast_ref::<DiagError>() {
+//         Some(err.0.clone())
+//     } else if let Some(err) = err.downcast_ref::<ConversionError>() {
+//         Some(err.to_diagnostic())
+//     } else if let Some(err) = err.downcast_ref::<ValidationError>() {
+//         Some(err.to_diagnostic())
+//     } else if let Some(err) = err.downcast_ref::<EvalError>() {
+//         Some(err.to_diagnostic())
+//     } else {
+//         None
+//     }
+// }
+
 pub fn anyhow_err_to_diagnostic(err: &anyhow::Error) -> Option<Diagnostic<usize>> {
-    #[allow(clippy::manual_map)]
     if let Some(err) = err.downcast_ref::<DiagError>() {
         Some(err.0.clone())
     } else if let Some(err) = err.downcast_ref::<ConversionError>() {
-        Some(err.to_diagnostic())
+        Some(Diagnostic::error().with_message(format!("conversion error: {}", err)))
     // } else if let Some(err) = err.downcast_ref::<ValidationError>() {
-    //     Some(err.to_diagnostic())
+    //     Some(Diagnostic::error().with_message(format!("validation error: {}", err)))
     // } else if let Some(err) = err.downcast_ref::<EvalError>() {
-    //     Some(err.to_diagnostic())
+    //     Some(Diagnostic::error().with_message(format!("evaluation error: {}", err)))
     } else {
         None
     }
