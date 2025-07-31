@@ -1,15 +1,8 @@
-# Ewwii - Widgets for everyone!
+# Installation
 
-Ewwii (ElKowar's Wacky Widgets improved interface, pronounced with sufficient amounts of disgust)
-is a widget system made in [Rust](https://www.rust-lang.org/),
-which lets you create your own widgets similarly to how you can in AwesomeWM.
-The key difference: It is independent of your window manager!
+The first step of using Ewwii is installing it. You would need to have the following prerequesties installed on your system to build/install ewwii.
 
-Configured in yuck and themed using CSS, it is easy to customize and provides all the flexibility you need!
-
-## How to install Eww
-
-### Prerequisites
+**Prerequesties:**
 
 -   rustc
 -   cargo
@@ -22,7 +15,7 @@ The exact names of the packages that provide these may differ depending on your 
 The following list of package names should work for arch linux:
 
 <details>
-<summary>Packages</summary>
+<summary><strong>Packages (click here)</strong></summary>
 
 -   gtk3 (libgdk-3, libgtk-3)
 -   gtk-layer-shell (only on Wayland)
@@ -36,11 +29,11 @@ The following list of package names should work for arch linux:
 
 </details>
 
-(Note that you will most likely need the -devel variants of your distro's packages to be able to compile eww.)
+> **Note** that you will most likely need the -devel variants of your distro's packages to be able to compile ewwii.
 
-### Building
+## Building
 
-Once you have the prerequisites ready, you're ready to install and build eww.
+Once you have the prerequisites ready, you're ready to install and build ewwii.
 
 First clone the repo:
 
@@ -65,7 +58,7 @@ When you're on Wayland, build with:
 cargo build --release --no-default-features --features=wayland
 ```
 
-### Running eww
+## Running ewwii
 
 Once you've built it you can now run it by entering:
 
@@ -81,7 +74,17 @@ chmod +x ./ewwii
 
 Then to run it, enter:
 
-```
+```bash
 ./ewwii daemon
 ./ewwii open <window_name>
+```
+
+## Installing via package managers
+
+If you don't want to go through the _very_ tedious task of cloning and building ewwii, you can install it using Cargo (Rust crate manager).
+
+You can run the following command to install ewwii from cargo:
+
+```bash
+cargo install --git https://github.com/byson94/ewwii
 ```
