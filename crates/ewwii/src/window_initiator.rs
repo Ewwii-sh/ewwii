@@ -46,7 +46,7 @@ impl WindowInitiator {
                 .map(|n| MonitorIdentifier::Numeric(n as i32))
         });
         Ok(WindowInitiator {
-            backend_options: window_def.backend_options.eval(&vars)?,
+            backend_options: window_def.backend_options,
             geometry,
             monitor,
             name: window_def.name.clone(),
