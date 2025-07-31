@@ -11,6 +11,7 @@ use crate::{
     // error_handling_ctx, 
     paths::EwwPaths, 
     ipc_server,
+    window::backend_window_options::BackendWindowOptionsDef,
 };
 
 use iirhai::{
@@ -42,6 +43,7 @@ pub struct EwwiiConfig {
 pub struct WindowDefinition {
     pub name: String,
     pub props: Map,
+    pub backend_options: BackendWindowOptionsDef,
     pub root_widget: WidgetNode,
 }
 
@@ -84,6 +86,7 @@ impl EwwiiConfig {
                             let win_def = WindowDefinition {
                                 name: name.clone(),
                                 props: props.clone(),
+                                backend_options: BackendWindowOptionsDef::from_map(&props)?,
                                 root_widget: *node.clone()
                             };
                             window_definitions.insert(name.clone(), win_def);
