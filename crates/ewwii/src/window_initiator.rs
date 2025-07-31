@@ -19,6 +19,7 @@ use crate::{
 };
 
 use std::str::FromStr;
+use rhai::Dynamic;
 
 /// This stores all the information required to create a window and is created
 /// via combining information from the [`WindowDefinition`] and the [`WindowInitiator`]
@@ -46,12 +47,18 @@ impl WindowInitiator {
                 .map(|n| MonitorIdentifier::Numeric(n as i32))
         });
         Ok(WindowInitiator {
+            // FIXME: window_def.backend_options is passed directly here
+            // window_def.backend_options is [`BackendWindowOptionsDef`] but
+            // [`WindowInitiator`] expects [`BackendWindowOptions`]
             backend_options: window_def.backend_options,
             geometry,
             monitor,
             name: window_def.name.clone(),
-            resizable: window_def.eval_resizable(&vars)?,
-            stacking: window_def.eval_stacking(&vars)?,
+            resizable: properties.get("resizable").map(|d| d.clone_cast::<bool>()).unwrap_or(false),
+            stacking: match properties.get("stacking") {
+                Some(d) => WindowStacking::from_str(&d.clone_cast::<String>())?,
+                None => WindowStacking::default(), // or error
+            },
         })
     }
 
@@ -60,7 +67,7 @@ impl WindowInitiator {
     // }
 }
 
-fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bool) -> Result<WindowGeometry> {
+fn parse_geometry(val: &Dynamic, args: &WindowArguments, override_geom: bool) -> Result<WindowGeometry> {
     let map = val.clone().cast::<rhai::Map>();
 
     let anchor = map.get("anchor")
