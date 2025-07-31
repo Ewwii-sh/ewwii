@@ -274,11 +274,7 @@ impl ActionWithServer {
             ActionWithServer::Reload => return with_response_channel(app::DaemonCommand::ReloadConfigAndCss),
             ActionWithServer::ListWindows => return with_response_channel(app::DaemonCommand::ListWindows),
             ActionWithServer::ListActiveWindows => return with_response_channel(app::DaemonCommand::ListActiveWindows),
-            ActionWithServer::ShowState { all } => {
-                return with_response_channel(|sender| app::DaemonCommand::PrintState { all, sender })
-            }
             ActionWithServer::ShowDebug => return with_response_channel(app::DaemonCommand::PrintDebug),
-            ActionWithServer::ShowGraph => return with_response_channel(app::DaemonCommand::PrintGraph),
         };
         (command, None)
     }

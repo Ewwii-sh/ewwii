@@ -68,12 +68,7 @@ pub enum DaemonCommand {
     },
     KillServer,
     CloseAll,
-    PrintState {
-        all: bool,
-        sender: DaemonResponseSender,
-    },
     PrintDebug(DaemonResponseSender),
-    PrintGraph(DaemonResponseSender),
     ListWindows(DaemonResponseSender),
     ListActiveWindows(DaemonResponseSender),
 }
@@ -101,7 +96,7 @@ impl EwwWindow {
 }
 
 pub struct App<B: DisplayBackend> {
-    pub ewwii_config: config::EwwConfig,
+    pub ewwii_config: config::EwwiiConfig,
     /// Map of all currently open windows to their unique IDs
     /// If no specific ID was specified whilst starting the window,
     /// it will be the same as the window name.
@@ -272,7 +267,6 @@ impl<B: DisplayBackend> App<B> {
                 let output = format!("{:#?}", &self);
                 sender.send_success(output)?
             }
-            DaemonCommand::PrintGraph(sender) => sender.send_success(self.scope_graph.borrow().visualize())?,
         }
         Ok(())
     }
@@ -297,7 +291,7 @@ impl<B: DisplayBackend> App<B> {
             .remove(instance_id)
             .with_context(|| format!("Tried to close window with id '{instance_id}', but no such window was open"))?;
 
-        let scope_index = eww_window.scope_index;
+        // let scope_index = eww_window.scope_index;
         eww_window.close();
 
         if auto_reopen {
@@ -345,7 +339,7 @@ impl<B: DisplayBackend> App<B> {
             // )?;
 
             let root_widget = crate::widgets::build_widget::build_gtk_widget(
-                window_def.windows.into()
+                window_def
             )?;
 
             root_widget.style_context().add_class(window_name);
@@ -418,7 +412,7 @@ impl<B: DisplayBackend> App<B> {
     }
 
     /// Load the given configuration, reloading all script-vars and attempting to reopen all windows that where opened.
-    pub fn load_config(&mut self, config: config::EwwConfig) -> Result<()> {
+    pub fn load_config(&mut self, config: config::EwwiiConfig) -> Result<()> {
         log::info!("Reloading windows");
         log::trace!("loading config: {:#?}", config);
 

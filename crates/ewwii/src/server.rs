@@ -37,7 +37,7 @@ pub fn initialize_server<B: DisplayBackend>(
         Ok(config) => config,
         Err(err) => {
             error_handling_ctx::print_error(err);
-            config::EwwConfig::default()
+            config::EwwiiConfig::default()
         }
     };
 
