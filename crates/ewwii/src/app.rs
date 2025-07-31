@@ -75,13 +75,13 @@ pub enum DaemonCommand {
 
 /// An opened window.
 #[derive(Debug)]
-pub struct EwwWindow {
+pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
 
-impl EwwWindow {
+impl EwwiiWindow {
     /// Close the GTK window and disconnect the destroy event-handler.
     ///
     /// You need to make sure that the scope get's properly cleaned from the state graph
@@ -101,7 +101,7 @@ pub struct App<B: DisplayBackend> {
     /// If no specific ID was specified whilst starting the window,
     /// it will be the same as the window name.
     /// Therefore, only one window of a given name can exist when not using IDs.
-    pub open_windows: HashMap<String, EwwWindow>,
+    pub open_windows: HashMap<String, EwwiiWindow>,
     pub instance_id_to_args: HashMap<String, WindowArguments>,
     /// Window names that are supposed to be open, but failed.
     /// When reloading the config, these should be opened again.
@@ -345,7 +345,7 @@ impl<B: DisplayBackend> App<B> {
             root_widget.style_context().add_class(window_name);
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
-            let mut eww_window = initialize_window::<B>(&initiator, monitor, root_widget, window_scope)?;
+            let mut eww_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
             eww_window.gtk_window.style_context().add_class(window_name);
 
             eww_window.destroy_event_handler_id = Some(eww_window.gtk_window.connect_destroy({
@@ -456,8 +456,7 @@ fn initialize_window<B: DisplayBackend>(
     window_init: &WindowInitiator,
     monitor: Monitor,
     root_widget: gtk::Widget,
-    window_scope: ScopeIndex,
-) -> Result<EwwWindow> {
+) -> Result<EwwiiWindow> {
     let monitor_geometry = monitor.geometry();
     let (actual_window_rect, x, y) = match window_init.geometry {
         Some(geometry) => {
@@ -505,10 +504,9 @@ fn initialize_window<B: DisplayBackend>(
 
     window.show_all();
 
-    Ok(EwwWindow {
+    Ok(EwwiiWindow {
         name: window_init.name.clone(),
         gtk_window: window,
-        scope_index: window_scope,
         destroy_event_handler_id: None,
     })
 }
@@ -517,7 +515,7 @@ fn initialize_window<B: DisplayBackend>(
 #[cfg(feature = "x11")]
 fn apply_window_position(mut window_geometry: WindowGeometry, monitor_geometry: gdk::Rectangle, window: &Window) -> Result<()> {
     let gdk_window = window.window().context("Failed to get gdk window from gtk window")?;
-    window_geometry.size = Coords::from_pixels(window.size());
+    window_geometry.size = crate::window::window_geometry::Coords::from_pixels(window.size());
     let actual_window_rect = get_window_rectangle(window_geometry, monitor_geometry);
 
     let gdk_origin = gdk_window.origin();
