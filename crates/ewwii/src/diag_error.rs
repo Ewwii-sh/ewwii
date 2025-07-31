@@ -1,5 +1,5 @@
 use codespan_reporting::diagnostic;
-use ewwii_shared_util::{Span, Spanned};
+// use ewwii_shared_util::{Span, Spanned};
 use crate::dynval;
 use thiserror::Error;
 

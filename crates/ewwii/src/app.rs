@@ -31,10 +31,10 @@ use gtk::{gdk, glib};
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use std::{
-    cell::RefCell,
+    // cell::RefCell,
     collections::{HashMap, HashSet},
     marker::PhantomData,
-    rc::Rc,
+    // rc::Rc,
 };
 use tokio::sync::mpsc::UnboundedSender;
 use crate::diag_error::DiagError;
@@ -342,7 +342,7 @@ impl<B: DisplayBackend> App<B> {
             //     None,
             // )?;
 
-            let root_widget = crate::widgets::build_widget::build_gtk_widget(
+            let root_widget = build_gtk_widget(
                 WidgetInput::Window(window_def)
             )?;
 

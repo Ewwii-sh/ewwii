@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::{
-    error_handling_ctx, 
+    // error_handling_ctx, 
     paths::EwwPaths, 
     ipc_server,
 };
