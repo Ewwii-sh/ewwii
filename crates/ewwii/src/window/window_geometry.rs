@@ -102,7 +102,7 @@ impl AnchorAlignment {
             "b" | "bottom" => AnchorAlignment::END,
         }
     }
-    pub fn align_coord(&self, inner: i32, outer: i32) -> i32 {
+    pub fn alignment_to_coordinate(&self, inner: i32, outer: i32) -> i32 {
         match self {
             AnchorAlignment::START => 0,
             AnchorAlignment::CENTER => (outer - inner) / 2,
