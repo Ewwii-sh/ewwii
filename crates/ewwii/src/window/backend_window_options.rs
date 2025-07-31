@@ -68,16 +68,16 @@ impl BackendWindowOptionsDef {
         let focusable = Self::get_optional(map, "focusable")?;
 
         let x11 = X11BackendWindowOptionsDef {
-            sticky: Self::get_optional(map, "sticky")?;
+            sticky: Self::get_optional(map, "sticky")?,
             struts,
             window_type,
-            wm_ignore: Self::get_optional(map, "wm-ignore")?;
+            wm_ignore: Self::get_optional(map, "wm-ignore")?,
         };
 
         let wayland = WlBackendWindowOptionsDef {
-            exclusive: Self::get_optional(map, "exclusive")?;
+            exclusive: Self::get_optional(map, "exclusive")?,
             focusable,
-            namespace: Self::get_optional(map, "namespace")?;
+            namespace: Self::get_optional(map, "namespace")?,
         };
 
         Ok(Self { wayland, x11 })
