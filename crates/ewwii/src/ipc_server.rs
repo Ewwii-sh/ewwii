@@ -1,17 +1,20 @@
 use crate::{app, opts};
 use anyhow::{Context, Result};
-use std::time::Duration;
-use std::path::PathBuf;
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, AsyncBufReadExt, ReadHalf, WriteHalf},
-    sync::mpsc::*,
-    net::UnixStream,
-};
 use iirhai::daemon::IIRhaiDaemon;
+use std::path::PathBuf;
+use std::time::Duration;
+use tokio::{
+    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf},
+    net::UnixStream,
+    sync::mpsc::*,
+};
 
 /// ewwii ipc
 
-pub async fn run_ewwii_server<P: AsRef<std::path::Path>>(evt_send: UnboundedSender<app::DaemonCommand>, socket_path: P) -> Result<()> {
+pub async fn run_ewwii_server<P: AsRef<std::path::Path>>(
+    evt_send: UnboundedSender<app::DaemonCommand>,
+    socket_path: P,
+) -> Result<()> {
     let socket_path = socket_path.as_ref();
     let listener = { tokio::net::UnixListener::bind(socket_path)? };
     log::info!("Ewwii IPC server initialized");
@@ -68,10 +71,9 @@ async fn read_ewwii_action_from_stream(stream_read: &'_ mut tokio::net::unix::Re
     bincode::deserialize(&raw_message).context("Failed to parse client message")
 }
 
-
 /// iirhai ipc
 
-pub async fn run_iirhai_server(socket_path: &PathBuf,) -> anyhow::Result<()> {
+pub async fn run_iirhai_server(socket_path: &PathBuf) -> anyhow::Result<()> {
     let daemon = IIRhaiDaemon::new(socket_path.clone());
 
     // Run the server in the background

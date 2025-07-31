@@ -6,9 +6,9 @@ use rhai::Map;
 use crate::{
     // enum_parse, error_handling_ctx,
     // util::{self, list_difference},
-    widgets::{build_widget::{build_gtk_widget, WidgetInput}},
+    widgets::build_widget::{build_gtk_widget, WidgetInput},
 };
-use anyhow::{Result};
+use anyhow::Result;
 // use codespan_reporting::diagnostic::Severity;
 // use ewwii_shared_util::Spanned;
 
@@ -32,19 +32,16 @@ use itertools::Itertools;
 use super::widget_definitions_helper::*;
 
 pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Box> {
-    let orientation = props.get("orientation")
+    let orientation = props
+        .get("orientation")
         .and_then(|v| v.clone().try_cast::<String>())
         .map(|s| parse_orientation(&s)) // from widget_definitions_helper
         .transpose()?
         .unwrap_or(gtk::Orientation::Horizontal);
 
-    let spacing = props.get("spacing")
-        .and_then(|v| v.clone().try_cast::<i64>())
-        .unwrap_or(0) as i32;
+    let spacing = props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()).unwrap_or(0) as i32;
 
-    let space_evenly = props.get("space_evenly")
-        .and_then(|v| v.clone().try_cast::<bool>())
-        .unwrap_or(true);
+    let space_evenly = props.get("space_evenly").and_then(|v| v.clone().try_cast::<bool>()).unwrap_or(true);
 
     let gtk_widget = gtk::Box::new(orientation, spacing);
     gtk_widget.set_homogeneous(space_evenly);
@@ -56,7 +53,6 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk
 
     Ok(gtk_widget)
 }
-
 
 pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Box> {
     let gtk_widget = gtk::Box::new(gtk::Orientation::Horizontal, 0);

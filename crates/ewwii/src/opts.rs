@@ -1,4 +1,4 @@
-use anyhow::{Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 // use ewwii_shared_util::VarName;
 use serde::{Deserialize, Serialize};
@@ -7,11 +7,7 @@ use crate::{
     app,
     daemon_response::{self, DaemonResponse, DaemonResponseSender},
     dynval::DynVal,
-    window::{
-        monitor::MonitorIdentifier,
-        coords::Coords,
-        window_geometry::AnchorPoint
-    },
+    window::{coords::Coords, monitor::MonitorIdentifier, window_geometry::AnchorPoint},
 };
 
 /// Struct that gets generated from `RawOpt`.
@@ -128,7 +124,6 @@ pub enum ActionWithServer {
         /// Automatically close the window after a specified amount of time, i.e.: 1s
         #[arg(long, value_parser=parse_duration)]
         duration: Option<std::time::Duration>,
-
         // /// Define a variable for the window, i.e.: `--arg "var_name=value"`
         // #[arg(long = "arg", value_parser = parse_var_update_arg)]
         // args: Option<Vec<(VarName, DynVal)>>,
@@ -175,7 +170,6 @@ pub enum ActionWithServer {
     //     #[arg(short, long)]
     //     all: bool,
     // },
-
     /// List the names of active windows
     #[command(name = "list-windows")]
     ListWindows,
@@ -190,7 +184,6 @@ pub enum ActionWithServer {
     /// and to provide additional context to the ewwii developers if you are filing a bug.
     #[command(name = "debug")]
     ShowDebug,
-
     // /// Print out the scope graph structure in graphviz dot format.
     // #[command(name = "graph")]
     // ShowGraph,
@@ -268,7 +261,7 @@ impl ActionWithServer {
                     duration,
                     sender,
                     // args,
-                })
+                });
             }
             ActionWithServer::CloseWindows { windows } => {
                 return with_response_channel(|sender| app::DaemonCommand::CloseWindows { windows, auto_reopen: false, sender });

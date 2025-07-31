@@ -3,15 +3,15 @@
 
 use std::sync::{Arc, RwLock};
 
+use crate::diag_error::DiagError;
+use crate::dynval::ConversionError;
+use crate::file_database::FileDatabase;
 use codespan_reporting::{
     diagnostic::Diagnostic,
     term::{self, Chars},
 };
 use ewwii_shared_util::Span;
 use once_cell::sync::Lazy;
-use crate::file_database::FileDatabase;
-use crate::diag_error::DiagError;
-use crate::dynval::ConversionError;
 
 pub static FILE_DATABASE: Lazy<Arc<RwLock<FileDatabase>>> = Lazy::new(|| Arc::new(RwLock::new(FileDatabase::new())));
 

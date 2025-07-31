@@ -1,25 +1,25 @@
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 // use ewwii_shared_util::{AttrName, VarName};
 // use std::collections::HashMap;
 // use rhai::Map;
 
 use crate::{
-    window_arguments::WindowArguments,
     config::WindowDefinition,
     window::{
-        // monitor,
-        window_geometry::{WindowGeometry, Coords},
+        backend_window_options::BackendWindowOptions,
         // coords::Coords,
         coords::NumWithUnit,
         monitor::MonitorIdentifier,
-        backend_window_options::BackendWindowOptions,
-        window_geometry::{AnchorPoint, AnchorAlignment},
-        window_definition::{WindowStacking},
+        window_definition::WindowStacking,
+        window_geometry::{AnchorAlignment, AnchorPoint},
+        // monitor,
+        window_geometry::{Coords, WindowGeometry},
     },
+    window_arguments::WindowArguments,
 };
 
-use std::str::FromStr;
 use rhai::Dynamic;
+use std::str::FromStr;
 
 /// This stores all the information required to create a window and is created
 /// via combining information from the [`WindowDefinition`] and the [`WindowInitiator`]
@@ -41,11 +41,10 @@ impl WindowInitiator {
             // Some(geo) => Some(geo.eval(&vars)?.override_if_given(args.anchor, args.pos, args.size)),
             None => None,
         };
-        let monitor = args.monitor.clone().or_else(|| {
-            properties.get("monitor")?.clone()
-                .try_cast::<i64>()
-                .map(|n| MonitorIdentifier::Numeric(n as i32))
-        });
+        let monitor = args
+            .monitor
+            .clone()
+            .or_else(|| properties.get("monitor")?.clone().try_cast::<i64>().map(|n| MonitorIdentifier::Numeric(n as i32)));
         Ok(WindowInitiator {
             // FIXME: window_def.backend_options is passed directly here
             // window_def.backend_options is [`BackendWindowOptionsDef`] but
@@ -70,26 +69,19 @@ impl WindowInitiator {
 fn parse_geometry(val: &Dynamic, args: &WindowArguments, override_geom: bool) -> Result<WindowGeometry> {
     let map = val.clone().cast::<rhai::Map>();
 
-    let anchor = map.get("anchor")
-        .map(|dyn_value| anchor_point_from_str(&dyn_value.to_string()))
-        .transpose()?;
-
+    let anchor = map.get("anchor").map(|dyn_value| anchor_point_from_str(&dyn_value.to_string())).transpose()?;
 
     let mut geom = WindowGeometry {
         offset: get_coords_from_map(&map, "x", "y")?,
         size: get_coords_from_map(&map, "width", "height")?,
-        anchor_point: anchor.unwrap_or(
-            AnchorPoint {
-                x: AnchorAlignment::CENTER, 
-                y: AnchorAlignment::START
-            }),
+        anchor_point: anchor.unwrap_or(AnchorPoint { x: AnchorAlignment::CENTER, y: AnchorAlignment::START }),
     };
 
     if override_geom {
         geom = geom.override_with(
-            args.anchor, 
+            args.anchor,
             // both are converted into window_geometry::Coords from coords::Coords
-            args.pos.map(Into::into), 
+            args.pos.map(Into::into),
             args.size.map(Into::into),
         );
     }
@@ -97,18 +89,24 @@ fn parse_geometry(val: &Dynamic, args: &WindowArguments, override_geom: bool) ->
     Ok(geom)
 }
 
-fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str, ) -> Result<Coords> {
-    let raw_key1 = map.get(x_key)
-        .ok_or_else(|| anyhow!("Missing field {}", x_key))?.clone()
-        .into_string().map_err(|_| anyhow!("Expected string for field {}", x_key))?;
+fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str) -> Result<Coords> {
+    let raw_key1 = map
+        .get(x_key)
+        .ok_or_else(|| anyhow!("Missing field {}", x_key))?
+        .clone()
+        .into_string()
+        .map_err(|_| anyhow!("Expected string for field {}", x_key))?;
 
-    let raw_key2 = map.get(y_key)
-        .ok_or_else(|| anyhow!("Missing field {}", y_key))?.clone()
-        .into_string().map_err(|_| anyhow!("Expected string for field {}", y_key))?;
+    let raw_key2 = map
+        .get(y_key)
+        .ok_or_else(|| anyhow!("Missing field {}", y_key))?
+        .clone()
+        .into_string()
+        .map_err(|_| anyhow!("Expected string for field {}", y_key))?;
 
     let key1 = NumWithUnit::from_str(&raw_key1)?;
     let key2 = NumWithUnit::from_str(&raw_key2)?;
-    
+
     Ok(Coords { x: key1, y: key2 })
 }
 
@@ -119,12 +117,8 @@ fn anchor_point_from_str(s: &str) -> Result<AnchorPoint> {
     match parts.as_slice() {
         [single] => {
             // Apply to both x and y
-            let alignment = AnchorAlignment::from_x_alignment(single)
-                .or_else(|_| AnchorAlignment::from_y_alignment(single))?;
-            Ok(AnchorPoint {
-                x: alignment,
-                y: alignment,
-            })
+            let alignment = AnchorAlignment::from_x_alignment(single).or_else(|_| AnchorAlignment::from_y_alignment(single))?;
+            Ok(AnchorPoint { x: alignment, y: alignment })
         }
         [y_part, x_part] => {
             let y = AnchorAlignment::from_y_alignment(y_part)?;

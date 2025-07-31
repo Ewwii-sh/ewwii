@@ -7,7 +7,7 @@ use smart_default::SmartDefault;
 use std::{fmt, str::FromStr};
 
 use super::window_definition::EnumParseError;
-use crate::window::coords::{NumWithUnit, Error};
+use crate::window::coords::{Error, NumWithUnit};
 
 #[macro_export]
 macro_rules! cstm_enum_parse {
@@ -35,28 +35,21 @@ impl FromStr for Coords {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (sx, sy) = s.split_once(|c: char| c == 'x' || c == '*')
-            .ok_or(Error::MalformedCoords)?;
+        let (sx, sy) = s.split_once(|c: char| c == 'x' || c == '*').ok_or(Error::MalformedCoords)?;
         Ok(Coords { x: sx.parse()?, y: sy.parse()? })
     }
 }
 
 impl From<crate::window::coords::Coords> for Coords {
     fn from(c: crate::window::coords::Coords) -> Self {
-        Self {
-            x: c.x,
-            y: c.y,
-        }
+        Self { x: c.x, y: c.y }
     }
 }
 
 impl Coords {
     /// Create from absolute pixel values
     pub fn from_pixels((x, y): (i32, i32)) -> Self {
-        Coords {
-            x: NumWithUnit::Pixels(x),
-            y: NumWithUnit::Pixels(y),
-        }
+        Coords { x: NumWithUnit::Pixels(x), y: NumWithUnit::Pixels(y) }
     }
     /// Resolve relative or absolute coordinates against container size
     pub fn relative_to(&self, width: i32, height: i32) -> (i32, i32) {
@@ -120,11 +113,9 @@ impl std::str::FromStr for AnchorPoint {
     type Err = EnumParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (x_str, y_str) = s.split_once(' ')
-            .ok_or_else(|| EnumParseError {
-                input: s.to_string(),
-                expected: vec!["<horizontal> <vertical>"],
-            })?;
+        let (x_str, y_str) = s
+            .split_once(' ')
+            .ok_or_else(|| EnumParseError { input: s.to_string(), expected: vec!["<horizontal> <vertical>"] })?;
 
         let x = AnchorAlignment::from_x_alignment(x_str)?;
         let y = AnchorAlignment::from_y_alignment(y_str)?;
@@ -155,7 +146,7 @@ impl WindowGeometry {
         &self,
         anchor_point: Option<AnchorPoint>,
         offset: Option<Coords>,
-        // if you are wondering why this is coords, ig that its because they watned to 
+        // if you are wondering why this is coords, ig that its because they watned to
         // reuse coords? I dont know. It works so I am keeping it.
         size: Option<Coords>,
     ) -> Self {
