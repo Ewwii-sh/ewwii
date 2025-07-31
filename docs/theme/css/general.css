@@ -1,6 +1,6 @@
 /* Base styles and content styles */
 
-@import 'variables.css';
+@import "variables.css";
 
 :root {
     /* Browser default font-size is 16px, this way 1 rem = 10px */
@@ -21,23 +21,51 @@ body {
 }
 
 code {
-    font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace !important;
+    font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo,
+        "DejaVu Sans Mono", monospace, monospace !important;
     font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+details summary {
+    cursor: pointer;
 }
 
 /* Don't change font size in headers. */
-h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
+h1 code,
+h2 code,
+h3 code,
+h4 code,
+h5 code,
+h6 code {
     font-size: unset;
 }
 
-.left { float: left; }
-.right { float: right; }
-.boring { opacity: 0.6; }
-.hide-boring .boring { display: none; }
-.hidden { display: none !important; }
+.left {
+    float: left;
+}
+.right {
+    float: right;
+}
+.boring {
+    opacity: 0.6;
+}
+.hide-boring .boring {
+    display: none;
+}
+.hidden {
+    display: none !important;
+}
 
-h2, h3 { margin-top: 2.5em; }
-h4, h5 { margin-top: 2em; }
+h2,
+h3 {
+    margin-top: 2.5em;
+}
+h4,
+h5 {
+    margin-top: 2em;
+}
 
 .header + .header h3,
 .header + .header h4,
@@ -68,7 +96,9 @@ h6:target::before {
 .page {
     outline: 0;
     padding: 0 var(--page-padding);
-    margin-top: calc(0px - var(--menu-bar-height)); /* Compensate for the #menu-bar-hover-placeholder */
+    margin-top: calc(
+        0px - var(--menu-bar-height)
+    ); /* Compensate for the #menu-bar-hover-placeholder */
 }
 .page-wrapper {
     box-sizing: border-box;
@@ -87,12 +117,25 @@ h6:target::before {
     margin-right: auto;
     max-width: var(--content-max-width);
 }
-.content p { line-height: 1.45em; }
-.content ol { line-height: 1.45em; }
-.content ul { line-height: 1.45em; }
-.content a { text-decoration: none; }
-.content a:hover { text-decoration: underline; }
-.content img, .content video { max-width: 100%; }
+.content p {
+    line-height: 1.45em;
+}
+.content ol {
+    line-height: 1.45em;
+}
+.content ul {
+    line-height: 1.45em;
+}
+.content a {
+    text-decoration: none;
+}
+.content a:hover {
+    text-decoration: underline;
+}
+.content img,
+.content video {
+    max-width: 100%;
+}
 .content .header:link,
 .content .header:visited {
     color: var(--fg);
@@ -128,16 +171,14 @@ table tbody tr:nth-child(2n) {
     background: var(--table-alternate-bg);
 }
 
-
 blockquote {
     margin: 20px 0;
     padding: 0 20px;
     color: var(--fg);
     background-color: var(--quote-bg);
-    border-top: .1em solid var(--quote-border);
-    border-bottom: .1em solid var(--quote-border);
+    border-top: 0.1em solid var(--quote-border);
+    border-bottom: 0.1em solid var(--quote-border);
 }
-
 
 :not(.footnote-definition) + .footnote-definition,
 .footnote-definition + :not(.footnote-definition) {
@@ -156,7 +197,9 @@ blockquote {
     visibility: hidden;
     color: #fff;
     background-color: #333;
-    transform: translateX(-50%); /* Center by moving tooltip 50% of its width left */
+    transform: translateX(
+        -50%
+    ); /* Center by moving tooltip 50% of its width left */
     left: -8px; /* Half of the width of the icon */
     top: -35px;
     font-size: 0.8em;

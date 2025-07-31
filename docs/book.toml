@@ -8,5 +8,4 @@ title = "eww documentation"
 
 [output.html]
 default-theme = "navy"
-no-section-label = true
 git-repository-url = "https://github.com/byson94/ewwii/tree/master/docs"
