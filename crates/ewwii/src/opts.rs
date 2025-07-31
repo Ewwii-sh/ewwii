@@ -168,13 +168,13 @@ pub enum ActionWithServer {
     #[command(name = "close-all", alias = "ca")]
     CloseAll,
 
-    /// Prints the variables used in all currently open window
-    #[command(name = "state")]
-    ShowState {
-        /// Shows all variables, including not currently used ones
-        #[arg(short, long)]
-        all: bool,
-    },
+    // /// Prints the variables used in all currently open window
+    // #[command(name = "state")]
+    // ShowState {
+    //     /// Shows all variables, including not currently used ones
+    //     #[arg(short, long)]
+    //     all: bool,
+    // },
 
     /// List the names of active windows
     #[command(name = "list-windows")]
@@ -191,9 +191,9 @@ pub enum ActionWithServer {
     #[command(name = "debug")]
     ShowDebug,
 
-    /// Print out the scope graph structure in graphviz dot format.
-    #[command(name = "graph")]
-    ShowGraph,
+    // /// Print out the scope graph structure in graphviz dot format.
+    // #[command(name = "graph")]
+    // ShowGraph,
 }
 
 impl Opt {
