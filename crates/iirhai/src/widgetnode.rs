@@ -5,7 +5,7 @@ pub enum WidgetNode {
     Label { props: Map },
     Box { props: Map, children: Vec<WidgetNode> },
     CenterBox { props: Map, children: Vec<WidgetNode> },
-    Button { props: Map, children: Vec<WidgetNode> },
+    Button { props: Map },
     Image { props: Map },
     Input { props: Map },
     Progress { props: Map },

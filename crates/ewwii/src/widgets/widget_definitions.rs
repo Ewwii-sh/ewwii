@@ -364,7 +364,7 @@ pub(super) fn build_gtk_image(props: Map) -> Result<gtk::Image> {
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_button(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Button> {
+pub(super) fn build_gtk_button(props: Map) -> Result<gtk::Button> {
     let gtk_widget = gtk::Button::new();
 
     // def_widget!(bargs, _g, gtk_widget, {
