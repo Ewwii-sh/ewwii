@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   GTK widget construction is redesigned to work with the new tree.
 -   Replaced `Simplexpr` and Yuck AST with Rhai's built in expression system and widget trees.
 -   Removed dependency on Yuck parser.
+-   Full rewrite of Documentation.
 
 ### Removed
 
