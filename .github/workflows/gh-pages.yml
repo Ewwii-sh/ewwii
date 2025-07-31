@@ -17,12 +17,12 @@ jobs:
             # Checkout
             - uses: actions/checkout@master
 
-            # Build widget documentation
-            - name: Use deno to build widget documentation
-              uses: denoland/setup-deno@main
-              with:
-                  deno-version: "v1.x"
-            - run: deno run --allow-read --allow-write gen-docs.ts ./crates/ewwii/src/widgets/widget_definitions.rs ./crates/ewwii/src/config/inbuilt.rs
+            # # Build widget documentation
+            # - name: Use deno to build widget documentation
+            #   uses: denoland/setup-deno@main
+            #   with:
+            #       deno-version: "v1.x"
+            # - run: deno run --allow-read --allow-write gen-docs.ts ./crates/ewwii/src/widgets/widget_definitions.rs ./crates/ewwii/src/config/inbuilt.rs
 
             # Build & deploy
             - name: build mdBook page
