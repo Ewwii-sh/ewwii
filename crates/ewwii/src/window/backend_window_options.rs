@@ -1,6 +1,6 @@
 use std::{str::FromStr};
 
-use anyhow::{Result, anyhow};
+use anyhow::{Result};
 
 use super::{window_definition::EnumParseError};
 use crate::{
