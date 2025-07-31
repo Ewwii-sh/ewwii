@@ -39,7 +39,7 @@ pub(super) struct RawOpt {
     #[arg(long = "force-wayland", global = true)]
     force_wayland: bool,
 
-    /// override path to configuration directory (directory that contains ewwii.lua and eww.(s)css)
+    /// override path to configuration directory (directory that contains ewwii.rhai and eww.(s)css)
     #[arg(short, long, global = true)]
     config: Option<std::path::PathBuf>,
 
