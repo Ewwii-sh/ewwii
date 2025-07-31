@@ -6,7 +6,7 @@ use rhai::Map;
 use crate::{
     enum_parse, error_handling_ctx,
     util::{self, list_difference},
-    widgets::{build_widget::build_gtk_widget},
+    widgets::{build_widget::{build_gtk_widget, WidgetInput}},
 };
 use anyhow::{anyhow, Context, Result};
 use codespan_reporting::diagnostic::Severity;
@@ -48,7 +48,7 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk
     gtk_widget.set_homogeneous(space_evenly);
 
     for child in children {
-        let child_widget = build_gtk_widget(child)?;
+        let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
         gtk_widget.add(&child_widget);
     }
 

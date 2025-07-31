@@ -145,7 +145,7 @@ impl WindowGeometry {
         size: Option<Coords>,
     ) -> Self {
         WindowGeometry {
-            anchor_point: anchor_point.unwrap_or(self.anchor),
+            anchor_point: anchor_point.unwrap_or(self.anchor_point),
             offset: offset.unwrap_or(self.offset),
             size: size.unwrap_or(self.size),
         }
