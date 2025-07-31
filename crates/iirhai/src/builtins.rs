@@ -17,10 +17,7 @@ pub fn register_all_widgets(engine: &mut Engine) {
         children: children.into_iter().map(|v| v.cast()).collect(),
     });
 
-    engine.register_fn("button", |props: Map, children: Array| WidgetNode::Button {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
+    engine.register_fn("button", |props: Map| WidgetNode::Button { props });
 
     engine.register_fn("image", |props: Map| WidgetNode::Image { props });
 
