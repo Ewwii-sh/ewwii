@@ -4,8 +4,8 @@ use std::{
     str::{self, FromStr},
 };
 
-use serde::{Deserialize, Serialize};
 use crate::dynval::{ConversionError, DynVal};
+use serde::{Deserialize, Serialize};
 
 /// The type of the identifier used to select a monitor
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

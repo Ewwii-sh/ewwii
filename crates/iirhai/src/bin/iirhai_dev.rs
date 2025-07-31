@@ -1,12 +1,9 @@
 use iirhai::{
-    parser::ParseConfig,
     // ipc_manager::IpcManager,
-    daemon::IIRhaiDaemon
+    daemon::IIRhaiDaemon,
+    parser::ParseConfig,
 };
-use std::{
-    fs,
-    path::PathBuf
-};
+use std::{fs, path::PathBuf};
 
 #[allow(unused_must_use)]
 fn main() {

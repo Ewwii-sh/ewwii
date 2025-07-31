@@ -1,13 +1,13 @@
-use std::{str::FromStr};
+use std::str::FromStr;
 
-use anyhow::{Result};
+use anyhow::Result;
 
-use super::{window_definition::EnumParseError};
+use super::window_definition::EnumParseError;
 use crate::{
     cstm_enum_parse,
     // diag_error::{DiagResult, DiagError, DiagResultExt},
     // parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
-    window::{coords::NumWithUnit, coords},
+    window::{coords, coords::NumWithUnit},
 };
 // use ewwii_shared_util::{Span, VarName};
 
@@ -37,10 +37,7 @@ pub struct BackendWindowOptionsDef {
 
 impl BackendWindowOptionsDef {
     pub fn eval(&self, properties: Map) -> Result<BackendWindowOptions, Error> {
-        Ok(BackendWindowOptions { 
-            wayland: self.wayland.eval(properties.clone())?, 
-            x11: self.x11.eval(properties)? 
-        })
+        Ok(BackendWindowOptions { wayland: self.wayland.eval(properties.clone())?, x11: self.x11.eval(properties)? })
     }
 
     // pub fn from_attrs(attrs: &mut Attributes) -> DiagResult<Self> {
@@ -118,36 +115,23 @@ pub struct X11BackendWindowOptionsDef {
 impl X11BackendWindowOptionsDef {
     fn eval(&self, properties: Map) -> Result<X11BackendWindowOptions, Error> {
         Ok(X11BackendWindowOptions {
-            sticky: properties
-                .get("sticky")
-                .map(|d| d.clone_cast::<bool>())
-                .unwrap_or(true),
+            sticky: properties.get("sticky").map(|d| d.clone_cast::<bool>()).unwrap_or(true),
 
             struts: match properties.get("reserve") {
                 Some(dynval) => {
                     let obj_map = dynval.read_lock::<Map>().ok_or(Error::EnumParseErrorMessage("Expected map for reserve"))?;
 
-                    let distance_str = obj_map
-                        .get("distance")
-                        .ok_or(Error::MissingField("distance"))?
-                        .clone_cast::<String>();
+                    let distance_str = obj_map.get("distance").ok_or(Error::MissingField("distance"))?.clone_cast::<String>();
 
                     let distance = NumWithUnit::from_str(&distance_str)?;
 
-                    let side = obj_map
-                        .get("side")
-                        .map(|s| s.clone_cast::<String>())
-                        .map(|s| Side::from_str(&s))
-                        .transpose()?;
+                    let side = obj_map.get("side").map(|s| s.clone_cast::<String>()).map(|s| Side::from_str(&s)).transpose()?;
 
-                    X11StrutDefinition {
-                        distance,
-                        side: side.unwrap_or(Side::default()),
-                    }
+                    X11StrutDefinition { distance, side: side.unwrap_or(Side::default()) }
                 }
                 None => X11StrutDefinition::default(),
             },
-            
+
             window_type: match properties.get("windowtype") {
                 Some(dynval) => {
                     let s = dynval.clone_cast::<String>();
@@ -157,13 +141,8 @@ impl X11BackendWindowOptionsDef {
             },
 
             wm_ignore: {
-                let wm_ignore = properties
-                    .get("wm_ignore")
-                    .map(|d| d.clone_cast::<bool>());
-                wm_ignore.unwrap_or_else(|| {
-                    properties.get("windowtype").is_none()
-                        && properties.get("reserve").is_none()
-                })
+                let wm_ignore = properties.get("wm_ignore").map(|d| d.clone_cast::<bool>());
+                wm_ignore.unwrap_or_else(|| properties.get("windowtype").is_none() && properties.get("reserve").is_none())
             },
         })
     }
@@ -192,10 +171,10 @@ impl WlBackendWindowOptionsDef {
                 Some(dynval) => {
                     let s = dynval.clone_cast::<String>().to_lowercase();
                     WlWindowFocusable::from_str(&s)?
-                },
+                }
                 None => WlWindowFocusable::default(),
             },
-            namespace: properties.get("namespace").map(|d| d.clone_cast::<String>())
+            namespace: properties.get("namespace").map(|d| d.clone_cast::<String>()),
         })
     }
 }

@@ -1,4 +1,4 @@
-use anyhow::{Result};
+use anyhow::Result;
 // use codespan_reporting::diagnostic::Severity;
 // use ewwii_shared_util::{AttrName, Spanned};
 use gtk::{
@@ -10,11 +10,11 @@ use gtk::{
 // use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
+    config::WindowDefinition,
+    // gen_diagnostic_macro,
     // error_handling_ctx,
     // dynval::DynVal,
     widgets::widget_definitions::*,
-    config::WindowDefinition,
-    // gen_diagnostic_macro,
 };
 
 use iirhai::widgetnode::WidgetNode;
@@ -64,10 +64,7 @@ fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<gtk::Widget> {
         // WIDGET_NAME_STACK => build_gtk_stack(node)?.upcast(),
         // WIDGET_NAME_SYSTRAY => build_systray(node)?.upcast(),
         unknown => {
-            return Err(anyhow::anyhow!(
-                "Cannot build GTK widget from node: {:?}",
-                unknown
-            ));
+            return Err(anyhow::anyhow!("Cannot build GTK widget from node: {:?}", unknown));
         }
     };
     Ok(gtk_widget)

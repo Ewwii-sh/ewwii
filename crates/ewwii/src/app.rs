@@ -1,3 +1,4 @@
+use crate::diag_error::DiagError;
 use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
@@ -5,26 +6,20 @@ use crate::{
     gtk::prelude::{ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt},
     paths::EwwPaths,
     widgets::window::Window,
-    window_arguments::WindowArguments,
-    window_initiator::WindowInitiator,
     // dynval::DynVal,
-    widgets::{
-        build_widget::build_gtk_widget,
-        build_widget::WidgetInput
-    },
+    widgets::{build_widget::build_gtk_widget, build_widget::WidgetInput},
     window::{
         coords::Coords,
-        window_geometry::{
-            WindowGeometry, 
-            AnchorPoint,
-        },
         monitor::MonitorIdentifier,
+        window_geometry::{AnchorPoint, WindowGeometry},
     },
+    window_arguments::WindowArguments,
+    window_initiator::WindowInitiator,
     *,
 };
 use anyhow::anyhow;
 use codespan_reporting::files::Files;
-use ewwii_shared_util::{Span};
+use ewwii_shared_util::Span;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
@@ -37,7 +32,6 @@ use std::{
     // rc::Rc,
 };
 use tokio::sync::mpsc::UnboundedSender;
-use crate::diag_error::DiagError;
 
 /// A command for the eww daemon.
 /// While these are mostly generated from eww CLI commands (see [`opts::ActionWithServer`]),
@@ -241,15 +235,7 @@ impl<B: DisplayBackend> App<B> {
                 let result = if should_toggle && is_open {
                     self.close_window(&instance_id, false)
                 } else {
-                    self.open_window(&WindowArguments {
-                        instance_id,
-                        window_name,
-                        pos,
-                        size,
-                        monitor,
-                        anchor,
-                        duration,
-                    })
+                    self.open_window(&WindowArguments { instance_id, window_name, pos, size, monitor, anchor, duration })
                 };
 
                 sender.respond_with_result(result)?;
@@ -342,9 +328,7 @@ impl<B: DisplayBackend> App<B> {
             //     None,
             // )?;
 
-            let root_widget = build_gtk_widget(
-                WidgetInput::Window(window_def)
-            )?;
+            let root_widget = build_gtk_widget(WidgetInput::Window(window_def))?;
 
             root_widget.style_context().add_class(window_name);
 
@@ -508,11 +492,7 @@ fn initialize_window<B: DisplayBackend>(
 
     window.show_all();
 
-    Ok(EwwiiWindow {
-        name: window_init.name.clone(),
-        gtk_window: window,
-        destroy_event_handler_id: None,
-    })
+    Ok(EwwiiWindow { name: window_init.name.clone(), gtk_window: window, destroy_event_handler_id: None })
 }
 
 /// Apply the provided window-positioning rules to the window.

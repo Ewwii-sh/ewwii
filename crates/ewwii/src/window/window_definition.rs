@@ -1,5 +1,5 @@
-use std::{fmt::Display};
 use crate::cstm_enum_parse;
+use std::fmt::Display;
 
 #[derive(Debug, thiserror::Error)]
 pub struct EnumParseError {
