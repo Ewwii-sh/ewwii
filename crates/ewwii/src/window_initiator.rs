@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 // use ewwii_shared_util::{AttrName, VarName};
 // use std::collections::HashMap;
 // use rhai::Map;
@@ -10,6 +10,7 @@ use crate::{
         // monitor,
         window_geometry::WindowGeometry,
         coords::Coords,
+        coords::NumWithUnit,
         monitor::MonitorIdentifier,
         backend_window_options::BackendWindowOptions,
         window_geometry::{AnchorPoint, AnchorAlignment},
@@ -64,9 +65,13 @@ fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bo
 
 
     let mut geom = WindowGeometry {
-        offset: get_coords_from_map(&map, "x", "y"),
-        size: get_coords_from_map(&map, "width", "height"),
-        anchor: anchor.unwrap_or(AnchorPoint::TopLeft),
+        offset: get_coords_from_map(&map, "x", "y")?,
+        size: get_coords_from_map(&map, "width", "height")?,
+        anchor_point: anchor.unwrap_or(
+            AnchorPoint {
+                x: AnchorAlignment::CENTER, 
+                y: AnchorAlignment::START
+            }),
     };
 
     if override_geom {
@@ -76,14 +81,17 @@ fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bo
     Ok(geom)
 }
 
-fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str) -> Result<Coords> {
-    let key1 = map.get(x_key)
-        .ok_or("Missing field x")?
-        .as_int()?;
+fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str, ) -> Result<Coords> {
+    let raw_key1 = map.get(x_key)
+        .ok_or_else(|| anyhow!("Missing field {}", x_key))?
+        .into_string().map_err(|_| anyhow!("Expected string for field {}", x_key))?;
 
-    let key2 = map.get(y_key)
-        .ok_or("Missing field y")?
-        .as_int()?;
+    let raw_key2 = map.get(y_key)
+        .ok_or_else(|| anyhow!("Missing field {}", y_key))?
+        .into_string().map_err(|_| anyhow!("Expected string for field {}", y_key))?;
+
+    let key1 = NumWithUnit::from_str(&raw_key1)?;
+    let key2 = NumWithUnit::from_str(&raw_key2)?;
     
     Ok(Coords { x: key1, y: key2 })
 }
