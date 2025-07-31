@@ -8,6 +8,10 @@ use crate::{
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
     dynval::DynVal,
+    widgets::{
+        build_widget::build_gtk_widget,
+        build_widget::WidgetInput
+    },
     window::{
         coords::Coords,
         window_geometry::{
@@ -339,7 +343,7 @@ impl<B: DisplayBackend> App<B> {
             // )?;
 
             let root_widget = crate::widgets::build_widget::build_gtk_widget(
-                window_def
+                WidgetInput::Window(window_def)
             )?;
 
             root_widget.style_context().add_class(window_name);
