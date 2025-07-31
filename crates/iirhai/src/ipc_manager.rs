@@ -41,10 +41,9 @@ fn widget_to_json(widget: &WidgetNode) -> Value {
             "props": props.iter().map(|(k, v)| (k.to_string(), dynamic_to_json(v))).collect::<serde_json::Map<_, _>>(),
             "children": children.iter().map(widget_to_json).collect::<Vec<_>>()
         }),
-        WidgetNode::Button { props, children } => json!({
+        WidgetNode::Button { props } => json!({
             "type": "button",
             "props": props.iter().map(|(k, v)| (k.to_string(), dynamic_to_json(v))).collect::<serde_json::Map<_, _>>(),
-            "children": children.iter().map(widget_to_json).collect::<Vec<_>>()
         }),
         WidgetNode::Image { props } => json!({
             "type": "image",

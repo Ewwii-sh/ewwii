@@ -130,8 +130,8 @@ pub enum ActionWithServer {
     },
 
     // TODO
-    /// Open multiple windows at once.
-    /// NOTE: This will in the future be part of ewwii open, and will then be removed.
+    // /// Open multiple windows at once.
+    // /// NOTE: This will in the future be part of ewwii open, and will then be removed.
     // #[command(name = "open-many")]
     // OpenMany {
     //     /// List the windows to open, optionally including their id, i.e.: `--window "window_name:window_id"`
@@ -146,7 +146,6 @@ pub enum ActionWithServer {
     //     #[arg(long = "toggle")]
     //     should_toggle: bool,
     // },
-
     /// Close the given windows
     #[command(name = "close", alias = "c")]
     CloseWindows { windows: Vec<String> },
