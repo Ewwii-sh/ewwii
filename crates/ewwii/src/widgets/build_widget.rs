@@ -19,8 +19,8 @@ use crate::{
 
 use iirhai::widgetnode::WidgetNode;
 
-// pass `EwwConfig::read_from_dir(&eww_paths).windows.into()` here
-pub fn build_gtk_widget(window_defs: Rc<HashMap<String, WindowDefinition>>) -> Result<gtk::Widget> {
+// pass `EwwiiConfig::read_from_dir(&eww_paths).windows.into()` here
+pub fn build_gtk_widget(window_defs: WindowDefinition) -> Result<gtk::Widget> {
     let def = window_defs.values().next().ok_or_else(|| anyhow!("No WindowDefinition passed to build_gtk_widget()"))?;
 
     let root_node = &def.root_widget;
