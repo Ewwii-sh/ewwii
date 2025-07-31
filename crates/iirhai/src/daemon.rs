@@ -1,9 +1,12 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::{
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    net::{
+        unix::{OwnedReadHalf, OwnedWriteHalf},
+        UnixListener,
+    },
     signal,
-    net::{UnixListener, unix::{OwnedWriteHalf, OwnedReadHalf}},
-    io::{AsyncWriteExt, BufReader, AsyncBufReadExt},
     sync::Mutex,
 };
 // use anyhow::Result;
@@ -27,10 +30,7 @@ enum DaemonState {
 
 impl IIRhaiDaemon {
     pub fn new(socket_path: PathBuf) -> Self {
-        Self {
-            socket_path,
-            clients: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self { socket_path, clients: Arc::new(Mutex::new(Vec::new())) }
     }
 
     pub async fn run_ewwii_server(&self) -> anyhow::Result<()> {
@@ -69,7 +69,11 @@ impl IIRhaiDaemon {
         Ok(())
     }
 
-    async fn handle_commands(stream_read: OwnedReadHalf, state: Arc<Mutex<DaemonState>>, clients: Arc<Mutex<Vec<OwnedWriteHalf>>>,) -> anyhow::Result<()> {
+    async fn handle_commands(
+        stream_read: OwnedReadHalf,
+        state: Arc<Mutex<DaemonState>>,
+        clients: Arc<Mutex<Vec<OwnedWriteHalf>>>,
+    ) -> anyhow::Result<()> {
         let mut buf_reader = BufReader::new(stream_read);
 
         loop {
@@ -93,10 +97,10 @@ impl IIRhaiDaemon {
 
                     // Send greeting
                     Self::send_if_running_static("started\n", &clients, &state).await;
-                },
+                }
                 Some(&_) => {
                     // invalid command
-                },
+                }
                 None => {
                     // Invalid command
                 }
@@ -104,11 +108,7 @@ impl IIRhaiDaemon {
         }
     }
 
-    async fn send_if_running_static(
-        msg: &str,
-        clients: &Arc<Mutex<Vec<OwnedWriteHalf>>>,
-        state: &Arc<Mutex<DaemonState>>,
-    ) {
+    async fn send_if_running_static(msg: &str, clients: &Arc<Mutex<Vec<OwnedWriteHalf>>>, state: &Arc<Mutex<DaemonState>>) {
         if let DaemonState::Running = *state.lock().await {
             let mut guard = clients.lock().await;
             let mut i = 0;

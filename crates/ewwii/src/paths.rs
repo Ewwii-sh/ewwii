@@ -65,7 +65,13 @@ impl EwwPaths {
             std::fs::create_dir_all(&log_dir)?;
         }
 
-        Ok(EwwPaths { config_dir, log_file: log_dir.join(format!("eww_{}.log", daemon_id)), log_dir, ipc_socket_file, iirhai_ipc_socket_file })
+        Ok(EwwPaths {
+            config_dir,
+            log_file: log_dir.join(format!("eww_{}.log", daemon_id)),
+            log_dir,
+            ipc_socket_file,
+            iirhai_ipc_socket_file,
+        })
     }
 
     pub fn default() -> Result<Self> {

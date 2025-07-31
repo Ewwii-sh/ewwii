@@ -2,8 +2,7 @@ use crate::{
     app::{self, App, DaemonCommand},
     config, daemon_response,
     display_backend::DisplayBackend,
-    error_handling_ctx, ipc_server,
-    EwwPaths,
+    error_handling_ctx, ipc_server, EwwPaths,
 };
 use anyhow::{Context, Result};
 

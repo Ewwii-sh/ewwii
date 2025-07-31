@@ -1,6 +1,6 @@
 /*
     Entry file of ewwii.
-    
+
     This file mostly contains wayland/x11 setup and args stuff
     If you are interesting in something like window rendering,
     then you can read `app.rs`. It is like the heart of ewwii.
@@ -11,7 +11,7 @@
     then you can check `config/ewwii_config.rs` as it is the file that loads
     and passes the widget tree to other compontents.
 
-    The ipc stuff are done in `ipc_server.rs`. This file holds the ipc 
+    The ipc stuff are done in `ipc_server.rs`. This file holds the ipc
     for both ewwii daemon and iirhai.
 */
 
@@ -36,18 +36,18 @@ use crate::server::ForkResult;
 // importing all local modules
 mod app; // major thing here
 mod application_lifecycle;
-mod file_database;
 mod client;
 mod config;
 mod daemon_response;
+mod diag_error;
 mod display_backend;
-mod error_handling_ctx;
 mod dynval;
+mod error_handling_ctx;
+mod file_database;
 mod gen_diagnostic_macro;
 mod geometry;
 mod ipc_server;
 mod opts;
-mod diag_error;
 mod paths;
 mod server;
 mod util;

@@ -1,16 +1,8 @@
-use anyhow::{Result};
+use anyhow::Result;
 use ewwii_shared_util::VarName;
-use std::{
-    collections::{HashMap},
-    str::FromStr,
-};
+use std::{collections::HashMap, str::FromStr};
 
-use crate::{
-    dynval::DynVal,
-    window::coords::Coords,
-    window::monitor::MonitorIdentifier,
-    window::window_geometry::AnchorPoint,
-};
+use crate::{dynval::DynVal, window::coords::Coords, window::monitor::MonitorIdentifier, window::window_geometry::AnchorPoint};
 
 fn parse_value_from_args<T: FromStr>(name: &str, args: &mut HashMap<VarName, DynVal>) -> Result<Option<T>, T::Err> {
     args.remove(&VarName(name.to_string())).map(|x| FromStr::from_str(&x.as_string().unwrap())).transpose()
