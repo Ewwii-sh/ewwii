@@ -1,6 +1,10 @@
 # Summary
 
-[Introduction](./eww.md)
+[Introduction](./introduction.md)
+
+-   [Getting Started](./getting_started.md)
+
+    -   [Installation](./installation.md)
 
 -   [Core Concepts](./concepts.md)
 
