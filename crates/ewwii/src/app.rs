@@ -336,12 +336,16 @@ impl<B: DisplayBackend> App<B> {
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
             // TODO replace this
+            // let root_widget = crate::widgets::build_widget::build_gtk_widget(
+            //     &mut self.scope_graph.borrow_mut(),
+            //     Rc::new(self.ewwii_config.get_widget_definitions().clone()),
+            //     window_scope,
+            //     window_def.widget,
+            //     None,
+            // )?;
+
             let root_widget = crate::widgets::build_widget::build_gtk_widget(
-                &mut self.scope_graph.borrow_mut(),
-                Rc::new(self.ewwii_config.get_widget_definitions().clone()),
-                window_scope,
-                window_def.widget,
-                None,
+                window_def.windows.into()
             )?;
 
             root_widget.style_context().add_class(window_name);
