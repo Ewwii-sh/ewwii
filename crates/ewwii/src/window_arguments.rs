@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{Result};
 use ewwii_shared_util::VarName;
 use std::{
     collections::{HashMap},
