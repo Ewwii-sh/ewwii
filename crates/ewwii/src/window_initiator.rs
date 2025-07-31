@@ -30,15 +30,15 @@ pub struct WindowInitiator {
 }
 
 impl WindowInitiator {
-    // pass `EwwiiConfig::read_from_dir(&eww_paths).windows.into()` here
     pub fn new(window_def: &WindowDefinition, args: &WindowArguments) -> Result<Self> {
-        let geometry = match &window_def.props.get("geometry") {
+        let properties = window_def.props.clone();
+        let geometry = match properties.get("geometry") {
             Some(val) => Some(parse_geometry(val, args, true)?),
             // Some(geo) => Some(geo.eval(&vars)?.override_if_given(args.anchor, args.pos, args.size)),
             None => None,
         };
         let monitor = args.monitor.clone().or_else(|| {
-            window_def.props.get("monitor")?.clone().try_cast::<i64>().map(|n| MonitorIdentifier::Index(n as usize))
+            properties.get("monitor")?.clone().try_cast::<i64>().map(|n| MonitorIdentifier::Index(n as usize))
         });
         Ok(WindowInitiator {
             backend_options: window_def.backend_options.eval(&vars)?,
@@ -70,7 +70,6 @@ fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bo
     };
 
     if override_geom {
-        // You apply CLI args if passed:
         geom = geom.override_if_given(args.anchor, args.pos, args.size);
     }
 

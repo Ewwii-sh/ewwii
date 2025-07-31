@@ -134,22 +134,23 @@ pub enum ActionWithServer {
         // args: Option<Vec<(VarName, DynVal)>>,
     },
 
+    // TODO
     /// Open multiple windows at once.
     /// NOTE: This will in the future be part of ewwii open, and will then be removed.
-    #[command(name = "open-many")]
-    OpenMany {
-        /// List the windows to open, optionally including their id, i.e.: `--window "window_name:window_id"`
-        #[arg(value_parser = parse_window_config_and_id)]
-        windows: Vec<(String, String)>,
+    // #[command(name = "open-many")]
+    // OpenMany {
+    //     /// List the windows to open, optionally including their id, i.e.: `--window "window_name:window_id"`
+    //     #[arg(value_parser = parse_window_config_and_id)]
+    //     windows: Vec<(String, String)>,
 
-        /// Define a variable for the window, i.e.: `--arg "window_id:var_name=value"`
-        // #[arg(long = "arg", value_parser = parse_window_id_args)]
-        // args: Vec<(String, VarName, DynVal)>,
+    //     /// Define a variable for the window, i.e.: `--arg "window_id:var_name=value"`
+    //     // #[arg(long = "arg", value_parser = parse_window_id_args)]
+    //     // args: Vec<(String, VarName, DynVal)>,
 
-        /// If a window is already open, close it instead
-        #[arg(long = "toggle")]
-        should_toggle: bool,
-    },
+    //     /// If a window is already open, close it instead
+    //     #[arg(long = "toggle")]
+    //     should_toggle: bool,
+    // },
 
     /// Close the given windows
     #[command(name = "close", alias = "c")]
@@ -237,7 +238,8 @@ fn parse_window_config_and_id(s: &str) -> Result<(String, String)> {
 
 impl ActionWithServer {
     pub fn can_start_daemon(&self) -> bool {
-        matches!(self, ActionWithServer::OpenWindow { .. } | ActionWithServer::OpenMany { .. })
+        // matches!(self, ActionWithServer::OpenWindow { .. } | ActionWithServer::OpenMany { .. })
+        matches!(self, ActionWithServer::OpenWindow { .. })
     }
 
     pub fn into_daemon_command(self) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
@@ -251,9 +253,9 @@ impl ActionWithServer {
                 let _ = send.send(DaemonResponse::Success("pong".to_owned()));
                 return (app::DaemonCommand::NoOp, Some(recv));
             }
-            ActionWithServer::OpenMany { windows, should_toggle } => {
-                return with_response_channel(|sender| app::DaemonCommand::OpenMany { windows, args, should_toggle, sender });
-            }
+            // ActionWithServer::OpenMany { windows, should_toggle } => {
+            //     return with_response_channel(|sender| app::DaemonCommand::OpenMany { windows, should_toggle, sender });
+            // }
             ActionWithServer::OpenWindow { window_name, id, pos, size, screen, anchor, should_toggle, duration } => {
                 return with_response_channel(|sender| app::DaemonCommand::OpenWindow {
                     window_name,
@@ -265,7 +267,7 @@ impl ActionWithServer {
                     should_toggle,
                     duration,
                     sender,
-                    args,
+                    // args,
                 })
             }
             ActionWithServer::CloseWindows { windows } => {
