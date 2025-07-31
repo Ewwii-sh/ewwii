@@ -40,6 +40,7 @@ pub struct WindowDefinition {
 impl EwwiiConfig {
     /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwPaths`], reading the main config file.
     pub fn read_from_dir(eww_paths: &EwwPaths) -> Result<Self> {
+        // TODO: Implement ipc server
         let rhai_path = eww_paths.get_rhai_path();
         if !rhai_path.exists() {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
@@ -50,46 +51,46 @@ impl EwwiiConfig {
         let config_tree = config_parser.parse_widget_from_file(rhai_path)?;
 
         // Create mpsc channel
-        let (tx, rx) = mpsc::channel::<String>(32);
+        // let (tx, rx) = mpsc::channel::<String>(32);
 
         // Gets iirhai ipc socket file
-        let paths = EwwPaths::default()?;
-        let iirhai_socket_file = paths.get_iirhai_ipc_socket_file().to_path_buf();
+        // let paths = EwwPaths::default()?;
+        // let iirhai_socket_file = paths.get_iirhai_ipc_socket_file().to_path_buf();
 
         // starts iirhai ipc server
         // a tokio runtime is used because we are calling async function
-        let tokio_rt = Runtime::new().unwrap();
-        let result = tokio_rt.block_on(ipc_server::run_iirhai_server(&iirhai_socket_file));
+        // let tokio_rt = Runtime::new().unwrap();
+        // let result = tokio_rt.block_on(ipc_server::run_iirhai_server(&iirhai_socket_file));
 
-        match result {
-            Ok(()) => {
+        // match result {
+            // Ok(()) => {
                 // starting the reader and passing the sender
-                tokio_rt.spawn(run_ipc_reader(iirhai_socket_file, tx));
+                // tokio_rt.spawn(run_ipc_reader(iirhai_socket_file, tx));
 
-                tokio_rt.spawn(iirhai_consumer(rx));
+                // tokio_rt.spawn(iirhai_consumer(rx));
+            // }
+            // Err(_) => bail!("Failed to run the iirhai IPC server."),
+        // };
 
-                let mut window_definitions = HashMap::new();
+        let mut window_definitions = HashMap::new();
 
-                if let WidgetNode::Enter(children) = config_tree {
-                    for node in children {
-                        if let WidgetNode::DefWindow { name, props, node } = node {
-                            let win_def = WindowDefinition {
-                                name: name.clone(),
-                                props: props.clone(),
-                                backend_options: BackendWindowOptionsDef::from_map(&props)?,
-                                root_widget: *node.clone(),
-                            };
-                            window_definitions.insert(name.clone(), win_def);
-                        }
-                    }
-                } else {
-                    bail!("Expected root node to be `Enter`, but got something else.");
+        if let WidgetNode::Enter(children) = config_tree {
+            for node in children {
+                if let WidgetNode::DefWindow { name, props, node } = node {
+                    let win_def = WindowDefinition {
+                        name: name.clone(),
+                        props: props.clone(),
+                        backend_options: BackendWindowOptionsDef::from_map(&props)?,
+                        root_widget: *node.clone(),
+                    };
+                    window_definitions.insert(name.clone(), win_def);
                 }
-
-                Ok(EwwiiConfig { windows: window_definitions })
             }
-            Err(_) => bail!("Failed to run the iirhai IPC server."),
+        } else {
+            bail!("Expected root node to be `Enter`, but got something else.");
         }
+
+        Ok(EwwiiConfig { windows: window_definitions })
     }
 
     pub fn get_windows(&self) -> &HashMap<String, WindowDefinition> {
