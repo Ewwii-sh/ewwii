@@ -1,13 +1,12 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use ewwii_shared_util::VarName;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap},
     str::FromStr,
 };
 
 use crate::{
     dynval::DynVal,
-    window::monitor,
     window::coords::Coords,
     window::monitor::MonitorIdentifier,
     window::window_geometry::AnchorPoint,
