@@ -34,22 +34,22 @@ pub struct WindowArguments {
 }
 
 impl WindowArguments {
-    pub fn new_from_args(id: String, config_name: String, mut args: HashMap<VarName, DynVal>) -> Result<Self> {
-        let initiator = WindowArguments {
-            window_name: config_name,
-            instance_id: id,
-            pos: parse_value_from_args::<Coords>("pos", &mut args)?,
-            size: parse_value_from_args::<Coords>("size", &mut args)?,
-            monitor: parse_value_from_args::<MonitorIdentifier>("screen", &mut args)?,
-            anchor: parse_value_from_args::<AnchorPoint>("anchor", &mut args)?,
-            duration: parse_value_from_args::<DynVal>("duration", &mut args)?
-                .map(|x| x.as_duration())
-                .transpose()
-                .context("Not a valid duration")?,
-        };
+    // pub fn new_from_args(id: String, config_name: String, mut args: HashMap<VarName, DynVal>) -> Result<Self> {
+    //     let initiator = WindowArguments {
+    //         window_name: config_name,
+    //         instance_id: id,
+    //         pos: parse_value_from_args::<Coords>("pos", &mut args)?,
+    //         size: parse_value_from_args::<Coords>("size", &mut args)?,
+    //         monitor: parse_value_from_args::<MonitorIdentifier>("screen", &mut args)?,
+    //         anchor: parse_value_from_args::<AnchorPoint>("anchor", &mut args)?,
+    //         duration: parse_value_from_args::<DynVal>("duration", &mut args)?
+    //             .map(|x| x.as_duration())
+    //             .transpose()
+    //             .context("Not a valid duration")?,
+    //     };
 
-        Ok(initiator)
-    }
+    //     Ok(initiator)
+    // }
 
     // /// Return a hashmap of all arguments the window was passed and expected, returning
     // /// an error in case required arguments are missing or unexpected arguments are passed.
