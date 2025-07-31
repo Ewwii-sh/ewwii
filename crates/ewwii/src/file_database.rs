@@ -19,11 +19,14 @@ pub enum FilesError {
 
     #[error(transparent)]
     DiagError(#[from] DiagError),
+
+    #[error(transparent)]
+    ParserError(#[from] anyhow::Error),
 }
 
 pub trait RhaiFileProvider {
-    fn load_rhai_file(&mut self, path: std::path::PathBuf) -> Result<(Span, WidgetNode), FilesError>;
-    fn load_rhai_str(&mut self, name: String, content: String) -> Result<(Span, WidgetNode), DiagError>;
+    fn load_rhai_file(&mut self, path: std::path::PathBuf) -> Result<WidgetNode, FilesError>;
+    fn load_rhai_str(&mut self, name: String, content: String) -> Result<WidgetNode, FilesError>;
     fn unload(&mut self, id: usize);
 }
 
@@ -52,7 +55,7 @@ impl FileDatabase {
 }
 
 impl RhaiFileProvider for FileDatabase {
-    fn load_rhai_file(&mut self, path: std::path::PathBuf) -> Result<(Span, WidgetNode), FilesError> {
+    fn load_rhai_file(&mut self, path: std::path::PathBuf) -> Result<WidgetNode, FilesError> {
         let file_content = std::fs::read_to_string(&path)?;
         let line_starts = codespan_reporting::files::line_starts(&file_content).collect();
         let code_file = CodeFile {
@@ -65,9 +68,9 @@ impl RhaiFileProvider for FileDatabase {
         Ok(iirhai::parser::ParseConfig::new().parse_widget_code(&file_content)?)
     }
 
-    fn load_rhai_str(&mut self, name: String, content: String) -> Result<(Span, WidgetNode), DiagError> {
+    fn load_rhai_str(&mut self, name: String, content: String) -> Result<WidgetNode, FilesError> {
         // let file_id = self.insert_string(name, content.clone())?;
-        iirhai::parser::ParseConfig::new().parse_widget_code(&content)
+        Ok(iirhai::parser::ParseConfig::new().parse_widget_code(&content)?)
     }
 
     fn unload(&mut self, id: usize) {

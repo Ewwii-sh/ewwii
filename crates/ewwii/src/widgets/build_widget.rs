@@ -19,14 +19,20 @@ use crate::{
 
 use iirhai::widgetnode::WidgetNode;
 
-// pass `EwwiiConfig::read_from_dir(&eww_paths).windows.into()` here
-pub fn build_gtk_widget(window_defs: WindowDefinition) -> Result<gtk::Widget> {
-    let def = window_defs.values().next().ok_or_else(|| anyhow!("No WindowDefinition passed to build_gtk_widget()"))?;
+/// Widget input allows us to pass either a widgetnode or a window_def
+/// this is important to make build_gtk_widget standalone without having to
+/// make build_gtk_widget_from_node public
+pub enum WidgetInput {
+    Node(WidgetNode),
+    Window(WindowDefinition),
+}
 
-    let root_node = &def.root_widget;
-
-    // build_gtk_widget_from_node(root_node)
-    Ok(build_gtk_widget_from_node(root_node.clone())?)
+pub fn build_gtk_widget(input: WidgetInput) -> Result<gtk::Widget> {
+    let node = match input {
+        WidgetInput::Node(n) => n,
+        WidgetInput::Window(w) => w.root_widget,
+    };
+    build_gtk_widget_from_node(node)
 }
 
 // TODO: implement the commented lines
