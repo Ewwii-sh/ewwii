@@ -77,7 +77,12 @@ fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bo
     };
 
     if override_geom {
-        geom = geom.override_with(args.anchor, args.pos, args.size);
+        geom = geom.override_with(
+            args.anchor, 
+            // both are converted into window_geometry::Coords from coords::Coords
+            args.pos.map(Into::into), 
+            args.size.map(Into::into),
+        );
     }
 
     Ok(geom)
@@ -98,8 +103,9 @@ fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str, ) -> Result<Co
     Ok(Coords { x: key1, y: key2 })
 }
 
-fn anchor_point_from_str(s: &str) -> Result<AnchorPoint, EnumParseError> {
-    let parts: Vec<_> = s.trim().to_lowercase().split_whitespace().collect();
+fn anchor_point_from_str(s: &str) -> Result<AnchorPoint> {
+    let binding = s.trim().to_lowercase();
+    let parts: Vec<_> = binding.split_whitespace().collect();
 
     match parts.as_slice() {
         [single] => {
@@ -116,9 +122,6 @@ fn anchor_point_from_str(s: &str) -> Result<AnchorPoint, EnumParseError> {
             let x = AnchorAlignment::from_x_alignment(x_part)?;
             Ok(AnchorPoint { x, y })
         }
-        _ => Err(EnumParseError::UnknownValue {
-            expected: "1 or 2 words like 'center' or 'top left'".to_string(),
-            got: s.to_string(),
-        }),
+        _ => Err(anyhow!("Expected 1 or 2 words like 'center' or 'top left'")),
     }
 }
