@@ -30,7 +30,7 @@ pub struct WindowInitiator {
 }
 
 impl WindowInitiator {
-    // pass `EwwConfig::read_from_dir(&eww_paths).windows.into()` here
+    // pass `EwwiiConfig::read_from_dir(&eww_paths).windows.into()` here
     pub fn new(window_def: &WindowDefinition, args: &WindowArguments) -> Result<Self> {
         let geometry = match &window_def.props.get("geometry") {
             Some(val) => Some(parse_geometry(val, args, true)?),
