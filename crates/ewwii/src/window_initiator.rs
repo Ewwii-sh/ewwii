@@ -8,8 +8,8 @@ use crate::{
     config::WindowDefinition,
     window::{
         // monitor,
-        window_geometry::WindowGeometry,
-        coords::Coords,
+        window_geometry::{WindowGeometry, Coords},
+        // coords::Coords,
         coords::NumWithUnit,
         monitor::MonitorIdentifier,
         backend_window_options::BackendWindowOptions,
@@ -17,6 +17,8 @@ use crate::{
         window_definition::{WindowStacking, EnumParseError},
     },
 };
+
+use std::str::FromStr;
 
 /// This stores all the information required to create a window and is created
 /// via combining information from the [`WindowDefinition`] and the [`WindowInitiator`]
@@ -75,7 +77,7 @@ fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bo
     };
 
     if override_geom {
-        geom = geom.override_if_given(args.anchor, args.pos, args.size);
+        geom = geom.override_with(args.anchor, args.pos, args.size);
     }
 
     Ok(geom)
@@ -83,11 +85,11 @@ fn parse_geometry(val: &rhai::Dynamic, args: &WindowArguments, override_geom: bo
 
 fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str, ) -> Result<Coords> {
     let raw_key1 = map.get(x_key)
-        .ok_or_else(|| anyhow!("Missing field {}", x_key))?
+        .ok_or_else(|| anyhow!("Missing field {}", x_key))?.clone()
         .into_string().map_err(|_| anyhow!("Expected string for field {}", x_key))?;
 
     let raw_key2 = map.get(y_key)
-        .ok_or_else(|| anyhow!("Missing field {}", y_key))?
+        .ok_or_else(|| anyhow!("Missing field {}", y_key))?.clone()
         .into_string().map_err(|_| anyhow!("Expected string for field {}", y_key))?;
 
     let key1 = NumWithUnit::from_str(&raw_key1)?;
