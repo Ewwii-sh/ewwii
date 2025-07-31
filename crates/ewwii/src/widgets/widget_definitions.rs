@@ -20,15 +20,15 @@ use crate::gtk::prelude::LabelExt;
 use gtk::{gdk, pango};
 use crate::util;
 use itertools::Itertools;
-// use once_cell::sync::Lazy;
+use once_cell::sync::Lazy;
 
-// use std::{
-//     cell::RefCell,
-//     cmp::Ordering,
-//     collections::{HashMap, HashSet},
-//     rc::Rc,
-//     time::Duration,
-// };
+use std::{
+    // cell::RefCell,
+    // cmp::Ordering,
+    collections::{HashMap, HashSet},
+    // rc::Rc,
+    // time::Duration,
+};
 
 use super::widget_definitions_helper::*;
 
@@ -612,4 +612,85 @@ pub(super) fn build_gtk_scrolledwindow(props: Map, children: Vec<WidgetNode>) ->
     // });
 
     Ok(gtk_widget)
+}
+
+// * CSS/SCSS
+/// Deprecated attributes from top of widget hierarchy
+static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
+    Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
+    
+/// Code that applies css/scss to widgets.
+pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widget) -> Result<()> {
+    use rhai::Dynamic;
+
+    let props = match node {
+        WidgetNode::Box { props, .. }
+        | WidgetNode::CenterBox { props, .. }
+        | WidgetNode::EventBox { props, .. }
+        | WidgetNode::Graph { props }
+        | WidgetNode::Progress { props }
+        | WidgetNode::Image { props }
+        | WidgetNode::Button { props }
+        | WidgetNode::Label { props }
+        | WidgetNode::Input { props }
+        | WidgetNode::Calendar { props }
+        | WidgetNode::Revealer { props, .. }
+        | WidgetNode::Scroll { props, .. } => props,
+        _ => return Ok(()),
+    };
+
+    // checking deprecated keys
+    // see eww issue #251 (https://github.com/elkowar/eww/issues/251)
+    for deprecated in DEPRECATED_ATTRS.iter() {
+        if props.contains_key(*deprecated) {
+            eprintln!("Warning: attribute `{}` is deprecated and ignored", deprecated);
+        }
+    }
+
+    // Handle visibility
+    let visible = get_bool_prop(&props, "visible", Some(true))?;
+    if visible {
+        gtk_widget.show();
+    } else {
+        gtk_widget.hide();
+    }
+
+    // Handle classes
+    let class_str = get_string_prop(&props, "class", Some(""))?;
+    if !class_str.is_empty() {
+        let style_context = gtk_widget.style_context();
+        for class in class_str.split_whitespace() {
+            style_context.add_class(class);
+        }
+    }
+
+    // 4. Handle style
+    let style_str = get_string_prop(&props, "style", Some(""))?;
+    if !style_str.is_empty() {
+        let css_provider = gtk::CssProvider::new();
+        let scss = format!("* {{ {} }}", style_str);
+        css_provider.load_from_data(
+            grass::from_string(scss, &grass::Options::default())?.as_bytes()
+        )?;
+        gtk_widget
+            .style_context()
+            .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
+
+    // 5. Handle full css
+    let css_str = get_string_prop(&props, "css", Some(""))?;
+    if !css_str.is_empty() {
+        let css_provider = gtk::CssProvider::new();
+        css_provider.load_from_data(
+            grass::from_string(css_str, &grass::Options::default())?.as_bytes()
+        )?;
+        gtk_widget
+            .style_context()
+            .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
+
+
+    // 5. Optional: handle other fields like valign/halign/vexpand etc.
+
+    Ok(())
 }
