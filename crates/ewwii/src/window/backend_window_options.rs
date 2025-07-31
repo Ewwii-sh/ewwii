@@ -4,7 +4,7 @@ use anyhow::{Result, anyhow};
 
 use super::{window_definition::EnumParseError};
 use crate::{
-    enum_parse,
+    cstm_enum_parse,
     // diag_error::{DiagResult, DiagError, DiagResultExt},
     // parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
     window::{coords::NumWithUnit},
@@ -186,7 +186,7 @@ impl FromStr for WlWindowFocusable {
     type Err = EnumParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        enum_parse! { "focusable", s,
+        cstm_enum_parse! { "focusable", s,
             "none" => Self::None,
             "exclusive" => Self::Exclusive,
             "ondemand" => Self::OnDemand,
@@ -213,7 +213,7 @@ impl FromStr for X11WindowType {
     type Err = EnumParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        enum_parse! { "window type", s,
+        cstm_enum_parse! { "window type", s,
             "dock" => Self::Dock,
             "toolbar" => Self::Toolbar,
             "dialog" => Self::Dialog,
@@ -238,7 +238,7 @@ impl FromStr for Side {
     type Err = EnumParseError;
 
     fn from_str(s: &str) -> Result<Side, Self::Err> {
-        enum_parse! { "side", s,
+        cstm_enum_parse! { "side", s,
             "l" | "left" => Side::Left,
             "r" | "right" => Side::Right,
             "t" | "top" => Side::Top,
