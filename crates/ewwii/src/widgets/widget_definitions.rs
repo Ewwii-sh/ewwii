@@ -8,7 +8,7 @@ use crate::{
     // util::{self, list_difference},
     widgets::build_widget::{build_gtk_widget, WidgetInput},
 };
-use anyhow::Result;
+use anyhow::{Result, bail, anyhow};
 // use codespan_reporting::diagnostic::Severity;
 // use ewwii_shared_util::Spanned;
 
@@ -16,8 +16,9 @@ use anyhow::Result;
 // use glib::translate::FromGlib;
 // use gtk::{self, glib, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{self, prelude::*};
-// use gtk::{gdk, pango};
-// use gtk::gdk;
+use crate::gtk::prelude::LabelExt;
+use gtk::{gdk, pango};
+use crate::util;
 use itertools::Itertools;
 // use once_cell::sync::Lazy;
 
@@ -35,13 +36,13 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk
     let orientation = props
         .get("orientation")
         .and_then(|v| v.clone().try_cast::<String>())
-        .map(|s| parse_orientation(&s)) // from widget_definitions_helper
+        .map(|s| parse_orientation(&s))
         .transpose()?
         .unwrap_or(gtk::Orientation::Horizontal);
 
     let spacing = props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()).unwrap_or(0) as i32;
 
-    let space_evenly = props.get("space_evenly").and_then(|v| v.clone().try_cast::<bool>()).unwrap_or(true);
+    let space_evenly = get_bool_prop(&props, "space_evenly", Some(true))?;
 
     let gtk_widget = gtk::Box::new(orientation, spacing);
     gtk_widget.set_homogeneous(space_evenly);
@@ -414,102 +415,96 @@ pub(super) fn build_gtk_button(props: Map) -> Result<gtk::Button> {
 pub(super) fn build_gtk_label(props: Map) -> Result<gtk::Label> {
     let gtk_widget = gtk::Label::new(None);
 
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     // @prop text - the text to display
-    //     // @prop truncate - whether to truncate text (or pango markup). If `show-truncated` is `false`, or if `limit-width` has a value, this property has no effect and truncation is enabled.
-    //     // @prop limit-width - maximum count of characters to display
-    //     // @prop truncate-left - whether to truncate on the left side
-    //     // @prop show-truncated - show whether the text was truncated. Disabling it will also disable dynamic truncation (the labels won't be truncated more than `limit-width`, even if there is not enough space for them), and will completly disable truncation on pango markup.
-    //     // @prop unindent - whether to remove leading spaces
-    //     prop(text: as_string, truncate: as_bool = false, limit_width: as_i32 = i32::MAX, truncate_left: as_bool = false, show_truncated: as_bool = true, unindent: as_bool = true) {
-    //         let text = if show_truncated {
-    //             // gtk does weird thing if we set max_width_chars to i32::MAX
-    //             if limit_width == i32::MAX {
-    //                 gtk_widget.set_max_width_chars(-1);
-    //             } else {
-    //                 gtk_widget.set_max_width_chars(limit_width);
-    //             }
-    //             if truncate || limit_width != i32::MAX {
-    //                 if truncate_left {
-    //                     gtk_widget.set_ellipsize(pango::EllipsizeMode::Start);
-    //                 } else {
-    //                     gtk_widget.set_ellipsize(pango::EllipsizeMode::End);
-    //                 }
-    //             } else {
-    //                 gtk_widget.set_ellipsize(pango::EllipsizeMode::None);
-    //             }
+    let truncate = get_bool_prop(&props, "truncate", Some(false))?;
+    let limit_width = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
+    let truncate_left = get_bool_prop(&props, "truncate_left", Some(false))?;
+    let show_truncated = get_bool_prop(&props, "show_truncated", Some(true))?;
+    let unindent = get_bool_prop(&props, "unindent", Some(true))?;
 
-    //             text
-    //         } else {
-    //             gtk_widget.set_ellipsize(pango::EllipsizeMode::None);
+    let has_text = props.get("text").is_some();
+    let has_markup = props.get("markup").is_some();
 
-    //             let limit_width = limit_width as usize;
-    //             let char_count = text.chars().count();
-    //             if char_count > limit_width {
-    //                 if truncate_left {
-    //                     text.chars().skip(char_count - limit_width).collect()
-    //                 } else {
-    //                     text.chars().take(limit_width).collect()
-    //                 }
-    //             } else {
-    //                 text
-    //             }
-    //         };
+    if has_text && has_markup {
+        bail!("Cannot set both 'text' and 'markup' for a label");
+    } else if has_text {
+        let text = get_string_prop(&props, "text", None)?;  // now safe: key must exist
+        let t = if show_truncated {
+            if limit_width == i32::MAX {
+                gtk_widget.set_max_width_chars(-1);
+            } else {
+                gtk_widget.set_max_width_chars(limit_width);
+            }
+            apply_ellipsize_settings(&gtk_widget, truncate, limit_width, truncate_left, show_truncated);
+            text
+        } else {
+            gtk_widget.set_ellipsize(pango::EllipsizeMode::None);
 
-    //         let text = unescape::unescape(&text).context(format!("Failed to unescape label text {}", &text))?;
-    //         let text = if unindent { util::unindent(&text) } else { text };
-    //         gtk_widget.set_text(&text);
-    //     },
-    //     // @prop markup - Pango markup to display
-    //     // @prop truncate - whether to truncate text (or pango markup). If `show-truncated` is `false`, or if `limit-width` has a value, this property has no effect and truncation is enabled.
-    //     // @prop limit-width - maximum count of characters to display
-    //     // @prop truncate-left - whether to truncate on the left side
-    //     // @prop show-truncated - show whether the text was truncated. Disabling it will also disable dynamic truncation (the labels won't be truncated more than `limit-width`, even if there is not enough space for them), and will completly disable truncation on pango markup.
-    //     prop(markup: as_string, truncate: as_bool = false, limit_width: as_i32 = i32::MAX, truncate_left: as_bool = false, show_truncated: as_bool = true) {
-    //         if (truncate || limit_width != i32::MAX) && show_truncated {
-    //             // gtk does weird thing if we set max_width_chars to i32::MAX
-    //             if limit_width == i32::MAX {
-    //                 gtk_widget.set_max_width_chars(-1);
-    //             } else {
-    //                 gtk_widget.set_max_width_chars(limit_width);
-    //             }
+            let limit_width = limit_width as usize;
+            let char_count = text.chars().count();
+            if char_count > limit_width {
+                if truncate_left {
+                    text.chars().skip(char_count - limit_width).collect()
+                } else {
+                    text.chars().take(limit_width).collect()
+                }
+            } else {
+                text
+            }
+        };
 
-    //             if truncate_left {
-    //                 gtk_widget.set_ellipsize(pango::EllipsizeMode::Start);
-    //             } else {
-    //                 gtk_widget.set_ellipsize(pango::EllipsizeMode::End);
-    //             }
-    //         } else {
-    //             gtk_widget.set_ellipsize(pango::EllipsizeMode::None);
-    //         }
+        let unescaped = unescape::unescape(&t).ok_or_else(|| anyhow!("Failed to unescape..."))?;
+        let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
+        gtk_widget.set_text(&final_text);
 
-    //         gtk_widget.set_markup(&markup);
-    //     },
-    //     // @prop wrap - Wrap the text. This mainly makes sense if you set the width of this widget.
-    //     prop(wrap: as_bool) { gtk_widget.set_line_wrap(wrap) },
-    //     // @prop angle - the angle of rotation for the label (between 0 - 360)
-    //     prop(angle: as_f64 = 0) { gtk_widget.set_angle(angle) },
-    //     // @prop gravity - the gravity of the string (south, east, west, north, auto). Text will want to face the direction of gravity.
-    //     prop(gravity: as_string = "south") {
-    //         gtk_widget.pango_context().set_base_gravity(parse_gravity(&gravity)?);
-    //     },
-    //     // @prop xalign - the alignment of the label text on the x axis (between 0 - 1, 0 -> left, 0.5 -> center, 1 -> right)
-    //     prop(xalign: as_f64 = 0.5) { gtk_widget.set_xalign(xalign as f32) },
-    //     // @prop yalign - the alignment of the label text on the y axis (between 0 - 1, 0 -> bottom, 0.5 -> center, 1 -> top)
-    //     prop(yalign: as_f64 = 0.5) { gtk_widget.set_yalign(yalign as f32) },
-    //     // @prop justify - the justification of the label text (left, right, center, fill)
-    //     prop(justify: as_string = "left") {
-    //         gtk_widget.set_justify(parse_justification(&justify)?);
-    //     },
-    //     // @prop wrap-mode - how text is wrapped. possible options: $wrap_mode
-    //     prop(wrap_mode: as_string = "word") {
-    //         gtk_widget.set_wrap_mode(parse_wrap_mode(&wrap_mode)?);
-    //     },
-    //     // @prop lines - maximum number of lines to display (only works when `limit-width` has a value). A value of -1 (default) disables the limit.
-    //     prop(lines: as_i32 = -1) {
-    //         gtk_widget.set_lines(lines);
-    //     }
-    // });
+    } else if has_markup {
+        let markup = get_string_prop(&props, "markup", None)?;
+        apply_ellipsize_settings(&gtk_widget, truncate, limit_width, truncate_left, show_truncated);
+        gtk_widget.set_markup(&markup);
+
+    } else {
+        bail!("Either 'text' or 'markup' must be set");
+    }
+
+    // wrap
+    if let Ok(wrap) = get_bool_prop(&props, "wrap", Some(false)) {
+        gtk_widget.set_line_wrap(wrap);
+    }
+
+    // angle
+    if let Ok(angle) = get_f64_prop(&props, "angle", Some(0.0)) {
+        gtk_widget.set_angle(angle);
+    }
+
+    // gravity
+    let gravity = get_string_prop(&props, "gravity", Some("south"))?;
+    gtk_widget
+        .pango_context()
+        .set_base_gravity(parse_gravity(&gravity)?);
+
+
+    // xalign
+    if let Ok(xalign) = get_f64_prop(&props, "xalign", Some(0.5)) {
+        gtk_widget.set_xalign(xalign as f32);
+    }
+
+    // yalign
+    if let Ok(yalign) = get_f64_prop(&props, "yalign", Some(0.5)) {
+        gtk_widget.set_yalign(yalign as f32);
+    }
+
+    // justify
+    let justify = get_string_prop(&props, "justify", Some("left"))?;
+    gtk_widget.set_justify(parse_justification(&justify)?);
+
+    // wrap_mode
+    let wrap_mode = get_string_prop(&props, "wrap_mode", Some("word"))?;
+    gtk_widget.set_wrap_mode(parse_wrap_mode(&wrap_mode)?);
+
+    // lines
+    if let Ok(lines) = get_i32_prop(&props, "lines", Some(-1)) {
+        gtk_widget.set_lines(lines);
+    }
+
     Ok(gtk_widget)
 }
 
