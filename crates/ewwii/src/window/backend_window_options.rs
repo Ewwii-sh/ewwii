@@ -7,7 +7,7 @@ use crate::{
     cstm_enum_parse,
     // diag_error::{DiagResult, DiagError, DiagResultExt},
     // parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
-    window::{coords::NumWithUnit},
+    window::{coords::NumWithUnit, coords},
 };
 // use ewwii_shared_util::{Span, VarName};
 
@@ -15,17 +15,17 @@ use crate::{
 use rhai::Map;
 // use crate::error::{DiagError, DiagResultExt};
 
-// #[derive(Debug, thiserror::Error)]
-// pub enum Error {
-//     #[error(transparent)]
-//     EnumParseError(#[from] EnumParseError),
-//     #[error(transparent)]
-//     CoordsError(#[from] coords::Error),
-//     #[error(transparent)]
-//     EvalError(#[from] EvalError),
-//     #[error(transparent)]
-//     ConversionError(#[from] ConversionError),
-// }
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Missing required field: {0}")]
+    MissingField(&'static str),
+    #[error(transparent)]
+    EnumParseError(#[from] EnumParseError),
+    #[error("Enum parse error: {0}")]
+    EnumParseErrorMessage(&'static str),
+    #[error(transparent)]
+    CoordsError(#[from] coords::Error),
+}
 
 /// Backend-specific options of a window
 /// Unevaluated form of [`BackendWindowOptions`]
@@ -36,9 +36,12 @@ pub struct BackendWindowOptionsDef {
 }
 
 impl BackendWindowOptionsDef {
-    // pub fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<BackendWindowOptions, Error> {
-    //     Ok(BackendWindowOptions { wayland: self.wayland.eval(local_variables)?, x11: self.x11.eval(local_variables)? })
-    // }
+    pub fn eval(&self, properties: Map) -> Result<BackendWindowOptions, Error> {
+        Ok(BackendWindowOptions { 
+            wayland: self.wayland.eval(properties.clone())?, 
+            x11: self.x11.eval(properties)? 
+        })
+    }
 
     // pub fn from_attrs(attrs: &mut Attributes) -> DiagResult<Self> {
     //     let struts = attrs.ast_optional("reserve")?;
@@ -108,30 +111,63 @@ pub struct X11BackendWindowOptions {
 pub struct X11BackendWindowOptionsDef {
     pub sticky: Option<NumWithUnit>,
     pub struts: Option<X11StrutDefinitionExpr>,
-    pub window_type: Option<NumWithUnit>,
+    pub window_type: Option<String>,
     pub wm_ignore: Option<NumWithUnit>,
 }
 
-// impl X11BackendWindowOptionsDef {
-//     fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<X11BackendWindowOptions, Error> {
-//         Ok(X11BackendWindowOptions {
-//             sticky: eval_opt_expr_as_bool(&self.sticky, true, local_variables)?,
-//             struts: match &self.struts {
-//                 Some(expr) => expr.eval(local_variables)?,
-//                 None => X11StrutDefinition::default(),
-//             },
-//             window_type: match &self.window_type {
-//                 Some(expr) => X11WindowType::from_dynval(&expr.eval(local_variables)?)?,
-//                 None => X11WindowType::default(),
-//             },
-//             wm_ignore: eval_opt_expr_as_bool(
-//                 &self.wm_ignore,
-//                 self.window_type.is_none() && self.struts.is_none(),
-//                 local_variables,
-//             )?,
-//         })
-//     }
-// }
+impl X11BackendWindowOptionsDef {
+    fn eval(&self, properties: Map) -> Result<X11BackendWindowOptions, Error> {
+        Ok(X11BackendWindowOptions {
+            sticky: properties
+                .get("sticky")
+                .map(|d| d.clone_cast::<bool>())
+                .unwrap_or(true),
+
+            struts: match properties.get("reserve") {
+                Some(dynval) => {
+                    let obj_map = dynval.read_lock::<Map>().ok_or(Error::EnumParseErrorMessage("Expected map for reserve"))?;
+
+                    let distance_str = obj_map
+                        .get("distance")
+                        .ok_or(Error::MissingField("distance"))?
+                        .clone_cast::<String>();
+
+                    let distance = NumWithUnit::from_str(&distance_str)?;
+
+                    let side = obj_map
+                        .get("side")
+                        .map(|s| s.clone_cast::<String>())
+                        .map(|s| Side::from_str(&s))
+                        .transpose()?;
+
+                    X11StrutDefinition {
+                        distance,
+                        side: side.unwrap_or(Side::default()),
+                    }
+                }
+                None => X11StrutDefinition::default(),
+            },
+            
+            window_type: match properties.get("windowtype") {
+                Some(dynval) => {
+                    let s = dynval.clone_cast::<String>();
+                    X11WindowType::from_str(&s)?
+                }
+                None => X11WindowType::default(),
+            },
+
+            wm_ignore: {
+                let wm_ignore = properties
+                    .get("wm_ignore")
+                    .map(|d| d.clone_cast::<bool>());
+                wm_ignore.unwrap_or_else(|| {
+                    properties.get("windowtype").is_none()
+                        && properties.get("reserve").is_none()
+                })
+            },
+        })
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct WlBackendWindowOptions {
@@ -143,26 +179,26 @@ pub struct WlBackendWindowOptions {
 /// Unevaluated form of [`WlBackendWindowOptions`]
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct WlBackendWindowOptionsDef {
-    pub exclusive: Option<NumWithUnit>,
-    pub focusable: Option<NumWithUnit>,
-    pub namespace: Option<NumWithUnit>,
+    pub exclusive: Option<bool>,
+    pub focusable: Option<String>,
+    pub namespace: Option<String>,
 }
 
-// impl WlBackendWindowOptionsDef {
-//     fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<WlBackendWindowOptions, Error> {
-//         Ok(WlBackendWindowOptions {
-//             exclusive: eval_opt_expr_as_bool(&self.exclusive, false, local_variables)?,
-//             focusable: match &self.focusable {
-//                 Some(expr) => WlWindowFocusable::from_dynval(&expr.eval(local_variables)?)?,
-//                 None => WlWindowFocusable::default(),
-//             },
-//             namespace: match &self.namespace {
-//                 Some(expr) => Some(expr.eval(local_variables)?.as_string()?),
-//                 None => None,
-//             },
-//         })
-//     }
-// }
+impl WlBackendWindowOptionsDef {
+    fn eval(&self, properties: Map) -> Result<WlBackendWindowOptions, Error> {
+        Ok(WlBackendWindowOptions {
+            exclusive: properties.get("exclusive").map(|d| d.clone_cast::<bool>()).unwrap_or(false),
+            focusable: match properties.get("focusable") {
+                Some(dynval) => {
+                    let s = dynval.clone_cast::<String>().to_lowercase();
+                    WlWindowFocusable::from_str(&s)?
+                },
+                None => WlWindowFocusable::default(),
+            },
+            namespace: properties.get("namespace").map(|d| d.clone_cast::<String>())
+        })
+    }
+}
 
 // fn eval_opt_expr_as_bool(
 //     opt_expr: &Option<NumWithUnit>,

@@ -14,7 +14,7 @@ use crate::{
         monitor::MonitorIdentifier,
         backend_window_options::BackendWindowOptions,
         window_geometry::{AnchorPoint, AnchorAlignment},
-        window_definition::{WindowStacking, EnumParseError},
+        window_definition::{WindowStacking},
     },
 };
 
@@ -50,7 +50,7 @@ impl WindowInitiator {
             // FIXME: window_def.backend_options is passed directly here
             // window_def.backend_options is [`BackendWindowOptionsDef`] but
             // [`WindowInitiator`] expects [`BackendWindowOptions`]
-            backend_options: window_def.backend_options,
+            backend_options: window_def.backend_options.eval(properties.clone())?,
             geometry,
             monitor,
             name: window_def.name.clone(),

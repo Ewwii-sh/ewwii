@@ -6,7 +6,8 @@ use thiserror::Error;
 pub type DiagResult<T> = Result<T, DiagError>;
 
 #[derive(Debug, Error)]
-#[error("{}", .0.to_message())]
+// #[error("{}", .0.to_message())] // old one
+#[error("{:?}", .0)]
 pub struct DiagError(pub diagnostic::Diagnostic<usize>);
 
 static_assertions::assert_impl_all!(DiagError: Send, Sync);
