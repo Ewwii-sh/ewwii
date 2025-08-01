@@ -26,10 +26,10 @@ use gtk::{gdk, glib};
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use std::{
-    // cell::RefCell,
+    cell::RefCell,
     collections::{HashMap, HashSet},
     marker::PhantomData,
-    // rc::Rc,
+    rc::Rc,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -481,9 +481,21 @@ fn initialize_window<B: DisplayBackend>(
         if let Some(geometry) = window_init.geometry {
             let _ = apply_window_position(geometry, monitor_geometry, &window);
             if window_init.backend_options.x11.window_type != crate::window::backend_window_options::X11WindowType::Normal {
-                window.connect_configure_event(move |window, _| {
-                    let _ = apply_window_position(geometry, monitor_geometry, window);
-                    false
+                let last_pos = Rc::new(RefCell::new(None));
+                window.connect_configure_event({
+                    let last_pos = last_pos.clone();
+                    move |window, _| {
+                        let gdk_window = window.window().unwrap();
+                        let current_origin = gdk_window.origin();
+
+                        let mut last = last_pos.borrow_mut();
+                        if Some((current_origin.1, current_origin.2)) != *last {
+                            *last = Some((current_origin.1, current_origin.2));
+                            let _ = apply_window_position(geometry, monitor_geometry, window);
+                        }
+
+                        false
+                    }
                 });
             }
         }

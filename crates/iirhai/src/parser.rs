@@ -22,9 +22,7 @@ impl ParseConfig {
     }
 
     pub fn parse_widget_code(&mut self, code: &str) -> Result<WidgetNode> {
-        self.engine
-            .eval_with_scope::<WidgetNode>(&mut self.scope, code)
-            .map_err(|e| anyhow!(format_rhai_error(&e, code)))
+        self.engine.eval_with_scope::<WidgetNode>(&mut self.scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code)))
     }
 
     pub fn parse_widget_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<WidgetNode> {
