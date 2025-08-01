@@ -1,4 +1,5 @@
 use crate::builtins::register_all_widgets;
+use crate::error::format_rhai_error;
 use crate::widgetnode::WidgetNode;
 use anyhow::{anyhow, Result};
 use rhai::{Engine, Scope};
@@ -21,13 +22,9 @@ impl ParseConfig {
     }
 
     pub fn parse_widget_code(&mut self, code: &str) -> Result<WidgetNode> {
-        self.engine.eval_with_scope::<WidgetNode>(&mut self.scope, code).map_err(|e| {
-            let mut msg = format!("Rhai eval error: {}", e);
-            if let Some(pos) = e.position().line() {
-                msg.push_str(&format!(" at line {}, col {}", pos, e.position().position().unwrap_or(0)));
-            }
-            anyhow!(msg)
-        })
+        self.engine
+            .eval_with_scope::<WidgetNode>(&mut self.scope, code)
+            .map_err(|e| anyhow!(format_rhai_error(&e, code)))
     }
 
     pub fn parse_widget_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<WidgetNode> {
