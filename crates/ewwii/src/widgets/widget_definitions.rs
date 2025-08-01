@@ -2,35 +2,50 @@
 
 use iirhai::widgetnode::WidgetNode;
 use rhai::Map;
-// use super::{build_widget::BuilderArgs, circular_progressbar::*, run_command, transform::*};
 use crate::{
-    // enum_parse, error_handling_ctx,
-    // util::{self, list_difference},
     widgets::build_widget::{build_gtk_widget, WidgetInput},
 };
 use anyhow::{Result, bail, anyhow};
-// use codespan_reporting::diagnostic::Severity;
-// use ewwii_shared_util::Spanned;
-
-// use gdk::{ModifierType, NotifyType};
-// use glib::translate::FromGlib;
-// use gtk::{self, glib, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{self, prelude::*};
 use crate::gtk::prelude::LabelExt;
-use gtk::{gdk, pango};
+use gtk::{gdk, pango, glib};
+use crate::gtk::glib::translate::FromGlib;
 use crate::util;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 
 use std::{
-    // cell::RefCell,
+    cell::RefCell,
     // cmp::Ordering,
     collections::{HashMap, HashSet},
-    // rc::Rc,
-    // time::Duration,
+    rc::Rc,
+    time::Duration,
 };
-
 use super::widget_definitions_helper::*;
+
+/// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
+/// the previously connected singal handler first gets disconnected.
+/// Can take an optional condition.
+/// If the condition is false, we disconnect the handler without running the connect_expr,
+/// thus not connecting a new handler unless the condition is met.
+macro_rules! connect_signal_handler {
+    ($widget:ident, if $cond:expr, $connect_expr:expr) => {{
+        const KEY:&str = std::concat!("signal-handler:", std::line!());
+        unsafe {
+            let old = $widget.data::<gtk::glib::SignalHandlerId>(KEY);
+
+            if let Some(old) = old {
+                 let a = old.as_ref().as_raw();
+                 $widget.disconnect(gtk::glib::SignalHandlerId::from_glib(a));
+            }
+
+            $widget.set_data::<gtk::glib::SignalHandlerId>(KEY, $connect_expr);
+        }
+    }};
+    ($widget:ident, $connect_expr:expr) => {{
+        connect_signal_handler!($widget, if true, $connect_expr)
+    }};
+}
 
 pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Box> {
     let orientation = props
@@ -315,17 +330,6 @@ pub(super) fn build_gtk_progress(props: Map) -> Result<gtk::ProgressBar> {
     if let Ok(bar_value) = get_f64_prop(&props, "value", None) {
         gtk_widget.set_fraction(bar_value / 100f64)
     }
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     // @prop flipped - flip the direction
-        // prop(flipped: as_bool) { gtk_widget.set_inverted(flipped) },
-
-    //     // @prop value - value of the progress bar (between 0-100)
-    //     prop(value: as_f64) { gtk_widget.set_fraction(value / 100f64) },
-
-    //     // @prop orientation - orientation of the progress bar. possible values: $orientation
-    //     prop(orientation: as_string) { gtk_widget.set_orientation(parse_orientation(&orientation)?) },
-    // });
-
     Ok(gtk_widget)
 }
 
@@ -607,6 +611,37 @@ pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Resul
     Ok(gtk_widget)
 }
 
+pub(super) fn build_gtk_scale(props: Map) -> Result<gtk::Scale> {
+    let gtk_widget = gtk::Scale::new(gtk::Orientation::Horizontal, Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
+
+    if let Ok(flipped) = get_bool_prop(&props, "flipped", Some(false)) {
+        gtk_widget.set_inverted(flipped)
+    }
+    
+    if let Ok(marks) = get_string_prop(&props, "marks", None) {
+        gtk_widget.clear_marks();
+        for mark in marks.split(',') {
+            gtk_widget.add_mark(mark.trim().parse()?, gtk::PositionType::Bottom, None)
+        }
+    }
+
+    if let Ok(draw_value) = get_bool_prop(&props, "draw_value", Some(false)) {
+        gtk_widget.set_draw_value(draw_value)
+    }
+
+    if let Ok(value_pos) = get_string_prop(&props, "value_pos", None) {
+        gtk_widget.set_value_pos(parse_position_type(&value_pos)?)
+    }
+
+    if let Ok(round_digits) = get_i32_prop(&props, "round_digits", Some(0)) {
+        gtk_widget.set_round_digits(round_digits)
+    }
+
+    resolve_range_attrs(&props, gtk_widget.upcast_ref::<gtk::Range>())?;
+
+    Ok(gtk_widget)
+}
+
 pub(super) fn build_gtk_scrolledwindow(props: Map, children: Vec<WidgetNode>) -> Result<gtk::ScrolledWindow> {
     // I don't have single idea of what those two generics are supposed to be, but this works.
     let gtk_widget = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
@@ -703,5 +738,58 @@ pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widg
 
     // 5. Optional: handle other fields like valign/halign/vexpand etc.
 
+    Ok(())
+}
+
+/// Shared rage atribute
+pub(super) fn resolve_range_attrs(props: &Map, gtk_widget: &gtk::Range) -> Result<()> {
+    gtk_widget.set_sensitive(false);
+
+    // only allow changing the value via the value property if the user isn't currently dragging
+    let is_being_dragged = Rc::new(RefCell::new(false));
+    gtk_widget.connect_button_press_event(glib::clone!(@strong is_being_dragged => move |_, _| {
+        *is_being_dragged.borrow_mut() = true;
+        glib::Propagation::Proceed
+    }));
+    gtk_widget.connect_button_release_event(glib::clone!(@strong is_being_dragged => move |_, _| {
+        *is_being_dragged.borrow_mut() = false;
+        glib::Propagation::Proceed
+    }));
+
+    // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
+    // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler
+    // and only run on_change when it's caused by manual user input
+    let last_set_value = Rc::new(RefCell::new(None));
+    let last_set_value_clone = last_set_value.clone();
+
+    if let Ok(value) = get_f64_prop(&props, "value", None) {
+        if !*is_being_dragged.borrow() {
+            *last_set_value.borrow_mut() = Some(value);
+            gtk_widget.set_value(value);
+        }
+    }
+
+    if let Ok(min) = get_f64_prop(&props, "min", None) {
+        gtk_widget.adjustment().set_lower(min)
+    }
+
+    if let Ok(max) = get_f64_prop(&props, "max", None) {
+        gtk_widget.adjustment().set_upper(max)
+    }
+
+    let onchange = get_string_prop(&props, "onchange", None).ok();
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200))).unwrap_or(Duration::from_millis(200));
+
+    if let Some(onchange) = onchange {
+        gtk_widget.set_sensitive(true);
+        gtk_widget.add_events(gdk::EventMask::PROPERTY_CHANGE_MASK);
+        let last_set_value = last_set_value_clone.clone();
+        connect_signal_handler!(gtk_widget, gtk_widget.connect_value_changed(move |gtk_widget| {
+            let value = gtk_widget.value();
+            if last_set_value.borrow_mut().take() != Some(value) {
+                run_command(timeout, &onchange, &[value]);
+            }
+        }));
+    }
     Ok(())
 }

@@ -46,7 +46,7 @@ fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<gtk::Widget> {
         // WIDGET_NAME_CIRCULAR_PROGRESS => build_circular_progress_bar(node)?.upcast(),
         WidgetNode::Graph { props } => build_graph(props)?.upcast(),
         // WIDGET_NAME_TRANSFORM => build_transform(node)?.upcast(),
-        // WIDGET_NAME_SCALE => build_gtk_scale(node)?.upcast(),
+        WidgetNode::Slider { props } => build_gtk_scale(props)?.upcast(),
         WidgetNode::Progress { props } => build_gtk_progress(props)?.upcast(),
         WidgetNode::Image { props } => build_gtk_image(props)?.upcast(),
         WidgetNode::Button { props } => build_gtk_button(props)?.upcast(),
