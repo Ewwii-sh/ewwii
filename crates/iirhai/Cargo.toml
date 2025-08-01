@@ -9,10 +9,9 @@ repository = "https://github.com/byson94/ewwii"
 homepage = "https://github.com/byson94/ewwii"
 
 [dependencies]
-anyhow.workspace = true
-serde_json.workspace = true
-serde = { workspace = true, features = ["derive"] }
 rhai = { version = "1.22.2", features = ["internals"] }
+anyhow.workspace = true
 tokio-util.workspace = true
 tokio = { workspace = true, features = ["full"] }
 log.workspace = true
+thiserror.workspace = true

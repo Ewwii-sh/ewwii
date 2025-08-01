@@ -298,9 +298,26 @@ pub(super) fn build_graph(props: Map) -> Result<super::graph::Graph> {
 
 pub(super) fn build_gtk_progress(props: Map) -> Result<gtk::ProgressBar> {
     let gtk_widget = gtk::ProgressBar::new();
+
+    let orientation = props
+        .get("orientation")
+        .and_then(|v| v.clone().try_cast::<String>())
+        .map(|s| parse_orientation(&s))
+        .transpose()?
+        .unwrap_or(gtk::Orientation::Horizontal);
+
+    gtk_widget.set_orientation(orientation);
+
+    if let Ok(flipped) = get_bool_prop(&props, "flipped", Some(false)) {
+        gtk_widget.set_inverted(flipped)
+    }
+    
+    if let Ok(bar_value) = get_f64_prop(&props, "value", None) {
+        gtk_widget.set_fraction(bar_value / 100f64)
+    }
     // def_widget!(bargs, _g, gtk_widget, {
     //     // @prop flipped - flip the direction
-    //     prop(flipped: as_bool) { gtk_widget.set_inverted(flipped) },
+        // prop(flipped: as_bool) { gtk_widget.set_inverted(flipped) },
 
     //     // @prop value - value of the progress bar (between 0-100)
     //     prop(value: as_f64) { gtk_widget.set_fraction(value / 100f64) },
