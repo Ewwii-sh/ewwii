@@ -56,46 +56,40 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk
 }
 
 pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Box> {
-    let gtk_widget = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     // @prop orientation - orientation of the centerbox. possible values: $orientation
-    //     prop(orientation: as_string) { gtk_widget.set_orientation(parse_orientation(&orientation)?) },
-    // });
+    let orientation = props
+        .get("orientation")
+        .and_then(|v| v.clone().try_cast::<String>())
+        .map(|s| parse_orientation(&s))
+        .transpose()?
+        .unwrap_or(gtk::Orientation::Horizontal);
 
-    // match bargs.widget_use.children.len().cmp(&3) {
-    //     Ordering::Less => {
-    //         Err(DiagError(gen_diagnostic!("centerbox must contain exactly 3 elements", bargs.widget_use.span)).into())
-    //     }
-    //     Ordering::Greater => {
-    //         let (_, additional_children) = bargs.widget_use.children.split_at(3);
-    //         // we know that there is more than three children, so unwrapping on first and left here is fine.
-    //         let first_span = additional_children.first().unwrap().span();
-    //         let last_span = additional_children.last().unwrap().span();
-    //         Err(DiagError(gen_diagnostic!("centerbox must contain exactly 3 elements, but got more", first_span.to(last_span)))
-    //             .into())
-    //     }
-    //     Ordering::Equal => {
-    //         let mut children = bargs.widget_use.children.iter().map(|child| {
-    //             build_gtk_widget(
-    //                 bargs.scope_graph,
-    //                 bargs.widget_defs.clone(),
-    //                 bargs.calling_scope,
-    //                 child.clone(),
-    //                 bargs.custom_widget_invocation.clone(),
-    //             )
-    //         });
-    //         // we know that we have exactly three children here, so we can unwrap here.
-    //         let (first, center, end) = children.next_tuple().unwrap();
-    //         let (first, center, end) = (first?, center?, end?);
-    //         gtk_widget.pack_start(&first, true, true, 0);
-    //         gtk_widget.set_center_widget(Some(&center));
-    //         gtk_widget.pack_end(&end, true, true, 0);
-    //         first.show();
-    //         center.show();
-    //         end.show();
-    //         Ok(gtk_widget)
-    //     }
-    // }
+    let count = children.len();
+
+    if count < 3 {
+        bail!("centerbox must contain exactly 3 children");
+    } else if count > 3 {
+        bail!("centerbox must contain exactly 3 children, but got more");
+    }
+
+    let first  = build_gtk_widget(
+        WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?)
+    )?;
+    let center = build_gtk_widget(
+        WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?)
+    )?;
+    let end    = build_gtk_widget(
+        WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?)
+    )?;
+
+    let gtk_widget = gtk::Box::new(orientation, 0);
+    gtk_widget.pack_start(&first, true, true, 0);
+    gtk_widget.set_center_widget(Some(&center));
+    gtk_widget.pack_end(&end, true, true, 0);
+
+    first.show();
+    center.show();
+    end.show();
+
     Ok(gtk_widget)
 }
 
