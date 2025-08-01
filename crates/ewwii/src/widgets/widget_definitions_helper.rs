@@ -2,6 +2,10 @@ use anyhow::{anyhow, Result};
 use gtk::{pango};
 use rhai::Map;
 use crate::gtk::prelude::LabelExt;
+use crate::dynval::DynVal;
+use anyhow::bail;
+use std::process::Command;
+use std::time::Duration;
 
 /// General purpose
 pub(super) fn get_string_prop(props: &Map, key: &str, default: Option<&str>) -> Result<String> {
@@ -64,6 +68,60 @@ pub(super) fn get_i32_prop(props: &Map, key: &str, default: Option<i32>) -> Resu
     }
 }
 
+pub(super) fn get_duration_prop(props: &Map, key: &str, default: Option<Duration>) -> Result<Duration> {
+    let key_str = get_string_prop(props, key, None)?
+        .trim()
+        .to_ascii_lowercase();
+
+    if key_str.ends_with("ms") {
+        let num = &key_str[..key_str.len()-2];
+        let ms = num.parse::<u64>().map_err(|_| anyhow!("Invalid ms value: '{}'", key_str))?;
+        Ok(Duration::from_millis(ms))
+    } else if key_str.ends_with("s") {
+        let num = &key_str[..key_str.len()-1];
+        let s = num.parse::<u64>().map_err(|_| anyhow!("Invalid s value: '{}'", key_str))?;
+        Ok(Duration::from_secs(s))
+    } else if key_str.ends_with("min") {
+        let num = &key_str[..key_str.len()-3];
+        let mins = num.parse::<u64>().map_err(|_| anyhow!("Invalid min value: '{}'", key_str))?;
+        Ok(Duration::from_secs(mins * 60))
+    } else if key_str.ends_with("h") {
+        let num = &key_str[..key_str.len()-1];
+        let hrs = num.parse::<u64>().map_err(|_| anyhow!("Invalid h value: '{}'", key_str))?;
+        Ok(Duration::from_secs(hrs * 3600))
+    } else {
+        Err(anyhow!("Unsupported duration format: '{}'", key_str))
+    }
+}
+
+// Run a command and get the output
+pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
+where
+    T: 'static + std::fmt::Display + Send + Sync + Clone,
+{
+    use wait_timeout::ChildExt;
+    let cmd = replace_placeholders(cmd, args);
+    std::thread::Builder::new()
+        .name("command-execution-thread".to_string())
+        .spawn(move || {
+            log::debug!("Running command from widget [timeout: {}ms]: {}", timeout.as_millis(), cmd);
+            let child = Command::new("/bin/sh").arg("-c").arg(&cmd).spawn();
+            match child {
+                Ok(mut child) => match child.wait_timeout(timeout) {
+                    // child timed out
+                    Ok(None) => {
+                        log::error!("WARNING: command {} timed out", &cmd);
+                        let _ = child.kill();
+                        let _ = child.wait();
+                    }
+                    Err(err) => log::error!("Failed to execute command {}: {}", cmd, err),
+                    Ok(Some(_)) => {}
+                },
+                Err(err) => log::error!("Failed to launch child process: {}", err),
+            }
+        })
+        .expect("Failed to start command-execution-thread");
+}
 
 /// Gtk Box
 pub(super) fn parse_orientation(ori: &str) -> Result<gtk::Orientation> {
@@ -115,5 +173,29 @@ pub(super) fn parse_wrap_mode(s: &str) -> Result<pango::WrapMode> {
         "char" => Ok(pango::WrapMode::Char),
         "wordchar" | "word_char" | "word-char" => Ok(pango::WrapMode::WordChar),
         _ => Err(anyhow!("Invalid wrap_mode: '{}'", s)),
+    }
+}
+
+/// Gtk scale (slider)
+pub(super) fn parse_position_type(s: &str) -> Result<gtk::PositionType> {
+    match s.to_ascii_lowercase().as_str() {
+        "left" => Ok(gtk::PositionType::Left),
+        "right" => Ok(gtk::PositionType::Right),
+        "top" => Ok(gtk::PositionType::Top),
+        "bottom" => Ok(gtk::PositionType::Bottom),
+        _ => Err(anyhow!("Invalid position type: '{}'", s)),
+    }
+}
+
+/// Helper of helpers
+fn replace_placeholders<T>(cmd: &str, args: &[T]) -> String
+where
+    T: 'static + std::fmt::Display + Send + Sync + Clone,
+{
+    if !args.is_empty() {
+        let cmd = cmd.replace("{}", &format!("{}", args[0]));
+        args.iter().enumerate().fold(cmd, |acc, (i, arg)| acc.replace(&format!("{{{}}}", i), &format!("{}", arg)))
+    } else {
+        cmd.to_string()
     }
 }
