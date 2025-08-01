@@ -1,19 +1,18 @@
 #![allow(clippy::option_map_unit_fn)]
 
-use iirhai::widgetnode::WidgetNode;
-use rhai::Map;
-use crate::{
-    widgets::build_widget::{build_gtk_widget, WidgetInput},
-};
-use anyhow::{Result, bail, anyhow};
-use gtk::{self, prelude::*};
-use crate::gtk::prelude::LabelExt;
-use gtk::{gdk, pango, glib};
 use crate::gtk::glib::translate::FromGlib;
+use crate::gtk::prelude::LabelExt;
 use crate::util;
+use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
+use anyhow::{anyhow, bail, Result};
+use gtk::{self, prelude::*};
+use gtk::{gdk, glib, pango};
+use iirhai::widgetnode::WidgetNode;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
+use rhai::Map;
 
+use super::widget_definitions_helper::*;
 use std::{
     cell::RefCell,
     // cmp::Ordering,
@@ -21,7 +20,6 @@ use std::{
     rc::Rc,
     time::Duration,
 };
-use super::widget_definitions_helper::*;
 
 /// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
 /// the previously connected singal handler first gets disconnected.
@@ -86,15 +84,9 @@ pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>) -> Result<
         bail!("centerbox must contain exactly 3 children, but got more");
     }
 
-    let first  = build_gtk_widget(
-        WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?)
-    )?;
-    let center = build_gtk_widget(
-        WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?)
-    )?;
-    let end    = build_gtk_widget(
-        WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?)
-    )?;
+    let first = build_gtk_widget(WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?))?;
+    let center = build_gtk_widget(WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?))?;
+    let end = build_gtk_widget(WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?))?;
 
     let gtk_widget = gtk::Box::new(orientation, 0);
     gtk_widget.pack_start(&first, true, true, 0);
@@ -326,7 +318,7 @@ pub(super) fn build_gtk_progress(props: Map) -> Result<gtk::ProgressBar> {
     if let Ok(flipped) = get_bool_prop(&props, "flipped", Some(false)) {
         gtk_widget.set_inverted(flipped)
     }
-    
+
     if let Ok(bar_value) = get_f64_prop(&props, "value", None) {
         gtk_widget.set_fraction(bar_value / 100f64)
     }
@@ -442,7 +434,7 @@ pub(super) fn build_gtk_label(props: Map) -> Result<gtk::Label> {
     if has_text && has_markup {
         bail!("Cannot set both 'text' and 'markup' for a label");
     } else if has_text {
-        let text = get_string_prop(&props, "text", None)?;  // now safe: key must exist
+        let text = get_string_prop(&props, "text", None)?; // now safe: key must exist
         let t = if show_truncated {
             if limit_width == i32::MAX {
                 gtk_widget.set_max_width_chars(-1);
@@ -470,12 +462,10 @@ pub(super) fn build_gtk_label(props: Map) -> Result<gtk::Label> {
         let unescaped = unescape::unescape(&t).ok_or_else(|| anyhow!("Failed to unescape..."))?;
         let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
         gtk_widget.set_text(&final_text);
-
     } else if has_markup {
         let markup = get_string_prop(&props, "markup", None)?;
         apply_ellipsize_settings(&gtk_widget, truncate, limit_width, truncate_left, show_truncated);
         gtk_widget.set_markup(&markup);
-
     } else {
         bail!("Either 'text' or 'markup' must be set");
     }
@@ -492,10 +482,7 @@ pub(super) fn build_gtk_label(props: Map) -> Result<gtk::Label> {
 
     // gravity
     let gravity = get_string_prop(&props, "gravity", Some("south"))?;
-    gtk_widget
-        .pango_context()
-        .set_base_gravity(parse_gravity(&gravity)?);
-
+    gtk_widget.pango_context().set_base_gravity(parse_gravity(&gravity)?);
 
     // xalign
     if let Ok(xalign) = get_f64_prop(&props, "xalign", Some(0.5)) {
@@ -617,7 +604,7 @@ pub(super) fn build_gtk_scale(props: Map) -> Result<gtk::Scale> {
     if let Ok(flipped) = get_bool_prop(&props, "flipped", Some(false)) {
         gtk_widget.set_inverted(flipped)
     }
-    
+
     if let Ok(marks) = get_string_prop(&props, "marks", None) {
         gtk_widget.clear_marks();
         for mark in marks.split(',') {
@@ -664,7 +651,7 @@ pub(super) fn build_gtk_scrolledwindow(props: Map, children: Vec<WidgetNode>) ->
 /// Deprecated attributes from top of widget hierarchy
 static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
-    
+
 /// Code that applies css/scss to widgets.
 pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widget) -> Result<()> {
     use rhai::Dynamic;
@@ -715,26 +702,17 @@ pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widg
     if !style_str.is_empty() {
         let css_provider = gtk::CssProvider::new();
         let scss = format!("* {{ {} }}", style_str);
-        css_provider.load_from_data(
-            grass::from_string(scss, &grass::Options::default())?.as_bytes()
-        )?;
-        gtk_widget
-            .style_context()
-            .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        css_provider.load_from_data(grass::from_string(scss, &grass::Options::default())?.as_bytes())?;
+        gtk_widget.style_context().add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
     // 5. Handle full css
     let css_str = get_string_prop(&props, "css", Some(""))?;
     if !css_str.is_empty() {
         let css_provider = gtk::CssProvider::new();
-        css_provider.load_from_data(
-            grass::from_string(css_str, &grass::Options::default())?.as_bytes()
-        )?;
-        gtk_widget
-            .style_context()
-            .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        css_provider.load_from_data(grass::from_string(css_str, &grass::Options::default())?.as_bytes())?;
+        gtk_widget.style_context().add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
-
 
     // 5. Optional: handle other fields like valign/halign/vexpand etc.
 
@@ -784,12 +762,15 @@ pub(super) fn resolve_range_attrs(props: &Map, gtk_widget: &gtk::Range) -> Resul
         gtk_widget.set_sensitive(true);
         gtk_widget.add_events(gdk::EventMask::PROPERTY_CHANGE_MASK);
         let last_set_value = last_set_value_clone.clone();
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_value_changed(move |gtk_widget| {
-            let value = gtk_widget.value();
-            if last_set_value.borrow_mut().take() != Some(value) {
-                run_command(timeout, &onchange, &[value]);
-            }
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_value_changed(move |gtk_widget| {
+                let value = gtk_widget.value();
+                if last_set_value.borrow_mut().take() != Some(value) {
+                    run_command(timeout, &onchange, &[value]);
+                }
+            })
+        );
     }
     Ok(())
 }
