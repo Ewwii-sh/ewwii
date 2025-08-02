@@ -1,77 +1,79 @@
-# Simple expression language
+# The Rhai Expression Engine
 
-Yuck includes a small expression language that can be used to run several operations on your data.
-This can be used to show different values depending on certain conditions,
-do mathematic operations, and even access values within JSON-structures.
+Ewwii uses [Rhai](https://rhai.rs/) as its core expression and scripting engine. This means your configuration is more than just static values or simple substitutions—it’s **real code**, and you can use it anywhere dynamic behavior is needed.
 
-These expressions can be placed anywhere within your configuration inside `{ ... }`,
-as well as within strings, inside string-interpolation blocks (`"foo ${ ... } bar"`).
+Rhai expressions can:
+
+-   Perform logic and branching (`if`, `match`, `? :`)
+-   Handle mathematical calculations and string operations
+-   Access nested data from arrays, maps, or JSON
+-   Run custom functions
+-   Be used directly in layout definitions, widget attributes, and style rules
+
+Unlike Yuck, where expressions were embedded in `{ ... }` or `${ ... }`, Rhai treats expressions as **native**. They don’t need to be wrapped in special delimiters. If you can write it in Rhai, it just works.
 
 ## Example
 
-```lisp
-(box
-  "Some math: ${12 + foo * 10}"
-  (button :class {button_active ? "active" : "inactive"}
-          :onclick "toggle_thing"
-    {button_active ? "disable" : "enable"}))
+```rust,ignore
+let value = 12 + foo * 10;
+
+box(#{
+  class: "baz"
+  orientation: "h",
+}, [
+  button(#{
+    class: button_active ? "active" : "inactive",
+    on_click: "toggle_thing",
+    label: "Some math: ${value}",
+  }),
+]);
 ```
 
-## Features
+## Core Features
 
-Supported currently are the following features:
-- simple mathematical operations (`+`, `-`, `*`, `/`, `%`)
-- comparisons (`==`, `!=`, `>`, `<`, `<=`, `>=`)
-- boolean operations (`||`, `&&`, `!`)
-- regex match operator (`=~`)
-    - Rust regex style, left hand is regex, right hand is string
-    - ex: workspace.name =~ '^special:.+$'
-- elvis operator (`?:`)
-    - if the left side is `""` or a JSON `null`, then returns the right side,
-      otherwise evaluates to the left side.
-- Safe Access operator (`?.`) or (`?.[index]`)
-    - if the left side is an empty string or a JSON `null`, then return `null`. Otherwise,
-      attempt to index. Note that indexing an empty JSON string (`'""'`) is an error.
-    - This can still cause an error to occur if the left hand side exists but is
-      not an object or an array.
-      (`Number` or `String`).
-- conditionals (`condition ? 'value' : 'other value'`)
-- numbers, strings, booleans and variable references (`12`, `'hi'`, `true`, `some_variable`)
-- json access (`object.field`, `array[12]`, `object["field"]`)
-    - for this, the object/array value needs to refer to a variable that contains a valid json string.
-- some function calls:
-    - `round(number, decimal_digits)`: Round a number to the given amount of decimals
-    - `floor(number)`: Round a number down to the nearest integer
-    - `ceil(number)`: Round a number up to the nearest integer
-    - `sin(number)`, `cos(number)`, `tan(number)`, `cot(number)`: Calculate the trigonometric value of a given number in **radians**
-    - `min(a, b)`, `max(a, b)`: Get the smaller or bigger number out of two given numbers
-    - `powi(num, n)`, `powf(num, n)`: Raise number `num` to power `n`. `powi` expects `n` to be of type `i32`
-    - `log(num, n)`: Calculate the base `n` logarithm of `num`. `num`, `n` and return type are `f64`
-    - `degtorad(number)`: Converts a number from degrees to radians
-    - `radtodeg(number)`: Converts a number from radians to degrees
-    - `replace(string, regex, replacement)`: Replace matches of a given regex in a string
-  - `search(string, regex)`: Search for a given regex in a string (returns array)
-  - `matches(string, regex)`: check if a given string matches a given regex (returns bool)
-  - `captures(string, regex)`: Get the captures of a given regex in a string (returns array)
-  - `strlength(value)`: Gets the length of the string
-    - `substring(string, start, length)`: Return a substring of given length starting at the given index
-  - `arraylength(value)`: Gets the length of the array
-  - `objectlength(value)`: Gets the amount of entries in the object
-  - `jq(value, jq_filter_string)`: run a [jq](https://jqlang.github.io/jq/manual/) style command on a json value. (Uses [jaq](https://crates.io/crates/jaq) internally).
-  - `jq(value, jq_filter_string, args)`: Emulate command line flags for jq, see [the docs](https://jqlang.github.io/jq/manual/#invoking-jq) on invoking jq for details. Invalid flags are silently ignored.
-    Currently supported flags:
-    - `"r"`: If the result is a string, it won't be formatted as a JSON string. The equivalent jq flag is `--raw-output`.
-  - `get_env(string)`: Gets the specified enviroment variable
-  - `formattime(unix_timestamp, format_str, timezone)`: Gets the time in a given format from UNIX timestamp.
-     Check [chrono's documentation](https://docs.rs/chrono/latest/chrono/format/strftime/index.html) for more
-     information about format string and [chrono-tz's documentation](https://docs.rs/chrono-tz/latest/chrono_tz/enum.Tz.html)
-     for available time zones.
-  - `formattime(unix_timestamp, format_str)`: Gets the time in a given format from UNIX timestamp.
-     Same as other `formattime`, but does not accept timezone. Instead, it uses system's local timezone.
-     Check [chrono's documentation](https://docs.rs/chrono/latest/chrono/format/strftime/index.html) for more
-     information about format string.
-  - `formatbytes(bytes, short, format_mode)`: Display bytes in a human-readable format.
-    Arguments:
-    - `bytes`: `i64` of bytes, supports negative sizes.
-    - `short`: set true for a compact version (default: false)
-    - `format_mode`: set to either to "iec" (eg. `1.0 GiB`) or "si" (eg. `1.2 GB`) (default: "iec")
+Rhai supports a wide range of expression capabilities:
+
+-   **Mathematics**: `+`, `-`, `*`, `/`, `%`
+-   **Comparisons**: `==`, `!=`, `<`, `>`, `<=`, `>=`
+-   **Boolean logic**: `&&`, `||`, `!`
+-   **Conditionals**: `if/else`, ternary (`cond ? a : b`)
+-   **Regex matching**: `=~` operator (Rust-style regex)
+-   **Optional access**: `?.` and `?.[index]`
+-   **Data structures**: maps/arrays (`obj.field`, `arr[3]`, `map["key"]`)
+-   **Function calls**: standard and Ewwii-specific built-ins (see below)
+-   **String interpolation**: `"Value is ${value}"` (standard Rhai feature)
+
+## Common Built-in Functions
+
+💡 _You may recognize some of these from the old expression system—but now they're just Rhai functions._
+
+Examples include:
+
+-   `round()`, `floor()`, `ceil()`, `powi()`, `powf()`
+-   `min()`, `max()`, `sin()`, `cos()`, etc.
+-   `replace()`, `matches()`, `captures()`
+-   `strlength()`, `arraylength()`, `objectlength()`
+-   `jq()` – run jaq-compatible filters on JSON data
+-   `get_env()` – read environment variables
+-   `formattime()` – format UNIX timestamps
+-   `formatbytes()` – format file sizes (IEC or SI)
+
+## Dynamic Usage
+
+Because expressions are just Rhai, you can now write real logic inline or break it into reusable functions:
+
+```rhai
+fn status_text(active) {
+  return active ? "enabled" : "disabled";
+}
+
+label({
+  text: "Status: ${status_text(system_active)}"
+});
+```
+
+---
+
+### TL;DR
+
+> If you’ve used scripting languages like JavaScript or Lua, you’ll feel at home. Rhai gives you real control—not just interpolation tricks.
