@@ -1,6 +1,7 @@
 pub mod locale;
 pub mod span;
 pub mod wrappers;
+pub mod general_helper;
 
 pub use locale::*;
 pub use span::*;

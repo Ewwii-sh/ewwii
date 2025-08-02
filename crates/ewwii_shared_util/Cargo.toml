@@ -13,3 +13,5 @@ serde.workspace = true
 derive_more.workspace = true
 ref-cast.workspace = true
 chrono = { workspace = true, features = ["unstable-locales"] }
+rhai = { version = "1.22.2" }
+anyhow.workspace = true
