@@ -1,10 +1,13 @@
-## Example Configurations
+# Examples
 
-These configurations of eww are available in the `examples/` directory of the [repo](https://github.com/elkowar/eww).
+This section provides hands-on, practical demonstrations of everything covered so far. Real layouts, interactive components, and theming techniques will be used in these examples.
 
-An eww bar configuration:
-![Example bar](https://github.com/elkowar/eww/raw/master/examples/eww-bar/eww-bar.png)
+Each example is minimal but complete, focusing on a particular design pattern or technique. You can copy-paste them into your own config to experiment.
 
-A demo on how to declare and use data structures:
+Included:
 
-![Data structure example](https://github.com/elkowar/eww/raw/master/examples/data-structures/data-structures-preview.png)
+-   Common layout patterns (e.g., bars, panels, dashboards)
+-   Interactive elements like buttons, sliders, toggles
+-   Theming techniques and tricks to override or enhance GTK styles
+
+If you're stuck or just looking for inspiration, this is your go-to reference.
