@@ -8,7 +8,6 @@ use anyhow::{anyhow, bail, Result};
 use gtk::{self, prelude::*};
 use gtk::{gdk, glib, pango};
 use iirhai::widgetnode::WidgetNode;
-use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::Map;
 
@@ -16,7 +15,7 @@ use super::widget_definitions_helper::*;
 use std::{
     cell::RefCell,
     // cmp::Ordering,
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     rc::Rc,
     time::Duration,
 };
@@ -376,39 +375,48 @@ pub(super) fn build_gtk_button(props: Map) -> Result<gtk::Button> {
     let gtk_widget = gtk::Button::new();
 
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200))).unwrap_or(Duration::from_millis(200));
-    
+
     let onclick = get_string_prop(&props, "onclick", Some(""))?;
     let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
     let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
 
     // animate button upon right-/middleclick (if gtk theme supports it)
     // since we do this, we can't use `connect_clicked` as that would always run `onclick` as well
-    connect_signal_handler!(gtk_widget, gtk_widget.connect_button_press_event(move |button, _| {
-        button.emit_activate();
-        glib::Propagation::Proceed
-    }));
+    connect_signal_handler!(
+        gtk_widget,
+        gtk_widget.connect_button_press_event(move |button, _| {
+            button.emit_activate();
+            glib::Propagation::Proceed
+        })
+    );
     let onclick_ = onclick.clone();
     // mouse click events
-    connect_signal_handler!(gtk_widget, gtk_widget.connect_button_release_event(move |_, evt| {
-        match evt.button() {
-            1 => run_command(timeout, &onclick, &[] as &[&str]),
-            2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
-            3 => run_command(timeout, &onrightclick, &[] as &[&str]),
-            _ => {},
-        }
-        glib::Propagation::Proceed
-    }));
+    connect_signal_handler!(
+        gtk_widget,
+        gtk_widget.connect_button_release_event(move |_, evt| {
+            match evt.button() {
+                1 => run_command(timeout, &onclick, &[] as &[&str]),
+                2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
+                3 => run_command(timeout, &onrightclick, &[] as &[&str]),
+                _ => {}
+            }
+            glib::Propagation::Proceed
+        })
+    );
     // keyboard events
-    connect_signal_handler!(gtk_widget, gtk_widget.connect_key_release_event(move |_, evt| {
-        match evt.scancode() {
-            // return
-            36 => run_command(timeout, &onclick_, &[] as &[&str]),
-            // space
-            65 => run_command(timeout, &onclick_, &[] as &[&str]),
-            _ => {},
-        }
-        glib::Propagation::Proceed
-    }));
+    connect_signal_handler!(
+        gtk_widget,
+        gtk_widget.connect_key_release_event(move |_, evt| {
+            match evt.scancode() {
+                // return
+                36 => run_command(timeout, &onclick_, &[] as &[&str]),
+                // space
+                65 => run_command(timeout, &onclick_, &[] as &[&str]),
+                _ => {}
+            }
+            glib::Propagation::Proceed
+        })
+    );
 
     if let Ok(button_label) = get_string_prop(&props, "label", None) {
         gtk_widget.set_label(&button_label);
@@ -652,8 +660,6 @@ static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
 
 /// Code that applies css/scss to widgets.
 pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widget) -> Result<()> {
-    use rhai::Dynamic;
-
     let props = match node {
         WidgetNode::Box { props, .. }
         | WidgetNode::CenterBox { props, .. }
