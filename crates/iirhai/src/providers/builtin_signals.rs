@@ -318,5 +318,5 @@
 // }
 
 pub fn register_all_signals(engine: &mut rhai::Engine) {
-    todo!("MAKE THIS WORK!");
+    // TODO
 }
