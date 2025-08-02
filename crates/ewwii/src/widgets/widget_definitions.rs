@@ -375,47 +375,45 @@ pub(super) fn build_gtk_image(props: Map) -> Result<gtk::Image> {
 pub(super) fn build_gtk_button(props: Map) -> Result<gtk::Button> {
     let gtk_widget = gtk::Button::new();
 
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     prop(
-    //         // @prop timeout - timeout of the command. Default: "200ms"
-    //         timeout: as_duration = Duration::from_millis(200),
-    //         // @prop onclick - command to run when the button is activated either by leftclicking or keyboard
-    //         onclick: as_string = "",
-    //         // @prop onmiddleclick - command to run when the button is middleclicked
-    //         onmiddleclick: as_string = "",
-    //         // @prop onrightclick - command to run when the button is rightclicked
-    //         onrightclick: as_string = ""
-    //     ) {
-    //         // animate button upon right-/middleclick (if gtk theme supports it)
-    //         // since we do this, we can't use `connect_clicked` as that would always run `onclick` as well
-    //         connect_signal_handler!(gtk_widget, gtk_widget.connect_button_press_event(move |button, _| {
-    //             button.emit_activate();
-    //             glib::Propagation::Proceed
-    //         }));
-    //         let onclick_ = onclick.clone();
-    //         // mouse click events
-    //         connect_signal_handler!(gtk_widget, gtk_widget.connect_button_release_event(move |_, evt| {
-    //             match evt.button() {
-    //                 1 => run_command(timeout, &onclick, &[] as &[&str]),
-    //                 2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
-    //                 3 => run_command(timeout, &onrightclick, &[] as &[&str]),
-    //                 _ => {},
-    //             }
-    //             glib::Propagation::Proceed
-    //         }));
-    //         // keyboard events
-    //         connect_signal_handler!(gtk_widget, gtk_widget.connect_key_release_event(move |_, evt| {
-    //             match evt.scancode() {
-    //                 // return
-    //                 36 => run_command(timeout, &onclick_, &[] as &[&str]),
-    //                 // space
-    //                 65 => run_command(timeout, &onclick_, &[] as &[&str]),
-    //                 _ => {},
-    //             }
-    //             glib::Propagation::Proceed
-    //         }));
-    //     }
-    // });
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200))).unwrap_or(Duration::from_millis(200));
+    
+    let onclick = get_string_prop(&props, "onclick", Some(""))?;
+    let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
+    let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
+
+    // animate button upon right-/middleclick (if gtk theme supports it)
+    // since we do this, we can't use `connect_clicked` as that would always run `onclick` as well
+    connect_signal_handler!(gtk_widget, gtk_widget.connect_button_press_event(move |button, _| {
+        button.emit_activate();
+        glib::Propagation::Proceed
+    }));
+    let onclick_ = onclick.clone();
+    // mouse click events
+    connect_signal_handler!(gtk_widget, gtk_widget.connect_button_release_event(move |_, evt| {
+        match evt.button() {
+            1 => run_command(timeout, &onclick, &[] as &[&str]),
+            2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
+            3 => run_command(timeout, &onrightclick, &[] as &[&str]),
+            _ => {},
+        }
+        glib::Propagation::Proceed
+    }));
+    // keyboard events
+    connect_signal_handler!(gtk_widget, gtk_widget.connect_key_release_event(move |_, evt| {
+        match evt.scancode() {
+            // return
+            36 => run_command(timeout, &onclick_, &[] as &[&str]),
+            // space
+            65 => run_command(timeout, &onclick_, &[] as &[&str]),
+            _ => {},
+        }
+        glib::Propagation::Proceed
+    }));
+
+    if let Ok(button_label) = get_string_prop(&props, "label", None) {
+        gtk_widget.set_label(&button_label);
+    }
+
     Ok(gtk_widget)
 }
 
