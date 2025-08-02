@@ -873,9 +873,11 @@ dependencies = [
 name = "ewwii_shared_util"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "derive_more",
  "ref-cast",
+ "rhai",
  "serde",
 ]
 
@@ -1445,6 +1447,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "colored",
+ "ewwii_shared_util",
  "log",
  "once_cell",
  "rhai",
