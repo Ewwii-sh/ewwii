@@ -1,10 +1,9 @@
 use crate::{app, opts};
 use anyhow::{Context, Result};
-use std::path::PathBuf;
+// use std::path::PathBuf;
 use std::time::Duration;
 use tokio::{
-    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf},
-    net::UnixStream,
+    io::{AsyncReadExt, AsyncWriteExt},
     sync::mpsc::*,
 };
 

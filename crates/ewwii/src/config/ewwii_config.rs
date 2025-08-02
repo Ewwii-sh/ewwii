@@ -2,10 +2,10 @@
 // I am losing my sanity replacing it!
 // I wonder how honorificabilitudinitatibus will I feel after replacing yuck...
 use anyhow::{bail, Context, Result};
-use std::{collections::HashMap, path::PathBuf};
+use std::collections::HashMap;
 
 use crate::{
-    ipc_server,
+    // ipc_server,
     // error_handling_ctx,
     paths::EwwPaths,
     window::backend_window_options::BackendWindowOptionsDef,
@@ -15,7 +15,7 @@ use iirhai::{parser::ParseConfig, widgetnode::WidgetNode};
 
 use rhai::Map;
 
-use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
+// use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].

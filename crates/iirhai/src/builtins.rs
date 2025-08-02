@@ -1,5 +1,5 @@
 use crate::widgetnode::WidgetNode;
-use rhai::{Array, Engine, Map, Scope};
+use rhai::{Array, Engine, Map};
 
 pub fn register_all_widgets(engine: &mut Engine) {
     engine.register_type::<WidgetNode>();
@@ -79,8 +79,4 @@ pub fn register_all_widgets(engine: &mut Engine) {
     engine.register_fn("listen", |var: &str, props: Map| WidgetNode::Listen { var: var.to_string(), props });
 
     engine.register_fn("enter", |children: Array| WidgetNode::Enter(children.into_iter().map(|v| v.cast()).collect()));
-}
-
-pub fn register_all_variables(scope: &mut Scope) {
-    todo!();
 }

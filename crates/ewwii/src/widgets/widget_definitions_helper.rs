@@ -1,6 +1,4 @@
-use crate::dynval::DynVal;
 use crate::gtk::prelude::LabelExt;
-use anyhow::bail;
 use anyhow::{anyhow, Result};
 use gtk::pango;
 use rhai::Map;
