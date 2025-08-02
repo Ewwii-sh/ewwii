@@ -1443,9 +1443,14 @@ name = "iirhai"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "colored",
  "log",
+ "once_cell",
  "rhai",
+ "serde",
+ "serde_json",
+ "sysinfo",
  "thiserror",
  "tokio",
  "tokio-util",

@@ -1,5 +1,6 @@
 use colored::*;
-use rhai::{EvalAltResult, Position};
+// use rhai::{EvalAltResult, Position};
+use rhai::EvalAltResult;
 
 /// Format a Rhai evaluation error with code context, Rust-style.
 pub fn format_rhai_error(error: &EvalAltResult, code: &str) -> String {

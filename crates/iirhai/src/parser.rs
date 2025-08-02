@@ -1,6 +1,6 @@
-use crate::builtins::register_all_widgets;
-use crate::error::format_rhai_error;
-use crate::widgetnode::WidgetNode;
+use crate::{
+    builtins::register_all_widgets, error::format_rhai_error, providers::register_all_providers, widgetnode::WidgetNode,
+};
 use anyhow::{anyhow, Result};
 use rhai::{Engine, Scope};
 use std::fs;
@@ -17,7 +17,7 @@ impl ParseConfig {
         let scope = Scope::new();
         engine.set_max_expr_depths(128, 128);
         register_all_widgets(&mut engine);
-        // register_all_variables(&mut scope);
+        register_all_providers(&mut engine);
         Self { engine, scope }
     }
 
