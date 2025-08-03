@@ -1,6 +1,6 @@
-use std::time::Duration;
-use rhai::Map;
 use anyhow::{anyhow, Result};
+use rhai::Map;
+use std::time::Duration;
 
 /// General purpose helpers
 pub fn get_string_prop(props: &Map, key: &str, default: Option<&str>) -> Result<String> {

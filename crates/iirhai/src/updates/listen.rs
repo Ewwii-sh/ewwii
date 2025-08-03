@@ -13,22 +13,17 @@
     }
 */
 
-use std::time::Duration;
-use std::process::Stdio;
-use tokio::time::sleep;
-use tokio::process::Command;
-use tokio::io::AsyncBufReadExt;
-use tokio::io::BufReader;
+use super::ReactiveVarStore;
 use ewwii_shared_util::general_helper::*;
 use rhai::Map;
-use super::ReactiveVarStore;
+use std::process::Stdio;
+use std::time::Duration;
+use tokio::io::AsyncBufReadExt;
+use tokio::io::BufReader;
+use tokio::process::Command;
+use tokio::time::sleep;
 
-pub fn handle_listen(
-    var_name: String,
-    props: Map,
-    store: ReactiveVarStore,
-    tx: tokio::sync::mpsc::UnboundedSender<String>,
-) {
+pub fn handle_listen(var_name: String, props: Map, store: ReactiveVarStore, tx: tokio::sync::mpsc::UnboundedSender<String>) {
     let cmd = match get_string_prop(&props, "cmd", Some("")) {
         Ok(c) => c,
         Err(e) => {
@@ -47,12 +42,8 @@ pub fn handle_listen(
     let store = store.clone();
     let tx = tx.clone();
 
-    let mut child = Command::new("/bin/sh")
-        .arg("-c")
-        .arg(&cmd)
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("failed to start listener process");
+    let mut child =
+        Command::new("/bin/sh").arg("-c").arg(&cmd).stdout(Stdio::piped()).spawn().expect("failed to start listener process");
 
     let stdout = BufReader::new(child.stdout.take().unwrap());
 
