@@ -594,14 +594,31 @@ pub(super) fn build_gtk_calendar(props: Map) -> Result<gtk::Calendar> {
 
 pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Revealer> {
     let gtk_widget = gtk::Revealer::new();
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     // @prop transition - the name of the transition. Possible values: $transition
-    //     prop(transition: as_string = "crossfade") { gtk_widget.set_transition_type(parse_revealer_transition(&transition)?); },
-    //     // @prop reveal - sets if the child is revealed or not
-    //     prop(reveal: as_bool) { gtk_widget.set_reveal_child(reveal); },
-    //     // @prop duration - the duration of the reveal transition. Default: "500ms"
-    //     prop(duration: as_duration = Duration::from_millis(500)) { gtk_widget.set_transition_duration(duration.as_millis() as u32); },
-    // });
+
+    if let Ok(transition) = get_string_prop(&props, "transition", Some("crossfade")) {
+        gtk_widget.set_transition_type(parse_revealer_transition(&transition)?);
+    }
+
+    if let Ok(reveal) = get_bool_prop(&props, "reveal", None) {
+        gtk_widget.set_reveal_child(reveal);
+    }
+
+    if let Ok(duration) = get_duration_prop(&props, "duration", Some(Duration::from_millis(500))) {
+        gtk_widget.set_transition_duration(duration.as_millis() as u32);
+    }
+    
+
+    match children.len() {
+        0 => {/* maybe warn? */},
+        1 => {
+            let child_widget = build_gtk_widget(WidgetInput::Node(children[0].clone()))?;
+            gtk_widget.set_child(Some(&child_widget));
+        }
+        n => {
+            return Err(anyhow!("A revealer must only have a maximum of 1 child but got: {}", n));
+        }
+    }
+
     Ok(gtk_widget)
 }
 
