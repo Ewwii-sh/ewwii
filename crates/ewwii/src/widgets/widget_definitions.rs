@@ -606,10 +606,9 @@ pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Resul
     if let Ok(duration) = get_duration_prop(&props, "duration", Some(Duration::from_millis(500))) {
         gtk_widget.set_transition_duration(duration.as_millis() as u32);
     }
-    
 
     match children.len() {
-        0 => {/* maybe warn? */},
+        0 => { /* maybe warn? */ }
         1 => {
             let child_widget = build_gtk_widget(WidgetInput::Node(children[0].clone()))?;
             gtk_widget.set_child(Some(&child_widget));
@@ -633,9 +632,12 @@ pub(super) fn build_gtk_checkbox(props: Map) -> Result<gtk::CheckButton> {
     let onchecked = get_string_prop(&props, "onchecked", Some(""))?;
     let onunchecked = get_string_prop(&props, "onchecked", Some(""))?;
 
-    connect_signal_handler!(gtk_widget, gtk_widget.connect_toggled(move |gtk_widget| {
-        run_command(timeout, if gtk_widget.is_active() { &onchecked } else { &onunchecked }, &[] as &[&str]);
-    }));
+    connect_signal_handler!(
+        gtk_widget,
+        gtk_widget.connect_toggled(move |gtk_widget| {
+            run_command(timeout, if gtk_widget.is_active() { &onchecked } else { &onunchecked }, &[] as &[&str]);
+        })
+    );
 
     Ok(gtk_widget)
 }
@@ -773,11 +775,10 @@ pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widg
 
     match (width, height) {
         (Some(w), Some(h)) => gtk_widget.set_size_request(w, h),
-        (Some(w), None)    => gtk_widget.set_size_request(w, gtk_widget.allocated_height()),
-        (None, Some(h))    => gtk_widget.set_size_request(gtk_widget.allocated_width(), h),
-        (None, None)       => {} // do nothing
+        (Some(w), None) => gtk_widget.set_size_request(w, gtk_widget.allocated_height()),
+        (None, Some(h)) => gtk_widget.set_size_request(gtk_widget.allocated_width(), h),
+        (None, None) => {} // do nothing
     }
-
 
     if let Ok(active) = get_bool_prop(&props, "active", Some(true)) {
         gtk_widget.set_sensitive(active)
