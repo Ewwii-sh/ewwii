@@ -23,3 +23,5 @@ serde_json.workspace = true
 serde = { workspace = true, features = ["derive"] }
 chrono.workspace = true
 regex.workspace = true
+textwrap.workspace =true
+termsize.workspace = true
