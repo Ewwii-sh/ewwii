@@ -51,6 +51,7 @@ mod opts;
 mod paths;
 mod server;
 mod util;
+mod updates;
 mod widgets;
 mod window;
 mod window_arguments;
