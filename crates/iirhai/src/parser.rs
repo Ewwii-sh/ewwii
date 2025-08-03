@@ -3,7 +3,7 @@ use crate::{
     providers::register_all_providers, widgetnode::WidgetNode,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, Scope, EvalAltResult};
+use rhai::{Dynamic, Engine, EvalAltResult, Scope};
 use std::fs;
 use std::path::Path;
 
@@ -35,9 +35,7 @@ impl ParseConfig {
             scope.set_value(var, value);
         }
 
-        self.engine
-            .eval_with_scope::<WidgetNode>(&mut scope, code)
-            .map_err(|e| anyhow!(format_rhai_error(&e, code)))
+        self.engine.eval_with_scope::<WidgetNode>(&mut scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code)))
     }
 
     pub fn parse_widget_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<WidgetNode> {
