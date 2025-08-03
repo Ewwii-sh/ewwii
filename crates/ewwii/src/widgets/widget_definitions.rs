@@ -661,11 +661,13 @@ static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
 
 /// Code that applies css/scss to widgets.
 pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widget) -> Result<()> {
+    // NOTE: The following variable should contain all widgets!
     let props = match node {
         WidgetNode::Box { props, .. }
         | WidgetNode::CenterBox { props, .. }
         | WidgetNode::EventBox { props, .. }
         | WidgetNode::Graph { props }
+        | WidgetNode::Slider { props }
         | WidgetNode::Progress { props }
         | WidgetNode::Image { props }
         | WidgetNode::Button { props }
@@ -694,32 +696,60 @@ pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widg
     }
 
     // Handle classes
-    let class_str = get_string_prop(&props, "class", Some(""))?;
-    if !class_str.is_empty() {
+    if let Ok(class_str) = get_string_prop(&props, "class", None) {
         let style_context = gtk_widget.style_context();
         for class in class_str.split_whitespace() {
             style_context.add_class(class);
         }
     }
 
-    // 4. Handle style
-    let style_str = get_string_prop(&props, "style", Some(""))?;
-    if !style_str.is_empty() {
+    if let Ok(style_str) = get_string_prop(&props, "style", None) {
         let css_provider = gtk::CssProvider::new();
         let scss = format!("* {{ {} }}", style_str);
         css_provider.load_from_data(grass::from_string(scss, &grass::Options::default())?.as_bytes())?;
         gtk_widget.style_context().add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
-    // 5. Handle full css
-    let css_str = get_string_prop(&props, "css", Some(""))?;
-    if !css_str.is_empty() {
+    if let Ok(css_str) = get_string_prop(&props, "css", None) {
         let css_provider = gtk::CssProvider::new();
         css_provider.load_from_data(grass::from_string(css_str, &grass::Options::default())?.as_bytes())?;
         gtk_widget.style_context().add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
-    // 5. Optional: handle other fields like valign/halign/vexpand etc.
+    if let Ok(valign) = get_string_prop(&props, "valign", None) {
+        gtk_widget.set_valign(parse_align(&valign)?)
+    }
+
+    if let Ok(halign) = get_string_prop(&props, "halign", None) {
+        gtk_widget.set_halign(parse_align(&halign)?)
+    }
+
+    if let Ok(vexpand) = get_bool_prop(&props, "vexpand", Some(false)) {
+        gtk_widget.set_vexpand(vexpand)
+    }
+
+    if let Ok(hexpand) = get_bool_prop(&props, "hexpand", Some(false)) {
+        gtk_widget.set_hexpand(hexpand)
+    }
+
+    let width = get_i32_prop(&props, "width", None).ok();
+    let height = get_i32_prop(&props, "height", None).ok();
+
+    match (width, height) {
+        (Some(w), Some(h)) => gtk_widget.set_size_request(w, h),
+        (Some(w), None)    => gtk_widget.set_size_request(w, gtk_widget.allocated_height()),
+        (None, Some(h))    => gtk_widget.set_size_request(gtk_widget.allocated_width(), h),
+        (None, None)       => {} // do nothing
+    }
+
+
+    if let Ok(active) = get_bool_prop(&props, "active", Some(true)) {
+        gtk_widget.set_sensitive(active)
+    }
+
+    if let Ok(tooltip) = get_string_prop(&props, "tooltip", None) {
+        gtk_widget.set_tooltip_text(Some(&tooltip));
+    }
 
     Ok(())
 }
