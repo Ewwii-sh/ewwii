@@ -14,22 +14,16 @@
     }
 */
 
-use std::time::Duration;
-use tokio::time::sleep;
-use tokio::process::Command;
+use super::ReactiveVarStore;
 use ewwii_shared_util::general_helper::*;
 use rhai::Map;
-use super::ReactiveVarStore;
+use std::time::Duration;
+use tokio::process::Command;
+use tokio::time::sleep;
 
-pub fn handle_poll(
-    var_name: String,
-    props: Map,
-    store: ReactiveVarStore,
-    tx: tokio::sync::mpsc::UnboundedSender<String>,
-) {
+pub fn handle_poll(var_name: String, props: Map, store: ReactiveVarStore, tx: tokio::sync::mpsc::UnboundedSender<String>) {
     // Parse polling interval
-    let interval = get_duration_prop(&props, "interval", Some(Duration::from_secs(1)))
-        .unwrap_or(Duration::from_secs(1));
+    let interval = get_duration_prop(&props, "interval", Some(Duration::from_secs(1))).unwrap_or(Duration::from_secs(1));
 
     let cmd = match get_string_prop(&props, "cmd", Some("")) {
         Ok(c) => c,
@@ -53,12 +47,7 @@ pub fn handle_poll(
         let mut last_value: Option<String> = None;
 
         loop {
-            match Command::new("/bin/sh")
-                .arg("-c")
-                .arg(&cmd)
-                .output()
-                .await
-            {
+            match Command::new("/bin/sh").arg("-c").arg(&cmd).output().await {
                 Ok(output) => {
                     if output.status.success() {
                         let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();

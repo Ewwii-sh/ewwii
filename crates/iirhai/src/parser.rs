@@ -1,9 +1,9 @@
 use crate::{
-    builtins::register_all_widgets, error::format_rhai_error, providers::register_all_providers, widgetnode::WidgetNode,
-    helper::extract_poll_and_listen_vars,
+    builtins::register_all_widgets, error::format_rhai_error, helper::extract_poll_and_listen_vars,
+    providers::register_all_providers, widgetnode::WidgetNode,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Engine, Scope, Dynamic};
+use rhai::{Dynamic, Engine, Scope};
 use std::fs;
 use std::path::Path;
 

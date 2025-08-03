@@ -86,8 +86,6 @@ impl EwwiiConfig {
     }
 
     pub fn get_root_node(&self) -> Result<WidgetNode> {
-        self.root_node
-            .clone()
-            .ok_or_else(|| anyhow::anyhow!("root_node is missing"))
+        self.root_node.clone().ok_or_else(|| anyhow::anyhow!("root_node is missing"))
     }
 }

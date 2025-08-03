@@ -19,7 +19,8 @@ mod tests {
     use crate::helper::extract_poll_and_listen_vars;
     #[test]
     fn poll_listen_regex_test() {
-        let result = extract_poll_and_listen_vars(r#"
+        let result = extract_poll_and_listen_vars(
+            r#"
             fn widget1() {
                 return box(#{
                     class: 'widget1',
@@ -52,7 +53,8 @@ mod tests {
                 }, widget1())
             ]);
 
-    "#);
+    "#,
+        );
         println!("{:#?}", result);
         assert!(result.contains("cpu_usage"));
         assert!(result.contains("net_speed"));
