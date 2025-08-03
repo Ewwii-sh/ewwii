@@ -1,8 +1,8 @@
-use std::collections::HashSet;
-use ewwii_shared_util::general_helper::*;
-use anyhow::{anyhow, Result};
 use crate::error::format_rhai_error;
+use anyhow::{anyhow, Result};
+use ewwii_shared_util::general_helper::*;
 use rhai::Engine;
+use std::collections::HashSet;
 
 pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<String>)>> {
     let mut results = Vec::new();
@@ -13,10 +13,7 @@ pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<St
     for expr in extract_poll_listen_exprs(code) {
         match engine.eval_expression::<TempSignal>(&expr) {
             Ok(sig) => {
-                let initial = sig
-                    .props
-                    .get("initial")
-                    .and_then(|v| v.clone().try_cast::<String>());
+                let initial = sig.props.get("initial").and_then(|v| v.clone().try_cast::<String>());
                 results.push((sig.var, initial));
             }
             Err(e) => {
@@ -70,13 +67,9 @@ struct TempSignal {
 fn register_temp_poll_listen(engine: &mut rhai::Engine) {
     engine.register_type::<TempSignal>();
 
-    engine.register_fn("poll", |var: &str, props: rhai::Map| {
-        TempSignal { var: var.to_string(), props }
-    });
+    engine.register_fn("poll", |var: &str, props: rhai::Map| TempSignal { var: var.to_string(), props });
 
-    engine.register_fn("listen", |var: &str, props: rhai::Map| {
-        TempSignal { var: var.to_string(), props }
-    });
+    engine.register_fn("listen", |var: &str, props: rhai::Map| TempSignal { var: var.to_string(), props });
 }
 
 #[cfg(test)]
