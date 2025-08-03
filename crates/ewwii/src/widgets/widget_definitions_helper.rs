@@ -118,3 +118,16 @@ where
         cmd.to_string()
     }
 }
+
+/// Revealer
+pub(super) fn parse_revealer_transition(t: &str) -> Result<gtk::RevealerTransitionType> {
+    match t.to_ascii_lowercase().as_str() {
+        "slideright" => Ok(gtk::RevealerTransitionType::SlideRight),
+        "slideleft" => Ok(gtk::RevealerTransitionType::SlideLeft),
+        "slideup" => Ok(gtk::RevealerTransitionType::SlideUp),
+        "slidedown" => Ok(gtk::RevealerTransitionType::SlideDown),
+        "fade" | "crossfade" => Ok(gtk::RevealerTransitionType::Crossfade),
+        "none" => Ok(gtk::RevealerTransitionType::None),
+        _ => Err(anyhow!("Invalid transition: '{}'", t)),
+    }
+}
