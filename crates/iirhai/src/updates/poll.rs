@@ -12,15 +12,6 @@
         pub interval: std::time::Duration,
         pub name_span: Span,
     }
-
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
-    pub struct ListenScriptVar {
-        pub name: VarName,
-        pub command: String,
-        pub initial_value: DynVal,
-        pub command_span: Span,
-        pub name_span: Span,
-    }
 */
 
 use std::time::Duration;
@@ -59,6 +50,8 @@ pub fn handle_poll(
     let tx = tx.clone();
 
     tokio::spawn(async move {
+        let mut last_value: Option<String> = None;
+
         loop {
             match Command::new("/bin/sh")
                 .arg("-c")
@@ -69,9 +62,15 @@ pub fn handle_poll(
                 Ok(output) => {
                     if output.status.success() {
                         let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                        log::debug!("[{}] polled value: {}", var_name, stdout);
-                        store.write().unwrap().insert(var_name.clone(), stdout);
-                        let _ = tx.send(var_name.clone());
+                        if Some(&stdout) != last_value.as_ref() {
+                            last_value = Some(stdout.clone());
+
+                            log::debug!("[{}] polled value: {}", var_name, stdout);
+                            store.write().unwrap().insert(var_name.clone(), stdout);
+                            let _ = tx.send(var_name.clone());
+                        } else {
+                            log::trace!("[{}] value unchanged, skipping tx", var_name);
+                        }
                     } else {
                         log::warn!("[{}] command failed: {:?}", var_name, output.status);
                     }
