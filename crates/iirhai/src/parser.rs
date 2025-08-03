@@ -1,8 +1,9 @@
 use crate::{
     builtins::register_all_widgets, error::format_rhai_error, providers::register_all_providers, widgetnode::WidgetNode,
+    helper::extract_poll_and_listen_vars,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Engine, Scope};
+use rhai::{Engine, Scope, Dynamic};
 use std::fs;
 use std::path::Path;
 
@@ -15,13 +16,19 @@ impl ParseConfig {
     pub fn new() -> Self {
         let mut engine = Engine::new();
         let scope = Scope::new();
+
         engine.set_max_expr_depths(128, 128);
         register_all_widgets(&mut engine);
         register_all_providers(&mut engine);
+
         Self { engine, scope }
     }
 
     pub fn parse_widget_code(&mut self, code: &str) -> Result<WidgetNode> {
+        for var in extract_poll_and_listen_vars(code) {
+            self.scope.set_value(var, Dynamic::UNIT);
+        }
+
         self.engine.eval_with_scope::<WidgetNode>(&mut self.scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code)))
     }
 
