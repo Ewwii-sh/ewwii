@@ -58,6 +58,8 @@ sysinfo = "0.31.2"
 thiserror = "1.0"
 tokio-util = "0.7.11"
 tokio = { version = "1.39.2", features = ["full"] }
+textwrap = "0.16.2"
+termsize = "0.1.9"
 unescape = "0.1"
 wait-timeout = "0.2"
 colored = "3.0.0"
