@@ -36,7 +36,12 @@ pub fn initialize_server<B: DisplayBackend>(
         Ok(config) => config,
         Err(err) => {
             error_handling_ctx::print_error(err);
-            config::EwwiiConfig::default()
+            // config::EwwiiConfig::default()
+            // TODO: maybe add a switch which will make it less strict.
+            // i wonder if exiting if an error is found is a great option.
+            // is making the daemon launch even in errors in necessary?
+            // i dont think so, so i guess that ill just exit.
+            std::process::exit(1);
         }
     };
 
