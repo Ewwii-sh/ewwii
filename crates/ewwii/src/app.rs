@@ -33,8 +33,8 @@ use std::{
 };
 use tokio::sync::mpsc::UnboundedSender;
 
-/// A command for the eww daemon.
-/// While these are mostly generated from eww CLI commands (see [`opts::ActionWithServer`]),
+/// A command for the ewwii daemon.
+/// While these are mostly generated from ewwii CLI commands (see [`opts::ActionWithServer`]),
 /// they may also be generated from other places internally.
 #[derive(Debug)]
 pub enum DaemonCommand {
@@ -261,7 +261,7 @@ impl<B: DisplayBackend> App<B> {
         Ok(())
     }
 
-    /// Fully stop eww:
+    /// Fully stop ewwii:
     /// close all windows, stop the script_var_handler, quit the gtk appliaction and send the exit instruction to the lifecycle manager
     fn stop_application(&mut self) {
         for (_, window) in self.open_windows.drain() {
