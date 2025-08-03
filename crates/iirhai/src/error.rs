@@ -18,31 +18,21 @@ impl<'a> Diagnostic<'a> {
         let num_width = self.line.to_string().len();
 
         // header (error: error_mssg)
-        let mut out = format!(
-            "\n{}: {}\n",
-            self.severity.red().bold(),
-            self.message
-        );
+        let mut out = format!("\n{}: {}\n", self.severity.red().bold(), self.message);
 
         // arrow location
         out.push_str(&format!(
             "  {arrow} {file}:{line}:{col}\n",
             arrow = "-->".dimmed(),
-            file  = self.file,
-            line  = self.line,
-            col   = self.column,
+            file = self.file,
+            line = self.line,
+            col = self.column,
         ));
 
         // bar seperator
         out.push_str(&format!("   {bar}\n", bar = "|".dimmed()));
 
-        out.push_str(&format!(
-            "{:>width$} {sep} {}\n",
-            self.line,
-            self.line_text,
-            width = num_width,
-            sep   = "|".dimmed(),
-        ));
+        out.push_str(&format!("{:>width$} {sep} {}\n", self.line, self.line_text, width = num_width, sep = "|".dimmed(),));
 
         // The caret line, pointing at the column
         let caret_padding = " ".repeat(self.column.saturating_sub(1));
@@ -50,8 +40,8 @@ impl<'a> Diagnostic<'a> {
             "{:>width$} {sep} {padding}{}\n",
             "",
             "^".red().bold(),
-            width   = num_width,
-            sep     = "|".dimmed(),
+            width = num_width,
+            sep = "|".dimmed(),
             padding = caret_padding,
         ));
 
@@ -60,18 +50,10 @@ impl<'a> Diagnostic<'a> {
 
         // Optional help and hint
         if let Some(help) = &self.help {
-            out.push_str(&format!(
-                "{eq} help: {}\n",
-                help.cyan(),
-                eq = "=".cyan().bold(),
-            ));
+            out.push_str(&format!("{eq} help: {}\n", help.cyan(), eq = "=".cyan().bold(),));
         }
         if let Some(hint) = &self.hint {
-            out.push_str(&format!(
-                "{eq} hint: {}\n",
-                hint.cyan(),
-                eq = "=".cyan().bold(),
-            ));
+            out.push_str(&format!("{eq} hint: {}\n", hint.cyan(), eq = "=".cyan().bold(),));
         }
 
         out
@@ -82,10 +64,7 @@ pub fn format_rhai_error(error: &EvalAltResult, code: &str) -> String {
     let pos = get_deepest_position(error);
     let line = pos.line().unwrap_or(0);
     let column = pos.position().unwrap_or(1);
-    let line_text = code
-        .lines()
-        .nth(line.saturating_sub(1))
-        .unwrap_or("");
+    let line_text = code.lines().nth(line.saturating_sub(1)).unwrap_or("");
 
     let filename = "<rhai>"; // DUMMY
     let help_hint = get_error_hint_help(error);
@@ -97,13 +76,12 @@ pub fn format_rhai_error(error: &EvalAltResult, code: &str) -> String {
         line,
         column,
         line_text,
-        help:   if help_hint.help.is_empty() { None } else { Some(help_hint.help) },
-        hint:   if help_hint.hint.is_empty() { None } else { Some(help_hint.hint) },
+        help: if help_hint.help.is_empty() { None } else { Some(help_hint.help) },
+        hint: if help_hint.hint.is_empty() { None } else { Some(help_hint.hint) },
     };
 
     diag.render()
 }
-
 
 fn get_deepest_position(error: &EvalAltResult) -> Position {
     match error {
@@ -194,10 +172,7 @@ fn get_error_hint_help(err: &EvalAltResult) -> ErrorHelp {
             help: format!("Invalid member access '{}'.", field),
             hint: "Verify the object has this member or method.".into(),
         },
-        EvalAltResult::ErrorArithmetic(msg, ..) => ErrorHelp {
-            help: "Arithmetic error encountered.".into(),
-            hint: msg.clone(),
-        },
+        EvalAltResult::ErrorArithmetic(msg, ..) => ErrorHelp { help: "Arithmetic error encountered.".into(), hint: msg.clone() },
         EvalAltResult::ErrorTooManyOperations(..) => ErrorHelp {
             help: "Script exceeded the maximum number of operations.".into(),
             hint: "Break complex expressions into smaller steps or increase the limit.".into(),
@@ -234,10 +209,7 @@ fn get_error_hint_help(err: &EvalAltResult) -> ErrorHelp {
             help: "`return` statement encountered.".into(),
             hint: "Script terminated with an explicit return value.".into(),
         },
-        _ => ErrorHelp {
-            help: "Unknown error".into(),
-            hint: "No additional information available for this error.".into(),
-        }
+        _ => ErrorHelp { help: "Unknown error".into(), hint: "No additional information available for this error.".into() },
     }
 }
 
