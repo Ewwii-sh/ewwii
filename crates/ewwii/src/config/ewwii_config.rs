@@ -27,6 +27,7 @@ pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwiiConfig> {
 #[derive(Debug, Clone, Default)]
 pub struct EwwiiConfig {
     windows: HashMap<String, WindowDefinition>,
+    root_node: Option<WidgetNode>,
 }
 
 #[derive(Debug, Clone)]
@@ -51,7 +52,7 @@ impl EwwiiConfig {
 
         let mut window_definitions = HashMap::new();
 
-        if let WidgetNode::Enter(children) = config_tree {
+        if let WidgetNode::Enter(ref children) = config_tree {
             for node in children {
                 if let WidgetNode::DefWindow { name, props, node } = node {
                     let win_def = WindowDefinition {
@@ -67,7 +68,7 @@ impl EwwiiConfig {
             bail!("Expected root node to be `Enter`, but got something else.");
         }
 
-        Ok(EwwiiConfig { windows: window_definitions })
+        Ok(EwwiiConfig { windows: window_definitions, root_node: Some(config_tree) })
     }
 
     pub fn get_windows(&self) -> &HashMap<String, WindowDefinition> {
@@ -82,5 +83,11 @@ impl EwwiiConfig {
                 name
             )
         })
+    }
+
+    pub fn get_root_node(&self) -> Result<WidgetNode> {
+        self.root_node
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("root_node is missing"))
     }
 }
