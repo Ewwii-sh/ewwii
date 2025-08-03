@@ -11,6 +11,7 @@ pub enum WidgetNode {
     Progress { props: Map },
     Spacer { props: Map },
     Slider { props: Map },
+    Checkbox { props: Map },
     Revealer { props: Map, children: Vec<WidgetNode> },
     Scroll { props: Map, children: Vec<WidgetNode> },
     Calendar { props: Map },

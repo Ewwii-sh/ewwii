@@ -375,7 +375,7 @@ pub(super) fn build_gtk_image(props: Map) -> Result<gtk::Image> {
 pub(super) fn build_gtk_button(props: Map) -> Result<gtk::Button> {
     let gtk_widget = gtk::Button::new();
 
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200))).unwrap_or(Duration::from_millis(200));
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
     let onclick = get_string_prop(&props, "onclick", Some(""))?;
     let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
@@ -605,6 +605,24 @@ pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Resul
     Ok(gtk_widget)
 }
 
+pub(super) fn build_gtk_checkbox(props: Map) -> Result<gtk::CheckButton> {
+    let gtk_widget = gtk::CheckButton::new();
+
+    if let Ok(checked) = get_bool_prop(&props, "checked", Some(false)) {
+        gtk_widget.set_active(checked);
+    }
+
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+    let onchecked = get_string_prop(&props, "onchecked", Some(""))?;
+    let onunchecked = get_string_prop(&props, "onchecked", Some(""))?;
+
+    connect_signal_handler!(gtk_widget, gtk_widget.connect_toggled(move |gtk_widget| {
+        run_command(timeout, if gtk_widget.is_active() { &onchecked } else { &onunchecked }, &[] as &[&str]);
+    }));
+
+    Ok(gtk_widget)
+}
+
 pub(super) fn build_gtk_scale(props: Map) -> Result<gtk::Scale> {
     let gtk_widget = gtk::Scale::new(gtk::Orientation::Horizontal, Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
 
@@ -674,6 +692,7 @@ pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widg
         | WidgetNode::Label { props }
         | WidgetNode::Input { props }
         | WidgetNode::Calendar { props }
+        | WidgetNode::Checkbox { props }
         | WidgetNode::Revealer { props, .. }
         | WidgetNode::Scroll { props, .. } => props,
         _ => return Ok(()),
@@ -791,7 +810,7 @@ pub(super) fn resolve_range_attrs(props: &Map, gtk_widget: &gtk::Range) -> Resul
     }
 
     let onchange = get_string_prop(&props, "onchange", None).ok();
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200))).unwrap_or(Duration::from_millis(200));
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
     if let Some(onchange) = onchange {
         gtk_widget.set_sensitive(true);

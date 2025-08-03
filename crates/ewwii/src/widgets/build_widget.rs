@@ -58,7 +58,7 @@ fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<gtk::Widget> {
         // WIDGET_NAME_EXPANDER => build_gtk_expander(node)?.upcast(),
         // WIDGET_NAME_COLOR_CHOOSER => build_gtk_color_chooser(node)?.upcast(),
         // WIDGET_NAME_COMBO_BOX_TEXT => build_gtk_combo_box_text(node)?.upcast(),
-        // WIDGET_NAME_CHECKBOX => build_gtk_checkbox(node)?.upcast(),
+        WidgetNode::Checkbox { props } => build_gtk_checkbox(props)?.upcast(),
         WidgetNode::Revealer { props, children } => build_gtk_revealer(props, children)?.upcast(),
         WidgetNode::Scroll { props, children } => build_gtk_scrolledwindow(props, children)?.upcast(),
         // WIDGET_NAME_OVERLAY => build_gtk_overlay(node)?.upcast(),
