@@ -34,6 +34,18 @@ where
         .expect("Failed to start command-execution-thread");
 }
 
+/// ALL WIDGETS
+pub(super) fn parse_align(o: &str) -> Result<gtk::Align> {
+    match o.to_ascii_lowercase().as_str() {
+        "fill" => Ok(gtk::Align::Fill),
+        "baseline" => Ok(gtk::Align::Baseline),
+        "center" => Ok(gtk::Align::Center),
+        "start" => Ok(gtk::Align::Start),
+        "end" => Ok(gtk::Align::End),
+        other => Err(anyhow!("Invalid alignment: {}", other)),
+    }
+}
+
 /// Gtk Box
 pub(super) fn parse_orientation(ori: &str) -> Result<gtk::Orientation> {
     match ori.to_ascii_lowercase().as_str() {
