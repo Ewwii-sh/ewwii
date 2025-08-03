@@ -329,6 +329,7 @@ impl<B: DisplayBackend> App<B> {
             // )?;
 
             let root_widget = build_gtk_widget(WidgetInput::Window(window_def))?;
+            iirhai::updates::handle_changes(self.ewwii_config.get_root_node()?);
 
             root_widget.style_context().add_class(window_name);
 

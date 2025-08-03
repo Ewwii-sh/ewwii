@@ -18,7 +18,7 @@ mod listen;
 mod poll;
 
 use crate::widgetnode::WidgetNode;
-// use listen::handle_listen;
+use listen::handle_listen;
 use poll::handle_poll;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -39,8 +39,7 @@ pub fn handle_changes(enter_node: WidgetNode) {
                     handle_poll(var, props, store.clone(), tx.clone());
                 }
                 WidgetNode::Listen { var, props } => {
-                    // handle_listen(var, props, store.clone(), tx.clone());
-                    println!("TODO: Add listen");
+                    handle_listen(var, props, store.clone(), tx.clone());
                 }
                 _ => {}
             }
@@ -54,8 +53,9 @@ pub fn handle_changes(enter_node: WidgetNode) {
         while let Some(var_name) = rx.recv().await {
             log::debug!("Reactive var changed: {}", var_name);
             let vars = store_clone.read().unwrap().clone();
-            // re_eval_widgets(&vars).await;
-            println!("TODO: REVAL VARS!");
+
+            // re_eval_widgets(&var_name, &vars).await;
+            println!("TODO: REVAL VARS! {:#?}", vars);
         }
     });
 }
