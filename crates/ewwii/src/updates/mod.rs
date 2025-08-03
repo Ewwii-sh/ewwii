@@ -17,12 +17,10 @@
 mod listen;
 mod poll;
 
-use iirhai::{
-    widgetnode::WidgetNode,
-};
-use rhai::{Scope, Dynamic};
+use iirhai::widgetnode::WidgetNode;
 use listen::handle_listen;
 use poll::handle_poll;
+use rhai::{Dynamic, Scope};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::RwLock;
