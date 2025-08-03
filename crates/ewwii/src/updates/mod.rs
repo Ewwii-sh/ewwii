@@ -17,7 +17,10 @@
 mod listen;
 mod poll;
 
-use crate::widgetnode::WidgetNode;
+use iirhai::{
+    widgetnode::WidgetNode,
+};
+use rhai::{Scope, Dynamic};
 use listen::handle_listen;
 use poll::handle_poll;
 use std::collections::HashMap;
@@ -26,7 +29,7 @@ use std::sync::RwLock;
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 
-pub fn handle_changes(enter_node: WidgetNode) {
+pub fn handle_state_changes(enter_node: WidgetNode) {
     /// Enter node is the WidgetNode of Enter()
     /// it is the very root of every config.
     let store: ReactiveVarStore = Arc::new(RwLock::new(HashMap::new()));
@@ -54,8 +57,15 @@ pub fn handle_changes(enter_node: WidgetNode) {
             log::debug!("Reactive var changed: {}", var_name);
             let vars = store_clone.read().unwrap().clone();
 
-            // re_eval_widgets(&var_name, &vars).await;
-            println!("TODO: REVAL VARS! {:#?}", vars);
+            re_eval_widgets(&vars).await;
         }
     });
+}
+
+pub async fn re_eval_widgets(all_vars: &HashMap<String, String>) {
+    let mut scope = Scope::new();
+    for (name, val) in all_vars {
+        scope.set_value(name.clone(), Dynamic::from(val.clone()));
+    }
+    // TODO: added re-eval here later;
 }
