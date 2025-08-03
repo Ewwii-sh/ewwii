@@ -32,12 +32,13 @@ pub fn handle_listen(var_name: String, props: Map, store: ReactiveVarStore, tx: 
         }
     };
 
+    // No need to do this as we apply the initial value before parsing
     // Handle initial value
-    if let Ok(initial) = get_string_prop(&props, "initial", None) {
-        log::debug!("[{}] initial value: {}", var_name, initial);
-        store.write().unwrap().insert(var_name.clone(), initial.clone());
-        let _ = tx.send(var_name.clone());
-    }
+    // if let Ok(initial) = get_string_prop(&props, "initial", None) {
+    //     log::debug!("[{}] initial value: {}", var_name, initial);
+    //     store.write().unwrap().insert(var_name.clone(), initial.clone());
+    //     let _ = tx.send(var_name.clone());
+    // }
 
     let store = store.clone();
     let tx = tx.clone();

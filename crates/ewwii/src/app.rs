@@ -329,7 +329,7 @@ impl<B: DisplayBackend> App<B> {
             // )?;
 
             let root_widget = build_gtk_widget(WidgetInput::Window(window_def))?;
-            iirhai::updates::handle_changes(self.ewwii_config.get_root_node()?);
+            crate::updates::handle_state_changes(self.ewwii_config.get_root_node()?);
 
             root_widget.style_context().add_class(window_name);
 
@@ -457,7 +457,7 @@ fn initialize_window<B: DisplayBackend>(
     let window = B::initialize_window(window_init, monitor_geometry, x, y)
         .with_context(|| format!("monitor {} is unavailable", window_init.monitor.clone().unwrap()))?;
 
-    window.set_title(&format!("Eww - {}", window_init.name));
+    window.set_title(&format!("Ewwii - {}", window_init.name));
     window.set_position(gtk::WindowPosition::None);
     window.set_gravity(gdk::Gravity::Center);
 
