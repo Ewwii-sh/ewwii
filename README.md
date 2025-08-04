@@ -2,7 +2,7 @@
 
 # Ewwii
 
-<img src="./.github/EwwLogo.svg" height="100" align="left"/>
+<img src="./.github/EwwiiLogo.svg" height="100" align="left"/>
 
 Elkowars Wacky Widgets Imporved Interface is a fork of Elkowars Wacky Widgets which is a standalone widget system made in Rust that allows you to implement your own, custom widgets in any window manager.
 
