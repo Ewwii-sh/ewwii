@@ -142,6 +142,21 @@ pub(super) fn parse_icon_size(o: &str) -> Result<gtk::IconSize> {
         "button" => Ok(gtk::IconSize::Button),
         "dnd" => Ok(gtk::IconSize::Dnd),
         "dialog" => Ok(gtk::IconSize::Dialog),
-        _ => Err(anyhow!("Invalid icon size: '{}'", 0)),
+        _ => Err(anyhow!("Invalid icon size: '{}'", o)),
+    }
+}
+
+/// Event box
+// dragtype - "file", "text"
+pub(super) enum DragEntryType {
+    File,
+    Text,
+}
+
+pub(super) fn parse_dragtype(o: &str) -> Result<DragEntryType> {
+    match o.to_ascii_lowercase().as_str() {
+        "file" => Ok(DragEntryType::File),
+        "text" => Ok(DragEntryType::Text),
+        _ => Err(anyhow!("Invalid drag type: '{}'", o)),
     }
 }
