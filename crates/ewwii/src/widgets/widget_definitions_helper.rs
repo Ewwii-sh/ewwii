@@ -131,3 +131,17 @@ pub(super) fn parse_revealer_transition(t: &str) -> Result<gtk::RevealerTransiti
         _ => Err(anyhow!("Invalid transition: '{}'", t)),
     }
 }
+
+/// Gtk Image
+// icon-size - "menu", "small-toolbar", "toolbar", "large-toolbar", "button", "dnd", "dialog"
+pub(super) fn parse_icon_size(o: &str) -> Result<gtk::IconSize> {
+    match o.to_ascii_lowercase().as_str() {
+        "menu" => Ok(gtk::IconSize::Menu),
+        "small-toolbar" | "toolbar" => Ok(gtk::IconSize::SmallToolbar),
+        "large-toolbar" => Ok(gtk::IconSize::LargeToolbar),
+        "button" => Ok(gtk::IconSize::Button),
+        "dnd" => Ok(gtk::IconSize::Dnd),
+        "dialog" => Ok(gtk::IconSize::Dialog),
+        _ => Err(anyhow!("Invalid icon size: '{}'", 0)),
+    }
+}
