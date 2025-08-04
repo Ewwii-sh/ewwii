@@ -43,7 +43,7 @@ fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<gtk::Widget> {
         WidgetNode::CenterBox { props, children } => build_center_box(props, children)?.upcast(),
         WidgetNode::EventBox { props, children } => build_gtk_event_box(props, children)?.upcast(),
         // WIDGET_NAME_TOOLTIP => build_tooltip(node)?.upcast(),
-        // WIDGET_NAME_CIRCULAR_PROGRESS => build_circular_progress_bar(node)?.upcast(),
+        WidgetNode::CircularProgress { props } => build_circular_progress_bar(props)?.upcast(),
         WidgetNode::Graph { props } => build_graph(props)?.upcast(),
         // WIDGET_NAME_TRANSFORM => build_transform(node)?.upcast(),
         WidgetNode::Slider { props } => build_gtk_scale(props)?.upcast(),

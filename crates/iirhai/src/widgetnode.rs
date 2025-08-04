@@ -16,6 +16,7 @@ pub enum WidgetNode {
     Revealer { props: Map, children: Vec<WidgetNode> },
     Scroll { props: Map, children: Vec<WidgetNode> },
     Calendar { props: Map },
+    CircularProgress { props: Map },
     Graph { props: Map },
     Include(String),
     DefStyle(String),
