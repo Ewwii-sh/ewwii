@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use rhai::{Map, Dynamic};
+use rhai::{Dynamic, Map};
 use std::time::Duration;
 
 /// General purpose helpers
@@ -43,13 +43,12 @@ pub fn get_i32_prop(props: &Map, key: &str, default: Option<i32>) -> Result<i32>
     }
 }
 
-
 pub fn get_vec_string_prop(props: &Map, key: &str, default: Option<Vec<String>>) -> Result<Vec<String>> {
     if let Some(value) = props.get(key) {
-        let array = value.clone().try_cast::<Vec<Dynamic>>()
-            .ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
+        let array = value.clone().try_cast::<Vec<Dynamic>>().ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
 
-        array.into_iter()
+        array
+            .into_iter()
             .map(|d| d.try_cast::<String>().ok_or_else(|| anyhow!("Expected all elements of `{}` to be strings", key)))
             .collect()
     } else {
