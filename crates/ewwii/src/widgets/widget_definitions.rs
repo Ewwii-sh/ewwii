@@ -21,6 +21,12 @@ use std::{
     time::Duration,
 };
 
+// custom widgets
+use crate::widgets::{
+    circular_progressbar::CircProg,
+    graph
+};
+
 /// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
 /// the previously connected singal handler first gets disconnected.
 /// Can take an optional condition.
@@ -259,6 +265,28 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
     //     }
     // });
     Ok(gtk_widget)
+}
+
+pub (super) fn build_circular_progress_bar(props: Map) -> Result<CircProg> {
+    let widget = CircProg::new();
+
+    if let Ok(value) = get_f64_prop(&props, "value", None) {
+        widget.set_property("value", value.clamp(0.0, 100.0));
+    }
+
+    if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
+        widget.set_property("start-at", start_at.clamp(0.0, 100.0));
+    }
+
+    if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
+        widget.set_property("thickness", thickness);
+    }
+
+    if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
+        widget.set_property("clockwise", clockwise);
+    }
+
+    Ok(widget)
 }
 
 pub(super) fn build_graph(props: Map) -> Result<super::graph::Graph> {
