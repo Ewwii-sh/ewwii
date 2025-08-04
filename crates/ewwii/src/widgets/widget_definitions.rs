@@ -612,6 +612,33 @@ pub(super) fn build_gtk_combo_box_text(props: Map) -> Result<gtk::ComboBoxText> 
     Ok(gtk_widget)
 }
 
+pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Expander> {
+    let gtk_widget = gtk::Expander::new(None);
+
+    let count = children.len();
+
+    if count < 1 {
+        bail!("expander must contain exactly one element");
+    } else if count > 1 {
+        bail!("expander must contain exactly one element, but got more");
+    }
+    
+    let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+    let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
+    gtk_widget.add(&child_widget);
+    child_widget.show();
+
+    if let Ok(name) = get_string_prop(&props, "name", None) {
+        gtk_widget.set_label(Some(&name));
+    }
+
+    if let Ok(expanded) = get_bool_prop(&props, "expanded", None) {
+        gtk_widget.set_expanded(expanded);
+    }
+
+    Ok(gtk_widget)
+}
+
 pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Revealer> {
     let gtk_widget = gtk::Revealer::new();
 

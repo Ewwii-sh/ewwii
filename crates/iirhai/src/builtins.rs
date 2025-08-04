@@ -31,6 +31,11 @@ pub fn register_all_widgets(engine: &mut Engine) {
 
     engine.register_fn("checkbox", |props: Map| WidgetNode::Checkbox { props });
 
+    engine.register_fn("expander", |props: Map, children: Array| WidgetNode::Expander {
+        props,
+        children: children.into_iter().map(|v| v.cast()).collect(),
+    });
+
     engine.register_fn("revealer", |props: Map, children: Array| WidgetNode::Revealer {
         props,
         children: children.into_iter().map(|v| v.cast()).collect(),
