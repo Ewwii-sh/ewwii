@@ -25,7 +25,7 @@ pub fn register_all_widgets(engine: &mut Engine) {
 
     engine.register_fn("progress", |props: Map| WidgetNode::Progress { props });
 
-    engine.register_fn("spacer", |props: Map| WidgetNode::Spacer { props });
+    engine.register_fn("combo_box_text", |props: Map| WidgetNode::ComboBoxText { props });
 
     engine.register_fn("slider", |props: Map| WidgetNode::Slider { props });
 
