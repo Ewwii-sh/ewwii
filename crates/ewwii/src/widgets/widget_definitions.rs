@@ -489,7 +489,7 @@ pub(super) fn build_gtk_label(props: Map) -> Result<gtk::Label> {
     if has_text && has_markup {
         bail!("Cannot set both 'text' and 'markup' for a label");
     } else if has_text {
-        let text = get_string_prop(&props, "text", None)?; // now safe: key must exist
+        let text = get_string_prop(&props, "text", None)?;
         let t = if show_truncated {
             if limit_width == i32::MAX {
                 gtk_widget.set_max_width_chars(-1);
@@ -567,30 +567,28 @@ pub(super) fn build_gtk_label(props: Map) -> Result<gtk::Label> {
 
 pub(super) fn build_gtk_input(props: Map) -> Result<gtk::Entry> {
     let gtk_widget = gtk::Entry::new();
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     // @prop value - the content of the text field
-    //     prop(value: as_string) {
-    //         gtk_widget.set_text(&value);
-    //     },
-    //     // @prop onchange - Command to run when the text changes. The placeholder `{}` will be replaced by the value
-    //     // @prop timeout - timeout of the command. Default: "200ms"
-    //     prop(timeout: as_duration = Duration::from_millis(200), onchange: as_string) {
-    //         connect_signal_handler!(gtk_widget, gtk_widget.connect_changed(move |gtk_widget| {
-    //             run_command(timeout, &onchange, &[gtk_widget.text().to_string()]);
-    //         }));
-    //     },
-    //     // @prop onaccept - Command to run when the user hits return in the input field. The placeholder `{}` will be replaced by the value
-    //     // @prop timeout - timeout of the command. Default: "200ms"
-    //     prop(timeout: as_duration = Duration::from_millis(200), onaccept: as_string) {
-    //         connect_signal_handler!(gtk_widget, gtk_widget.connect_activate(move |gtk_widget| {
-    //             run_command(timeout, &onaccept, &[gtk_widget.text().to_string()]);
-    //         }));
-    //     },
-    //     // @prop password - if the input is obscured
-    //     prop(password: as_bool = false) {
-    //         gtk_widget.set_visibility(!password);
-    //     }
-    // });
+
+    if let Ok(value) = get_string_prop(&props, "value", None) {
+        gtk_widget.set_text(&value);
+    }
+
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+
+    if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+        connect_signal_handler!(gtk_widget, gtk_widget.connect_changed(move |gtk_widget| {
+            run_command(timeout, &onchange, &[gtk_widget.text().to_string()]);
+        }));
+    }
+
+    if let Ok(onaccept) = get_string_prop(&props, "onaccept", None) {
+        connect_signal_handler!(gtk_widget, gtk_widget.connect_activate(move |gtk_widget| {
+            run_command(timeout, &onaccept, &[gtk_widget.text().to_string()]);
+        }));
+    }
+
+    let password: bool = get_bool_prop(&props, "password", Some(false))?;
+    gtk_widget.set_visibility(!password);
+
     Ok(gtk_widget)
 }
 
@@ -690,17 +688,16 @@ pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>) -> Resul
 pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Revealer> {
     let gtk_widget = gtk::Revealer::new();
 
-    if let Ok(transition) = get_string_prop(&props, "transition", Some("crossfade")) {
-        gtk_widget.set_transition_type(parse_revealer_transition(&transition)?);
-    }
+    let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
+    gtk_widget.set_transition_type(parse_revealer_transition(&transition)?);
 
     if let Ok(reveal) = get_bool_prop(&props, "reveal", None) {
         gtk_widget.set_reveal_child(reveal);
     }
 
-    if let Ok(duration) = get_duration_prop(&props, "duration", Some(Duration::from_millis(500))) {
-        gtk_widget.set_transition_duration(duration.as_millis() as u32);
-    }
+    let duration =  get_duration_prop(&props, "duration", Some(Duration::from_millis(500)))?;
+
+    gtk_widget.set_transition_duration(duration.as_millis() as u32);
 
     match children.len() {
         0 => { /* maybe warn? */ }
@@ -719,9 +716,8 @@ pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Resul
 pub(super) fn build_gtk_checkbox(props: Map) -> Result<gtk::CheckButton> {
     let gtk_widget = gtk::CheckButton::new();
 
-    if let Ok(checked) = get_bool_prop(&props, "checked", Some(false)) {
-        gtk_widget.set_active(checked);
-    }
+    let checked = get_bool_prop(&props, "checked", Some(false))?;
+    gtk_widget.set_active(checked);
 
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
     let onchecked = get_string_prop(&props, "onchecked", Some(""))?;
@@ -740,9 +736,8 @@ pub(super) fn build_gtk_checkbox(props: Map) -> Result<gtk::CheckButton> {
 pub(super) fn build_gtk_scale(props: Map) -> Result<gtk::Scale> {
     let gtk_widget = gtk::Scale::new(gtk::Orientation::Horizontal, Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
 
-    if let Ok(flipped) = get_bool_prop(&props, "flipped", Some(false)) {
-        gtk_widget.set_inverted(flipped)
-    }
+    let flipped = get_bool_prop(&props, "flipped", Some(false))?;
+    gtk_widget.set_inverted(flipped);
 
     if let Ok(marks) = get_string_prop(&props, "marks", None) {
         gtk_widget.clear_marks();
@@ -751,17 +746,15 @@ pub(super) fn build_gtk_scale(props: Map) -> Result<gtk::Scale> {
         }
     }
 
-    if let Ok(draw_value) = get_bool_prop(&props, "draw_value", Some(false)) {
-        gtk_widget.set_draw_value(draw_value)
-    }
+    let draw_value = get_bool_prop(&props, "draw_value", Some(false))?;
+    gtk_widget.set_draw_value(draw_value);
 
     if let Ok(value_pos) = get_string_prop(&props, "value_pos", None) {
         gtk_widget.set_value_pos(parse_position_type(&value_pos)?)
     }
 
-    if let Ok(round_digits) = get_i32_prop(&props, "round_digits", Some(0)) {
-        gtk_widget.set_round_digits(round_digits)
-    }
+    let round_digits = get_i32_prop(&props, "round_digits", Some(0))?;
+    gtk_widget.set_round_digits(round_digits);
 
     resolve_range_attrs(&props, gtk_widget.upcast_ref::<gtk::Range>())?;
 
@@ -857,13 +850,11 @@ pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widg
         gtk_widget.set_halign(parse_align(&halign)?)
     }
 
-    if let Ok(vexpand) = get_bool_prop(&props, "vexpand", Some(false)) {
-        gtk_widget.set_vexpand(vexpand)
-    }
+    let vexpand = get_bool_prop(&props, "vexpand", Some(false))?;
+    gtk_widget.set_vexpand(vexpand);
 
-    if let Ok(hexpand) = get_bool_prop(&props, "hexpand", Some(false)) {
-        gtk_widget.set_hexpand(hexpand)
-    }
+    let hexpand = get_bool_prop(&props, "hexpand", Some(false))?;
+    gtk_widget.set_hexpand(hexpand);
 
     let width = get_i32_prop(&props, "width", None).ok();
     let height = get_i32_prop(&props, "height", None).ok();
@@ -875,9 +866,8 @@ pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widg
         (None, None) => {} // do nothing
     }
 
-    if let Ok(active) = get_bool_prop(&props, "active", Some(true)) {
-        gtk_widget.set_sensitive(active)
-    }
+    let active = get_bool_prop(&props, "active", Some(true))?;
+    gtk_widget.set_sensitive(active);
 
     if let Ok(tooltip) = get_string_prop(&props, "tooltip", None) {
         gtk_widget.set_tooltip_text(Some(&tooltip));
