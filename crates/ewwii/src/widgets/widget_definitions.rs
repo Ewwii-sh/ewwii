@@ -290,45 +290,65 @@ pub (super) fn build_circular_progress_bar(props: Map) -> Result<CircProg> {
 }
 
 pub(super) fn build_graph(props: Map) -> Result<super::graph::Graph> {
-    let w = super::graph::Graph::new();
-    // def_widget!(bargs, _g, w, {
-    //     // @prop value - the value, between 0 - 100
-    //     prop(value: as_f64) {
-    //         if value.is_nan() || value.is_infinite() {
-    //             return Err(DiagError(gen_diagnostic!(
-    //                 format!("Graph's value should never be NaN or infinite")
-    //             )).into());
-    //         }
-    //         w.set_property("value", value);
-    //     },
-    //     // @prop thickness - the thickness of the line
-    //     prop(thickness: as_f64) { w.set_property("thickness", thickness); },
-    //     // @prop time-range - the range of time to show
-    //     prop(time_range: as_duration) { w.set_property("time-range", time_range.as_millis() as u64); },
-    //     // @prop min - the minimum value to show (defaults to 0 if value_max is provided)
-    //     // @prop max - the maximum value to show
-    //     prop(min: as_f64 = 0, max: as_f64 = 100) {
-    //         if min > max {
-    //             return Err(DiagError(gen_diagnostic!(
-    //                 format!("Graph's min ({min}) should never be higher than max ({max})")
-    //             )).into());
-    //         }
-    //         w.set_property("min", min);
-    //         w.set_property("max", max);
-    //     },
-    //     // @prop dynamic - whether the y range should dynamically change based on value
-    //     prop(dynamic: as_bool) { w.set_property("dynamic", dynamic); },
-    //     // @prop line-style - changes the look of the edges in the graph. Values: "miter" (default), "round",
-    //     // "bevel"
-    //     prop(line_style: as_string) { w.set_property("line-style", line_style); },
-    //     // @prop flip-x - whether the x axis should go from high to low
-    //     prop(flip_x: as_bool) { w.set_property("flip-x", flip_x); },
-    //     // @prop flip-y - whether the y axis should go from high to low
-    //     prop(flip_y: as_bool) { w.set_property("flip-y", flip_y); },
-    //     // @prop vertical - if set to true, the x and y axes will be exchanged
-    //     prop(vertical: as_bool) { w.set_property("vertical", vertical); },
-    // });
-    Ok(w)
+    let widget = super::graph::Graph::new();
+
+    if let Ok(value) = get_f64_prop(&props, "value", None) {
+        if value.is_nan() || value.is_infinite() {
+            return Err(anyhow!("Graph's value should never be NaN or infinite"));
+        }
+        widget.set_property("value", value);
+    }
+
+    if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
+        widget.set_property("thickness", thickness);
+    }
+
+    if let Ok(time_range) = get_duration_prop(&props, "time_range", None) {
+        widget.set_property("time-range", time_range.as_millis() as u64);
+    }
+
+    let min = get_f64_prop(&props, "min", Some(0.0)).ok();
+    let max = get_f64_prop(&props, "max", Some(100.0)).ok();
+
+    if let (Some(mi), Some(ma)) = (min, max) {
+        if mi > ma {
+            return Err(anyhow!("Graph's min ({mi}) should never be higher than max ({ma})"));
+        }
+    }
+
+    if let Some(mi) = min {
+        widget.set_property("min", mi);
+    }
+
+    if let Some(ma) = max {
+        widget.set_property("max", ma);
+    }
+
+    if let Ok(dynamic) = get_bool_prop(&props, "dynamic", None) {
+        widget.set_property("dynamic", dynamic);
+    }
+
+    if let Ok(line_style) = get_string_prop(&props, "line_style", None) {
+        widget.set_property("line-style", line_style);
+    }
+
+
+    // flip-x - whether the x axis should go from high to low
+    if let Ok(flip_x) = get_bool_prop(&props, "flip_x", None) {
+        widget.set_property("flip-x", flip_x);
+    }
+
+    // flip-y - whether the y axis should go from high to low
+    if let Ok(flip_y) = get_bool_prop(&props, "flip_y", None) {
+        widget.set_property("flip-y", flip_y);
+    }
+
+    // vertical - if set to true, the x and y axes will be exchanged
+    if let Ok(vertical) = get_bool_prop(&props, "vertical", None) {
+        widget.set_property("vertical", vertical);
+    }
+
+    Ok(widget)
 }
 
 pub(super) fn build_gtk_progress(props: Map) -> Result<gtk::ProgressBar> {
