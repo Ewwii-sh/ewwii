@@ -12,6 +12,7 @@ pub enum WidgetNode {
     ComboBoxText { props: Map },
     Slider { props: Map },
     Checkbox { props: Map },
+    Expander { props: Map, children: Vec<WidgetNode> },
     Revealer { props: Map, children: Vec<WidgetNode> },
     Scroll { props: Map, children: Vec<WidgetNode> },
     Calendar { props: Map },
