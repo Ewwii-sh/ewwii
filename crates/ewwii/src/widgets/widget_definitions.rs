@@ -375,48 +375,48 @@ pub(super) fn build_gtk_progress(props: Map) -> Result<gtk::ProgressBar> {
 
 pub(super) fn build_gtk_image(props: Map) -> Result<gtk::Image> {
     let gtk_widget = gtk::Image::new();
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     // @prop path - path to the image file
-    //     // @prop image-width - width of the image
-    //     // @prop image-height - height of the image
-    //     // @prop preserve-aspect-ratio - whether to keep the aspect ratio when resizing an image. Default: true, false doesn't work for all image types
-    //     // @prop fill-svg - sets the color of svg images
-    //     prop(path: as_string, image_width: as_i32 = -1, image_height: as_i32 = -1, preserve_aspect_ratio: as_bool = true, fill_svg: as_string = "") {
-    //         if !path.ends_with(".svg") && !fill_svg.is_empty() {
-    //             log::warn!("Fill attribute ignored, file is not an svg image");
-    //         }
+    
+    let path = get_string_prop(&props, "path", None)?;
+    let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
+    let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
+    let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
+    let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
 
-    //         if path.ends_with(".gif") {
-    //             let pixbuf_animation = gtk::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-    //             gtk_widget.set_from_animation(&pixbuf_animation);
-    //         } else {
-    //             let pixbuf;
-    //             // populate the pixel buffer
-    //             if path.ends_with(".svg") && !fill_svg.is_empty() {
-    //                 let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
-    //                 // The fastest way to add/change fill color
-    //                 let svg_data = if svg_data.contains("fill=") {
-    //                     let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
-    //                     reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
-    //                 } else {
-    //                     let reg = regex::Regex::new(r"<svg")?;
-    //                     reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
-    //                 };
-    //                 let stream = gtk::gio::MemoryInputStream::from_bytes(&gtk::glib::Bytes::from(svg_data.as_bytes()));
-    //                 pixbuf = gtk::gdk_pixbuf::Pixbuf::from_stream_at_scale(&stream, image_width, image_height, preserve_aspect_ratio, None::<&gtk::gio::Cancellable>)?;
-    //                 stream.close(None::<&gtk::gio::Cancellable>)?;
-    //             } else {
-    //                 pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(std::path::PathBuf::from(path), image_width, image_height, preserve_aspect_ratio)?;
-    //             }
-    //             gtk_widget.set_from_pixbuf(Some(&pixbuf));
-    //         }
-    //     },
-    //     // @prop icon - name of a theme icon
-    //     // @prop icon-size - size of the theme icon
-    //     prop(icon: as_string, icon_size: as_string = "button") {
-    //         gtk_widget.set_from_icon_name(Some(&icon), parse_icon_size(&icon_size)?);
-    //     },
-    // });
+    if !path.ends_with(".svg") && !fill_svg.is_empty() {
+        log::warn!("Fill attribute ignored, file is not an svg image");
+    }
+
+    if path.ends_with(".gif") {
+        let pixbuf_animation = gtk::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
+        gtk_widget.set_from_animation(&pixbuf_animation);
+    } else {
+        let pixbuf;
+        // populate the pixel buffer
+        if path.ends_with(".svg") && !fill_svg.is_empty() {
+            let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
+            // The fastest way to add/change fill color
+            let svg_data = if svg_data.contains("fill=") {
+                let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
+                reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
+            } else {
+                let reg = regex::Regex::new(r"<svg")?;
+                reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
+            };
+            let stream = gtk::gio::MemoryInputStream::from_bytes(&gtk::glib::Bytes::from(svg_data.as_bytes()));
+            pixbuf = gtk::gdk_pixbuf::Pixbuf::from_stream_at_scale(&stream, image_width, image_height, preserve_aspect_ratio, None::<&gtk::gio::Cancellable>)?;
+            stream.close(None::<&gtk::gio::Cancellable>)?;
+        } else {
+            pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(std::path::PathBuf::from(path), image_width, image_height, preserve_aspect_ratio)?;
+        }
+        gtk_widget.set_from_pixbuf(Some(&pixbuf));
+    }
+    
+    if let Ok(icon_name) = get_string_prop(&props, "icon", None) {
+        let icon_size = get_string_prop(&props, "icon-size", Some("button"))?;
+        gtk_widget.set_from_icon_name(Some(&icon_name), parse_icon_size(&icon_size)?);
+        return Ok(gtk_widget);
+    }
+
     Ok(gtk_widget)
 }
 
