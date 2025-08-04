@@ -607,46 +607,60 @@ pub(super) fn build_gtk_input(props: Map) -> Result<gtk::Entry> {
 
 pub(super) fn build_gtk_calendar(props: Map) -> Result<gtk::Calendar> {
     let gtk_widget = gtk::Calendar::new();
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     // @prop day - the selected day
-    //     prop(day: as_f64) {
-    //         if !(1f64..=31f64).contains(&day) {
-    //             log::warn!("Calendar day is not a number between 1 and 31");
-    //         } else {
-    //             gtk_widget.set_day(day as i32)
-    //         }
-    //     },
-    //     // @prop month - the selected month
-    //     prop(month: as_f64) {
-    //         if !(1f64..=12f64).contains(&month) {
-    //             log::warn!("Calendar month is not a number between 1 and 12");
-    //         } else {
-    //             gtk_widget.set_month(month as i32 - 1)
-    //         }
-    //     },
-    //     // @prop year - the selected year
-    //     prop(year: as_f64) { gtk_widget.set_year(year as i32) },
-    //     // @prop show-details - show details
-    //     prop(show_details: as_bool) { gtk_widget.set_show_details(show_details) },
-    //     // @prop show-heading - show heading line
-    //     prop(show_heading: as_bool) { gtk_widget.set_show_heading(show_heading) },
-    //     // @prop show-day-names - show names of days
-    //     prop(show_day_names: as_bool) { gtk_widget.set_show_day_names(show_day_names) },
-    //     // @prop show-week-numbers - show week numbers
-    //     prop(show_week_numbers: as_bool) { gtk_widget.set_show_week_numbers(show_week_numbers) },
-    //     // @prop onclick - command to run when the user selects a date. The `{0}` placeholder will be replaced by the selected day, `{1}` will be replaced by the month, and `{2}` by the year.
-    //     // @prop timeout - timeout of the command. Default: "200ms"
-    //     prop(timeout: as_duration = Duration::from_millis(200), onclick: as_string) {
-    //         connect_signal_handler!(gtk_widget, gtk_widget.connect_day_selected(move |w| {
-    //             run_command(
-    //                 timeout,
-    //                 &onclick,
-    //                 &[w.day(), w.month(), w.year()]
-    //             )
-    //         }));
-    //     }
 
-    // });
+    // day - the selected day
+    if let Ok(day) = get_f64_prop(&props, "day", None) {
+        if !(1f64..=31f64).contains(&day) {
+            log::warn!("Calendar day is not a number between 1 and 31");
+        } else {
+            gtk_widget.set_day(day as i32)
+        }
+    }
+
+    // month - the selected month
+    if let Ok(month) = get_f64_prop(&props, "month", None) {
+        if !(1f64..=12f64).contains(&month) {
+            log::warn!("Calendar month is not a number between 1 and 12");
+        } else {
+            gtk_widget.set_month(month as i32 - 1)
+        }
+    }
+
+    // year - the selected year
+    if let Ok(year) = get_f64_prop(&props, "year", None) {
+        gtk_widget.set_year(year as i32)
+    }
+
+    // show-details - show details
+    if let Ok(show_details) = get_bool_prop(&props, "show_details", None) {
+        gtk_widget.set_show_details(show_details)
+    }
+
+    // show-heading - show heading line
+    if let Ok(show_heading) = get_bool_prop(&props, "show_heading", None) {
+        gtk_widget.set_show_heading(show_heading)
+    }
+
+    // show-day-names - show names of days
+    if let Ok(show_day_names) = get_bool_prop(&props, "show_day_names", None) {
+        gtk_widget.set_show_day_names(show_day_names)
+    }
+
+    // show-week-numbers - show week numbers
+    if let Ok(show_week_numbers) = get_bool_prop(&props, "show_week_numbers", None) {
+        gtk_widget.set_show_week_numbers(show_week_numbers)
+    }
+
+    // timeout - timeout of the command. Default: "200ms"
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+
+    // onclick - command to run when the user selects a date. The `{0}` placeholder will be replaced by the selected day, `{1}` will be replaced by the month, and `{2}` by the year.
+    if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_day_selected(move |w| { run_command(timeout, &onclick, &[w.day(), w.month(), w.year()]) })
+        );
+    }
 
     Ok(gtk_widget)
 }
