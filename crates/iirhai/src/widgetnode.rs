@@ -9,7 +9,7 @@ pub enum WidgetNode {
     Image { props: Map },
     Input { props: Map },
     Progress { props: Map },
-    Spacer { props: Map },
+    ComboBoxText { props: Map },
     Slider { props: Map },
     Checkbox { props: Map },
     Revealer { props: Map, children: Vec<WidgetNode> },

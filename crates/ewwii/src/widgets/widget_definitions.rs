@@ -592,6 +592,26 @@ pub(super) fn build_gtk_calendar(props: Map) -> Result<gtk::Calendar> {
     Ok(gtk_widget)
 }
 
+pub(super) fn build_gtk_combo_box_text(props: Map) -> Result<gtk::ComboBoxText> {
+    let gtk_widget = gtk::ComboBoxText::new();
+
+    if let Ok(items) = get_vec_string_prop(&props, "items", None) {
+        gtk_widget.remove_all();
+        for i in items {
+            gtk_widget.append_text(&i);
+        }
+    }
+
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+    let onchange = get_string_prop(&props, "onchange", Some(""))?;
+    
+    connect_signal_handler!(gtk_widget, gtk_widget.connect_changed(move |gtk_widget| {
+        run_command(timeout, &onchange, &[gtk_widget.active_text().unwrap_or_else(|| "".into())]);
+    }));
+
+    Ok(gtk_widget)
+}
+
 pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Revealer> {
     let gtk_widget = gtk::Revealer::new();
 
