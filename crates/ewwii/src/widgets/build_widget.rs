@@ -55,7 +55,7 @@ fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<gtk::Widget> {
         WidgetNode::Input { props } => build_gtk_input(props)?.upcast(),
         WidgetNode::Calendar { props } => build_gtk_calendar(props)?.upcast(),
         // WIDGET_NAME_COLOR_BUTTON => build_gtk_color_button(node)?.upcast(),
-        // WIDGET_NAME_EXPANDER => build_gtk_expander(node)?.upcast(),
+        WidgetNode::Expander { props, children } => build_gtk_expander(props, children)?.upcast(),
         // WIDGET_NAME_COLOR_CHOOSER => build_gtk_color_chooser(node)?.upcast(),
         WidgetNode::ComboBoxText { props } => build_gtk_combo_box_text(props)?.upcast(),
         WidgetNode::Checkbox { props } => build_gtk_checkbox(props)?.upcast(),
