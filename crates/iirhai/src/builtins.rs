@@ -50,6 +50,8 @@ pub fn register_all_widgets(engine: &mut Engine) {
 
     engine.register_fn("graph", |props: Map| WidgetNode::Graph { props });
 
+    engine.register_fn("circular_progress", |props: Map| WidgetNode::CircularProgress { props });
+
     engine.register_fn("include", |path: &str| {
         // TODO: load and eval another config file
         WidgetNode::Include(path.to_string())
