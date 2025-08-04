@@ -795,16 +795,26 @@ pub(super) fn build_gtk_scrolledwindow(props: Map, children: Vec<WidgetNode>) ->
     // I don't have single idea of what those two generics are supposed to be, but this works.
     let gtk_widget = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
 
-    // def_widget!(bargs, _g, gtk_widget, {
-    //     // @prop hscroll - scroll horizontally
-    //     // @prop vscroll - scroll vertically
-    //     prop(hscroll: as_bool = true, vscroll: as_bool = true) {
-    //         gtk_widget.set_policy(
-    //             if hscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
-    //             if vscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
-    //         )
-    //     },
-    // });
+    let hscroll = get_bool_prop(&props, "hscroll", Some(true))?;
+    let vscroll = get_bool_prop(&props, "vscroll", Some(true))?;
+
+    gtk_widget.set_policy(
+        if hscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
+        if vscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
+    );
+
+    let count = children.len();
+
+    if count < 1 {
+        bail!("scrolled window must contain exactly one element");
+    } else if count > 1 {
+        bail!("scrolled window contain exactly one element, but got more");
+    }
+
+    let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+    let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
+    gtk_widget.add(&child_widget);
+    child_widget.show();
 
     Ok(gtk_widget)
 }
