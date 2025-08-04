@@ -22,10 +22,7 @@ use std::{
 };
 
 // custom widgets
-use crate::widgets::{
-    circular_progressbar::CircProg,
-    graph
-};
+use crate::widgets::{circular_progressbar::CircProg, graph};
 
 /// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
 /// the previously connected singal handler first gets disconnected.
@@ -267,7 +264,7 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
     Ok(gtk_widget)
 }
 
-pub (super) fn build_circular_progress_bar(props: Map) -> Result<CircProg> {
+pub(super) fn build_circular_progress_bar(props: Map) -> Result<CircProg> {
     let widget = CircProg::new();
 
     if let Ok(value) = get_f64_prop(&props, "value", None) {
@@ -332,7 +329,6 @@ pub(super) fn build_graph(props: Map) -> Result<super::graph::Graph> {
         widget.set_property("line-style", line_style);
     }
 
-
     // flip-x - whether the x axis should go from high to low
     if let Ok(flip_x) = get_bool_prop(&props, "flip_x", None) {
         widget.set_property("flip-x", flip_x);
@@ -375,7 +371,7 @@ pub(super) fn build_gtk_progress(props: Map) -> Result<gtk::ProgressBar> {
 
 pub(super) fn build_gtk_image(props: Map) -> Result<gtk::Image> {
     let gtk_widget = gtk::Image::new();
-    
+
     let path = get_string_prop(&props, "path", None)?;
     let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
     let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
@@ -403,14 +399,25 @@ pub(super) fn build_gtk_image(props: Map) -> Result<gtk::Image> {
                 reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
             };
             let stream = gtk::gio::MemoryInputStream::from_bytes(&gtk::glib::Bytes::from(svg_data.as_bytes()));
-            pixbuf = gtk::gdk_pixbuf::Pixbuf::from_stream_at_scale(&stream, image_width, image_height, preserve_aspect_ratio, None::<&gtk::gio::Cancellable>)?;
+            pixbuf = gtk::gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                &stream,
+                image_width,
+                image_height,
+                preserve_aspect_ratio,
+                None::<&gtk::gio::Cancellable>,
+            )?;
             stream.close(None::<&gtk::gio::Cancellable>)?;
         } else {
-            pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(std::path::PathBuf::from(path), image_width, image_height, preserve_aspect_ratio)?;
+            pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(
+                std::path::PathBuf::from(path),
+                image_width,
+                image_height,
+                preserve_aspect_ratio,
+            )?;
         }
         gtk_widget.set_from_pixbuf(Some(&pixbuf));
     }
-    
+
     if let Ok(icon_name) = get_string_prop(&props, "icon", None) {
         let icon_size = get_string_prop(&props, "icon-size", Some("button"))?;
         gtk_widget.set_from_icon_name(Some(&icon_name), parse_icon_size(&icon_size)?);
@@ -575,15 +582,21 @@ pub(super) fn build_gtk_input(props: Map) -> Result<gtk::Entry> {
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
     if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_changed(move |gtk_widget| {
-            run_command(timeout, &onchange, &[gtk_widget.text().to_string()]);
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_changed(move |gtk_widget| {
+                run_command(timeout, &onchange, &[gtk_widget.text().to_string()]);
+            })
+        );
     }
 
     if let Ok(onaccept) = get_string_prop(&props, "onaccept", None) {
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_activate(move |gtk_widget| {
-            run_command(timeout, &onaccept, &[gtk_widget.text().to_string()]);
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_activate(move |gtk_widget| {
+                run_command(timeout, &onaccept, &[gtk_widget.text().to_string()]);
+            })
+        );
     }
 
     let password: bool = get_bool_prop(&props, "password", Some(false))?;
@@ -650,10 +663,13 @@ pub(super) fn build_gtk_combo_box_text(props: Map) -> Result<gtk::ComboBoxText> 
 
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
     let onchange = get_string_prop(&props, "onchange", Some(""))?;
-    
-    connect_signal_handler!(gtk_widget, gtk_widget.connect_changed(move |gtk_widget| {
-        run_command(timeout, &onchange, &[gtk_widget.active_text().unwrap_or_else(|| "".into())]);
-    }));
+
+    connect_signal_handler!(
+        gtk_widget,
+        gtk_widget.connect_changed(move |gtk_widget| {
+            run_command(timeout, &onchange, &[gtk_widget.active_text().unwrap_or_else(|| "".into())]);
+        })
+    );
 
     Ok(gtk_widget)
 }
@@ -668,7 +684,7 @@ pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>) -> Resul
     } else if count > 1 {
         bail!("expander must contain exactly one element, but got more");
     }
-    
+
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
     let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
     gtk_widget.add(&child_widget);
@@ -695,7 +711,7 @@ pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Resul
         gtk_widget.set_reveal_child(reveal);
     }
 
-    let duration =  get_duration_prop(&props, "duration", Some(Duration::from_millis(500)))?;
+    let duration = get_duration_prop(&props, "duration", Some(Duration::from_millis(500)))?;
 
     gtk_widget.set_transition_duration(duration.as_millis() as u32);
 
