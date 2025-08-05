@@ -29,7 +29,7 @@ impl ObjectSubclass for WindowPriv {
     type ParentType = gtk::Window;
     type Type = Window;
 
-    const NAME: &'static str = "WindowEww";
+    const NAME: &'static str = "WindowEwwii";
 }
 
 impl Default for Window {
