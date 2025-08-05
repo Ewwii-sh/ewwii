@@ -476,8 +476,8 @@ pub(super) fn build_gtk_button(props: Map) -> Result<gtk::Button> {
         })
     );
 
-    if let Ok(button_label) = get_string_prop(&props, "label", None) {
-        gtk_widget.set_label(&button_label);
+    if let Ok(button_text) = get_string_prop(&props, "text", None) {
+        gtk_widget.set_label(&button_text);
     }
 
     Ok(gtk_widget)

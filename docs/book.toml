@@ -1,11 +1,14 @@
 [book]
-authors = ["elkowar"]
+authors = ["byson94"]
 language = "en"
 multilingual = false
 src = "src"
-title = "eww documentation"
-
+title = "Ewii documentation"
 
 [output.html]
 default-theme = "navy"
 git-repository-url = "https://github.com/byson94/ewwii/tree/master/docs"
+site-url = "/"
+
+[output.html.playground]
+runnable = false
