@@ -75,7 +75,7 @@ pub async fn reeval_and_update(all_vars: &HashMap<String, String>, code_path: &P
     }
 
     let mut reeval_parser = ParseConfig::new();
-    let new_config_tree = reeval_parser.parse_widget_file_from_scope(code_path, scope);
+    let new_config_tree = reeval_parser.eval_file_with(code_path, scope, None);
 
     Ok(())
 }
