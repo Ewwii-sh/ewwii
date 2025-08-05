@@ -3,7 +3,7 @@ use crate::{
     providers::register_all_providers, widgetnode::WidgetNode,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, EvalAltResult, Scope};
+use rhai::{Dynamic, Engine, EvalAltResult, Scope, AST};
 use std::fs;
 use std::path::Path;
 
@@ -24,7 +24,7 @@ impl ParseConfig {
         Self { engine }
     }
 
-    pub fn parse_widget_code(&mut self, code: &str) -> Result<WidgetNode> {
+    pub fn eval_code(&mut self, code: &str) -> Result<WidgetNode> {
         /// Setting the initial value of poll/listen
         let mut scope = Scope::new();
         for (var, initial) in extract_poll_and_listen_vars(code)? {
@@ -38,17 +38,42 @@ impl ParseConfig {
         self.engine.eval_with_scope::<WidgetNode>(&mut scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code)))
     }
 
-    pub fn parse_widget_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<WidgetNode> {
+    pub fn eval_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<WidgetNode> {
         let code = fs::read_to_string(&file_path).map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?;
-        self.parse_widget_code(&code)
+        self.eval_code(&code)
     }
 
-    pub fn parse_widget_code_from_scope(&mut self, code: &str, mut scope: Scope) -> Result<WidgetNode> {
-        self.engine.eval_with_scope::<WidgetNode>(&mut scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code)))
+    pub fn compile_code(&mut self, code: &str) -> Result<AST> {
+        Ok(self.engine.compile(code)?)
     }
 
-    pub fn parse_widget_file_from_scope<P: AsRef<Path>>(&mut self, file_path: P, scope: Scope) -> Result<WidgetNode> {
+    pub fn compile_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<AST> {
         let code = fs::read_to_string(&file_path).map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?;
-        self.parse_widget_code_from_scope(&code, scope)
+        self.compile_code(&code)
+    }
+
+    pub fn eval_code_with(
+        &mut self, 
+        code: &str, 
+        mut scope: Scope, 
+        compiled_ast: Option<AST>
+    ) -> Result<WidgetNode> {
+        match compiled_ast {
+            Some(ast) => self.engine
+                .eval_ast_with_scope::<WidgetNode>(&mut scope, &ast)
+                .map_err(|e| anyhow!(format_rhai_error(&e, code))),
+            None => self.engine
+                .eval_with_scope::<WidgetNode>(&mut scope, code)
+                .map_err(|e| anyhow!(format_rhai_error(&e, code))),
+        }
+    }
+
+    pub fn eval_file_with<P: AsRef<Path>>(
+        &mut self, 
+        file_path: P, 
+        scope: Scope, 
+        compiled_ast: Option<AST>) -> Result<WidgetNode> {
+        let code = fs::read_to_string(&file_path).map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?;
+        self.eval_code_with(&code, scope, compiled_ast)
     }
 }
