@@ -1,15 +1,11 @@
-pub mod text;
 pub mod env;
+pub mod text;
 
-use rhai::{Engine, Module, exported_module};
 use rhai::module_resolvers::StaticModuleResolver;
-use std::rc::Rc;
+use rhai::{exported_module, Engine};
 
 pub fn register_stdlib(engine: &mut Engine) {
-    use crate::providers::stdlib::{
-        text::text,
-        env::env,
-    };
+    use crate::providers::stdlib::{env::env, text::text};
 
     let mut resolver = StaticModuleResolver::new();
 

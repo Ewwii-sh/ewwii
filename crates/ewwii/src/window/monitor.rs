@@ -1,10 +1,10 @@
 use std::{
     convert::Infallible,
     fmt,
-    str::{self, FromStr},
+    str::{self},
 };
 
-use crate::dynval::{ConversionError, DynVal};
+use crate::dynval::DynVal;
 use serde::{Deserialize, Serialize};
 
 /// The type of the identifier used to select a monitor
@@ -16,23 +16,23 @@ pub enum MonitorIdentifier {
     Primary,
 }
 
-impl MonitorIdentifier {
-    pub fn from_dynval(val: &DynVal) -> Result<Self, ConversionError> {
-        match val.as_json_array() {
-            Ok(arr) => Ok(MonitorIdentifier::List(
-                arr.iter().map(|x| MonitorIdentifier::from_dynval(&x.into())).collect::<Result<_, _>>()?,
-            )),
-            Err(_) => match val.as_i32() {
-                Ok(x) => Ok(MonitorIdentifier::Numeric(x)),
-                Err(_) => Ok(MonitorIdentifier::from_str(&val.as_string().unwrap()).unwrap()),
-            },
-        }
-    }
+// impl MonitorIdentifier {
+//     pub fn from_dynval(val: &DynVal) -> Result<Self, ConversionError> {
+//         match val.as_json_array() {
+//             Ok(arr) => Ok(MonitorIdentifier::List(
+//                 arr.iter().map(|x| MonitorIdentifier::from_dynval(&x.into())).collect::<Result<_, _>>()?,
+//             )),
+//             Err(_) => match val.as_i32() {
+//                 Ok(x) => Ok(MonitorIdentifier::Numeric(x)),
+//                 Err(_) => Ok(MonitorIdentifier::from_str(&val.as_string().unwrap()).unwrap()),
+//             },
+//         }
+//     }
 
-    pub fn is_numeric(&self) -> bool {
-        matches!(self, Self::Numeric(_))
-    }
-}
+//     pub fn is_numeric(&self) -> bool {
+//         matches!(self, Self::Numeric(_))
+//     }
+// }
 
 impl From<&MonitorIdentifier> for DynVal {
     fn from(val: &MonitorIdentifier) -> Self {

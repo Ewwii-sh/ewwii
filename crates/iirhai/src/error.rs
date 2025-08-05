@@ -62,7 +62,6 @@ impl<'a> Diagnostic<'a> {
             let wrap_width = term_width.saturating_sub(4);
             let note_lines: Vec<_> = textwrap::wrap(note, wrap_width);
             let width = note_lines.iter().map(|l| l.len()).max().unwrap_or(0);
-            let border = "─".repeat(width.max(label.len()));
 
             out.push_str(&format!(
                 "{tl}{label}{tr}\n",
