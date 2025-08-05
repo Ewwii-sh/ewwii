@@ -17,11 +17,9 @@ use super::ReactiveVarStore;
 use ewwii_shared_util::general_helper::*;
 use rhai::Map;
 use std::process::Stdio;
-use std::time::Duration;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;
 use tokio::process::Command;
-use tokio::time::sleep;
 
 pub fn handle_listen(var_name: String, props: Map, store: ReactiveVarStore, tx: tokio::sync::mpsc::UnboundedSender<String>) {
     let cmd = match get_string_prop(&props, "cmd", Some("")) {
@@ -49,7 +47,7 @@ pub fn handle_listen(var_name: String, props: Map, store: ReactiveVarStore, tx: 
     let stdout = BufReader::new(child.stdout.take().unwrap());
 
     tokio::spawn(async move {
-        let mut last_value: Option<String> = None;
+        let last_value: Option<String> = None;
         let mut lines = stdout.lines();
 
         while let Ok(Some(line)) = lines.next_line().await {

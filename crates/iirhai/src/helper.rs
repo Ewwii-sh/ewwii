@@ -1,8 +1,6 @@
 use crate::error::format_rhai_error;
-use anyhow::{anyhow, Result};
-use ewwii_shared_util::general_helper::*;
+use anyhow::Result;
 use rhai::Engine;
-use std::collections::HashSet;
 
 pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<String>)>> {
     let mut results = Vec::new();

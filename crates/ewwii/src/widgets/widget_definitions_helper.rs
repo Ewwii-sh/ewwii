@@ -1,9 +1,7 @@
 use crate::gtk::prelude::LabelExt;
 use anyhow::{anyhow, Result};
 use gtk::pango;
-use rhai::Map;
 use std::process::Command;
-use std::time::Duration;
 
 // Run a command and get the output
 pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
