@@ -4,8 +4,6 @@ use codespan_reporting::files::Files;
 // use ewwii_shared_util::Span;
 use crate::diag_error::DiagError;
 
-use iirhai::widgetnode::WidgetNode;
-
 #[derive(Debug, Clone, Default)]
 pub struct FileDatabase {
     files: HashMap<usize, CodeFile>,

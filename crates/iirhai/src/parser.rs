@@ -3,7 +3,7 @@ use crate::{
     providers::register_all_providers, widgetnode::WidgetNode,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, EvalAltResult, Scope, AST};
+use rhai::{Dynamic, Engine, Scope, AST};
 use std::fs;
 use std::path::Path;
 
@@ -25,7 +25,7 @@ impl ParseConfig {
     }
 
     pub fn eval_code(&mut self, code: &str) -> Result<WidgetNode> {
-        /// Setting the initial value of poll/listen
+        // Setting the initial value of poll/listen
         let mut scope = Scope::new();
         for (var, initial) in extract_poll_and_listen_vars(code)? {
             let value = match initial {
@@ -52,27 +52,21 @@ impl ParseConfig {
         self.compile_code(&code)
     }
 
-    pub fn eval_code_with(
-        &mut self, 
-        code: &str, 
-        mut scope: Scope, 
-        compiled_ast: Option<AST>
-    ) -> Result<WidgetNode> {
+    pub fn eval_code_with(&mut self, code: &str, mut scope: Scope, compiled_ast: Option<AST>) -> Result<WidgetNode> {
         match compiled_ast {
-            Some(ast) => self.engine
-                .eval_ast_with_scope::<WidgetNode>(&mut scope, &ast)
-                .map_err(|e| anyhow!(format_rhai_error(&e, code))),
-            None => self.engine
-                .eval_with_scope::<WidgetNode>(&mut scope, code)
-                .map_err(|e| anyhow!(format_rhai_error(&e, code))),
+            Some(ast) => {
+                self.engine.eval_ast_with_scope::<WidgetNode>(&mut scope, &ast).map_err(|e| anyhow!(format_rhai_error(&e, code)))
+            }
+            None => self.engine.eval_with_scope::<WidgetNode>(&mut scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code))),
         }
     }
 
     pub fn eval_file_with<P: AsRef<Path>>(
-        &mut self, 
-        file_path: P, 
-        scope: Scope, 
-        compiled_ast: Option<AST>) -> Result<WidgetNode> {
+        &mut self,
+        file_path: P,
+        scope: Scope,
+        compiled_ast: Option<AST>,
+    ) -> Result<WidgetNode> {
         let code = fs::read_to_string(&file_path).map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?;
         self.eval_code_with(&code, scope, compiled_ast)
     }

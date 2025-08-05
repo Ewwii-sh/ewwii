@@ -5,9 +5,9 @@ use crate::gtk::prelude::LabelExt;
 use crate::util;
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use anyhow::{anyhow, bail, Result};
+use gdk::{ModifierType, NotifyType};
 use gtk::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{gdk, glib, pango};
-use gdk::{ModifierType, NotifyType};
 use iirhai::widgetnode::WidgetNode;
 use once_cell::sync::Lazy;
 use rhai::Map;
@@ -140,35 +140,45 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
     if let Ok(onscroll) = get_string_prop(&props, "onscroll", None) {
         gtk_widget.add_events(gdk::EventMask::SCROLL_MASK);
         gtk_widget.add_events(gdk::EventMask::SMOOTH_SCROLL_MASK);
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_scroll_event(move |_, evt| {
-            let delta = evt.delta().1;
-            if delta != 0f64 { // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
-                run_command(timeout, &onscroll, &[if delta < 0f64 { "up" } else { "down" }]);
-            }
-            glib::Propagation::Proceed
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_scroll_event(move |_, evt| {
+                let delta = evt.delta().1;
+                if delta != 0f64 {
+                    // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
+                    run_command(timeout, &onscroll, &[if delta < 0f64 { "up" } else { "down" }]);
+                }
+                glib::Propagation::Proceed
+            })
+        );
     }
 
     // onhover - event to execute when the user hovers over the widget
     if let Ok(onhover) = get_string_prop(&props, "onhover", None) {
         gtk_widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK);
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_enter_notify_event(move |_, evt| {
-            if evt.detail() != NotifyType::Inferior {
-                run_command(timeout, &onhover, &[evt.position().0, evt.position().1]);
-            }
-            glib::Propagation::Proceed
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_enter_notify_event(move |_, evt| {
+                if evt.detail() != NotifyType::Inferior {
+                    run_command(timeout, &onhover, &[evt.position().0, evt.position().1]);
+                }
+                glib::Propagation::Proceed
+            })
+        );
     }
 
     // onhoverlost - event to execute when the user losts hovers over the widget
     if let Ok(onhoverlost) = get_string_prop(&props, "onhoverlost", None) {
         gtk_widget.add_events(gdk::EventMask::LEAVE_NOTIFY_MASK);
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_leave_notify_event(move |_, evt| {
-            if evt.detail() != NotifyType::Inferior {
-                run_command(timeout, &onhoverlost, &[evt.position().0, evt.position().1]);
-            }
-            glib::Propagation::Proceed
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_leave_notify_event(move |_, evt| {
+                if evt.detail() != NotifyType::Inferior {
+                    run_command(timeout, &onhoverlost, &[evt.position().0, evt.position().1]);
+                }
+                glib::Propagation::Proceed
+            })
+        );
     }
 
     // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
@@ -176,25 +186,31 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
         gtk_widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK);
         gtk_widget.add_events(gdk::EventMask::LEAVE_NOTIFY_MASK);
 
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_enter_notify_event(move |widget, _evt| {
-            if _evt.detail() != NotifyType::Inferior {
-                let display = gdk::Display::default();
-                let gdk_window = widget.window();
-                if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
-                    gdk_window.set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_enter_notify_event(move |widget, _evt| {
+                if _evt.detail() != NotifyType::Inferior {
+                    let display = gdk::Display::default();
+                    let gdk_window = widget.window();
+                    if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
+                        gdk_window.set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
+                    }
                 }
-            }
-            glib::Propagation::Proceed
-        }));
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_leave_notify_event(move |widget, _evt| {
-            if _evt.detail() != NotifyType::Inferior {
-                let gdk_window = widget.window();
-                if let Some(gdk_window) = gdk_window {
-                    gdk_window.set_cursor(None);
+                glib::Propagation::Proceed
+            })
+        );
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_leave_notify_event(move |widget, _evt| {
+                if _evt.detail() != NotifyType::Inferior {
+                    let gdk_window = widget.window();
+                    if let Some(gdk_window) = gdk_window {
+                        gdk_window.set_cursor(None);
+                    }
                 }
-            }
-            glib::Propagation::Proceed
-        }));
+                glib::Propagation::Proceed
+            })
+        );
     }
 
     // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
@@ -203,17 +219,20 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
             DestDefaults::ALL,
             &[
                 TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
-                TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
+                TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
             ],
             gdk::DragAction::COPY,
         );
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_drag_data_received(move |_, _, _x, _y, selection_data, _target_type, _timestamp| {
-            if let Some(data) = selection_data.uris().first(){
-                run_command(timeout, &ondropped, &[data.to_string(), "file".to_string()]);
-            } else if let Some(data) = selection_data.text(){
-                run_command(timeout, &ondropped, &[data.to_string(), "text".to_string()]);
-            }
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_drag_data_received(move |_, _, _x, _y, selection_data, _target_type, _timestamp| {
+                if let Some(data) = selection_data.uris().first() {
+                    run_command(timeout, &ondropped, &[data.to_string(), "file".to_string()]);
+                } else if let Some(data) = selection_data.text() {
+                    run_command(timeout, &ondropped, &[data.to_string(), "text".to_string()]);
+                }
+            })
+        );
     }
 
     // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
@@ -226,8 +245,12 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
             gtk_widget.drag_source_unset();
         } else {
             let target_entry = match dragtype {
-                DragEntryType::File => TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
-                DragEntryType::Text => TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
+                DragEntryType::File => {
+                    TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
+                }
+                DragEntryType::Text => {
+                    TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
+                }
             };
             gtk_widget.drag_source_set(
                 ModifierType::BUTTON1_MASK,
@@ -253,15 +276,31 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
     let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
 
     gtk_widget.add_events(gdk::EventMask::BUTTON_PRESS_MASK);
-    connect_signal_handler!(gtk_widget, gtk_widget.connect_button_release_event(move |_, evt| {
-        match evt.button() {
-            1 => run_command(timeout, &onclick, &[] as &[&str]),
-            2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
-            3 => run_command(timeout, &onrightclick, &[] as &[&str]),
-            _ => {},
-        }
-        glib::Propagation::Proceed
-    }));
+    connect_signal_handler!(
+        gtk_widget,
+        gtk_widget.connect_button_release_event(move |_, evt| {
+            match evt.button() {
+                1 => run_command(timeout, &onclick, &[] as &[&str]),
+                2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
+                3 => run_command(timeout, &onrightclick, &[] as &[&str]),
+                _ => {}
+            }
+            glib::Propagation::Proceed
+        })
+    );
+
+    let count = children.len();
+
+    if count < 1 {
+        bail!("expander must contain exactly one element");
+    } else if count > 1 {
+        bail!("expander must contain exactly one element, but got more");
+    }
+
+    let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+    let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
+    gtk_widget.add(&child_widget);
+    child_widget.show();
 
     Ok(gtk_widget)
 }
