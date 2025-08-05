@@ -75,10 +75,10 @@ impl std::str::FromStr for DynVal {
     }
 }
 
-pub trait FromDynVal: Sized {
-    type Err;
-    fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err>;
-}
+// pub trait FromDynVal: Sized {
+//     type Err;
+//     fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err>;
+// }
 
 impl<E, T: FromStr<Err = E>> FromDynVal for T {
     type Err = E;
@@ -86,6 +86,11 @@ impl<E, T: FromStr<Err = E>> FromDynVal for T {
     fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err> {
         x.0.parse()
     }
+}
+
+pub trait FromDynVal: Sized {
+    type Err;
+    fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err>;
 }
 
 macro_rules! impl_dynval_from {
@@ -139,28 +144,8 @@ impl Spanned for DynVal {
 }
 
 impl DynVal {
-    pub fn at(mut self, span: Span) -> Self {
-        self.1 = span;
-        self
-    }
-
-    pub fn at_if_dummy(mut self, span: Span) -> Self {
-        if self.1.is_dummy() {
-            self.1 = span;
-        }
-        self
-    }
-
     pub fn from_string(s: String) -> Self {
         DynVal(s, Span::DUMMY)
-    }
-
-    pub fn read_as<E, T: FromDynVal<Err = E>>(&self) -> std::result::Result<T, E> {
-        T::from_dynval(self)
-    }
-
-    pub fn into_inner(self) -> String {
-        self.0
     }
 
     /// This will never fail
@@ -172,17 +157,17 @@ impl DynVal {
         self.0.parse().map_err(|e| ConversionError::new(self.clone(), "f64", e))
     }
 
-    pub fn as_i32(&self) -> Result<i32> {
-        self.0.parse().map_err(|e| ConversionError::new(self.clone(), "i32", e))
-    }
+    // pub fn as_i32(&self) -> Result<i32> {
+    //     self.0.parse().map_err(|e| ConversionError::new(self.clone(), "i32", e))
+    // }
 
-    pub fn as_i64(&self) -> Result<i64> {
-        self.0.parse().map_err(|e| ConversionError::new(self.clone(), "i64", e))
-    }
+    // pub fn as_i64(&self) -> Result<i64> {
+    //     self.0.parse().map_err(|e| ConversionError::new(self.clone(), "i64", e))
+    // }
 
-    pub fn as_bool(&self) -> Result<bool> {
-        self.0.parse().map_err(|e| ConversionError::new(self.clone(), "bool", e))
-    }
+    // pub fn as_bool(&self) -> Result<bool> {
+    //     self.0.parse().map_err(|e| ConversionError::new(self.clone(), "bool", e))
+    // }
 
     pub fn as_duration(&self) -> Result<std::time::Duration> {
         use std::time::Duration;
@@ -237,18 +222,18 @@ impl DynVal {
         }
     }
 
-    pub fn as_json_value(&self) -> Result<serde_json::Value> {
-        serde_json::from_str::<serde_json::Value>(&self.0)
-            .map_err(|e| ConversionError::new(self.clone(), "json-value", Box::new(e)))
-    }
+    // pub fn as_json_value(&self) -> Result<serde_json::Value> {
+    //     serde_json::from_str::<serde_json::Value>(&self.0)
+    //         .map_err(|e| ConversionError::new(self.clone(), "json-value", Box::new(e)))
+    // }
 
-    pub fn as_json_array(&self) -> Result<Vec<serde_json::Value>> {
-        serde_json::from_str::<serde_json::Value>(&self.0)
-            .map_err(|e| ConversionError::new(self.clone(), "json-value", Box::new(e)))?
-            .as_array()
-            .cloned()
-            .ok_or_else(|| ConversionError { value: self.clone(), target_type: "json-array", source: None })
-    }
+    // pub fn as_json_array(&self) -> Result<Vec<serde_json::Value>> {
+    //     serde_json::from_str::<serde_json::Value>(&self.0)
+    //         .map_err(|e| ConversionError::new(self.clone(), "json-value", Box::new(e)))?
+    //         .as_array()
+    //         .cloned()
+    //         .ok_or_else(|| ConversionError { value: self.clone(), target_type: "json-array", source: None })
+    // }
 
     pub fn as_json_object(&self) -> Result<serde_json::Map<String, serde_json::Value>> {
         serde_json::from_str::<serde_json::Value>(&self.0)
