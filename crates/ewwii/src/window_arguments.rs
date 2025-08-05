@@ -4,10 +4,6 @@ use std::{collections::HashMap, str::FromStr};
 
 use crate::{dynval::DynVal, window::coords::Coords, window::monitor::MonitorIdentifier, window::window_geometry::AnchorPoint};
 
-fn parse_value_from_args<T: FromStr>(name: &str, args: &mut HashMap<VarName, DynVal>) -> Result<Option<T>, T::Err> {
-    args.remove(&VarName(name.to_string())).map(|x| FromStr::from_str(&x.as_string().unwrap())).transpose()
-}
-
 /// This stores the arguments given in the command line to create a window
 /// While creating a window, we combine this with information from the
 /// [`WindowDefinition`] to create a [WindowInitiator](`crate::window_initiator::WindowInitiator`), which stores all the
