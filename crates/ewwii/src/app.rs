@@ -276,13 +276,13 @@ impl<B: DisplayBackend> App<B> {
         if let Some(old_abort_send) = self.window_close_timer_abort_senders.remove(instance_id) {
             _ = old_abort_send.send(());
         }
-        let eww_window = self
+        let ewwii_window = self
             .open_windows
             .remove(instance_id)
             .with_context(|| format!("Tried to close window with id '{instance_id}', but no such window was open"))?;
 
-        // let scope_index = eww_window.scope_index;
-        eww_window.close();
+        // let scope_index = ewwii_window.scope_index;
+        ewwii_window.close();
 
         if auto_reopen {
             self.failed_windows.insert(instance_id.to_string());
@@ -329,15 +329,15 @@ impl<B: DisplayBackend> App<B> {
             // )?;
 
             let root_widget = build_gtk_widget(WidgetInput::Window(window_def))?;
-            crate::updates::handle_state_changes(self.ewwii_config.get_root_node()?);
+            // crate::updates::handle_state_changes(self.ewwii_config.get_root_node()?, self.paths.get_rhai_path());
 
             root_widget.style_context().add_class(window_name);
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
-            let mut eww_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
-            eww_window.gtk_window.style_context().add_class(window_name);
+            let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
+            ewwii_window.gtk_window.style_context().add_class(window_name);
 
-            eww_window.destroy_event_handler_id = Some(eww_window.gtk_window.connect_destroy({
+            ewwii_window.destroy_event_handler_id = Some(ewwii_window.gtk_window.connect_destroy({
                 let app_evt_sender = self.app_evt_send.clone();
                 let instance_id = instance_id.to_string();
                 move |_| {
@@ -388,7 +388,7 @@ impl<B: DisplayBackend> App<B> {
                 }
             }
 
-            self.open_windows.insert(instance_id.to_string(), eww_window);
+            self.open_windows.insert(instance_id.to_string(), ewwii_window);
             Ok(())
         })();
 
