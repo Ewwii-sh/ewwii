@@ -12,7 +12,7 @@ In Rhai, all variables are dynamically typed bindings to values. You can define 
 
 **Basic variables (`let`)**
 
-```rust
+```rust,ignore
 let foo = "value";
 ```
 
@@ -25,7 +25,7 @@ Just having static variables that wont update is pretty limiting. So, ewwii has 
 
 **Polling variables (`poll`)**
 
-```rust
+```rust,ignore
 poll("var_name", #{
   // It is recommended to have initial property passed.
   // If not provided, it will default to no value which may cause problems when used.
@@ -50,7 +50,7 @@ To externally update a polling variable, `ewwii update` can be used like with b
 
 **Listening variables (`listen`)**
 
-```rust
+```rust,ignore
 listen("foo", #{
   initial: "whatever",
   cmd: "tail -F /tmp/some_file",
@@ -84,7 +84,7 @@ As we discussed earlier, all variables are only available locally. So, you would
 
 Here is an example of how it is done:
 
-```rust
+```rust,ignore
 let foo = "example";
 
 poll("time", #{
