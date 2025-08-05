@@ -191,7 +191,7 @@ fn init_async_part(paths: EwwPaths, ui_send: UnboundedSender<app::DaemonCommand>
                 let result = tokio::try_join!(filewatch_join_handle, ipc_server_join_handle, forward_exit_to_app_handle);
 
                 if let Err(e) = result {
-                    log::error!("Eww exiting with error: {:?}", e);
+                    log::error!("Ewwii exiting with error: {:?}", e);
                 }
             })
         })
