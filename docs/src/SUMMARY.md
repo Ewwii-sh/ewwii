@@ -19,6 +19,8 @@
     -   [GTK Theming](working_with_gtk.md)
     -   [Styling Widgets](styling_widgets.md)
 
+-   [Modules](modules/modules.md)
+
 -   [Widgets](widgets/widgets.md)
 
     -   [Defining Widgets](widgets/defining_widgets.md)
