@@ -42,4 +42,13 @@ impl ParseConfig {
         let code = fs::read_to_string(&file_path).map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?;
         self.parse_widget_code(&code)
     }
+
+    pub fn parse_widget_code_from_scope(&mut self, code: &str, mut scope: Scope) -> Result<WidgetNode> {
+        self.engine.eval_with_scope::<WidgetNode>(&mut scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code)))
+    }
+
+    pub fn parse_widget_file_from_scope<P: AsRef<Path>>(&mut self, file_path: P, scope: Scope) -> Result<WidgetNode> {
+        let code = fs::read_to_string(&file_path).map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?;
+        self.parse_widget_code_from_scope(&code, scope)
+    }
 }

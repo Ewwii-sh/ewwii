@@ -18,16 +18,22 @@ mod listen;
 mod poll;
 
 use iirhai::widgetnode::WidgetNode;
+use iirhai::parser::ParseConfig;
+use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use listen::handle_listen;
 use poll::handle_poll;
 use rhai::{Dynamic, Scope};
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::sync::RwLock;
+use std::{
+    collections::HashMap,
+    sync::Arc,
+    sync::RwLock,
+    path::{PathBuf, Path},
+};
+use anyhow::{bail, Result};
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 
-pub fn handle_state_changes(enter_node: WidgetNode) {
+pub fn handle_state_changes(enter_node: WidgetNode, code_path: PathBuf) {
     /// Enter node is the WidgetNode of Enter()
     /// it is the very root of every config.
     let store: ReactiveVarStore = Arc::new(RwLock::new(HashMap::new()));
@@ -52,18 +58,24 @@ pub fn handle_state_changes(enter_node: WidgetNode) {
     let store_clone = store.clone();
     tokio::spawn(async move {
         while let Some(var_name) = rx.recv().await {
-            log::debug!("Reactive var changed: {}", var_name);
             let vars = store_clone.read().unwrap().clone();
-
-            re_eval_widgets(&vars).await;
+            reeval_and_update(&vars, &code_path).await;
         }
     });
 }
 
-pub async fn re_eval_widgets(all_vars: &HashMap<String, String>) {
+pub async fn reeval_and_update(all_vars: &HashMap<String, String>, code_path: &Path) -> Result<()> {
     let mut scope = Scope::new();
     for (name, val) in all_vars {
         scope.set_value(name.clone(), Dynamic::from(val.clone()));
     }
-    // TODO: added re-eval here later;
+
+    if !code_path.exists() {
+        bail!("The configuration file `{}` does not exist", code_path.display());
+    }
+
+    let mut reeval_parser = ParseConfig::new();
+    let new_config_tree = reeval_parser.parse_widget_file_from_scope(code_path, scope);
+
+    Ok(())
 }
