@@ -9,6 +9,3 @@ title = "Ewii documentation"
 default-theme = "navy"
 git-repository-url = "https://github.com/byson94/ewwii/tree/master/docs"
 site-url = "/"
-
-[output.html.playground]
-runnable = false
