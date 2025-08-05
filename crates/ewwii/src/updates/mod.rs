@@ -59,7 +59,7 @@ pub fn handle_state_changes(enter_node: WidgetNode, code_path: PathBuf) {
     tokio::spawn(async move {
         while let Some(var_name) = rx.recv().await {
             let vars = store_clone.read().unwrap().clone();
-            reeval_and_update(&vars, &code_path).await;
+            let _ = reeval_and_update(&vars, &code_path).await;
         }
     });
 }
