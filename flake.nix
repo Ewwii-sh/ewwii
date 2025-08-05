@@ -29,7 +29,7 @@
       mkRustToolchain = pkgs: pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
     in
     {
-      overlays.default = final: prev: { inherit (self.packages.${prev.system}) eww eww-wayland; };
+      overlays.default = final: prev: { inherit (self.packages.${prev.system}) ewwii ewwii-wayland; };
 
       packages = nixpkgs.lib.genAttrs targetSystems (
         system:
@@ -40,10 +40,10 @@
             cargo = rust;
             rustc = rust;
           };
-          version = (builtins.fromTOML (builtins.readFile ./crates/eww/Cargo.toml)).package.version;
+          version = (builtins.fromTOML (builtins.readFile ./crates/ewwii/Cargo.toml)).package.version;
         in
         rec {
-          eww = rustPlatform.buildRustPackage {
+          ewwii = rustPlatform.buildRustPackage {
             version = "${version}-dirty";
             pname = "ewwii";
 
@@ -66,8 +66,8 @@
             ];
           };
 
-          eww-wayland = nixpkgs.lib.warn "`eww-wayland` is deprecated due to eww building with both X11 and wayland support by default. Use `eww` instead." eww;
-          default = eww;
+          ewwii-wayland = nixpkgs.lib.warn "`ewwii-wayland` is deprecated due to ewwii building with both X11 and wayland support by default. Use `ewwii` instead." ewwii;
+          default = ewwii;
         }
       );
 
@@ -79,7 +79,7 @@
         in
         {
           default = pkgs.mkShell {
-            inputsFrom = [ self.packages.${system}.eww ];
+            inputsFrom = [ self.packages.${system}.ewwii ];
             packages = with pkgs; [
               deno
               mdbook
