@@ -14,7 +14,7 @@ Unlike Yuck, where expressions were embedded in `{ ... }` or `${ ... }`, Rhai tr
 
 ## Example
 
-```rust,ignore
+```rust
 let value = 12 + foo * 10;
 
 box(#{
