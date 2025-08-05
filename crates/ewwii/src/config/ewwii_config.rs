@@ -48,7 +48,7 @@ impl EwwiiConfig {
 
         // get the iirhai widget tree
         let mut config_parser = ParseConfig::new();
-        let config_tree = config_parser.parse_widget_from_file(rhai_path)?;
+        let config_tree = config_parser.eval_file(rhai_path)?;
 
         let mut window_definitions = HashMap::new();
 
