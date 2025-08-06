@@ -67,13 +67,6 @@ pub fn register_all_widgets(engine: &mut Engine) {
 
     engine.register_fn("circular_progress", |props: Map| WidgetNode::CircularProgress { props });
 
-    engine.register_fn("include", |path: &str| {
-        // TODO: load and eval another config file
-        WidgetNode::Include(path.to_string())
-    });
-
-    engine.register_fn("defstyle", |style: &str| WidgetNode::DefStyle(style.to_string()));
-
     engine.register_fn("eventbox", |props: Map, children: Array| WidgetNode::EventBox {
         props,
         children: children.into_iter().map(|v| v.cast()).collect(),
