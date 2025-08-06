@@ -18,8 +18,7 @@ mod listen;
 mod poll;
 
 use anyhow::{bail, Result};
-use iirhai::parser::ParseConfig;
-use iirhai::widgetnode::WidgetNode;
+use crate::widgetnode::WidgetNode;
 use listen::handle_listen;
 use poll::handle_poll;
 use rhai::{Dynamic, Scope};
@@ -29,14 +28,17 @@ use std::{
     sync::Arc,
     sync::RwLock,
 };
+use tokio::sync::mpsc::{UnboundedSender, UnboundedReceiver};
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 
-pub fn handle_state_changes(enter_node: WidgetNode, code_path: PathBuf) {
+pub fn handle_state_changes(
+    enter_node: WidgetNode,
+    tx: UnboundedSender<String>,
+) -> ReactiveVarStore {
     // Enter node is the WidgetNode of Enter()
     // it is the very root of every config.
     let store: ReactiveVarStore = Arc::new(RwLock::new(HashMap::new()));
-    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
 
     if let WidgetNode::Enter(children) = enter_node {
         for child in children {
@@ -54,27 +56,5 @@ pub fn handle_state_changes(enter_node: WidgetNode, code_path: PathBuf) {
         log::warn!("Expected Enter() as root node for config");
     }
 
-    let store_clone = store.clone();
-    tokio::spawn(async move {
-        while let Some(_var_name) = rx.recv().await {
-            let vars = store_clone.read().unwrap().clone();
-            let _ = reeval_and_update(&vars, &code_path).await;
-        }
-    });
-}
-
-pub async fn reeval_and_update(all_vars: &HashMap<String, String>, code_path: &Path) -> Result<()> {
-    let mut scope = Scope::new();
-    for (name, val) in all_vars {
-        scope.set_value(name.clone(), Dynamic::from(val.clone()));
-    }
-
-    if !code_path.exists() {
-        bail!("The configuration file `{}` does not exist", code_path.display());
-    }
-
-    let mut reeval_parser = ParseConfig::new();
-    let _new_config_tree = reeval_parser.eval_file_with(code_path, scope, None);
-
-    Ok(())
+    store
 }
