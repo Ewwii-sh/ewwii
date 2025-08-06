@@ -11,7 +11,7 @@
     -   [Configuration](config/configuration.md)
     -   [Fundamentals](config/config_fundamentals.md)
     -   [Variables](config/variables.md)
-    -   [Expression Language](expression_language.md)
+    -   [Expression Language](config/expression_language.md)
     <!-- -   [Magic Variables](magic-vars.md) -->
 
 -   [Theming & UI](theming/theming_and_ui.md)
