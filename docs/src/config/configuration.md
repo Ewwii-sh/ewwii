@@ -1,6 +1,6 @@
 # Writing your ewwii configuration
 
-(For a list of all built-in widgets (i.e. `box`, `label`, `button`), see [Widget Documentation](widgets.md).)\
+(For a list of all built-in widgets (i.e. `box`, `label`, `button`), see [Widget Documentation](../widgets/widgets.md).)\
 Ewwii is configured using its own language called `rhai`.
 Using rhai, you declare the structure and content of your widgets, the geometry, position, and behavior of any windows,
 as well as any state and data that will be used in your widgets.
@@ -103,7 +103,7 @@ fn greeter(name) {
     orientation: "horizontal",
     halign: "center"
   }, [
-    button(#{ onclick: "notify-send 'Hello' 'Hello, ${name}'", text: "Greet" })
+    button(#{ onclick: "notify-send 'Hello' 'Hello, ${name}'", label: "Greet" })
   ]);
 };
 ```
@@ -157,7 +157,7 @@ You can call it like this:
 
 ```rust,ignore
 labeled_container("foo", [
-  button(#{ onclick: "notify-send hey ho", text: "Click me" })
+  button(#{ onclick: "notify-send hey ho", label: "Click me" })
 ]);
 ```
 
@@ -230,7 +230,7 @@ let my_array = [1, 2, 3];
 // Then, inside your widget, you can use
 box(#{}, [
   for entry in my_array {
-    button(#{ onclick: "notify-send 'click' 'button ${entry}'", text: entry.to_string() })
+    button(#{ onclick: "notify-send 'click' 'button ${entry}'", label: entry.to_string() })
   }
 ])
 ```
