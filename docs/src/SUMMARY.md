@@ -14,17 +14,16 @@
     <!-- -   [Expression Language](expression_language.md)
     -   [Magic Variables](magic-vars.md) -->
 
--   [Theming & UI](theming_and_ui.md)
+-   [Theming & UI](theming/theming_and_ui.md)
 
-    -   [GTK Theming](working_with_gtk.md)
-    -   [Styling Widgets](styling_widgets.md)
+    -   [Working With GTK](theming/working_with_gtk.md)
+    -   [Styling Widgets](theming/styling_widgets.md)
 
 -   [Modules](modules/modules.md)
 
 -   [Widgets](widgets/widgets.md)
 
-    -   [Defining Widgets](widgets/defining_widgets.md)
-    -   [Window Layouts](widgets/layouts.md)
+    -   [Widgets & Parameters](widgets/widgets_and_params.md)
     -   [Widget Properties](widgets/props.md)
 
 -   [Examples](examples/examples.md)
