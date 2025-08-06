@@ -23,7 +23,7 @@ use std::{
 };
 
 // custom widgets
-use crate::widgets::{circular_progressbar::CircProg};
+use crate::widgets::{circular_progressbar::CircProg, transform::Transform};
 
 /// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
 /// the previously connected singal handler first gets disconnected.
@@ -335,6 +335,47 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
     child_widget.show();
 
     Ok(gtk_widget)
+}
+
+pub(super) fn build_transform(props: Map) -> Result<Transform> {
+    let widget = Transform::new();
+
+    // rotate - the percentage to rotate
+    if let Ok(rotate) = get_f64_prop(&props, "rotate", None) {
+        widget.set_property("rotate", rotate);
+    }
+
+    // transform-origin-x - x coordinate of origin of transformation (px or %)
+    if let Ok(transform_origin_x) = get_string_prop(&props, "transform_origin_x", None) {
+        widget.set_property("transform-origin-x", transform_origin_x);
+    }
+
+    // transform-origin-y - y coordinate of origin of transformation (px or %)
+    if let Ok(transform_origin_y) = get_string_prop(&props, "transform_origin_y", None) {
+        widget.set_property("transform-origin-y", transform_origin_y);
+    }
+
+    // translate-x - the amount to translate in the x direction (px or %)
+    if let Ok(translate_x) = get_string_prop(&props, "translate_x", None) {
+        widget.set_property("translate-x", translate_x);
+    }
+
+    // translate-y - the amount to translate in the y direction (px or %)
+    if let Ok(translate_y) = get_string_prop(&props, "translate_y", None) {
+        widget.set_property("translate-y", translate_y);
+    }
+
+    // scale-x - the amount to scale in the x direction (px or %)
+    if let Ok(scale_x) = get_string_prop(&props, "scale_x", None) {
+        widget.set_property("scale-x", scale_x);
+    }
+
+    // scale-y - the amount to scale in the y direction (px or %)
+    if let Ok(scale_y) = get_string_prop(&props, "scale_y", None) {
+        widget.set_property("scale-y", scale_y);
+    }
+
+    Ok(widget)
 }
 
 pub(super) fn build_circular_progress_bar(props: Map) -> Result<CircProg> {
