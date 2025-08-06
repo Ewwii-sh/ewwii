@@ -158,3 +158,17 @@ pub(super) fn parse_dragtype(o: &str) -> Result<DragEntryType> {
         _ => Err(anyhow!("Invalid drag type: '{}'", o)),
     }
 }
+
+/// Stack widget
+// transition - "slideright", "slideleft", "slideup", "slidedown", "crossfade", "none"
+pub(super) fn parse_stack_transition(t: &str) -> Result<gtk::StackTransitionType> {
+    match t.to_ascii_lowercase().as_str() {
+        "slideright" => Ok(gtk::StackTransitionType::SlideRight),
+        "slideleft" => Ok(gtk::StackTransitionType::SlideLeft),
+        "slideup" => Ok(gtk::StackTransitionType::SlideUp),
+        "slidedown" => Ok(gtk::StackTransitionType::SlideDown),
+        "fade" | "crossfade" => Ok(gtk::StackTransitionType::Crossfade),
+        "none" => Ok(gtk::StackTransitionType::None),
+        _ => Err(anyhow!("Invalid stack transition: '{}'", t)),
+    }
+}

@@ -15,6 +15,8 @@ pub enum WidgetNode {
     Expander { props: Map, children: Vec<WidgetNode> },
     Revealer { props: Map, children: Vec<WidgetNode> },
     Scroll { props: Map, children: Vec<WidgetNode> },
+    OverLay { children: Vec<WidgetNode> },
+    Stack { props: Map, children: Vec<WidgetNode> },
     Calendar { props: Map },
     ColorButton { props: Map },
     ColorChooser { props: Map },

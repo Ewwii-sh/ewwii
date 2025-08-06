@@ -50,6 +50,15 @@ pub fn register_all_widgets(engine: &mut Engine) {
 
     engine.register_fn("color_chooser", |props: Map| WidgetNode::ColorChooser { props });
 
+    engine.register_fn("overlay", |children: Array| WidgetNode::OverLay {
+        children: children.into_iter().map(|v| v.cast()).collect(),
+    });
+
+    engine.register_fn("stack", |props: Map, children: Array| WidgetNode::Stack {
+        props,
+        children: children.into_iter().map(|v| v.cast()).collect(),
+    });
+
     engine.register_fn("calendar", |props: Map| WidgetNode::Calendar { props });
 
     engine.register_fn("graph", |props: Map| WidgetNode::Graph { props });
