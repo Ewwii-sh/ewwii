@@ -70,13 +70,13 @@ Examples include:
 
 Because expressions are just Rhai, you can now write real logic inline or break it into reusable functions:
 
-```rhai
+```rust,ignore
 fn status_text(active) {
   return active ? "enabled" : "disabled";
 }
 
 label({
-  text: "Status: ${status_text(system_active)}"
+  text: `Status: ${status_text(system_active)}`
 });
 ```
 
