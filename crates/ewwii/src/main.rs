@@ -50,7 +50,6 @@ mod ipc_server;
 mod opts;
 mod paths;
 mod server;
-mod updates;
 mod util;
 mod widgets;
 mod window;

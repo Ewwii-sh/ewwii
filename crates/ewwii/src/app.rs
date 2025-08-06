@@ -3,7 +3,7 @@ use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
     error_handling_ctx,
-    gtk::prelude::{ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt},
+    gtk::prelude::{ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt, Cast},
     paths::EwwPaths,
     widgets::window::Window,
     // dynval::DynVal,
@@ -17,7 +17,7 @@ use crate::{
     window_initiator::WindowInitiator,
     *,
 };
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use codespan_reporting::files::Files;
 use ewwii_shared_util::Span;
 use gdk::Monitor;
@@ -32,6 +32,8 @@ use std::{
     rc::Rc,
 };
 use tokio::sync::mpsc::UnboundedSender;
+use rhai::{Scope, Dynamic};
+use iirhai::widgetnode::WidgetNode;
 
 /// A command for the ewwii daemon.
 /// While these are mostly generated from ewwii CLI commands (see [`opts::ActionWithServer`]),
@@ -76,6 +78,7 @@ pub enum DaemonCommand {
 pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
+    pub content_box: gtk::Box,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
 
@@ -329,13 +332,26 @@ impl<B: DisplayBackend> App<B> {
             // )?;
 
             let root_widget = build_gtk_widget(WidgetInput::Window(window_def))?;
-            // crate::updates::handle_state_changes(self.ewwii_config.get_root_node()?, self.paths.get_rhai_path());
 
             root_widget.style_context().add_class(window_name);
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
             ewwii_window.gtk_window.style_context().add_class(window_name);
+
+            // listening/polling
+            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+            let (update_sender, update_receiver) = glib::MainContext::channel(0.into());
+            let config_path = self.paths.get_rhai_path();
+            let store = iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
+
+            glib::MainContext::default().spawn_local(async move {
+                while let Some(_var_name) = rx.recv().await {
+                    let vars = store.read().unwrap().clone();
+                    let new_widget = generate_new_widgetnode(&vars, &config_path).await;
+                    let _ = update_sender.send(new_widget);
+                }
+            });
 
             ewwii_window.destroy_event_handler_id = Some(ewwii_window.gtk_window.connect_destroy({
                 let app_evt_sender = self.app_evt_send.clone();
@@ -359,6 +375,31 @@ impl<B: DisplayBackend> App<B> {
                     }
                 }
             }));
+
+            let window_for_task = ewwii_window.gtk_window.clone();
+            let container_for_task = ewwii_window.content_box.clone();
+
+            update_receiver.attach(None, move |new_root_widget| {
+                for child in container_for_task.children() {
+                    container_for_task.remove(&child);
+                }
+
+                match new_root_widget {
+                    Ok(node) => {
+                        let gtk_widget: gtk::Widget =
+                            build_gtk_widget(WidgetInput::Node(node))
+                                .expect("Unable to create the gtk widget.");
+                        container_for_task.add(&gtk_widget);
+                        container_for_task.show_all();
+                    }
+                    Err(err) => {
+                        eprintln!("Widget render failed: {:?}", err);
+                    }
+                }
+
+                glib::ControlFlow::Continue
+            });
+
 
             let duration = window_args.duration;
             if let Some(duration) = duration {
@@ -473,7 +514,13 @@ fn initialize_window<B: DisplayBackend>(
     on_screen_changed(&window, None);
     window.connect_screen_changed(on_screen_changed);
 
-    window.add(&root_widget);
+    // crate container that will be replaced on rerender
+    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    container.set_hexpand(true);
+    container.set_vexpand(true);
+
+    container.add(&root_widget);
+    window.add(&container);
 
     window.realize();
 
@@ -505,7 +552,28 @@ fn initialize_window<B: DisplayBackend>(
 
     window.show_all();
 
-    Ok(EwwiiWindow { name: window_init.name.clone(), gtk_window: window, destroy_event_handler_id: None })
+    Ok(EwwiiWindow { 
+        name: window_init.name.clone(), 
+        gtk_window: window, 
+        content_box: container,
+        destroy_event_handler_id: None 
+    })
+}
+
+async fn generate_new_widgetnode(all_vars: &HashMap<String, String>, code_path: &Path) -> Result<WidgetNode> {
+    let mut scope = Scope::new();
+    for (name, val) in all_vars {
+        scope.set_value(name.clone(), Dynamic::from(val.clone()));
+    }
+
+    if !code_path.exists() {
+        bail!("The configuration file `{}` does not exist", code_path.display());
+    }
+
+    let mut reeval_parser = iirhai::parser::ParseConfig::new();
+    let new_root_widget = reeval_parser.eval_file_with(code_path, scope, None);
+
+    Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget?)?)
 }
 
 /// Apply the provided window-positioning rules to the window.
