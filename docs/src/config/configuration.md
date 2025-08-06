@@ -246,13 +246,19 @@ As time passes, your configuration might grow larger and larger. Luckily, you ca
 
 There are two options to achieve this:
 
-### Using `include`
+### Using `import/export`
 
 ```rust,ignore
-include("./path/to/your/file.rhai");
+// in ./foo/baz.rhai
+fn greet() { return "Greetings!" }
+export greet;
+
+// in ./ewwii.rhai
+import "foo/baz" as example;
+print(example::greet()); // output: Greetings!
 ```
 
-A single rhai file may import the contents of any other rhai file. For this, make use of the `include` directive.
+A rhai file may import the contents of any other rhai file that they export. For this, make use of the `import` directive. If you are exporting a variable/function, make use the `export` directive.
 
 ### Using a separate ewwii configuration directory
 
