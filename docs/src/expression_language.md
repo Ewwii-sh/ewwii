@@ -24,7 +24,7 @@ box(#{
   button(#{
     class: button_active ? "active" : "inactive",
     on_click: "toggle_thing",
-    label: "Some math: ${value}",
+    label: `Some math: ${value}`,
   }),
 ]);
 ```
@@ -41,7 +41,15 @@ Rhai supports a wide range of expression capabilities:
 -   **Optional access**: `?.` and `?.[index]`
 -   **Data structures**: maps/arrays (`obj.field`, `arr[3]`, `map["key"]`)
 -   **Function calls**: standard and Ewwii-specific built-ins (see below)
--   **String interpolation**: `"Value is ${value}"` (standard Rhai feature)
+-   **String interpolation**: `` `Value is ${value}` `` (standard Rhai feature)
+
+> Note
+>
+> ---
+>
+> Rhai only allows string interpolation only for the strings that are quoted in `` similar to JavaScript.
+>
+> > Learn more about it [here](https://rhai.rs/book/ref/strings-chars.html?interpolation#string-interpolation).
 
 ## Common Built-in Functions
 
