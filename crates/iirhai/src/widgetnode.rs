@@ -23,8 +23,6 @@ pub enum WidgetNode {
     CircularProgress { props: Map },
     Graph { props: Map },
     Transform { props: Map },
-    Include(String),
-    DefStyle(String),
     EventBox { props: Map, children: Vec<WidgetNode> },
     ToolTip { children: Vec<WidgetNode> },
 
