@@ -3,7 +3,7 @@ use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
     error_handling_ctx,
-    gtk::prelude::{ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt, Cast},
+    gtk::prelude::{Cast, ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt},
     paths::EwwPaths,
     widgets::window::Window,
     // dynval::DynVal,
@@ -23,8 +23,10 @@ use ewwii_shared_util::Span;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
+use iirhai::widgetnode::WidgetNode;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
+use rhai::{Dynamic, Scope};
 use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
@@ -32,8 +34,6 @@ use std::{
     rc::Rc,
 };
 use tokio::sync::mpsc::UnboundedSender;
-use rhai::{Scope, Dynamic};
-use iirhai::widgetnode::WidgetNode;
 
 /// A command for the ewwii daemon.
 /// While these are mostly generated from ewwii CLI commands (see [`opts::ActionWithServer`]),
@@ -387,8 +387,7 @@ impl<B: DisplayBackend> App<B> {
                 match new_root_widget {
                     Ok(node) => {
                         let gtk_widget: gtk::Widget =
-                            build_gtk_widget(WidgetInput::Node(node))
-                                .expect("Unable to create the gtk widget.");
+                            build_gtk_widget(WidgetInput::Node(node)).expect("Unable to create the gtk widget.");
                         container_for_task.add(&gtk_widget);
                         container_for_task.show_all();
                     }
@@ -399,7 +398,6 @@ impl<B: DisplayBackend> App<B> {
 
                 glib::ControlFlow::Continue
             });
-
 
             let duration = window_args.duration;
             if let Some(duration) = duration {
@@ -552,12 +550,7 @@ fn initialize_window<B: DisplayBackend>(
 
     window.show_all();
 
-    Ok(EwwiiWindow { 
-        name: window_init.name.clone(), 
-        gtk_window: window, 
-        content_box: container,
-        destroy_event_handler_id: None 
-    })
+    Ok(EwwiiWindow { name: window_init.name.clone(), gtk_window: window, content_box: container, destroy_event_handler_id: None })
 }
 
 async fn generate_new_widgetnode(all_vars: &HashMap<String, String>, code_path: &Path) -> Result<WidgetNode> {

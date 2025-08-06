@@ -17,8 +17,8 @@
 mod listen;
 mod poll;
 
-use anyhow::{bail, Result};
 use crate::widgetnode::WidgetNode;
+use anyhow::{bail, Result};
 use listen::handle_listen;
 use poll::handle_poll;
 use rhai::{Dynamic, Scope};
@@ -28,14 +28,11 @@ use std::{
     sync::Arc,
     sync::RwLock,
 };
-use tokio::sync::mpsc::{UnboundedSender, UnboundedReceiver};
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 
-pub fn handle_state_changes(
-    enter_node: WidgetNode,
-    tx: UnboundedSender<String>,
-) -> ReactiveVarStore {
+pub fn handle_state_changes(enter_node: WidgetNode, tx: UnboundedSender<String>) -> ReactiveVarStore {
     // Enter node is the WidgetNode of Enter()
     // it is the very root of every config.
     let store: ReactiveVarStore = Arc::new(RwLock::new(HashMap::new()));
