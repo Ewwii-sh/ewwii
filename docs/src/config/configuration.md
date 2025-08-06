@@ -40,7 +40,7 @@ enter([ // Add all defwindow inside enter. Enter is the root of the config.
         anchor: "top center"
       },
       reserve: #{ distance: "40px" side: "top" }
-  }, root_widget())
+  }, label(#{ text: "example content" }))
 ])
 ```
 
