@@ -103,7 +103,7 @@ fn greeter(name) {
     orientation: "horizontal",
     halign: "center"
   }, [
-    button(#{ onclick: "notify-send 'Hello' 'Hello, ${name}'", label: "Greet" })
+    button(#{ onclick: `notify-send 'Hello' 'Hello, ${name}'`, label: "Greet" })
   ]);
 };
 ```
@@ -129,8 +129,7 @@ We need this `box`, as a function can only ever contain a single widget - otherw
 ewwii would not know if it should align them vertically or horizontally, how it should space them, and so on.
 Thus, we wrap multiple children in a `box`.
 This box then contains a button.
-In that button's `onclick` property, we refer to the provided `name` using string-interpolation syntax: `"${name}"`.
-This allows us to easily refer to any variables within strings.
+In that button's `onclick` property, we refer to the provided `name` using string-interpolation syntax: `` `${name}` ``. It is not possible to use a variable within a `""` or `''` just like javascript. You can learn more about it [here](https://rhai.rs/book/ref/strings-chars.html?interpolation#string-interpolation).
 
 <!-- TODO -->
 <!-- In fact, there is a lot more you can do within `${...}` - more on that in the chapter about the [expression language](expression_language.md). -->
@@ -230,7 +229,7 @@ let my_array = [1, 2, 3];
 // Then, inside your widget, you can use
 box(#{}, [
   for entry in my_array {
-    button(#{ onclick: "notify-send 'click' 'button ${entry}'", label: entry.to_string() })
+    button(#{ onclick: `notify-send 'click' 'button ${entry}'`, label: entry.to_string() })
   }
 ])
 ```

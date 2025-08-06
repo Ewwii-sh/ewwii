@@ -93,7 +93,7 @@ fn greeter(foo) {
   }, [
     // the `[]` holds a button which is the child widget of the box widget
     // each element in a `[]` should end in a comma (,) instead of a semi-colon (;).
-    button(#{ onclick: "notify-send '${foo}'", label: "baz" }),
+    button(#{ onclick: `notify-send '${foo}'`, label: "baz" }),
     label(#{ text: "example" }),
   ]);
 };
@@ -112,7 +112,7 @@ fn greeter(foo) {
     halign: "center"
   }, [
     // properties are assigned to both button and label using the #{}.
-    button(#{ onclick: "notify-send '${foo}'", label: "baz" }),
+    button(#{ onclick: `notify-send '${foo}'`, label: "baz" }),
     label(#{ text: "example" }),
   ]);
 };
