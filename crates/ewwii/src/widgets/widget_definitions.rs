@@ -23,7 +23,7 @@ use std::{
 };
 
 // custom widgets
-use crate::widgets::{circular_progressbar::CircProg, graph};
+use crate::widgets::{circular_progressbar::CircProg};
 
 /// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
 /// the previously connected singal handler first gets disconnected.
@@ -68,6 +68,38 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk
         let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
         gtk_widget.add(&child_widget);
     }
+
+    Ok(gtk_widget)
+}
+
+pub(super) fn build_tooltip(children: Vec<WidgetNode>) -> Result<gtk::Box> {
+    let gtk_widget = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    gtk_widget.set_has_tooltip(true);
+
+    let count = children.len();
+
+    if count < 2 {
+        bail!("tooltip must contain exactly 2 children");
+    } else if count > 2 {
+        bail!("tooltip must contain exactly 2 children, but got more");
+    }
+
+    let tooltip_node = children.get(0).cloned().ok_or_else(|| anyhow!("missing tooltip"))?;
+    let content_node = children.get(1).cloned().ok_or_else(|| anyhow!("missing content"))?;
+
+    // The visible child immediately
+    let content_widget = build_gtk_widget(WidgetInput::Node(content_node))?;
+    gtk_widget.add(&content_widget);
+
+    let tooltip_node = Rc::new(tooltip_node);
+
+    gtk_widget.connect_query_tooltip(move |_widget, _x, _y, _keyboard_mode, tooltip| {
+        let tooltip_widget = build_gtk_widget(
+            WidgetInput::Node(Rc::clone(&tooltip_node).as_ref().clone())
+        ).expect("Failed to build tooltip widget");
+        tooltip.set_custom(Some(&tooltip_widget));
+        true
+    });
 
     Ok(gtk_widget)
 }
@@ -800,6 +832,48 @@ pub(super) fn build_gtk_checkbox(props: Map) -> Result<gtk::CheckButton> {
             run_command(timeout, if gtk_widget.is_active() { &onchecked } else { &onunchecked }, &[] as &[&str]);
         })
     );
+
+    Ok(gtk_widget)
+}
+
+pub(super) fn build_gtk_color_button(props: Map) -> Result<gtk::ColorButton> {
+    let gtk_widget = gtk::ColorButton::builder().build();
+
+    // use-alpha - bool to wether or not use alpha
+    if let Ok(use_alpha) = get_bool_prop(&props, "use_alpha", None) {
+        gtk_widget.set_use_alpha(use_alpha);
+    }
+
+    // timeout - timeout of the command. Default: "200ms"
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+
+    // onchange - runs the code when the color was selected
+    if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+        connect_signal_handler!(gtk_widget, gtk_widget.connect_color_set(move |gtk_widget| {
+            run_command(timeout, &onchange, &[gtk_widget.rgba()]);
+        }));
+    }
+
+    Ok(gtk_widget)
+}
+
+pub(super) fn build_gtk_color_chooser(props: Map) -> Result<gtk::ColorChooserWidget> {
+    let gtk_widget = gtk::ColorChooserWidget::new();
+
+    // use-alpha - bool to wether or not use alpha
+    if let Ok(use_alpha) = get_bool_prop(&props, "use_alpha", None) {
+        gtk_widget.set_use_alpha(use_alpha);
+    }
+
+    // timeout - timeout of the command. Default: "200ms"
+    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+
+    // onchange - runs the code when the color was selected
+    if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+        connect_signal_handler!(gtk_widget, gtk_widget.connect_color_activated(move |_a, color| {
+            run_command(timeout, &onchange, &[*color]);
+        }));
+    }
 
     Ok(gtk_widget)
 }

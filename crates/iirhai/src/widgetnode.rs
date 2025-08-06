@@ -16,11 +16,14 @@ pub enum WidgetNode {
     Revealer { props: Map, children: Vec<WidgetNode> },
     Scroll { props: Map, children: Vec<WidgetNode> },
     Calendar { props: Map },
+    ColorButton { props: Map },
+    ColorChooser { props: Map },
     CircularProgress { props: Map },
     Graph { props: Map },
     Include(String),
     DefStyle(String),
     EventBox { props: Map, children: Vec<WidgetNode> },
+    ToolTip { children: Vec<WidgetNode> },
 
     // Top-level macros
     DefWindow { name: String, props: Map, node: Box<WidgetNode> },
