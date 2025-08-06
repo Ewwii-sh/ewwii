@@ -61,8 +61,8 @@ fn build_gtk_widget_from_node(root_node: WidgetNode) -> Result<gtk::Widget> {
         WidgetNode::Checkbox { props } => build_gtk_checkbox(props)?.upcast(),
         WidgetNode::Revealer { props, children } => build_gtk_revealer(props, children)?.upcast(),
         WidgetNode::Scroll { props, children } => build_gtk_scrolledwindow(props, children)?.upcast(),
-        // WIDGET_NAME_OVERLAY => build_gtk_overlay(node)?.upcast(),
-        // WIDGET_NAME_STACK => build_gtk_stack(node)?.upcast(),
+        WidgetNode::OverLay { children } => build_gtk_overlay(children)?.upcast(),
+        WidgetNode::Stack { props, children } => build_gtk_stack(props, children)?.upcast(),
         // WIDGET_NAME_SYSTRAY => build_systray(node)?.upcast(),
         unknown => {
             return Err(anyhow::anyhow!("Cannot build GTK widget from node: {:?}", unknown));

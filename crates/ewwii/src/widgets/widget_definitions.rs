@@ -72,6 +72,32 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk
     Ok(gtk_widget)
 }
 
+pub(super) fn build_gtk_overlay(children: Vec<WidgetNode>) -> Result<gtk::Overlay> {
+    let gtk_widget = gtk::Overlay::new();
+
+    let count = children.len();
+
+    if count < 1 {
+        bail!("overlay must contain at least one element");
+    } 
+
+    let mut children = children.into_iter().map(|child| {
+        build_gtk_widget(WidgetInput::Node(child))
+    });
+
+    // we have more than one child, we can unwrap
+    let first = children.next().unwrap()?;
+    gtk_widget.add(&first);
+    first.show();
+    for child in children {
+        let child = child?;
+        gtk_widget.add_overlay(&child);
+        gtk_widget.set_overlay_pass_through(&child, true);
+        child.show();
+    }
+    Ok(gtk_widget)
+}
+
 pub(super) fn build_tooltip(children: Vec<WidgetNode>) -> Result<gtk::Box> {
     let gtk_widget = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     gtk_widget.set_has_tooltip(true);
@@ -333,6 +359,37 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
     let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
     gtk_widget.add(&child_widget);
     child_widget.show();
+
+    Ok(gtk_widget)
+}
+
+pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Stack> {
+    let gtk_widget = gtk::Stack::new();
+
+    if children.is_empty() {
+        return Err(anyhow!("stack must contain at least one element"));
+    }
+
+    let children = children.into_iter().map(|child| {
+        build_gtk_widget(WidgetInput::Node(child))
+    });
+
+    for (i, child) in children.enumerate() {
+        let child = child?;
+        gtk_widget.add_named(&child, &i.to_string());
+        child.show();
+    }
+
+    // parsing the properties
+    if let Ok(selected) = get_i32_prop(&props, "selected", None) {
+        gtk_widget.set_visible_child_name(&selected.to_string());
+    }
+
+    let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
+    gtk_widget.set_transition_type(parse_stack_transition(&transition)?);
+
+    let same_size = get_bool_prop(&props, "same_size", Some(false))?;
+    gtk_widget.set_homogeneous(same_size);
 
     Ok(gtk_widget)
 }
