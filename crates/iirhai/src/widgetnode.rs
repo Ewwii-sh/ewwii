@@ -20,6 +20,7 @@ pub enum WidgetNode {
     ColorChooser { props: Map },
     CircularProgress { props: Map },
     Graph { props: Map },
+    Transform { props: Map },
     Include(String),
     DefStyle(String),
     EventBox { props: Map, children: Vec<WidgetNode> },
