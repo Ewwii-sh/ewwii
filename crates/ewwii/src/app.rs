@@ -322,18 +322,12 @@ impl<B: DisplayBackend> App<B> {
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
-            // TODO replace this
-            // let root_widget = crate::widgets::build_widget::build_gtk_widget(
-            //     &mut self.scope_graph.borrow_mut(),
-            //     Rc::new(self.ewwii_config.get_widget_definitions().clone()),
-            //     window_scope,
-            //     window_def.widget,
-            //     None,
-            // )?;
-
             let root_widget = build_gtk_widget(WidgetInput::Window(window_def))?;
 
             root_widget.style_context().add_class(window_name);
+
+            println!("Root widget type: {}", root_widget.widget_name());
+            println!("Style classes: {:?}", root_widget.style_context().list_classes());
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
@@ -513,6 +507,16 @@ fn initialize_window<B: DisplayBackend>(
     window.connect_screen_changed(on_screen_changed);
 
     // crate container that will be replaced on rerender
+
+    // !FIXME
+    // The following is the layout of ewwii. Due to the usage of a container during creation,
+    // the css styling has an issue where it doesnt apply correctly.
+    // I have to removing it and add a smarter system to update the gtk widgets
+    // instead of relying on replacing a container every time which resets the state.
+    // GtkWindow
+    // └── GtkBox (vertical)
+    //  └── GtkBox (centerbox for example, with window_name as class)
+
     let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
     container.set_hexpand(true);
     container.set_vexpand(true);
