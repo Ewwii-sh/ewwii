@@ -26,30 +26,37 @@ pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<St
 pub fn extract_poll_listen_exprs(code: &str) -> Vec<String> {
     let mut exprs = Vec::new();
     let mut i = 0;
-    let chars: Vec<_> = code.chars().collect();
+    let code_bytes = code.as_bytes();
+    let len = code.len();
 
-    while i < chars.len() {
+    while i < len {
         if code[i..].starts_with("poll(") || code[i..].starts_with("listen(") {
             let start = i;
             let mut depth = 0;
+            let mut j = i;
 
-            while i < chars.len() {
-                if chars[i] == '(' {
-                    depth += 1;
-                } else if chars[i] == ')' {
-                    depth -= 1;
-                    if depth == 0 {
-                        i += 1;
-                        break;
+            while j < len {
+                match code.as_bytes()[j] as char {
+                    '(' => depth += 1,
+                    ')' => {
+                        depth -= 1;
+                        if depth == 0 {
+                            j += 1;
+                            break;
+                        }
                     }
+                    _ => {}
                 }
-                i += 1;
+                j += 1;
             }
 
-            let end = i;
-            exprs.push(code[start..end].to_string());
+            let end = j;
+            if let Some(expr) = code.get(start..end) {
+                exprs.push(expr.to_string());
+            }
+            i = j;
         } else {
-            i += 1;
+            i += code[i..].chars().next().unwrap().len_utf8();
         }
     }
 
