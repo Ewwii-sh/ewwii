@@ -46,6 +46,10 @@ pub fn register_all_widgets(engine: &mut Engine) {
         children: children.into_iter().map(|v| v.cast()).collect(),
     });
 
+    engine.register_fn("color_button", |props: Map| WidgetNode::ColorButton { props });
+
+    engine.register_fn("color_chooser", |props: Map| WidgetNode::ColorChooser { props });
+
     engine.register_fn("calendar", |props: Map| WidgetNode::Calendar { props });
 
     engine.register_fn("graph", |props: Map| WidgetNode::Graph { props });
@@ -61,6 +65,10 @@ pub fn register_all_widgets(engine: &mut Engine) {
 
     engine.register_fn("eventbox", |props: Map, children: Array| WidgetNode::EventBox {
         props,
+        children: children.into_iter().map(|v| v.cast()).collect(),
+    });
+
+    engine.register_fn("tooltip", |children: Array| WidgetNode::ToolTip {
         children: children.into_iter().map(|v| v.cast()).collect(),
     });
 
