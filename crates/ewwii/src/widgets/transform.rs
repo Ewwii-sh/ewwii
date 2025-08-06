@@ -1,8 +1,8 @@
+use crate::window::coords::NumWithUnit;
 use anyhow::{anyhow, Result};
 use gtk::glib::{self, object_subclass, wrapper, Properties};
 use gtk::{prelude::*, subclass::prelude::*};
 use std::{cell::RefCell, str::FromStr};
-use crate::window::coords::NumWithUnit;
 
 use crate::error_handling_ctx;
 

@@ -79,11 +79,9 @@ pub(super) fn build_gtk_overlay(children: Vec<WidgetNode>) -> Result<gtk::Overla
 
     if count < 1 {
         bail!("overlay must contain at least one element");
-    } 
+    }
 
-    let mut children = children.into_iter().map(|child| {
-        build_gtk_widget(WidgetInput::Node(child))
-    });
+    let mut children = children.into_iter().map(|child| build_gtk_widget(WidgetInput::Node(child)));
 
     // we have more than one child, we can unwrap
     let first = children.next().unwrap()?;
@@ -120,9 +118,8 @@ pub(super) fn build_tooltip(children: Vec<WidgetNode>) -> Result<gtk::Box> {
     let tooltip_node = Rc::new(tooltip_node);
 
     gtk_widget.connect_query_tooltip(move |_widget, _x, _y, _keyboard_mode, tooltip| {
-        let tooltip_widget = build_gtk_widget(
-            WidgetInput::Node(Rc::clone(&tooltip_node).as_ref().clone())
-        ).expect("Failed to build tooltip widget");
+        let tooltip_widget = build_gtk_widget(WidgetInput::Node(Rc::clone(&tooltip_node).as_ref().clone()))
+            .expect("Failed to build tooltip widget");
         tooltip.set_custom(Some(&tooltip_widget));
         true
     });
@@ -370,9 +367,7 @@ pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>) -> Result<g
         return Err(anyhow!("stack must contain at least one element"));
     }
 
-    let children = children.into_iter().map(|child| {
-        build_gtk_widget(WidgetInput::Node(child))
-    });
+    let children = children.into_iter().map(|child| build_gtk_widget(WidgetInput::Node(child)));
 
     for (i, child) in children.enumerate() {
         let child = child?;
@@ -947,9 +942,12 @@ pub(super) fn build_gtk_color_button(props: Map) -> Result<gtk::ColorButton> {
 
     // onchange - runs the code when the color was selected
     if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_color_set(move |gtk_widget| {
-            run_command(timeout, &onchange, &[gtk_widget.rgba()]);
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_color_set(move |gtk_widget| {
+                run_command(timeout, &onchange, &[gtk_widget.rgba()]);
+            })
+        );
     }
 
     Ok(gtk_widget)
@@ -968,9 +966,12 @@ pub(super) fn build_gtk_color_chooser(props: Map) -> Result<gtk::ColorChooserWid
 
     // onchange - runs the code when the color was selected
     if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
-        connect_signal_handler!(gtk_widget, gtk_widget.connect_color_activated(move |_a, color| {
-            run_command(timeout, &onchange, &[*color]);
-        }));
+        connect_signal_handler!(
+            gtk_widget,
+            gtk_widget.connect_color_activated(move |_a, color| {
+                run_command(timeout, &onchange, &[*color]);
+            })
+        );
     }
 
     Ok(gtk_widget)
