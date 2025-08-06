@@ -54,6 +54,8 @@ pub fn register_all_widgets(engine: &mut Engine) {
 
     engine.register_fn("graph", |props: Map| WidgetNode::Graph { props });
 
+    engine.register_fn("transform", |props: Map| WidgetNode::Transform { props });
+
     engine.register_fn("circular_progress", |props: Map| WidgetNode::CircularProgress { props });
 
     engine.register_fn("include", |path: &str| {
