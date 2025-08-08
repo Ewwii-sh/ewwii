@@ -69,24 +69,12 @@ impl WidgetRegistry {
     }
 
     pub fn update_prop_changes(&self, id_to_props: HashMap<u64, Map>) {
-        println!("--- id_to_props keys ---");
-        for id in id_to_props.keys() {
-            println!("{}", id);
-        }
-
-        println!("--- self.widgets keys ---");
-        for id in self.widgets.keys() {
-            println!("{}", id);
-        }
-
-        println!("--- processing update ids ---");
         for (id, props) in id_to_props {
             if let Some(entry) = self.widgets.get(&id) {
-                println!("Updating widget id: {}", id);
                 (entry.update_fn)(&props);
-            } else {
-                println!("Warning: id {} not found in widget_registry", id);
-            }
+            } // else {
+                // println!("Warning: id {} not found in widget_registry", id);
+            // }
         }
     }
 }
