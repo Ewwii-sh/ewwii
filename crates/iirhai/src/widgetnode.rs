@@ -39,43 +39,111 @@ pub enum WidgetNode {
     Enter(Vec<WidgetNode>),
 }
 
-pub fn get_id_to_props_map(root_node: &WidgetNode) -> Result<HashMap<u64, Map>> {
-    let mut id_to_props = HashMap::new();
-
-    let mut insert_props = |props: &Map, widget_type: &str| -> Result<()> {
-        let id = hash_props_and_type(props, widget_type);
-        id_to_props.insert(id, props.clone());
-        Ok(())
-    };
-
+pub fn get_id_to_props_map(root_node: &WidgetNode, id_to_props: &mut HashMap<u64, Map>) -> Result<()> {
     match root_node {
-        WidgetNode::Box { props, .. } => insert_props(props, "Box")?,
-        WidgetNode::CenterBox { props, .. } => insert_props(props, "CenterBox")?,
-        WidgetNode::EventBox { props, .. } => insert_props(props, "EventBox")?,
-        WidgetNode::CircularProgress { props } => insert_props(props, "CircularProgress")?,
-        WidgetNode::Graph { props } => insert_props(props, "Graph")?,
-        WidgetNode::Transform { props } => insert_props(props, "Transform")?,
-        WidgetNode::Slider { props } => insert_props(props, "Slider")?,
-        WidgetNode::Progress { props } => insert_props(props, "Progress")?,
-        WidgetNode::Image { props } => insert_props(props, "Image")?,
-        WidgetNode::Button { props } => insert_props(props, "Button")?,
-        WidgetNode::Label { props } => insert_props(props, "Label")?,
-        WidgetNode::Input { props } => insert_props(props, "Input")?,
-        WidgetNode::Calendar { props } => insert_props(props, "Calendar")?,
-        WidgetNode::ColorButton { props } => insert_props(props, "ColorButton")?,
-        WidgetNode::Expander { props, .. } => insert_props(props, "Expander")?,
-        WidgetNode::ColorChooser { props } => insert_props(props, "ColorChooser")?,
-        WidgetNode::ComboBoxText { props } => insert_props(props, "ComboBoxText")?,
-        WidgetNode::Checkbox { props } => insert_props(props, "Checkbox")?,
-        WidgetNode::Revealer { props, .. } => insert_props(props, "Revealer")?,
-        WidgetNode::Scroll { props, .. } => insert_props(props, "Scroll")?,
-        WidgetNode::Stack { props, .. } => insert_props(props, "Stack")?,
+        WidgetNode::Box { props, children } => {
+            insert_props(props, "Box", id_to_props)?;
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
+        WidgetNode::CenterBox { props, children } => {
+            insert_props(props, "CenterBox", id_to_props)?;
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
+        WidgetNode::EventBox { props, children } => {
+            insert_props(props, "EventBox", id_to_props)?;
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
+        WidgetNode::CircularProgress { props } => {
+            insert_props(props, "CircularProgress", id_to_props)?;
+        },
+        WidgetNode::Graph { props } => {
+            insert_props(props, "Graph", id_to_props)?;
+        },
+        WidgetNode::Transform { props } => {
+            insert_props(props, "Transform", id_to_props)?;
+        },
+        WidgetNode::Slider { props } => {
+            insert_props(props, "Slider", id_to_props)?;
+        },
+        WidgetNode::Progress { props } => {
+            insert_props(props, "Progress", id_to_props)?;
+        },
+        WidgetNode::Image { props } => {
+            insert_props(props, "Image", id_to_props)?;
+        },
+        WidgetNode::Button { props } => {
+            insert_props(props, "Button", id_to_props)?;
+        },
+        WidgetNode::Label { props } => {
+            insert_props(props, "Label", id_to_props)?;
+        },
+        WidgetNode::Input { props } => {
+            insert_props(props, "Input", id_to_props)?;
+        },
+        WidgetNode::Calendar { props } => {
+            insert_props(props, "Calendar", id_to_props)?;
+        },
+        WidgetNode::ColorButton { props } => {
+            insert_props(props, "ColorButton", id_to_props)?;
+        },
+        WidgetNode::Expander { props, children } => {
+            insert_props(props, "Expander", id_to_props)?;
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
+        WidgetNode::ToolTip { children } => {;
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
+        WidgetNode::ColorChooser { props } => {
+            insert_props(props, "ColorChooser", id_to_props)?;
+        },
+        WidgetNode::ComboBoxText { props } => {
+            insert_props(props, "ComboBoxText", id_to_props)?;
+        },
+        WidgetNode::Checkbox { props } => {
+            insert_props(props, "Checkbox", id_to_props)?;
+        },
+        WidgetNode::Revealer { props, children } => {
+            insert_props(props, "Revealer", id_to_props)?;
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
+        WidgetNode::Scroll { props, children } => {
+            insert_props(props, "Scroll", id_to_props)?
+        },
+        WidgetNode::OverLay { children } => {;
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
+        WidgetNode::Stack { props, children } => {
+            insert_props(props, "Stack", id_to_props)?;
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
         _ => {
             // do nothing for now ig?
         }
     }
 
-    Ok(id_to_props)
+    Ok(())
+}
+
+fn insert_props(props: &Map, widget_type: &str, id_to_props: &mut HashMap<u64, Map>) -> Result<()> {
+    let id = hash_props_and_type(props, widget_type);
+    id_to_props.insert(id, props.clone());
+    Ok(())
 }
 
 pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
