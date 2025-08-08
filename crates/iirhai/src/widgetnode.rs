@@ -98,7 +98,7 @@ pub fn get_id_to_props_map(root_node: &WidgetNode, id_to_props: &mut HashMap<u64
                 get_id_to_props_map(child, id_to_props)?;
             }
         },
-        WidgetNode::ToolTip { children } => {;
+        WidgetNode::ToolTip { children } => {
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
@@ -121,7 +121,7 @@ pub fn get_id_to_props_map(root_node: &WidgetNode, id_to_props: &mut HashMap<u64
         WidgetNode::Scroll { props, children } => {
             insert_props(props, "Scroll", id_to_props)?
         },
-        WidgetNode::OverLay { children } => {;
+        WidgetNode::OverLay { children } => {
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
@@ -151,41 +151,36 @@ pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
 
     widget_type_str.hash(&mut hasher);
 
+    props.len().hash(&mut hasher);
+
+    // key-value pairs
     let mut kv_pairs: Vec<_> = props.iter().collect();
     kv_pairs.sort_by_key(|(k, _)| k.clone());
 
     for (k, v) in kv_pairs {
         k.hash(&mut hasher);
-        let val_str = serialize_value(v);
-        val_str.hash(&mut hasher);
+        type_name(v).hash(&mut hasher);
     }
 
     hasher.finish()
 }
 
-fn serialize_value(value: &Dynamic) -> String {
+
+fn type_name(value: &Dynamic) -> &'static str {
     if value.is::<String>() {
-        value.clone_cast::<String>()
+        "String"
     } else if value.is::<bool>() {
-        value.clone_cast::<bool>().to_string()
+        "Bool"
     } else if value.is::<i64>() {
-        value.clone_cast::<i64>().to_string()
+        "I64"
     } else if value.is::<f64>() {
-        value.clone_cast::<f64>().to_string()
+        "F64"
     } else if value.is::<Array>() {
-        let arr = value.clone_cast::<Array>();
-        let serialized_items: Vec<String> = arr.iter().map(|v| serialize_value(v)).collect();
-        format!("[{}]", serialized_items.join(","))
+        "Array"
     } else if value.is::<Map>() {
-        let map = value.clone_cast::<Map>();
-        let mut kvs: Vec<_> = map.iter().collect();
-        kvs.sort_by_key(|(k, _)| k.clone());
-        let serialized_pairs: Vec<String> = kvs.iter()
-            .map(|(k, v)| format!("{}:{}", k, serialize_value(v)))
-            .collect();
-        format!("{{{}}}", serialized_pairs.join(","))
+        "Map"
     } else {
-        format!("{:?}", value)
+        "Unknown"
     }
 }
 

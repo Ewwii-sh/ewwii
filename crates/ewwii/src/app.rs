@@ -348,11 +348,23 @@ impl<B: DisplayBackend> App<B> {
             let store = iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
 
             glib::MainContext::default().spawn_local(async move {
-                while let Some(_var_name) = rx.recv().await {
+                while let Some(var_name) = rx.recv().await {
+                    log::debug!("Received update for var: {}", var_name);
+                    println!("Received update for var: {}", var_name);
                     let vars = store.read().unwrap().clone();
-                    let new_widget = generate_new_widgetnode(&vars, &config_path).await;
-                    let _ = update_sender.send(new_widget);
+                    
+                    match generate_new_widgetnode(&vars, &config_path).await {
+                        Ok(new_widget) => {
+                            if let Err(e) = update_sender.send(new_widget) {
+                                log::warn!("Failed to send new widget update: {:?}", e);
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("Failed to generate new widgetnode: {:?}", e);
+                        }
+                    }
                 }
+                log::debug!("Receiver loop exited");
             });
 
             ewwii_window.destroy_event_handler_id = Some(ewwii_window.gtk_window.connect_destroy({
@@ -380,11 +392,7 @@ impl<B: DisplayBackend> App<B> {
 
             update_receiver.attach(None, move |new_root_widget| {
                 let mut id_to_prop = HashMap::new();
-                get_id_to_props_map(&new_root_widget.expect(
-                    "Failed to hash id's and props"
-                ), &mut id_to_prop);
-
-                println!("RECEIVED UPDATE!");
+                let _ = get_id_to_props_map(&new_root_widget, &mut id_to_prop);
 
                 widget_reg_store.update_prop_changes(id_to_prop);
 
