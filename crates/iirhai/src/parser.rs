@@ -1,6 +1,7 @@
 use crate::{
     builtins::register_all_widgets, error::format_rhai_error, helper::extract_poll_and_listen_vars,
     providers::register_all_providers, widgetnode::WidgetNode,
+    module_resolver::SimpleFileResolver,
 };
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, Scope, AST};
@@ -18,6 +19,7 @@ impl ParseConfig {
         // let scope = Scope::new();
 
         engine.set_max_expr_depths(128, 128);
+        engine.set_module_resolver(SimpleFileResolver);
         register_all_widgets(&mut engine);
         register_all_providers(&mut engine);
 
