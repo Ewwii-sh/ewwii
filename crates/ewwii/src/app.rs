@@ -326,9 +326,6 @@ impl<B: DisplayBackend> App<B> {
 
             root_widget.style_context().add_class(window_name);
 
-            println!("Root widget type: {}", root_widget.widget_name());
-            println!("Style classes: {:?}", root_widget.style_context().list_classes());
-
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
             ewwii_window.gtk_window.style_context().add_class(window_name);
