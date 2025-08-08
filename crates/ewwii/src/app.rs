@@ -379,15 +379,14 @@ impl<B: DisplayBackend> App<B> {
             }));
 
             update_receiver.attach(None, move |new_root_widget| {
-                let id_to_prop = get_id_to_props_map(&new_root_widget.expect(
+                let mut id_to_prop = HashMap::new();
+                get_id_to_props_map(&new_root_widget.expect(
                     "Failed to hash id's and props"
-                ));
+                ), &mut id_to_prop);
 
                 println!("RECEIVED UPDATE!");
 
-                widget_reg_store.update_prop_changes(id_to_prop.expect(
-                    "Failed to update property changes."
-                ));
+                widget_reg_store.update_prop_changes(id_to_prop);
 
                 // for child in container_for_task.children() {
                 //     container_for_task.remove(&child);
