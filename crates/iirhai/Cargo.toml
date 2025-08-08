@@ -24,3 +24,4 @@ serde = { workspace = true, features = ["derive"] }
 chrono.workspace = true
 textwrap.workspace =true
 termsize.workspace = true
+ahash.workspace = true
