@@ -9,6 +9,7 @@ iirhai = { version = "0.1.0", path = "crates/iirhai" }
 notifier_host = { version = "0.1.0", path = "crates/notifier_host" }
 
 anyhow = "1.0.86"
+ahash = "0.8.12"
 bincode = "1.3.3"
 bytesize = "2.0.1"
 cached = "0.53.1"

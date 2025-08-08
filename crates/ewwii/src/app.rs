@@ -7,7 +7,11 @@ use crate::{
     paths::EwwPaths,
     widgets::window::Window,
     // dynval::DynVal,
-    widgets::{build_widget::build_gtk_widget, build_widget::WidgetInput},
+    widgets::{
+        build_widget::build_gtk_widget, 
+        build_widget::WidgetInput,
+        widget_definitions::WidgetRegistry,
+    },
     window::{
         coords::Coords,
         monitor::MonitorIdentifier,
@@ -23,7 +27,7 @@ use ewwii_shared_util::Span;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
-use iirhai::widgetnode::WidgetNode;
+use iirhai::widgetnode::{WidgetNode, get_id_to_props_map};
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::{Dynamic, Scope};
@@ -78,7 +82,6 @@ pub enum DaemonCommand {
 pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
-    pub content_box: gtk::Box,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
 
@@ -322,7 +325,15 @@ impl<B: DisplayBackend> App<B> {
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
-            let root_widget = build_gtk_widget(WidgetInput::Window(window_def))?;
+            /// Holds the id and the props of a widget
+            /// It is crutual for supporting dynamic updates
+            let mut widget_reg_store = WidgetRegistry::new(); 
+            // note for future me: ^ this might need cloning.
+
+            let root_widget = build_gtk_widget(
+                WidgetInput::Window(window_def), 
+                &mut widget_reg_store
+            )?;
 
             root_widget.style_context().add_class(window_name);
 
@@ -367,25 +378,32 @@ impl<B: DisplayBackend> App<B> {
                 }
             }));
 
-            let window_for_task = ewwii_window.gtk_window.clone();
-            let container_for_task = ewwii_window.content_box.clone();
-
             update_receiver.attach(None, move |new_root_widget| {
-                for child in container_for_task.children() {
-                    container_for_task.remove(&child);
-                }
+                let id_to_prop = get_id_to_props_map(&new_root_widget.expect(
+                    "Failed to hash id's and props"
+                ));
 
-                match new_root_widget {
-                    Ok(node) => {
-                        let gtk_widget: gtk::Widget =
-                            build_gtk_widget(WidgetInput::Node(node)).expect("Unable to create the gtk widget.");
-                        container_for_task.add(&gtk_widget);
-                        container_for_task.show_all();
-                    }
-                    Err(err) => {
-                        eprintln!("Widget render failed: {:?}", err);
-                    }
-                }
+                println!("RECEIVED UPDATE!");
+
+                widget_reg_store.update_prop_changes(id_to_prop.expect(
+                    "Failed to update property changes."
+                ));
+
+                // for child in container_for_task.children() {
+                //     container_for_task.remove(&child);
+                // }
+
+                // match new_root_widget {
+                //     Ok(node) => {
+                //         let gtk_widget: gtk::Widget =
+                //             build_gtk_widget(WidgetInput::Node(node)).expect("Unable to create the gtk widget.");
+                //         container_for_task.add(&gtk_widget);
+                //         container_for_task.show_all();
+                //     }
+                //     Err(err) => {
+                //         eprintln!("Widget render failed: {:?}", err);
+                //     }
+                // }
 
                 glib::ControlFlow::Continue
             });
@@ -503,23 +521,7 @@ fn initialize_window<B: DisplayBackend>(
     on_screen_changed(&window, None);
     window.connect_screen_changed(on_screen_changed);
 
-    // crate container that will be replaced on rerender
-
-    // !FIXME
-    // The following is the layout of ewwii. Due to the usage of a container during creation,
-    // the css styling has an issue where it doesnt apply correctly.
-    // I have to removing it and add a smarter system to update the gtk widgets
-    // instead of relying on replacing a container every time which resets the state.
-    // GtkWindow
-    // └── GtkBox (vertical)
-    //  └── GtkBox (centerbox for example, with window_name as class)
-
-    let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    container.set_hexpand(true);
-    container.set_vexpand(true);
-
-    container.add(&root_widget);
-    window.add(&container);
+    window.add(&root_widget);
 
     window.realize();
 
@@ -551,7 +553,11 @@ fn initialize_window<B: DisplayBackend>(
 
     window.show_all();
 
-    Ok(EwwiiWindow { name: window_init.name.clone(), gtk_window: window, content_box: container, destroy_event_handler_id: None })
+    Ok(EwwiiWindow { 
+        name: window_init.name.clone(), 
+        gtk_window: window, 
+        destroy_event_handler_id: None 
+    })
 }
 
 async fn generate_new_widgetnode(all_vars: &HashMap<String, String>, code_path: &Path) -> Result<WidgetNode> {
