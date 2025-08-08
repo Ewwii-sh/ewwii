@@ -8,7 +8,7 @@ use anyhow::{anyhow, bail, Result};
 use gdk::{ModifierType, NotifyType};
 use gtk::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{gdk, glib, pango};
-use iirhai::widgetnode::WidgetNode;
+use iirhai::widgetnode::{WidgetNode, hash_props_and_type};
 use once_cell::sync::Lazy;
 use rhai::Map;
 
@@ -20,6 +20,7 @@ use std::{
     collections::HashSet,
     rc::Rc,
     time::Duration,
+    collections::HashMap,
 };
 
 // custom widgets
@@ -49,7 +50,49 @@ macro_rules! connect_signal_handler {
     }};
 }
 
-pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Box> {
+pub type UpdateFn = Box<dyn Fn(&Map)>;
+
+pub struct WidgetEntry {
+    // pub widget: gtk::Widget, // not needed now
+    pub update_fn: UpdateFn,
+}
+
+pub struct WidgetRegistry {
+    widgets: HashMap<u64, WidgetEntry>,
+}
+
+impl WidgetRegistry {
+    pub fn new() -> Self {
+        Self {
+            widgets: HashMap::new(),
+        }
+    }
+
+    pub fn update_prop_changes(&self, id_to_props: HashMap<u64, Map>) {
+        println!("--- id_to_props keys ---");
+        for id in id_to_props.keys() {
+            println!("{}", id);
+        }
+
+        println!("--- self.widgets keys ---");
+        for id in self.widgets.keys() {
+            println!("{}", id);
+        }
+
+        println!("--- processing update ids ---");
+        for (id, props) in id_to_props {
+            if let Some(entry) = self.widgets.get(&id) {
+                println!("Updating widget id: {}", id);
+                (entry.update_fn)(&props);
+            } else {
+                println!("Warning: id {} not found in widget_registry", id);
+            }
+        }
+    }
+}
+
+pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Box> {
+    // Parse initial props to create the widget:
     let orientation = props
         .get("orientation")
         .and_then(|v| v.clone().try_cast::<String>())
@@ -65,14 +108,39 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk
     gtk_widget.set_homogeneous(space_evenly);
 
     for child in children {
-        let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
+        let child_widget = build_gtk_widget(WidgetInput::Node(child), widget_registry)?;
         gtk_widget.add(&child_widget);
     }
+
+    let gtk_widget_clone = gtk_widget.clone();
+    
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        if let Some(orientation_str) = props.get("orientation").and_then(|v| v.clone().try_cast::<String>()) {
+            if let Ok(orientation) = parse_orientation(&orientation_str) {
+                gtk_widget_clone.set_orientation(orientation);
+            }
+        }
+
+        if let Some(spacing_val) = props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()) {
+            gtk_widget_clone.set_spacing(spacing_val as i32);
+        }
+
+        if let Ok(space_evenly) = get_bool_prop(props, "space_evenly", Some(true)) {
+            gtk_widget_clone.set_homogeneous(space_evenly);
+        }
+    });
+
+    let id = hash_props_and_type(&props, "Box");
+
+    widget_registry.widgets.insert(id, WidgetEntry {
+        // widget: gtk_widget.upcast(),
+        update_fn,
+    });
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_overlay(children: Vec<WidgetNode>) -> Result<gtk::Overlay> {
+pub(super) fn build_gtk_overlay(children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Overlay> {
     let gtk_widget = gtk::Overlay::new();
 
     let count = children.len();
@@ -81,7 +149,7 @@ pub(super) fn build_gtk_overlay(children: Vec<WidgetNode>) -> Result<gtk::Overla
         bail!("overlay must contain at least one element");
     }
 
-    let mut children = children.into_iter().map(|child| build_gtk_widget(WidgetInput::Node(child)));
+    let mut children = children.into_iter().map(|child| build_gtk_widget(WidgetInput::Node(child), widget_registry));
 
     // we have more than one child, we can unwrap
     let first = children.next().unwrap()?;
@@ -96,7 +164,7 @@ pub(super) fn build_gtk_overlay(children: Vec<WidgetNode>) -> Result<gtk::Overla
     Ok(gtk_widget)
 }
 
-pub(super) fn build_tooltip(children: Vec<WidgetNode>) -> Result<gtk::Box> {
+pub(super) fn build_tooltip(children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Box> {
     let gtk_widget = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     gtk_widget.set_has_tooltip(true);
 
@@ -112,14 +180,14 @@ pub(super) fn build_tooltip(children: Vec<WidgetNode>) -> Result<gtk::Box> {
     let content_node = children.get(1).cloned().ok_or_else(|| anyhow!("missing content"))?;
 
     // The visible child immediately
-    let content_widget = build_gtk_widget(WidgetInput::Node(content_node))?;
+    let content_widget = build_gtk_widget(WidgetInput::Node(content_node), widget_registry)?;
     gtk_widget.add(&content_widget);
 
     let tooltip_node = Rc::new(tooltip_node);
+    let tooltip_widget = build_gtk_widget(WidgetInput::Node(Rc::clone(&tooltip_node).as_ref().clone()), widget_registry)
+        .expect("Failed to build tooltip widget");
 
     gtk_widget.connect_query_tooltip(move |_widget, _x, _y, _keyboard_mode, tooltip| {
-        let tooltip_widget = build_gtk_widget(WidgetInput::Node(Rc::clone(&tooltip_node).as_ref().clone()))
-            .expect("Failed to build tooltip widget");
         tooltip.set_custom(Some(&tooltip_widget));
         true
     });
@@ -127,7 +195,7 @@ pub(super) fn build_tooltip(children: Vec<WidgetNode>) -> Result<gtk::Box> {
     Ok(gtk_widget)
 }
 
-pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Box> {
+pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Box> {
     let orientation = props
         .get("orientation")
         .and_then(|v| v.clone().try_cast::<String>())
@@ -143,9 +211,9 @@ pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>) -> Result<
         bail!("centerbox must contain exactly 3 children, but got more");
     }
 
-    let first = build_gtk_widget(WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?))?;
-    let center = build_gtk_widget(WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?))?;
-    let end = build_gtk_widget(WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?))?;
+    let first = build_gtk_widget(WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?), widget_registry)?;
+    let center = build_gtk_widget(WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?), widget_registry)?;
+    let end = build_gtk_widget(WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?), widget_registry)?;
 
     let gtk_widget = gtk::Box::new(orientation, 0);
     gtk_widget.pack_start(&first, true, true, 0);
@@ -156,10 +224,35 @@ pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>) -> Result<
     center.show();
     end.show();
 
+    let gtk_widget_clone = gtk_widget.clone();
+
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let orientation = match props
+            .get("orientation")
+            .and_then(|v| v.clone().try_cast::<String>())
+            .map(|s| parse_orientation(&s))
+            .transpose() {
+                Ok(opt) => opt.unwrap_or(gtk::Orientation::Horizontal),
+                Err(e) => {
+                    eprintln!("Error parsing orientation: {:?}", e);
+                    gtk::Orientation::Horizontal
+                }
+            };
+
+        gtk_widget_clone.set_orientation(orientation);
+    });
+
+
+    let id = hash_props_and_type(&props, "CenterBox");
+
+    widget_registry.widgets.insert(id, WidgetEntry {
+        update_fn
+    });
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Result<gtk::EventBox> {
+pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::EventBox> {
     let gtk_widget = gtk::EventBox::new();
 
     // Support :hover selector
@@ -353,21 +446,23 @@ pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>) -> Resu
     }
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
-    let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
+    let child_widget = build_gtk_widget(WidgetInput::Node(child), widget_registry)?;
     gtk_widget.add(&child_widget);
     child_widget.show();
+
+    let id = hash_props_and_type(&props, "EventBox");
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Stack> {
+pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Stack> {
     let gtk_widget = gtk::Stack::new();
 
     if children.is_empty() {
         return Err(anyhow!("stack must contain at least one element"));
     }
 
-    let children = children.into_iter().map(|child| build_gtk_widget(WidgetInput::Node(child)));
+    let children = children.into_iter().map(|child| build_gtk_widget(WidgetInput::Node(child), widget_registry));
 
     for (i, child) in children.enumerate() {
         let child = child?;
@@ -386,10 +481,12 @@ pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>) -> Result<g
     let same_size = get_bool_prop(&props, "same_size", Some(false))?;
     gtk_widget.set_homogeneous(same_size);
 
+    let id = hash_props_and_type(&props, "Stack");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_transform(props: Map) -> Result<Transform> {
+pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) -> Result<Transform> {
     let widget = Transform::new();
 
     // rotate - the percentage to rotate
@@ -427,10 +524,12 @@ pub(super) fn build_transform(props: Map) -> Result<Transform> {
         widget.set_property("scale-y", scale_y);
     }
 
+    let id = hash_props_and_type(&props, "Transform");
+
     Ok(widget)
 }
 
-pub(super) fn build_circular_progress_bar(props: Map) -> Result<CircProg> {
+pub(super) fn build_circular_progress_bar(props: Map, widget_registry: &mut WidgetRegistry) -> Result<CircProg> {
     let widget = CircProg::new();
 
     if let Ok(value) = get_f64_prop(&props, "value", None) {
@@ -449,10 +548,12 @@ pub(super) fn build_circular_progress_bar(props: Map) -> Result<CircProg> {
         widget.set_property("clockwise", clockwise);
     }
 
+    let id = hash_props_and_type(&props, "CircularProgressBar");
+
     Ok(widget)
 }
 
-pub(super) fn build_graph(props: Map) -> Result<super::graph::Graph> {
+pub(super) fn build_graph(props: Map, widget_registry: &mut WidgetRegistry) -> Result<super::graph::Graph> {
     let widget = super::graph::Graph::new();
 
     if let Ok(value) = get_f64_prop(&props, "value", None) {
@@ -510,10 +611,12 @@ pub(super) fn build_graph(props: Map) -> Result<super::graph::Graph> {
         widget.set_property("vertical", vertical);
     }
 
+    let id = hash_props_and_type(&props, "Graph");
+
     Ok(widget)
 }
 
-pub(super) fn build_gtk_progress(props: Map) -> Result<gtk::ProgressBar> {
+pub(super) fn build_gtk_progress(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ProgressBar> {
     let gtk_widget = gtk::ProgressBar::new();
 
     let orientation = props
@@ -532,10 +635,13 @@ pub(super) fn build_gtk_progress(props: Map) -> Result<gtk::ProgressBar> {
     if let Ok(bar_value) = get_f64_prop(&props, "value", None) {
         gtk_widget.set_fraction(bar_value / 100f64)
     }
+
+    let id = hash_props_and_type(&props, "Progress");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_image(props: Map) -> Result<gtk::Image> {
+pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Image> {
     let gtk_widget = gtk::Image::new();
 
     let path = get_string_prop(&props, "path", None)?;
@@ -590,10 +696,12 @@ pub(super) fn build_gtk_image(props: Map) -> Result<gtk::Image> {
         return Ok(gtk_widget);
     }
 
+    let id = hash_props_and_type(&props, "Image");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_button(props: Map) -> Result<gtk::Button> {
+pub(super) fn build_gtk_button(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Button> {
     let gtk_widget = gtk::Button::new();
 
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
@@ -644,10 +752,12 @@ pub(super) fn build_gtk_button(props: Map) -> Result<gtk::Button> {
         gtk_widget.set_label(&button_label);
     }
 
+    let id = hash_props_and_type(&props, "Button");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_label(props: Map) -> Result<gtk::Label> {
+pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Label> {
     let gtk_widget = gtk::Label::new(None);
 
     let truncate = get_bool_prop(&props, "truncate", Some(false))?;
@@ -735,10 +845,12 @@ pub(super) fn build_gtk_label(props: Map) -> Result<gtk::Label> {
         gtk_widget.set_lines(lines);
     }
 
+    let id = hash_props_and_type(&props, "Label");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_input(props: Map) -> Result<gtk::Entry> {
+pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Entry> {
     let gtk_widget = gtk::Entry::new();
 
     if let Ok(value) = get_string_prop(&props, "value", None) {
@@ -768,10 +880,12 @@ pub(super) fn build_gtk_input(props: Map) -> Result<gtk::Entry> {
     let password: bool = get_bool_prop(&props, "password", Some(false))?;
     gtk_widget.set_visibility(!password);
 
+    let id = hash_props_and_type(&props, "Input");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_calendar(props: Map) -> Result<gtk::Calendar> {
+pub(super) fn build_gtk_calendar(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Calendar> {
     let gtk_widget = gtk::Calendar::new();
 
     // day - the selected day
@@ -828,10 +942,12 @@ pub(super) fn build_gtk_calendar(props: Map) -> Result<gtk::Calendar> {
         );
     }
 
+    let id = hash_props_and_type(&props, "Calendar");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_combo_box_text(props: Map) -> Result<gtk::ComboBoxText> {
+pub(super) fn build_gtk_combo_box_text(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ComboBoxText> {
     let gtk_widget = gtk::ComboBoxText::new();
 
     if let Ok(items) = get_vec_string_prop(&props, "items", None) {
@@ -851,10 +967,12 @@ pub(super) fn build_gtk_combo_box_text(props: Map) -> Result<gtk::ComboBoxText> 
         })
     );
 
+    let id = hash_props_and_type(&props, "ComboBoxText");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Expander> {
+pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Expander> {
     let gtk_widget = gtk::Expander::new(None);
 
     let count = children.len();
@@ -866,7 +984,7 @@ pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>) -> Resul
     }
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
-    let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
+    let child_widget = build_gtk_widget(WidgetInput::Node(child), widget_registry)?;
     gtk_widget.add(&child_widget);
     child_widget.show();
 
@@ -878,10 +996,12 @@ pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>) -> Resul
         gtk_widget.set_expanded(expanded);
     }
 
+    let id = hash_props_and_type(&props, "Expander");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Result<gtk::Revealer> {
+pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Revealer> {
     let gtk_widget = gtk::Revealer::new();
 
     let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
@@ -898,7 +1018,7 @@ pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Resul
     match children.len() {
         0 => { /* maybe warn? */ }
         1 => {
-            let child_widget = build_gtk_widget(WidgetInput::Node(children[0].clone()))?;
+            let child_widget = build_gtk_widget(WidgetInput::Node(children[0].clone()), widget_registry)?;
             gtk_widget.set_child(Some(&child_widget));
         }
         n => {
@@ -906,10 +1026,12 @@ pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>) -> Resul
         }
     }
 
+    let id = hash_props_and_type(&props, "Revealer");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_checkbox(props: Map) -> Result<gtk::CheckButton> {
+pub(super) fn build_gtk_checkbox(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::CheckButton> {
     let gtk_widget = gtk::CheckButton::new();
 
     let checked = get_bool_prop(&props, "checked", Some(false))?;
@@ -926,10 +1048,12 @@ pub(super) fn build_gtk_checkbox(props: Map) -> Result<gtk::CheckButton> {
         })
     );
 
+    let id = hash_props_and_type(&props, "Checkbox");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_color_button(props: Map) -> Result<gtk::ColorButton> {
+pub(super) fn build_gtk_color_button(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ColorButton> {
     let gtk_widget = gtk::ColorButton::builder().build();
 
     // use-alpha - bool to wether or not use alpha
@@ -950,10 +1074,12 @@ pub(super) fn build_gtk_color_button(props: Map) -> Result<gtk::ColorButton> {
         );
     }
 
+    let id = hash_props_and_type(&props, "ColorButton");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_color_chooser(props: Map) -> Result<gtk::ColorChooserWidget> {
+pub(super) fn build_gtk_color_chooser(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ColorChooserWidget> {
     let gtk_widget = gtk::ColorChooserWidget::new();
 
     // use-alpha - bool to wether or not use alpha
@@ -974,10 +1100,12 @@ pub(super) fn build_gtk_color_chooser(props: Map) -> Result<gtk::ColorChooserWid
         );
     }
 
+    let id = hash_props_and_type(&props, "ColorChooser");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_scale(props: Map) -> Result<gtk::Scale> {
+pub(super) fn build_gtk_scale(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Scale> {
     let gtk_widget = gtk::Scale::new(gtk::Orientation::Horizontal, Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
 
     let flipped = get_bool_prop(&props, "flipped", Some(false))?;
@@ -1002,10 +1130,12 @@ pub(super) fn build_gtk_scale(props: Map) -> Result<gtk::Scale> {
 
     resolve_range_attrs(&props, gtk_widget.upcast_ref::<gtk::Range>())?;
 
+    let id = hash_props_and_type(&props, "Scale");
+
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_scrolledwindow(props: Map, children: Vec<WidgetNode>) -> Result<gtk::ScrolledWindow> {
+pub(super) fn build_gtk_scrolledwindow(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::ScrolledWindow> {
     // I don't have single idea of what those two generics are supposed to be, but this works.
     let gtk_widget = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
 
@@ -1026,9 +1156,11 @@ pub(super) fn build_gtk_scrolledwindow(props: Map, children: Vec<WidgetNode>) ->
     }
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
-    let child_widget = build_gtk_widget(WidgetInput::Node(child))?;
+    let child_widget = build_gtk_widget(WidgetInput::Node(child), widget_registry)?;
     gtk_widget.add(&child_widget);
     child_widget.show();
+
+    let id = hash_props_and_type(&props, "ScrolledWindow");
 
     Ok(gtk_widget)
 }
