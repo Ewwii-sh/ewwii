@@ -9,6 +9,7 @@
 -   [Configuration & Syntax](config/config_and_syntax.md)
 
     -   [Configuration](config/configuration.md)
+    -   [Rendering and Best Practices](config/rendering_and_best_practices.md)
     -   [Fundamentals](config/config_fundamentals.md)
     -   [Variables](config/variables.md)
     -   [Expression Language](config/expression_language.md)
