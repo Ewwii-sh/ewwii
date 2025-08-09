@@ -153,35 +153,12 @@ pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
 
     props.len().hash(&mut hasher);
 
-    // key-value pairs
-    let mut kv_pairs: Vec<_> = props.iter().collect();
-    kv_pairs.sort_by_key(|(k, _)| k.clone());
+    let get_string_fn = ewwii_shared_util::general_helper::get_string_prop;
+    let dyn_id = get_string_fn(&props, "dyn_id", Some("")).unwrap_or("".to_string());
 
-    for (k, v) in kv_pairs {
-        k.hash(&mut hasher);
-        type_name(v).hash(&mut hasher);
-    }
+    dyn_id.hash(&mut hasher);
 
     hasher.finish()
-}
-
-
-fn type_name(value: &Dynamic) -> &'static str {
-    if value.is::<String>() {
-        "String"
-    } else if value.is::<bool>() {
-        "Bool"
-    } else if value.is::<i64>() {
-        "I64"
-    } else if value.is::<f64>() {
-        "F64"
-    } else if value.is::<Array>() {
-        "Array"
-    } else if value.is::<Map>() {
-        "Map"
-    } else {
-        "Unknown"
-    }
 }
 
 #[cfg(test)]
@@ -217,7 +194,7 @@ mod tests {
         props_modified.insert("count".into(), Dynamic::from(43_i64));
 
         let hash3 = hash_props_and_type(&props_modified, widget_type);
-        assert_ne!(hash1, hash3, "Hashes should differ when props change");
+        assert_eq!(hash1, hash3, "Hashes should be consistent even when props change");
 
         // Different widget type string
         let hash4 = hash_props_and_type(&props, "Button");
