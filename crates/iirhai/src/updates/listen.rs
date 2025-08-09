@@ -25,7 +25,7 @@ pub fn handle_listen(var_name: String, props: Map, store: ReactiveVarStore, tx: 
     let cmd = match get_string_prop(&props, "cmd", Some("")) {
         Ok(c) => c,
         Err(e) => {
-            log::warn!("Poll {} missing cmd property: {}", var_name, e);
+            log::warn!("Listen {} missing cmd property: {}", var_name, e);
             return;
         }
     };
