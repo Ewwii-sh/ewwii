@@ -2,6 +2,7 @@ use crate::error::format_rhai_error;
 use anyhow::Result;
 use rhai::Engine;
 
+// TODO: use the cmd of poll as the initial value of initial is not found.
 pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<String>)>> {
     let mut results = Vec::new();
     let mut engine = Engine::new();
