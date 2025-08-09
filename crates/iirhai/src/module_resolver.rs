@@ -48,7 +48,7 @@ impl ModuleResolver for SimpleFileResolver {
         })?;
 
         let ast: AST = engine.compile(&script)?;
-        let mut scope = Scope::new();
+        let scope = Scope::new();
         let mut module = Module::eval_ast_as_new(scope, &ast, engine)?;
 
         module.build_index();

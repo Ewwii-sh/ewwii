@@ -1,5 +1,9 @@
-fn bar(music, time, volume) {
-  return centerbox(#{ orientation: "h" }, [workspaces(), music(music), sidestuff(volume, time)]);
+fn bar(music_var, time, volume) {
+  return centerbox(#{ orientation: "h" }, [
+    workspaces(), 
+    music(music_var), 
+    sidestuff(volume, time),
+  ]);
 }
 
 fn sidestuff(volume, time) {
@@ -33,9 +37,9 @@ fn workspaces() {
   ]);
 }
 
-fn music(music) {
-  let label_text = if music != "" {
-      "🎵" + music
+fn music(music_var) {
+  let label_text = if music_var != "" {
+      "🎵" + music_var
   } else {
       ""
   };
@@ -45,7 +49,7 @@ fn music(music) {
     space_evenly: false,
     halign: "center"
   }, [
-    label(#{ text: label_text }),
+    label(#{ text: music_var }),
   ]);
 }
 
@@ -59,6 +63,7 @@ fn metric(props) {
     class: "metric",
     space_evenly: false,
   }, [
+    box(#{ class: "label" }, [ label(#{ text: label_prop }) ]),
     slider(#{
       min: 0,
       max: 101,
@@ -69,10 +74,12 @@ fn metric(props) {
   ]);
 }
 
+print(music_var + " " + volume + " " + time);
+
 enter([
-  listen("music", #{
+  listen("music_var", #{
     initial: "",
-    cmd: "playerctl --follow metadata --format '{{ artist }} - {{ title }}' || true"
+    cmd: "echo Playing Example"
   }),
 
   poll("volume", #{ 
@@ -98,5 +105,5 @@ enter([
           anchor: "top center",
       },
       reserve: #{ side: "top", distance: "4%" }
-  }, bar(music, time, volume)),
+  }, bar(music_var, time, volume)),
 ])

@@ -796,47 +796,135 @@ pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) 
         bail!("Either 'text' or 'markup' must be set");
     }
 
-    // wrap
     if let Ok(wrap) = get_bool_prop(&props, "wrap", Some(false)) {
         gtk_widget.set_line_wrap(wrap);
     }
 
-    // angle
     if let Ok(angle) = get_f64_prop(&props, "angle", Some(0.0)) {
         gtk_widget.set_angle(angle);
     }
 
-    // gravity
     let gravity = get_string_prop(&props, "gravity", Some("south"))?;
     gtk_widget.pango_context().set_base_gravity(parse_gravity(&gravity)?);
 
-    // xalign
     if let Ok(xalign) = get_f64_prop(&props, "xalign", Some(0.5)) {
         gtk_widget.set_xalign(xalign as f32);
     }
 
-    // yalign
     if let Ok(yalign) = get_f64_prop(&props, "yalign", Some(0.5)) {
         gtk_widget.set_yalign(yalign as f32);
     }
 
-    // justify
     let justify = get_string_prop(&props, "justify", Some("left"))?;
     gtk_widget.set_justify(parse_justification(&justify)?);
 
-    // wrap_mode
     let wrap_mode = get_string_prop(&props, "wrap_mode", Some("word"))?;
     gtk_widget.set_wrap_mode(parse_wrap_mode(&wrap_mode)?);
 
-    // lines
     if let Ok(lines) = get_i32_prop(&props, "lines", Some(-1)) {
         gtk_widget.set_lines(lines);
     }
 
+    let gtk_widget_clone = gtk_widget.clone();
+
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        // Handle text or markup update
+        if let Some(text_val) = props.get("text").and_then(|v| v.clone().try_cast::<String>()) {
+            let truncate = get_bool_prop(props, "truncate", Some(false)).unwrap_or(false);
+            let limit_width = get_i32_prop(props, "limit_width", Some(i32::MAX)).unwrap_or(i32::MAX);
+            let truncate_left = get_bool_prop(props, "truncate_left", Some(false)).unwrap_or(false);
+            let show_truncated = get_bool_prop(props, "show_truncated", Some(true)).unwrap_or(true);
+            let unindent = get_bool_prop(props, "unindent", Some(true)).unwrap_or(true);
+
+            if show_truncated {
+                if limit_width == i32::MAX {
+                    gtk_widget_clone.set_max_width_chars(-1);
+                } else {
+                    gtk_widget_clone.set_max_width_chars(limit_width);
+                }
+                apply_ellipsize_settings(&gtk_widget_clone, truncate, limit_width, truncate_left, show_truncated);
+            } else {
+                gtk_widget_clone.set_ellipsize(pango::EllipsizeMode::None);
+            }
+
+            let t = if show_truncated {
+                text_val.clone()
+            } else {
+                let limit_width = limit_width as usize;
+                let char_count = text_val.chars().count();
+                if char_count > limit_width {
+                    if truncate_left {
+                        text_val.chars().skip(char_count - limit_width).collect()
+                    } else {
+                        text_val.chars().take(limit_width).collect()
+                    }
+                } else {
+                    text_val.clone()
+                }
+            };
+
+            if let Some(unescaped) = unescape::unescape(&t) {
+                let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
+                gtk_widget_clone.set_text(&final_text);
+            }
+        } else if let Some(markup_val) = props.get("markup").and_then(|v| v.clone().try_cast::<String>()) {
+            let truncate = get_bool_prop(props, "truncate", Some(false)).unwrap_or(false);
+            let limit_width = get_i32_prop(props, "limit_width", Some(i32::MAX)).unwrap_or(i32::MAX);
+            let truncate_left = get_bool_prop(props, "truncate_left", Some(false)).unwrap_or(false);
+            let show_truncated = get_bool_prop(props, "show_truncated", Some(true)).unwrap_or(true);
+
+            apply_ellipsize_settings(&gtk_widget_clone, truncate, limit_width, truncate_left, show_truncated);
+            gtk_widget_clone.set_markup(&markup_val);
+        }
+
+        if let Ok(wrap) = get_bool_prop(props, "wrap", Some(false)) {
+            gtk_widget_clone.set_line_wrap(wrap);
+        }
+
+        if let Ok(angle) = get_f64_prop(props, "angle", Some(0.0)) {
+            gtk_widget_clone.set_angle(angle);
+        }
+
+        if let Ok(xalign) = get_f64_prop(props, "xalign", Some(0.5)) {
+            gtk_widget_clone.set_xalign(xalign as f32);
+        }
+
+        if let Ok(yalign) = get_f64_prop(props, "yalign", Some(0.5)) {
+            gtk_widget_clone.set_yalign(yalign as f32);
+        }
+
+        if let Ok(justify) = get_string_prop(props, "justify", Some("left")) {
+            if let Ok(j) = parse_justification(&justify) {
+                gtk_widget_clone.set_justify(j);
+            }
+        }
+
+        if let Ok(wrap_mode) = get_string_prop(props, "wrap_mode", Some("word")) {
+            if let Ok(wm) = parse_wrap_mode(&wrap_mode) {
+                gtk_widget_clone.set_wrap_mode(wm);
+            }
+        }
+
+        if let Ok(lines) = get_i32_prop(props, "lines", Some(-1)) {
+            gtk_widget_clone.set_lines(lines);
+        }
+
+        if let Ok(gravity) = get_string_prop(props, "gravity", Some("south")) {
+            if let Ok(g) = parse_gravity(&gravity) {
+                gtk_widget_clone.pango_context().set_base_gravity(g);
+            }
+        }
+    });
+
     let id = hash_props_and_type(&props, "Label");
+
+    widget_registry.widgets.insert(id, WidgetEntry {
+        update_fn,
+    });
 
     Ok(gtk_widget)
 }
+
 
 pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Entry> {
     let gtk_widget = gtk::Entry::new();
