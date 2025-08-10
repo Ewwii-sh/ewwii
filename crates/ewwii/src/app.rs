@@ -350,7 +350,6 @@ impl<B: DisplayBackend> App<B> {
             glib::MainContext::default().spawn_local(async move {
                 while let Some(var_name) = rx.recv().await {
                     log::debug!("Received update for var: {}", var_name);
-                    println!("Received update for var: {}", var_name);
                     let vars = store.read().unwrap().clone();
                     
                     match generate_new_widgetnode(&vars, &config_path).await {
