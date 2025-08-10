@@ -1,4 +1,4 @@
-fn bar(music_var, time, volume) {
+fn bar(music_var, volume, time) {
   return centerbox(#{ orientation: "h" }, [
     workspaces(), 
     music(music_var), 
@@ -11,9 +11,10 @@ fn sidestuff(volume, time) {
     metric(#{
       label: "🔊",
       value: volume,
-      onchange: "amixer -D pulse sset Master {}%",
+      onchange: "pamixer --set-volume {}",
+      dyn_id: "volume_metric"
     }),
-    label(#{ text: time })
+    label(#{ text: time, dyn_id: "current_time" })
   ]);
 }
 
@@ -49,7 +50,7 @@ fn music(music_var) {
     space_evenly: false,
     halign: "center"
   }, [
-    label(#{ text: music_var }),
+    label(#{ text: label_text, dyn_id: "music_bar" }),
   ]);
 }
 
@@ -57,6 +58,8 @@ fn metric(props) {
   let label_prop = props.label;
   let value_prop = props.value;
   let onchange_prop = props.onchange;
+  let dyn_id_prop = props.dyn_id;
+
 
   return box(#{
     orientation: "h",
@@ -70,20 +73,18 @@ fn metric(props) {
       active: onchange_prop != "",
       value: value_prop,
       onchange: onchange_prop,
+      dyn_id: dyn_id_prop
     }),
   ]);
 }
 
-print(music_var + " " + volume + " " + time);
-
 enter([
   listen("music_var", #{
     initial: "",
-    cmd: "echo Playing Example"
+    cmd: "echo Playing Ewwii",
   }),
 
-  poll("volume", #{ 
-      interval: "1s", 
+  listen("volume", #{ 
       cmd: "scripts/getvol",
       initial: "" 
   }),
@@ -105,5 +106,5 @@ enter([
           anchor: "top center",
       },
       reserve: #{ side: "top", distance: "4%" }
-  }, bar(music_var, time, volume)),
-])
+  }, bar(music_var, volume, time)),
+]);

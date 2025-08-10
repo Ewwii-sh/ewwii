@@ -18,30 +18,50 @@ pub fn get_bool_prop(props: &Map, key: &str, default: Option<bool>) -> Result<bo
         default.map(|s| s).ok_or_else(|| anyhow!("Missing required bool property `{}`", key))
     }
 }
-
 pub fn get_i64_prop(props: &Map, key: &str, default: Option<i64>) -> Result<i64> {
     if let Some(value) = props.get(key) {
-        value.clone().try_cast::<i64>().ok_or_else(|| anyhow!("Expected property `{}` to be an i64", key))
+        if let Some(v) = value.clone().try_cast::<i64>() {
+            Ok(v)
+        } else if let Some(s) = value.clone().try_cast::<String>() {
+            s.parse::<i64>().map_err(|_| anyhow!("Expected property `{}` to be an i64 or numeric string", key))
+        } else {
+            Err(anyhow!("Expected property `{}` to be an i64 or numeric string", key))
+        }
     } else {
-        default.map(|s| s).ok_or_else(|| anyhow!("Missing required i64 property `{}`", key))
+        default.ok_or_else(|| anyhow!("Missing required i64 property `{}`", key))
     }
 }
 
 pub fn get_f64_prop(props: &Map, key: &str, default: Option<f64>) -> Result<f64> {
     if let Some(value) = props.get(key) {
-        value.clone().try_cast::<f64>().ok_or_else(|| anyhow!("Expected property `{}` to be an f64", key))
+        if let Some(v) = value.clone().try_cast::<f64>() {
+            Ok(v)
+        } else if let Some(v) = value.clone().try_cast::<i64>() {
+            Ok(v as f64)
+        } else if let Some(s) = value.clone().try_cast::<String>() {
+            s.parse::<f64>().map_err(|_| anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key))
+        } else {
+            Err(anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key))
+        }
     } else {
-        default.map(|s| s).ok_or_else(|| anyhow!("Missing required f64 property `{}`", key))
+        default.ok_or_else(|| anyhow!("Missing required f64 property `{}`", key))
     }
 }
 
 pub fn get_i32_prop(props: &Map, key: &str, default: Option<i32>) -> Result<i32> {
     if let Some(value) = props.get(key) {
-        value.clone().try_cast::<i32>().ok_or_else(|| anyhow!("Expected property `{}` to be an i32", key))
+        if let Some(v) = value.clone().try_cast::<i32>() {
+            Ok(v)
+        } else if let Some(s) = value.clone().try_cast::<String>() {
+            s.parse::<i32>().map_err(|_| anyhow!("Expected property `{}` to be an i32 or numeric string", key))
+        } else {
+            Err(anyhow!("Expected property `{}` to be an i32 or numeric string", key))
+        }
     } else {
-        default.map(|s| s).ok_or_else(|| anyhow!("Missing required i32 property `{}`", key))
+        default.ok_or_else(|| anyhow!("Missing required i32 property `{}`", key))
     }
 }
+
 
 pub fn get_vec_string_prop(props: &Map, key: &str, default: Option<Vec<String>>) -> Result<Vec<String>> {
     if let Some(value) = props.get(key) {

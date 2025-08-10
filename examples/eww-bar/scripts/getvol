@@ -1,12 +1,21 @@
 #!/bin/sh
 
-if command -v pamixer &>/dev/null; then
-    if [ true == $(pamixer --get-mute) ]; then
-        echo 0
-        exit
+get_vol() {
+  if command -v pamixer &>/dev/null; then
+    if [ "$(pamixer --get-mute)" = "true" ]; then
+      echo 0
     else
-        pamixer --get-volume
+      pamixer --get-volume
     fi
-else
+  else
     amixer -D pulse sget Master | awk -F '[^0-9]+' '/Left:/{print $3}'
-fi
+  fi
+}
+
+get_vol
+
+pactl subscribe | while read -r line; do
+  if echo "$line" | grep -q "sink"; then
+    get_vol
+  fi
+done
