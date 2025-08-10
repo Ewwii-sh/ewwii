@@ -4,8 +4,8 @@
 
 // Global Styles
 .bar {
-    background-color: #3a3a3a;
-    color: #b0b4bc;
+    background-color: #2b2b2b;
+    color: #cfd3da;
     padding: 10px;
 }
 
@@ -13,26 +13,26 @@
 
 .sidestuff slider {
     all: unset;
-    color: #ffd5cd;
+    color: #ffcab1;
 }
 
 .metric scale trough highlight {
     all: unset;
-    background-color: #d35d6e;
-    color: #000000;
+    background-color: #e07a5f;
+    color: #ffffff;
     border-radius: 10px;
 }
 
 .metric scale trough {
     all: unset;
-    background-color: #4e4e4e;
+    background-color: #3d3d3d;
     border-radius: 50px;
-    min-height: 3px;
+    min-height: 8px;
     min-width: 50px;
     margin-left: 10px;
     margin-right: 20px;
 }
 
 .workspaces button:hover {
-    color: #d35d6e;
+    color: #e07a5f;
 }
