@@ -1181,32 +1181,47 @@ pub(super) fn build_gtk_color_chooser(props: Map, widget_registry: &mut WidgetRe
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_scale(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Scale> {
-    let gtk_widget = gtk::Scale::new(gtk::Orientation::Horizontal, Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
+pub(super) fn build_gtk_scale(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Scale> {
+    let gtk_widget = gtk::Scale::new(
+        gtk::Orientation::Horizontal,
+        Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
+    );
 
-    let flipped = get_bool_prop(&props, "flipped", Some(false))?;
-    gtk_widget.set_inverted(flipped);
+    // Reusable closure for applying props
+    let apply_props = |props: &Map, widget: &gtk::Scale| -> Result<()> {
+        widget.set_inverted(get_bool_prop(props, "flipped", Some(false))?);
 
-    if let Ok(marks) = get_string_prop(&props, "marks", None) {
-        gtk_widget.clear_marks();
-        for mark in marks.split(',') {
-            gtk_widget.add_mark(mark.trim().parse()?, gtk::PositionType::Bottom, None)
+        if let Ok(marks) = get_string_prop(props, "marks", None) {
+            widget.clear_marks();
+            for mark in marks.split(',') {
+                widget.add_mark(mark.trim().parse()?, gtk::PositionType::Bottom, None);
+            }
         }
-    }
 
-    let draw_value = get_bool_prop(&props, "draw_value", Some(false))?;
-    gtk_widget.set_draw_value(draw_value);
+        widget.set_draw_value(get_bool_prop(props, "draw_value", Some(false))?);
 
-    if let Ok(value_pos) = get_string_prop(&props, "value_pos", None) {
-        gtk_widget.set_value_pos(parse_position_type(&value_pos)?)
-    }
+        if let Ok(value_pos) = get_string_prop(props, "value_pos", None) {
+            widget.set_value_pos(parse_position_type(&value_pos)?);
+        }
 
-    let round_digits = get_i32_prop(&props, "round_digits", Some(0))?;
-    gtk_widget.set_round_digits(round_digits);
+        widget.set_round_digits(get_i32_prop(props, "round_digits", Some(0))?);
 
-    resolve_range_attrs(&props, gtk_widget.upcast_ref::<gtk::Range>())?;
+        resolve_range_attrs(props, widget.upcast_ref::<gtk::Range>())?;
+        Ok(())
+    };
 
-    let id = hash_props_and_type(&props, "Scale");
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+    });
+
+    let id = hash_props_and_type(&props, "Slider");
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
