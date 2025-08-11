@@ -8,7 +8,7 @@ use anyhow::{anyhow, bail, Result};
 use gdk::{ModifierType, NotifyType};
 use gtk::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{gdk, glib, pango};
-use iirhai::widgetnode::{WidgetNode, hash_props_and_type};
+use iirhai::widgetnode::{hash_props_and_type, WidgetNode};
 use once_cell::sync::Lazy;
 use rhai::Map;
 
@@ -16,11 +16,11 @@ use super::widget_definitions_helper::*;
 use ewwii_shared_util::general_helper::*;
 use std::{
     cell::RefCell,
+    collections::HashMap,
     // cmp::Ordering,
     collections::HashSet,
     rc::Rc,
     time::Duration,
-    collections::HashMap,
 };
 
 // custom widgets
@@ -63,9 +63,7 @@ pub struct WidgetRegistry {
 
 impl WidgetRegistry {
     pub fn new() -> Self {
-        Self {
-            widgets: HashMap::new(),
-        }
+        Self { widgets: HashMap::new() }
     }
 
     pub fn update_prop_changes(&self, id_to_props: HashMap<u64, Map>) {
@@ -73,8 +71,8 @@ impl WidgetRegistry {
             if let Some(entry) = self.widgets.get(&id) {
                 (entry.update_fn)(&props);
             } // else {
-                // println!("Warning: id {} not found in widget_registry", id);
-            // }
+              // println!("Warning: id {} not found in widget_registry", id);
+              // }
         }
     }
 }
@@ -101,7 +99,7 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
     }
 
     let gtk_widget_clone = gtk_widget.clone();
-    
+
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
         if let Some(orientation_str) = props.get("orientation").and_then(|v| v.clone().try_cast::<String>()) {
             if let Ok(orientation) = parse_orientation(&orientation_str) {
@@ -120,10 +118,13 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
 
     let id = hash_props_and_type(&props, "Box");
 
-    widget_registry.widgets.insert(id, WidgetEntry {
-        // widget: gtk_widget.upcast(),
-        update_fn,
-    });
+    widget_registry.widgets.insert(
+        id,
+        WidgetEntry {
+            // widget: gtk_widget.upcast(),
+            update_fn,
+        },
+    );
 
     Ok(gtk_widget)
 }
@@ -199,9 +200,18 @@ pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>, widget_reg
         bail!("centerbox must contain exactly 3 children, but got more");
     }
 
-    let first = build_gtk_widget(WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?), widget_registry)?;
-    let center = build_gtk_widget(WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?), widget_registry)?;
-    let end = build_gtk_widget(WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?), widget_registry)?;
+    let first = build_gtk_widget(
+        WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?),
+        widget_registry,
+    )?;
+    let center = build_gtk_widget(
+        WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?),
+        widget_registry,
+    )?;
+    let end = build_gtk_widget(
+        WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?),
+        widget_registry,
+    )?;
 
     let gtk_widget = gtk::Box::new(orientation, 0);
     gtk_widget.pack_start(&first, true, true, 0);
@@ -219,28 +229,30 @@ pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>, widget_reg
             .get("orientation")
             .and_then(|v| v.clone().try_cast::<String>())
             .map(|s| parse_orientation(&s))
-            .transpose() {
-                Ok(opt) => opt.unwrap_or(gtk::Orientation::Horizontal),
-                Err(e) => {
-                    eprintln!("Error parsing orientation: {:?}", e);
-                    gtk::Orientation::Horizontal
-                }
-            };
+            .transpose()
+        {
+            Ok(opt) => opt.unwrap_or(gtk::Orientation::Horizontal),
+            Err(e) => {
+                eprintln!("Error parsing orientation: {:?}", e);
+                gtk::Orientation::Horizontal
+            }
+        };
 
         gtk_widget_clone.set_orientation(orientation);
     });
 
-
     let id = hash_props_and_type(&props, "CenterBox");
 
-    widget_registry.widgets.insert(id, WidgetEntry {
-        update_fn
-    });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_event_box(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::EventBox> {
+pub(super) fn build_gtk_event_box(
+    props: Map,
+    children: Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::EventBox> {
     let gtk_widget = gtk::EventBox::new();
 
     // Support :hover selector
@@ -918,13 +930,10 @@ pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) 
 
     let id = hash_props_and_type(&props, "Label");
 
-    widget_registry.widgets.insert(id, WidgetEntry {
-        update_fn,
-    });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
-
 
 pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Entry> {
     let gtk_widget = gtk::Entry::new();
@@ -1048,7 +1057,11 @@ pub(super) fn build_gtk_combo_box_text(props: Map, widget_registry: &mut WidgetR
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Expander> {
+pub(super) fn build_gtk_expander(
+    props: Map,
+    children: Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Expander> {
     let gtk_widget = gtk::Expander::new(None);
 
     let count = children.len();
@@ -1077,7 +1090,11 @@ pub(super) fn build_gtk_expander(props: Map, children: Vec<WidgetNode>, widget_r
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_revealer(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Revealer> {
+pub(super) fn build_gtk_revealer(
+    props: Map,
+    children: Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Revealer> {
     let gtk_widget = gtk::Revealer::new();
 
     let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
@@ -1181,14 +1198,8 @@ pub(super) fn build_gtk_color_chooser(props: Map, widget_registry: &mut WidgetRe
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_scale(
-    props: Map,
-    widget_registry: &mut WidgetRegistry,
-) -> Result<gtk::Scale> {
-    let gtk_widget = gtk::Scale::new(
-        gtk::Orientation::Horizontal,
-        Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
-    );
+pub(super) fn build_gtk_scale(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Scale> {
+    let gtk_widget = gtk::Scale::new(gtk::Orientation::Horizontal, Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
 
     // Reusable closure for applying props
     let apply_props = |props: &Map, widget: &gtk::Scale| -> Result<()> {
@@ -1226,7 +1237,11 @@ pub(super) fn build_gtk_scale(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_scrolledwindow(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::ScrolledWindow> {
+pub(super) fn build_gtk_scrolledwindow(
+    props: Map,
+    children: Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::ScrolledWindow> {
     // I don't have single idea of what those two generics are supposed to be, but this works.
     let gtk_widget = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
 

@@ -7,11 +7,7 @@ use crate::{
     paths::EwwPaths,
     widgets::window::Window,
     // dynval::DynVal,
-    widgets::{
-        build_widget::build_gtk_widget, 
-        build_widget::WidgetInput,
-        widget_definitions::WidgetRegistry,
-    },
+    widgets::{build_widget::build_gtk_widget, build_widget::WidgetInput, widget_definitions::WidgetRegistry},
     window::{
         coords::Coords,
         monitor::MonitorIdentifier,
@@ -27,7 +23,7 @@ use ewwii_shared_util::Span;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
-use iirhai::widgetnode::{WidgetNode, get_id_to_props_map};
+use iirhai::widgetnode::{get_id_to_props_map, WidgetNode};
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::{Dynamic, Scope};
@@ -327,13 +323,10 @@ impl<B: DisplayBackend> App<B> {
 
             /// Holds the id and the props of a widget
             /// It is crutual for supporting dynamic updates
-            let mut widget_reg_store = WidgetRegistry::new(); 
+            let mut widget_reg_store = WidgetRegistry::new();
             // note for future me: ^ this might need cloning.
 
-            let root_widget = build_gtk_widget(
-                WidgetInput::Window(window_def), 
-                &mut widget_reg_store
-            )?;
+            let root_widget = build_gtk_widget(WidgetInput::Window(window_def), &mut widget_reg_store)?;
 
             root_widget.style_context().add_class(window_name);
 
@@ -351,7 +344,7 @@ impl<B: DisplayBackend> App<B> {
                 while let Some(var_name) = rx.recv().await {
                     log::debug!("Received update for var: {}", var_name);
                     let vars = store.read().unwrap().clone();
-                    
+
                     match generate_new_widgetnode(&vars, &config_path).await {
                         Ok(new_widget) => {
                             if let Err(e) = update_sender.send(new_widget) {
@@ -559,11 +552,7 @@ fn initialize_window<B: DisplayBackend>(
 
     window.show_all();
 
-    Ok(EwwiiWindow { 
-        name: window_init.name.clone(), 
-        gtk_window: window, 
-        destroy_event_handler_id: None 
-    })
+    Ok(EwwiiWindow { name: window_init.name.clone(), gtk_window: window, destroy_event_handler_id: None })
 }
 
 async fn generate_new_widgetnode(all_vars: &HashMap<String, String>, code_path: &Path) -> Result<WidgetNode> {

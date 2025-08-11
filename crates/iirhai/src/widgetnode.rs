@@ -1,8 +1,8 @@
-use rhai::{Dynamic, Map, Array};
-use anyhow::{Result, bail};
 use ahash::AHasher;
-use std::hash::{Hasher, Hash};
+use anyhow::{bail, Result};
+use rhai::{Array, Dynamic, Map};
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
 pub enum WidgetNode {
@@ -46,92 +46,90 @@ pub fn get_id_to_props_map(root_node: &WidgetNode, id_to_props: &mut HashMap<u64
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
+        }
         WidgetNode::CenterBox { props, children } => {
             insert_props(props, "CenterBox", id_to_props)?;
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
+        }
         WidgetNode::EventBox { props, children } => {
             insert_props(props, "EventBox", id_to_props)?;
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
+        }
         WidgetNode::CircularProgress { props } => {
             insert_props(props, "CircularProgress", id_to_props)?;
-        },
+        }
         WidgetNode::Graph { props } => {
             insert_props(props, "Graph", id_to_props)?;
-        },
+        }
         WidgetNode::Transform { props } => {
             insert_props(props, "Transform", id_to_props)?;
-        },
+        }
         WidgetNode::Slider { props } => {
             insert_props(props, "Slider", id_to_props)?;
-        },
+        }
         WidgetNode::Progress { props } => {
             insert_props(props, "Progress", id_to_props)?;
-        },
+        }
         WidgetNode::Image { props } => {
             insert_props(props, "Image", id_to_props)?;
-        },
+        }
         WidgetNode::Button { props } => {
             insert_props(props, "Button", id_to_props)?;
-        },
+        }
         WidgetNode::Label { props } => {
             insert_props(props, "Label", id_to_props)?;
-        },
+        }
         WidgetNode::Input { props } => {
             insert_props(props, "Input", id_to_props)?;
-        },
+        }
         WidgetNode::Calendar { props } => {
             insert_props(props, "Calendar", id_to_props)?;
-        },
+        }
         WidgetNode::ColorButton { props } => {
             insert_props(props, "ColorButton", id_to_props)?;
-        },
+        }
         WidgetNode::Expander { props, children } => {
             insert_props(props, "Expander", id_to_props)?;
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
+        }
         WidgetNode::ToolTip { children } => {
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
+        }
         WidgetNode::ColorChooser { props } => {
             insert_props(props, "ColorChooser", id_to_props)?;
-        },
+        }
         WidgetNode::ComboBoxText { props } => {
             insert_props(props, "ComboBoxText", id_to_props)?;
-        },
+        }
         WidgetNode::Checkbox { props } => {
             insert_props(props, "Checkbox", id_to_props)?;
-        },
+        }
         WidgetNode::Revealer { props, children } => {
             insert_props(props, "Revealer", id_to_props)?;
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
-        WidgetNode::Scroll { props, children } => {
-            insert_props(props, "Scroll", id_to_props)?
-        },
+        }
+        WidgetNode::Scroll { props, children } => insert_props(props, "Scroll", id_to_props)?,
         WidgetNode::OverLay { children } => {
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
+        }
         WidgetNode::Stack { props, children } => {
             insert_props(props, "Stack", id_to_props)?;
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
+        }
         _ => {
             // do nothing for now ig?
         }
@@ -164,7 +162,7 @@ pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rhai::{Map, Dynamic};
+    use rhai::{Dynamic, Map};
 
     #[test]
     fn test_hash_props_and_type_consistency() {
