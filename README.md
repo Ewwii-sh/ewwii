@@ -8,8 +8,8 @@ Elkowars Wacky Widgets Imporved Interface is a fork of Elkowars Wacky Widgets wh
 
 ## Examples
 
--   A basic bar, see [examples](./examples/eww-bar)
-    ![Example 1](./examples/eww-bar/eww-bar.png)
+-   A basic bar, see [examples](./examples/ewwii-bar)
+    ![Example 1](./examples/ewwii-bar/ewwii-bar.png)
 
 ## Contribewwtiing
 
