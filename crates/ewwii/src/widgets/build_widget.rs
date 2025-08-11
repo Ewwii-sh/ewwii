@@ -54,6 +54,7 @@ fn build_gtk_widget_from_node(root_node: WidgetNode, widget_reg: &mut WidgetRegi
             return Err(anyhow::anyhow!("Cannot build GTK widget from node: {:?}", unknown));
         }
     };
-    resolve_rhai_widget_attrs(root_node2, &gtk_widget)?;
+    // Add the widget in resolve_rhai_widget_attrs as well becase it also has a map
+    resolve_rhai_widget_attrs(Some(root_node2), &gtk_widget, None)?;
     Ok(gtk_widget)
 }

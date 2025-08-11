@@ -19,23 +19,25 @@ fn sidestuff(volume, time) {
 }
 
 fn workspaces() {
+  let buttons = [];
+
+  // looping and creating buttons
+  for n in 0..9 {
+    buttons.push(
+        button(#{ 
+            onclick: "i3-msg workspace " + (n + 1), 
+            label: (n + 1).to_string() 
+        })
+    );
+  }
+
   return box(#{
     class: "workspaces",
     orientation: "h",
     space_evenly: true,
     halign: "start",
     spacing: 10,
-  }, [
-    button(#{ onclick: "wmctrl -s 0", label: "1" }),
-    button(#{ onclick: "wmctrl -s 1", label: "2" }),
-    button(#{ onclick: "wmctrl -s 1", label: "3" }),
-    button(#{ onclick: "wmctrl -s 3", label: "4" }),
-    button(#{ onclick: "wmctrl -s 4", label: "5" }),
-    button(#{ onclick: "wmctrl -s 5", label: "6" }),
-    button(#{ onclick: "wmctrl -s 6", label: "7" }),
-    button(#{ onclick: "wmctrl -s 7", label: "8" }),
-    button(#{ onclick: "wmctrl -s 8", label: "9" }),
-  ]);
+  }, buttons);
 }
 
 fn music(music_var) {
