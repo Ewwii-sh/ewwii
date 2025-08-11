@@ -62,7 +62,6 @@ pub fn get_i32_prop(props: &Map, key: &str, default: Option<i32>) -> Result<i32>
     }
 }
 
-
 pub fn get_vec_string_prop(props: &Map, key: &str, default: Option<Vec<String>>) -> Result<Vec<String>> {
     if let Some(value) = props.get(key) {
         let array = value.clone().try_cast::<Vec<Dynamic>>().ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
