@@ -281,161 +281,173 @@ pub(super) fn build_gtk_event_box(
         glib::Propagation::Proceed
     });
 
-    // timeout - timeout of the command. Default: "200ms"
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
     // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
-    if let Ok(onscroll) = get_string_prop(&props, "onscroll", None) {
-        gtk_widget.add_events(gdk::EventMask::SCROLL_MASK);
-        gtk_widget.add_events(gdk::EventMask::SMOOTH_SCROLL_MASK);
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_scroll_event(move |_, evt| {
-                let delta = evt.delta().1;
-                if delta != 0f64 {
-                    // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
-                    run_command(timeout, &onscroll, &[if delta < 0f64 { "up" } else { "down" }]);
-                }
-                glib::Propagation::Proceed
-            })
-        );
-    }
+    let apply_props = |props: &Map, widget: &gtk::EventBox| -> Result<()> {
+        // timeout - timeout of the command. Default: "200ms"
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
-    // onhover - event to execute when the user hovers over the widget
-    if let Ok(onhover) = get_string_prop(&props, "onhover", None) {
-        gtk_widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK);
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_enter_notify_event(move |_, evt| {
-                if evt.detail() != NotifyType::Inferior {
-                    run_command(timeout, &onhover, &[evt.position().0, evt.position().1]);
-                }
-                glib::Propagation::Proceed
-            })
-        );
-    }
-
-    // onhoverlost - event to execute when the user losts hovers over the widget
-    if let Ok(onhoverlost) = get_string_prop(&props, "onhoverlost", None) {
-        gtk_widget.add_events(gdk::EventMask::LEAVE_NOTIFY_MASK);
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_leave_notify_event(move |_, evt| {
-                if evt.detail() != NotifyType::Inferior {
-                    run_command(timeout, &onhoverlost, &[evt.position().0, evt.position().1]);
-                }
-                glib::Propagation::Proceed
-            })
-        );
-    }
-
-    // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
-    if let Ok(cursor) = get_string_prop(&props, "cursor", None) {
-        gtk_widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK);
-        gtk_widget.add_events(gdk::EventMask::LEAVE_NOTIFY_MASK);
-
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_enter_notify_event(move |widget, _evt| {
-                if _evt.detail() != NotifyType::Inferior {
-                    let display = gdk::Display::default();
-                    let gdk_window = widget.window();
-                    if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
-                        gdk_window.set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
+        if let Ok(onscroll) = get_string_prop(&props, "onscroll", None) {
+            widget.add_events(gdk::EventMask::SCROLL_MASK);
+            widget.add_events(gdk::EventMask::SMOOTH_SCROLL_MASK);
+            connect_signal_handler!(
+                widget,
+                widget.connect_scroll_event(move |_, evt| {
+                    let delta = evt.delta().1;
+                    if delta != 0f64 {
+                        // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
+                        run_command(timeout, &onscroll, &[if delta < 0f64 { "up" } else { "down" }]);
                     }
-                }
-                glib::Propagation::Proceed
-            })
-        );
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_leave_notify_event(move |widget, _evt| {
-                if _evt.detail() != NotifyType::Inferior {
-                    let gdk_window = widget.window();
-                    if let Some(gdk_window) = gdk_window {
-                        gdk_window.set_cursor(None);
-                    }
-                }
-                glib::Propagation::Proceed
-            })
-        );
-    }
-
-    // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
-    if let Ok(ondropped) = get_string_prop(&props, "ondropped", None) {
-        gtk_widget.drag_dest_set(
-            DestDefaults::ALL,
-            &[
-                TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
-                TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
-            ],
-            gdk::DragAction::COPY,
-        );
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_drag_data_received(move |_, _, _x, _y, selection_data, _target_type, _timestamp| {
-                if let Some(data) = selection_data.uris().first() {
-                    run_command(timeout, &ondropped, &[data.to_string(), "file".to_string()]);
-                } else if let Some(data) = selection_data.text() {
-                    run_command(timeout, &ondropped, &[data.to_string(), "text".to_string()]);
-                }
-            })
-        );
-    }
-
-    // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
-    let dragtype = get_string_prop(&props, "drag_type", Some("file"))?;
-
-    // dragvalue - URI that will be provided when dragging from this widget
-    if let Ok(dragvalue) = get_string_prop(&props, "dragvalue", None) {
-        let dragtype = parse_dragtype(&dragtype)?;
-        if dragvalue.is_empty() {
-            gtk_widget.drag_source_unset();
-        } else {
-            let target_entry = match dragtype {
-                DragEntryType::File => {
-                    TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
-                }
-                DragEntryType::Text => {
-                    TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
-                }
-            };
-            gtk_widget.drag_source_set(
-                ModifierType::BUTTON1_MASK,
-                &[target_entry.clone()],
-                gdk::DragAction::COPY | gdk::DragAction::MOVE,
+                    glib::Propagation::Proceed
+                })
             );
-            gtk_widget.drag_source_set_target_list(Some(&TargetList::new(&[target_entry])));
         }
 
-        connect_signal_handler!(gtk_widget, if !dragvalue.is_empty(), gtk_widget.connect_drag_data_get(move |_, _, data, _, _| {
-            match dragtype {
-                DragEntryType::File => data.set_uris(&[&dragvalue]),
-                DragEntryType::Text => data.set_text(&dragvalue),
-            };
-        }));
-    }
+        // onhover - event to execute when the user hovers over the widget
+        if let Ok(onhover) = get_string_prop(&props, "onhover", None) {
+            widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK);
+            connect_signal_handler!(
+                widget,
+                widget.connect_enter_notify_event(move |_, evt| {
+                    if evt.detail() != NotifyType::Inferior {
+                        run_command(timeout, &onhover, &[evt.position().0, evt.position().1]);
+                    }
+                    glib::Propagation::Proceed
+                })
+            );
+        }
 
-    // onclick - command to run when the widget is clicked
-    let onclick = get_string_prop(&props, "onclick", Some(""))?;
-    // onmiddleclick - command to run when the widget is middleclicked
-    let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
-    // onrightclick - command to run when the widget is rightclicked
-    let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
+        // onhoverlost - event to execute when the user losts hovers over the widget
+        if let Ok(onhoverlost) = get_string_prop(&props, "onhoverlost", None) {
+            widget.add_events(gdk::EventMask::LEAVE_NOTIFY_MASK);
+            connect_signal_handler!(
+                widget,
+                widget.connect_leave_notify_event(move |_, evt| {
+                    if evt.detail() != NotifyType::Inferior {
+                        run_command(timeout, &onhoverlost, &[evt.position().0, evt.position().1]);
+                    }
+                    glib::Propagation::Proceed
+                })
+            );
+        }
 
-    gtk_widget.add_events(gdk::EventMask::BUTTON_PRESS_MASK);
-    connect_signal_handler!(
-        gtk_widget,
-        gtk_widget.connect_button_release_event(move |_, evt| {
-            match evt.button() {
-                1 => run_command(timeout, &onclick, &[] as &[&str]),
-                2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
-                3 => run_command(timeout, &onrightclick, &[] as &[&str]),
-                _ => {}
+        // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
+        if let Ok(cursor) = get_string_prop(&props, "cursor", None) {
+            widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK);
+            widget.add_events(gdk::EventMask::LEAVE_NOTIFY_MASK);
+
+            connect_signal_handler!(
+                widget,
+                widget.connect_enter_notify_event(move |widget, _evt| {
+                    if _evt.detail() != NotifyType::Inferior {
+                        let display = gdk::Display::default();
+                        let gdk_window = widget.window();
+                        if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
+                            gdk_window.set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
+                        }
+                    }
+                    glib::Propagation::Proceed
+                })
+            );
+            connect_signal_handler!(
+                widget,
+                widget.connect_leave_notify_event(move |widget, _evt| {
+                    if _evt.detail() != NotifyType::Inferior {
+                        let gdk_window = widget.window();
+                        if let Some(gdk_window) = gdk_window {
+                            gdk_window.set_cursor(None);
+                        }
+                    }
+                    glib::Propagation::Proceed
+                })
+            );
+        }
+
+        // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
+        if let Ok(ondropped) = get_string_prop(&props, "ondropped", None) {
+            widget.drag_dest_set(
+                DestDefaults::ALL,
+                &[
+                    TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
+                    TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
+                ],
+                gdk::DragAction::COPY,
+            );
+            connect_signal_handler!(
+                widget,
+                widget.connect_drag_data_received(move |_, _, _x, _y, selection_data, _target_type, _timestamp| {
+                    if let Some(data) = selection_data.uris().first() {
+                        run_command(timeout, &ondropped, &[data.to_string(), "file".to_string()]);
+                    } else if let Some(data) = selection_data.text() {
+                        run_command(timeout, &ondropped, &[data.to_string(), "text".to_string()]);
+                    }
+                })
+            );
+        }
+
+        // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
+        let dragtype = get_string_prop(&props, "drag_type", Some("file"))?;
+
+        // dragvalue - URI that will be provided when dragging from this widget
+        if let Ok(dragvalue) = get_string_prop(&props, "dragvalue", None) {
+            let dragtype = parse_dragtype(&dragtype)?;
+            if dragvalue.is_empty() {
+                widget.drag_source_unset();
+            } else {
+                let target_entry = match dragtype {
+                    DragEntryType::File => {
+                        TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
+                    }
+                    DragEntryType::Text => {
+                        TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
+                    }
+                };
+                widget.drag_source_set(
+                    ModifierType::BUTTON1_MASK,
+                    &[target_entry.clone()],
+                    gdk::DragAction::COPY | gdk::DragAction::MOVE,
+                );
+                widget.drag_source_set_target_list(Some(&TargetList::new(&[target_entry])));
             }
-            glib::Propagation::Proceed
-        })
-    );
+
+            connect_signal_handler!(widget, if !dragvalue.is_empty(), widget.connect_drag_data_get(move |_, _, data, _, _| {
+                match dragtype {
+                    DragEntryType::File => data.set_uris(&[&dragvalue]),
+                    DragEntryType::Text => data.set_text(&dragvalue),
+                };
+            }));
+        }
+
+        // onclick - command to run when the widget is clicked
+        let onclick = get_string_prop(&props, "onclick", Some(""))?;
+        // onmiddleclick - command to run when the widget is middleclicked
+        let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
+        // onrightclick - command to run when the widget is rightclicked
+        let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
+
+        widget.add_events(gdk::EventMask::BUTTON_PRESS_MASK);
+        connect_signal_handler!(
+            widget,
+            widget.connect_button_release_event(move |_, evt| {
+                match evt.button() {
+                    1 => run_command(timeout, &onclick, &[] as &[&str]),
+                    2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
+                    3 => run_command(timeout, &onrightclick, &[] as &[&str]),
+                    _ => {}
+                }
+                glib::Propagation::Proceed
+            })
+        );
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+    });
 
     let count = children.len();
 
@@ -451,6 +463,8 @@ pub(super) fn build_gtk_event_box(
     child_widget.show();
 
     let id = hash_props_and_type(&props, "EventBox");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1277,24 +1291,31 @@ static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
 
 /// Code that applies css/scss to widgets.
-pub(super) fn resolve_rhai_widget_attrs(node: WidgetNode, gtk_widget: &gtk::Widget) -> Result<()> {
+pub(super) fn resolve_rhai_widget_attrs(
+    node: Option<WidgetNode>, 
+    gtk_widget: &gtk::Widget,
+    props: Option<&Map>,
+) -> Result<()> {
     // NOTE: The following variable should contain all widgets!
-    let props = match node {
-        WidgetNode::Box { props, .. }
-        | WidgetNode::CenterBox { props, .. }
-        | WidgetNode::EventBox { props, .. }
-        | WidgetNode::Graph { props }
-        | WidgetNode::Slider { props }
-        | WidgetNode::Progress { props }
-        | WidgetNode::Image { props }
-        | WidgetNode::Button { props }
-        | WidgetNode::Label { props }
-        | WidgetNode::Input { props }
-        | WidgetNode::Calendar { props }
-        | WidgetNode::Checkbox { props }
-        | WidgetNode::Revealer { props, .. }
-        | WidgetNode::Scroll { props, .. } => props,
-        _ => return Ok(()),
+    let props = match props {
+        Some(p) => p,
+        None => &match node {
+            Some(WidgetNode::Box { props, .. })
+            | Some(WidgetNode::CenterBox { props, .. })
+            | Some(WidgetNode::EventBox { props, .. })
+            | Some(WidgetNode::Graph { props })
+            | Some(WidgetNode::Slider { props })
+            | Some(WidgetNode::Progress { props })
+            | Some(WidgetNode::Image { props })
+            | Some(WidgetNode::Button { props })
+            | Some(WidgetNode::Label { props })
+            | Some(WidgetNode::Input { props })
+            | Some(WidgetNode::Calendar { props })
+            | Some(WidgetNode::Checkbox { props })
+            | Some(WidgetNode::Revealer { props, .. })
+            | Some(WidgetNode::Scroll { props, .. }) => props,
+            _ => return Ok(()),
+        },
     };
 
     // checking deprecated keys
