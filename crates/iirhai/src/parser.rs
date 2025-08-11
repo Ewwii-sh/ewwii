@@ -1,7 +1,6 @@
 use crate::{
     builtins::register_all_widgets, error::format_rhai_error, helper::extract_poll_and_listen_vars,
-    providers::register_all_providers, widgetnode::WidgetNode,
-    module_resolver::SimpleFileResolver,
+    module_resolver::SimpleFileResolver, providers::register_all_providers, widgetnode::WidgetNode,
 };
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, Scope, AST};
