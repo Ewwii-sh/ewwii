@@ -46,6 +46,24 @@ impl ModuleResolver for SimpleFileResolver {
     }
 }
 
+pub struct ChainedResolver<Res1, Res2> {
+    pub first: Res1,
+    pub second: Res2,
+}
+
+impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<R1, R2> {
+    fn resolve(
+        &self,
+        engine: &Engine,
+        source_path: Option<&str>,
+        path: &str,
+        pos: Position,
+    ) -> Result<Rc<Module>, Box<EvalAltResult>> {
+        self.first.resolve(engine, source_path, path, pos).or_else(|_| self.second.resolve(engine, source_path, path, pos))
+    }
+}
+
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -67,22 +85,5 @@ mod test {
         println!("{:#?}", parser.eval_code(test_code));
 
         Ok(())
-    }
-}
-
-pub struct ChainedResolver<Res1, Res2> {
-    pub first: Res1,
-    pub second: Res2,
-}
-
-impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<R1, R2> {
-    fn resolve(
-        &self,
-        engine: &Engine,
-        source_path: Option<&str>,
-        path: &str,
-        pos: Position,
-    ) -> Result<Rc<Module>, Box<EvalAltResult>> {
-        self.first.resolve(engine, source_path, path, pos).or_else(|_| self.second.resolve(engine, source_path, path, pos))
     }
 }
