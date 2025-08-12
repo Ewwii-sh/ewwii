@@ -1,6 +1,6 @@
-use rhai::plugin::*;
-use gtk::prelude::*;
 use gtk::gdk;
+use gtk::prelude::*;
+use rhai::plugin::*;
 
 #[export_module]
 pub mod monitor {
@@ -22,11 +22,7 @@ pub mod monitor {
     }
 
     pub fn all_resolutions_str() -> String {
-        get_all_monitor_resolutions()
-            .into_iter()
-            .map(|(w, h)| format!("{w}x{h}"))
-            .collect::<Vec<_>>()
-            .join(", ")
+        get_all_monitor_resolutions().into_iter().map(|(w, h)| format!("{w}x{h}")).collect::<Vec<_>>().join(", ")
     }
 
     pub fn dimensions(index: i64) -> (i64, i64, i64, i64) {
@@ -88,12 +84,7 @@ fn get_monitor_dimensions(index: usize) -> (i64, i64, i64, i64) {
     let display = gdk::Display::default().expect("No display found");
     if let Some(m) = display.monitor(index as i32) {
         let geom = m.geometry();
-        (
-            geom.x() as i64,
-            geom.y() as i64,
-            geom.width() as i64,
-            geom.height() as i64,
-        )
+        (geom.x() as i64, geom.y() as i64, geom.width() as i64, geom.height() as i64)
     } else {
         (0, 0, 0, 0)
     }
