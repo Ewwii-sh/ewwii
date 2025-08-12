@@ -281,7 +281,6 @@ pub(super) fn build_gtk_event_box(
         glib::Propagation::Proceed
     });
 
-
     // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
     let apply_props = |props: &Map, widget: &gtk::EventBox| -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
@@ -1291,11 +1290,7 @@ static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
 
 /// Code that applies css/scss to widgets.
-pub(super) fn resolve_rhai_widget_attrs(
-    node: Option<WidgetNode>, 
-    gtk_widget: &gtk::Widget,
-    props: Option<&Map>,
-) -> Result<()> {
+pub(super) fn resolve_rhai_widget_attrs(node: Option<WidgetNode>, gtk_widget: &gtk::Widget, props: Option<&Map>) -> Result<()> {
     // NOTE: The following variable should contain all widgets!
     let props = match props {
         Some(p) => p,
