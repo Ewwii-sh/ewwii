@@ -12,25 +12,56 @@ pub mod monitor {
         get_primary_monitor_resolution()
     }
 
+    pub fn primary_resolution_str() -> String {
+        let (w, h) = get_primary_monitor_resolution();
+        format!("{w}x{h}")
+    }
+
     pub fn all_resolutions() -> Vec<(i64, i64)> {
         get_all_monitor_resolutions()
+    }
+
+    pub fn all_resolutions_str() -> String {
+        get_all_monitor_resolutions()
+            .into_iter()
+            .map(|(w, h)| format!("{w}x{h}"))
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 
     pub fn dimensions(index: i64) -> (i64, i64, i64, i64) {
         get_monitor_dimensions(index as usize)
     }
 
+    pub fn dimensions_str(index: i64) -> String {
+        let (x, y, w, h) = get_monitor_dimensions(index as usize);
+        format!("{x},{y} - {w}x{h}")
+    }
+
     pub fn dpi(index: i64) -> f64 {
         get_monitor_dpi(index as usize)
     }
+
+    pub fn dpi_str(index: i64) -> String {
+        format!("{:.1}", get_monitor_dpi(index as usize))
+    }
+}
+
+fn ensure_gdk_init() {
+    if gtk::is_initialized_main_thread() {
+        return;
+    }
+    gtk::init().expect("Failed to initialize GTK");
 }
 
 fn get_monitor_count() -> i64 {
+    ensure_gdk_init();
     let display = gdk::Display::default().expect("No display found");
     display.n_monitors() as i64
 }
 
 fn get_primary_monitor_resolution() -> (i64, i64) {
+    ensure_gdk_init();
     let display = gdk::Display::default().expect("No display found");
     if let Some(primary) = display.primary_monitor() {
         let rect = primary.geometry();
@@ -41,6 +72,7 @@ fn get_primary_monitor_resolution() -> (i64, i64) {
 }
 
 fn get_all_monitor_resolutions() -> Vec<(i64, i64)> {
+    ensure_gdk_init();
     let display = gdk::Display::default().expect("No display found");
     (0..display.n_monitors())
         .filter_map(|i| display.monitor(i))
@@ -52,6 +84,7 @@ fn get_all_monitor_resolutions() -> Vec<(i64, i64)> {
 }
 
 fn get_monitor_dimensions(index: usize) -> (i64, i64, i64, i64) {
+    ensure_gdk_init();
     let display = gdk::Display::default().expect("No display found");
     if let Some(m) = display.monitor(index as i32) {
         let geom = m.geometry();
@@ -67,6 +100,7 @@ fn get_monitor_dimensions(index: usize) -> (i64, i64, i64, i64) {
 }
 
 fn get_monitor_dpi(index: usize) -> f64 {
+    ensure_gdk_init();
     let display = gdk::Display::default().expect("No display found");
     if let Some(m) = display.monitor(index as i32) {
         m.scale_factor() as f64 * 96.0 // base DPI * scale factor

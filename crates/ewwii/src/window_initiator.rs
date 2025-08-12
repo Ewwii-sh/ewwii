@@ -89,7 +89,7 @@ fn parse_geometry(val: &Dynamic, args: &WindowArguments, override_geom: bool) ->
     Ok(geom)
 }
 
-fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str) -> Result<Coords> {
+fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str, default_val: &str) -> Result<Coords> {
     let raw_key1 = map
         .get(x_key)
         .ok_or_else(|| anyhow!("Missing field {}", x_key))?
