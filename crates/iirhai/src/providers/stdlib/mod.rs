@@ -1,13 +1,13 @@
 pub mod env;
-pub mod text;
 pub mod monitor;
+pub mod text;
 
 use crate::module_resolver::{ChainedResolver, SimpleFileResolver};
 use rhai::module_resolvers::StaticModuleResolver;
 use rhai::{exported_module, Engine};
 
 pub fn register_stdlib(engine: &mut Engine) {
-    use crate::providers::stdlib::{env::env, text::text, monitor::monitor};
+    use crate::providers::stdlib::{env::env, monitor::monitor, text::text};
 
     let mut resolver = StaticModuleResolver::new();
 
