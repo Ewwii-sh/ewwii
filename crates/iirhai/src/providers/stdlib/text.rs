@@ -36,8 +36,8 @@ pub mod text {
         camel
     }
 
-    pub fn truncate_chars(text: String, max_chars: usize) -> String {
-        match text.char_indices().nth(max_chars) {
+    pub fn truncate_chars(text: String, max_chars: i64) -> String {
+        match text.char_indices().nth(max_chars.try_into().unwrap()) {
             None => text,
             Some((idx, _)) => text[..idx].to_string(),
         }
