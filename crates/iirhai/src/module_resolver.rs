@@ -63,7 +63,6 @@ impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
