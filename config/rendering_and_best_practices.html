@@ -1,0 +1,334 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js navy">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Rendering and Best Practices - Ewii documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="../getting_started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li></ol></li><li class="chapter-item expanded "><a href="../config/config_and_syntax.html"><strong aria-hidden="true">2.</strong> Configuration &amp; Syntax</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../config/configuration.html"><strong aria-hidden="true">2.1.</strong> Configuration</a></li><li class="chapter-item expanded "><a href="../config/rendering_and_best_practices.html" class="active"><strong aria-hidden="true">2.2.</strong> Rendering and Best Practices</a></li><li class="chapter-item expanded "><a href="../config/config_fundamentals.html"><strong aria-hidden="true">2.3.</strong> Fundamentals</a></li><li class="chapter-item expanded "><a href="../config/variables.html"><strong aria-hidden="true">2.4.</strong> Variables</a></li><li class="chapter-item expanded "><a href="../config/expression_language.html"><strong aria-hidden="true">2.5.</strong> Expression Language</a></li></ol></li><li class="chapter-item expanded "><a href="../theming/theming_and_ui.html"><strong aria-hidden="true">3.</strong> Theming &amp; UI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../theming/working_with_gtk.html"><strong aria-hidden="true">3.1.</strong> Working With GTK</a></li><li class="chapter-item expanded "><a href="../theming/styling_widgets.html"><strong aria-hidden="true">3.2.</strong> Styling Widgets</a></li></ol></li><li class="chapter-item expanded "><a href="../modules/modules.html"><strong aria-hidden="true">4.</strong> Modules</a></li><li class="chapter-item expanded "><a href="../widgets/widgets.html"><strong aria-hidden="true">5.</strong> Widgets</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../widgets/widgets_and_params.html"><strong aria-hidden="true">5.1.</strong> Widgets &amp; Parameters</a></li><li class="chapter-item expanded "><a href="../widgets/props.html"><strong aria-hidden="true">5.2.</strong> Widget Properties</a></li></ol></li><li class="chapter-item expanded "><a href="../examples/examples.html"><strong aria-hidden="true">6.</strong> Examples</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../examples/common_layouts.html"><strong aria-hidden="true">6.1.</strong> Common Layouts</a></li><li class="chapter-item expanded "><a href="../examples/interactive.html"><strong aria-hidden="true">6.2.</strong> Interactive Widgets</a></li><li class="chapter-item expanded "><a href="../examples/theming.html"><strong aria-hidden="true">6.3.</strong> Theming Tricks</a></li></ol></li><li class="chapter-item expanded "><a href="../troubleshooting.html"><strong aria-hidden="true">7.</strong> Troubleshooting</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Ewii documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/byson94/ewwii/tree/master/docs" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                        
+
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="rendering-and-best-practices"><a class="header" href="#rendering-and-best-practices">Rendering and Best Practices</a></h1>
+<h2 id="rendering-children-in-your-widgets"><a class="header" href="#rendering-children-in-your-widgets">Rendering children in your widgets</a></h2>
+<p>As your configuration grows, you might want to improve its structure by factoring out pieces into reusable functions.</p>
+<p>In Ewwii’s Rhai-based configuration system, you can define wrapper functions that return widgets and accept a <code>children</code> parameter (or any parameter that you prefer), just like built-in widgets such as <code>box()</code> or <code>button()</code>.</p>
+<p>Here's an example of a custom container that adds a label before its children:</p>
+<pre><code class="language-rust ignore">fn labeled_container(name, children = []) {
+  return box(#{ class: &quot;container&quot; }, [label(#{text: name})] + children)
+}
+</code></pre>
+<p>You can call it like this:</p>
+<pre><code class="language-rust ignore">labeled_container(&quot;foo&quot;, [
+  button(#{ onclick: &quot;notify-send hey ho&quot;, label: &quot;Click me&quot; })
+]);
+</code></pre>
+<p>Because children are just a list of widgets, you can also write functions that structure them however you'd like. For example, here's a layout that places the first two children side by side:</p>
+<pre><code class="language-rust ignore">fn two_boxes(children = []) {
+  return box(#{}, [
+    box(#{ class: &quot;first&quot; }, [children[0]]),
+    box(#{ class: &quot;second&quot; }, [children[1]])
+  ]);
+}
+</code></pre>
+<p>And call it like this:</p>
+<pre><code class="language-rust ignore">two_boxes([
+  label(#{ text: &quot;First&quot; }),
+  label(#{ text: &quot;Second&quot; })
+]);
+</code></pre>
+<p>If a child is missing (e.g., children[1] doesn't exist), make sure to handle that gracefully or document the expected number of children.</p>
+<!-- TODO: add it once literal is implemented -->
+<!-- ## Dynamically generated widgets with `literal`
+
+In some cases, you want to not only change the text,
+value, or color of a widget dynamically, but instead want to generate an entire widget structure dynamically.
+This is necessary if you want to display lists of things (for example notifications)
+where the amount is not necessarily known,
+or if you want to change the widget structure in some other, more complex way.
+
+For this, you can make use of one of ewwii's most powerful features: the `literal` widget.
+
+```rust,ignore
+let variable_containing_rhai = "(box (button 'foo') (button 'bar'))";
+
+// Then, inside your widget, use:
+literal(#{ content: variable_containing_rhai })
+```
+
+Here, you specify the content of your literal by providing it a string (most likely stored in a variable) which contains a single yuck widget tree.
+Ewwii then reads the provided value and renders the resulting widget. Whenever it changes, the widget will be rerendered.
+
+Note that this is not all that efficient. Make sure to only use `literal` when necessary! -->
+<h2 id="window-id"><a class="header" href="#window-id">Window ID</a></h2>
+<p>In some cases you may want to use the same window configuration for multiple widgets, e.g. for multiple windows. This is where arguments and ids come in.</p>
+<p>Firstly let us start off with ids. An id can be specified in the <code>open</code> command
+with <code>--id</code>, by default the id will be set to the name of the window
+configuration. These ids allow you to spawn multiple of the same windows. So
+for example you can do:</p>
+<pre><code class="language-bash">ewwii open my_bar --screen 0 --id primary
+ewwii open my_bar --screen 1 --id secondary
+</code></pre>
+<h2 id="generating-a-list-of-widgets-from-array-using-for"><a class="header" href="#generating-a-list-of-widgets-from-array-using-for">Generating a list of widgets from array using <code>for</code></a></h2>
+<p>If you want to display a list of values, you can use the <code>for</code>-Element to fill a container with a list of elements generated from a JSON-array.</p>
+<pre><code class="language-rust ignore">let my_array = [1, 2, 3];
+
+// Then, inside your widget, you can use
+box(#{}, [
+  for entry in my_array {
+    button(#{ onclick: `notify-send 'click' 'button ${entry}'`, label: entry.to_string() })
+  }
+])
+</code></pre>
+<p>This can be useful in many situations, for example when generating a workspace list from an array representation of your workspaces.
+In many cases, this can be used instead of <code>literal</code>, and should most likely be preferred in those cases.</p>
+<!-- To see how to declare and use more advanced data structures, check out the [data structures example](/examples/data-structures/ewwii.rhai). -->
+<h2 id="splitting-up-your-configuration"><a class="header" href="#splitting-up-your-configuration">Splitting up your configuration</a></h2>
+<p>As time passes, your configuration might grow larger and larger. Luckily, you can easily split up your configuration into multiple files!</p>
+<p>There are two options to achieve this:</p>
+<h3 id="using-importexport"><a class="header" href="#using-importexport">Using <code>import/export</code></a></h3>
+<pre><code class="language-rust ignore">// in ./foo/baz.rhai
+fn greet() { return &quot;Greetings!&quot; }
+export greet;
+
+// in ./ewwii.rhai
+import &quot;foo/baz&quot; as example;
+print(example::greet()); // output: Greetings!
+</code></pre>
+<p>A rhai file may import the contents of any other rhai file that they export. For this, make use of the <code>import</code> directive. If you are exporting a variable/function, make use the <code>export</code> directive.</p>
+<h3 id="using-a-separate-ewwii-configuration-directory"><a class="header" href="#using-a-separate-ewwii-configuration-directory">Using a separate ewwii configuration directory</a></h3>
+<p>If you want to separate different widgets even further, you can create a new ewwii config folder anywhere else.
+Then, you can tell ewwii to use that configuration directory by passing <em>every</em> command the <code>--config /path/to/your/config/dir</code> flag.
+Make sure to actually include this in all your <code>ewwii</code> calls, including <code>ewwii kill</code>, <code>eww logs</code>, etc.
+This launches a separate instance of the ewwii daemon that has separate logs and state from your main ewwii configuration.</p>
+<pre><code class="language-bash">ewwii --config &quot;/path/to/your/config/dir&quot;
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../config/configuration.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../config/config_fundamentals.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../config/configuration.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../config/config_fundamentals.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
