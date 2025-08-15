@@ -1,0 +1,282 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js navy">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Fundamentals - Ewii documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="getting_started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li></ol></li><li class="chapter-item expanded "><a href="config/config_and_syntax.html"><strong aria-hidden="true">2.</strong> Configuration &amp; Syntax</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="config/configuration.html"><strong aria-hidden="true">2.1.</strong> Configuration</a></li><li class="chapter-item expanded "><a href="config/rendering_and_best_practices.html"><strong aria-hidden="true">2.2.</strong> Rendering and Best Practices</a></li><li class="chapter-item expanded "><a href="config/config_fundamentals.html"><strong aria-hidden="true">2.3.</strong> Fundamentals</a></li><li class="chapter-item expanded "><a href="config/variables.html"><strong aria-hidden="true">2.4.</strong> Variables</a></li><li class="chapter-item expanded "><a href="config/expression_language.html"><strong aria-hidden="true">2.5.</strong> Expression Language</a></li></ol></li><li class="chapter-item expanded "><a href="theming/theming_and_ui.html"><strong aria-hidden="true">3.</strong> Theming &amp; UI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theming/working_with_gtk.html"><strong aria-hidden="true">3.1.</strong> Working With GTK</a></li><li class="chapter-item expanded "><a href="theming/styling_widgets.html"><strong aria-hidden="true">3.2.</strong> Styling Widgets</a></li></ol></li><li class="chapter-item expanded "><a href="modules/modules.html"><strong aria-hidden="true">4.</strong> Modules</a></li><li class="chapter-item expanded "><a href="widgets/widgets.html"><strong aria-hidden="true">5.</strong> Widgets</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="widgets/widgets_and_params.html"><strong aria-hidden="true">5.1.</strong> Widgets &amp; Parameters</a></li><li class="chapter-item expanded "><a href="widgets/props.html"><strong aria-hidden="true">5.2.</strong> Widget Properties</a></li></ol></li><li class="chapter-item expanded "><a href="examples/examples.html"><strong aria-hidden="true">6.</strong> Examples</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="examples/common_layouts.html"><strong aria-hidden="true">6.1.</strong> Common Layouts</a></li><li class="chapter-item expanded "><a href="examples/interactive.html"><strong aria-hidden="true">6.2.</strong> Interactive Widgets</a></li><li class="chapter-item expanded "><a href="examples/theming.html"><strong aria-hidden="true">6.3.</strong> Theming Tricks</a></li></ol></li><li class="chapter-item expanded "><a href="troubleshooting.html"><strong aria-hidden="true">7.</strong> Troubleshooting</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Ewii documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/byson94/ewwii/tree/master/docs" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="fundamentals"><a class="header" href="#fundamentals">Fundamentals</a></h1>
+<p>Ewwii uses Rhai as its configuration language. But instead of just pure Rhai, ewwii has its own layout that users should follow to create widgets using Rhai. And you may be wondering why ewwii has a "custom" layout instead of allowing users to just use pure Rhai. It's good question and the reason why ewwii has a custom layout is because it tries to remove unnecessary complexity.</p>
+<p>The full reasons for this layout wont be explained much more because it goes way deeper than just "decreasing complexity".</p>
+<p>For more information about Rhai, you can read <a href="https://rhai.rs/book/">their documentation</a>.</p>
+<h2 id="widgets-and-their-parameters"><a class="header" href="#widgets-and-their-parameters">Widgets and their parameters</a></h2>
+<p>Each widget in ewwii is a function (e.g: <code>button(#{...})</code> is a function call to create a button). So each one requires its own parameters.</p>
+<p>For example, <code>defwindow</code> expects a <strong>String</strong>, <strong>Properties</strong>, and a function call that <strong>returns a widget.</strong></p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-rust ignore">enter([
+  // the string here (the text in "") is the name of the window
+  // the content in #{} is the properties
+  // and the 3rd `root_widget()` call is the function that returns a child.
+
+  // defwindow cant have children in [] directly, but it expects a function returning it for it.
+  defwindow("example", #{
+      monitor: 0,
+      windowtype: "dock",
+      stacking: "fg",
+      wm_ignore: false,
+      geometry: #{
+        x: "0%",
+        y: "2px",
+        width: "90%",
+        height: "30px",
+        anchor: "top center"
+      },
+      reserve: #{ distance: "40px" side: "top" }
+  }, root_widget())
+])</code></pre>
+<p>This is not that complex once you know the parameters of defwindow as most of the other widgets only take in properties or optinally children. <strong>Poll/Listen</strong> are the only things that is similar to <code>defwindow</code> and you will learn about it later in the <a href="./variables.html">variables chapter</a>.</p>
+<h2 id="the-root"><a class="header" href="#the-root">The root</a></h2>
+<p>It is an important concept that users must know to go forward with this documentaiton. Ewwii's Rhai layout is made to be <strong>logical and powerful</strong>, so the user is given access the root of the entire widget system.</p>
+<p>The root is defined as <code>enter()</code> and it is where you should write <code>defwindow</code>.</p>
+<p>Here is an example:</p>
+<pre><code class="language-rust ignore">enter([
+  defwindow("example", #{
+      monitor: 0,
+      windowtype: "dock",
+      stacking: "fg",
+      wm_ignore: false,
+      geometry: #{
+        x: "0%",
+        y: "2px",
+        width: "90%",
+        height: "30px",
+        anchor: "top center"
+      },
+      reserve: #{ distance: "40px" side: "top" }
+  }, root_widget())
+])</code></pre>
+<p>Now that you saw this example, you may be wondering why we are doing <code>enter([])</code> instead of <code>enter()</code>. That is due to another fundamental concept in ewwii which is very important. You will learn about it in the <a href="#properties-and-child-definition">properties and child definition section</a>.</p>
+<h2 id="semi-colons"><a class="header" href="#semi-colons">Semi-colons</a></h2>
+<p>Semi-colon is an important character in Rhai. Just like programming languages like JavaScript, Java, Rust etc.</p>
+<p>You can use the following link to read about semi-colons in the Rhai book as they have an awesome documentation.</p>
+<p><a href="https://rhai.rs/book/ref/statements.html#statements">https://rhai.rs/book/ref/statements.html#statements</a></p>
+<h2 id="properties-and-child-definition"><a class="header" href="#properties-and-child-definition">Properties and child definition</a></h2>
+<p>The part where most people get confused is the use of <code>[]</code> and <code>#{}</code>. Let's get into what those are and how you can use them.</p>
+<p>The <code>[]</code> is used for adding <strong>children</strong> to a widget.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-rust ignore">fn greeter(foo) {
+  return box(#{
+    orientation: "horizontal",
+    halign: "center"
+  }, [
+    // the `[]` holds a button which is the child widget of the box widget
+    // each element in a `[]` should end in a comma (,) instead of a semi-colon (;).
+    button(#{ onclick: `notify-send '${foo}'`, label: "baz" }),
+    label(#{ text: "example" }),
+  ]);
+};</code></pre>
+<p>The <code>#{}</code> works similar to the <code>[]</code> but, it is used to add properties into the widget.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-rust ignore">fn greeter(foo) {
+  // the `#{}` holds the properties of the box widget
+  // each element in a `#{}` should end in a comma (,) instead of a semi-colon (;).
+  return box(#{
+    orientation: "horizontal",
+    halign: "center"
+  }, [
+    // properties are assigned to both button and label using the #{}.
+    button(#{ onclick: `notify-send '${foo}'`, label: "baz" }),
+    label(#{ text: "example" }),
+  ]);
+};</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../config/rendering_and_best_practices.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../config/variables.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../config/rendering_and_best_practices.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../config/variables.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>
