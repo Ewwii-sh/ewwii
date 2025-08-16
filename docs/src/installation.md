@@ -38,7 +38,7 @@ Once you have the prerequisites ready, you're ready to install and build ewwii.
 First clone the repo:
 
 ```bash
-git clone https://github.com/byson94/ewwii
+git clone https://github.com/Ewwii-sh/ewwii
 ```
 
 ```bash
@@ -86,5 +86,5 @@ If you don't want to go through the _very_ tedious task of cloning and building 
 You can run the following command to install ewwii from cargo:
 
 ```bash
-cargo install --git https://github.com/byson94/ewwii
+cargo install --git https://github.com/Ewwii-sh/ewwii
 ```
