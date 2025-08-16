@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Here you will find help if something doesn't work. If the issue isn't listed here, please [open an issue on the GitHub repo.](https://github.com/byson94/ewwii/issues)
+Here you will find help if something doesn't work. If the issue isn't listed here, please [open an issue on the GitHub repo.](https://github.com/Ewwii-sh/ewwii/issues)
 
 ## Ewwii does not compile
 
@@ -32,4 +32,4 @@ You should try the following things before opening an issue or doing more specia
 -   Update to the latest ewwii version.
 -   Sometimes hot reloading doesn't work. In that case, you can make use of `ewwii reload` manually.
 
-Remember, if your issue isn't listed here, [open an issue on the GitHub repo](https://github.com/byson94/ewwii/issues).
+Remember, if your issue isn't listed here, [open an issue on the GitHub repo](https://github.com/Ewwii-sh/ewwii/issues).
