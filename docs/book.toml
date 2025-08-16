@@ -3,7 +3,7 @@ authors = ["byson94"]
 language = "en"
 multilingual = false
 src = "src"
-title = "Ewii documentation"
+title = "Ewwii documentation"
 
 [output.html]
 default-theme = "navy"

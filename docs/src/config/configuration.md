@@ -46,7 +46,7 @@ enter([ // Add all defwindow inside enter. Enter is the root of the config.
 
 Here, we are defining a window named `example`, which we then define a set of properties for. Additionally, we set the content of the window to be the text `"example content"`.
 
-You can now open your first window by running `eww open example`! Glorious!
+You can now open your first window by running `ewwii open example`! Glorious!
 
 ### `defwindow`-properties
 
