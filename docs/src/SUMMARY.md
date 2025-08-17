@@ -5,6 +5,7 @@
 -   [Getting Started](getting_started.md)
 
     -   [Installation](installation.md)
+    -   [Optional: Statictranspl](statictranspl.md)
 
 -   [Configuration & Syntax](config/config_and_syntax.md)
 
@@ -29,7 +30,7 @@
 
 -   [Examples](examples/examples.md)
 
-    -   [Common Layouts](examples/common_layouts.md)
+    -   [Starter Bar](examples/starter_bar.md)
     -   [Interactive Widgets](examples/interactive.md)
     -   [Theming Tricks](examples/theming.md)
 
