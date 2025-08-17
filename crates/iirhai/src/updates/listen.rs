@@ -41,8 +41,13 @@ pub fn handle_listen(var_name: String, props: Map, store: ReactiveVarStore, tx: 
     let store = store.clone();
     let tx = tx.clone();
 
-    let mut child =
-        Command::new("/bin/sh").arg("-c").arg(&cmd).stdout(Stdio::piped()).spawn().expect("failed to start listener process");
+    let mut child = Command::new("/bin/sh")
+        .arg("-c")
+        .arg(&cmd)
+        .kill_on_drop(true)
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to start listener process");
 
     let stdout = BufReader::new(child.stdout.take().unwrap());
 
