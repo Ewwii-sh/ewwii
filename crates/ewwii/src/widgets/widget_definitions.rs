@@ -510,18 +510,40 @@ pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>, widget_regi
         child.show();
     }
 
-    // parsing the properties
-    if let Ok(selected) = get_i32_prop(&props, "selected", None) {
-        gtk_widget.set_visible_child_name(&selected.to_string());
-    }
+    let apply_props = |props: &Map, widget: &gtk::Stack| -> Result<()> {
+        // parsing the properties
+        if let Ok(selected) = get_i32_prop(&props, "selected", None) {
+            widget.set_visible_child_name(&selected.to_string());
+        }
 
-    let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
-    gtk_widget.set_transition_type(parse_stack_transition(&transition)?);
+        let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
+        widget.set_transition_type(parse_stack_transition(&transition)?);
 
-    let same_size = get_bool_prop(&props, "same_size", Some(false))?;
-    gtk_widget.set_homogeneous(same_size);
+        let same_size = get_bool_prop(&props, "same_size", Some(false))?;
+        widget.set_homogeneous(same_size);
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Stack");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -529,42 +551,64 @@ pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>, widget_regi
 pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) -> Result<Transform> {
     let widget = Transform::new();
 
-    // rotate - the percentage to rotate
-    if let Ok(rotate) = get_f64_prop(&props, "rotate", None) {
-        widget.set_property("rotate", rotate);
-    }
+    let apply_props = |props: &Map, widget: &Transform| -> Result<()> {
+        // rotate - the percentage to rotate
+        if let Ok(rotate) = get_f64_prop(&props, "rotate", None) {
+            widget.set_property("rotate", rotate);
+        }
 
-    // transform-origin-x - x coordinate of origin of transformation (px or %)
-    if let Ok(transform_origin_x) = get_string_prop(&props, "transform_origin_x", None) {
-        widget.set_property("transform-origin-x", transform_origin_x);
-    }
+        // transform-origin-x - x coordinate of origin of transformation (px or %)
+        if let Ok(transform_origin_x) = get_string_prop(&props, "transform_origin_x", None) {
+            widget.set_property("transform-origin-x", transform_origin_x);
+        }
 
-    // transform-origin-y - y coordinate of origin of transformation (px or %)
-    if let Ok(transform_origin_y) = get_string_prop(&props, "transform_origin_y", None) {
-        widget.set_property("transform-origin-y", transform_origin_y);
-    }
+        // transform-origin-y - y coordinate of origin of transformation (px or %)
+        if let Ok(transform_origin_y) = get_string_prop(&props, "transform_origin_y", None) {
+            widget.set_property("transform-origin-y", transform_origin_y);
+        }
 
-    // translate-x - the amount to translate in the x direction (px or %)
-    if let Ok(translate_x) = get_string_prop(&props, "translate_x", None) {
-        widget.set_property("translate-x", translate_x);
-    }
+        // translate-x - the amount to translate in the x direction (px or %)
+        if let Ok(translate_x) = get_string_prop(&props, "translate_x", None) {
+            widget.set_property("translate-x", translate_x);
+        }
 
-    // translate-y - the amount to translate in the y direction (px or %)
-    if let Ok(translate_y) = get_string_prop(&props, "translate_y", None) {
-        widget.set_property("translate-y", translate_y);
-    }
+        // translate-y - the amount to translate in the y direction (px or %)
+        if let Ok(translate_y) = get_string_prop(&props, "translate_y", None) {
+            widget.set_property("translate-y", translate_y);
+        }
 
-    // scale-x - the amount to scale in the x direction (px or %)
-    if let Ok(scale_x) = get_string_prop(&props, "scale_x", None) {
-        widget.set_property("scale-x", scale_x);
-    }
+        // scale-x - the amount to scale in the x direction (px or %)
+        if let Ok(scale_x) = get_string_prop(&props, "scale_x", None) {
+            widget.set_property("scale-x", scale_x);
+        }
 
-    // scale-y - the amount to scale in the y direction (px or %)
-    if let Ok(scale_y) = get_string_prop(&props, "scale_y", None) {
-        widget.set_property("scale-y", scale_y);
-    }
+        // scale-y - the amount to scale in the y direction (px or %)
+        if let Ok(scale_y) = get_string_prop(&props, "scale_y", None) {
+            widget.set_property("scale-y", scale_y);
+        }
+    
+        Ok(())
+    };
+
+    apply_props(&props, &widget)?;
+
+    let widget_clone = widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Transform");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(widget)
 }
@@ -832,55 +876,77 @@ pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) 
 pub(super) fn build_gtk_button(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Button> {
     let gtk_widget = gtk::Button::new();
 
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+    let apply_props = |props: &Map, widget: &gtk::Button| -> Result<()> {
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
-    let onclick = get_string_prop(&props, "onclick", Some(""))?;
-    let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
-    let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
+        let onclick = get_string_prop(&props, "onclick", Some(""))?;
+        let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
+        let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
 
-    // animate button upon right-/middleclick (if gtk theme supports it)
-    // since we do this, we can't use `connect_clicked` as that would always run `onclick` as well
-    connect_signal_handler!(
-        gtk_widget,
-        gtk_widget.connect_button_press_event(move |button, _| {
-            button.emit_activate();
-            glib::Propagation::Proceed
-        })
-    );
-    let onclick_ = onclick.clone();
-    // mouse click events
-    connect_signal_handler!(
-        gtk_widget,
-        gtk_widget.connect_button_release_event(move |_, evt| {
-            match evt.button() {
-                1 => run_command(timeout, &onclick, &[] as &[&str]),
-                2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
-                3 => run_command(timeout, &onrightclick, &[] as &[&str]),
-                _ => {}
-            }
-            glib::Propagation::Proceed
-        })
-    );
-    // keyboard events
-    connect_signal_handler!(
-        gtk_widget,
-        gtk_widget.connect_key_release_event(move |_, evt| {
-            match evt.scancode() {
-                // return
-                36 => run_command(timeout, &onclick_, &[] as &[&str]),
-                // space
-                65 => run_command(timeout, &onclick_, &[] as &[&str]),
-                _ => {}
-            }
-            glib::Propagation::Proceed
-        })
-    );
+        // animate button upon right-/middleclick (if gtk theme supports it)
+        // since we do this, we can't use `connect_clicked` as that would always run `onclick` as well
+        connect_signal_handler!(
+            widget,
+            widget.connect_button_press_event(move |button, _| {
+                button.emit_activate();
+                glib::Propagation::Proceed
+            })
+        );
+        let onclick_ = onclick.clone();
+        // mouse click events
+        connect_signal_handler!(
+            widget,
+            widget.connect_button_release_event(move |_, evt| {
+                match evt.button() {
+                    1 => run_command(timeout, &onclick, &[] as &[&str]),
+                    2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
+                    3 => run_command(timeout, &onrightclick, &[] as &[&str]),
+                    _ => {}
+                }
+                glib::Propagation::Proceed
+            })
+        );
+        // keyboard events
+        connect_signal_handler!(
+            widget,
+            widget.connect_key_release_event(move |_, evt| {
+                match evt.scancode() {
+                    // return
+                    36 => run_command(timeout, &onclick_, &[] as &[&str]),
+                    // space
+                    65 => run_command(timeout, &onclick_, &[] as &[&str]),
+                    _ => {}
+                }
+                glib::Propagation::Proceed
+            })
+        );
 
-    if let Ok(button_label) = get_string_prop(&props, "label", None) {
-        gtk_widget.set_label(&button_label);
-    }
+        if let Ok(button_label) = get_string_prop(&props, "label", None) {
+            widget.set_label(&button_label);
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Button");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -888,171 +954,100 @@ pub(super) fn build_gtk_button(props: Map, widget_registry: &mut WidgetRegistry)
 pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Label> {
     let gtk_widget = gtk::Label::new(None);
 
-    let truncate = get_bool_prop(&props, "truncate", Some(false))?;
-    let limit_width = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
-    let truncate_left = get_bool_prop(&props, "truncate_left", Some(false))?;
-    let show_truncated = get_bool_prop(&props, "show_truncated", Some(true))?;
-    let unindent = get_bool_prop(&props, "unindent", Some(true))?;
+    let apply_props = |props: &Map, widget: &gtk::Label| -> Result<()> {
+        let truncate = get_bool_prop(&props, "truncate", Some(false))?;
+        let limit_width = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
+        let truncate_left = get_bool_prop(&props, "truncate_left", Some(false))?;
+        let show_truncated = get_bool_prop(&props, "show_truncated", Some(true))?;
+        let unindent = get_bool_prop(&props, "unindent", Some(true))?;
 
-    let has_text = props.get("text").is_some();
-    let has_markup = props.get("markup").is_some();
+        let has_text = props.get("text").is_some();
+        let has_markup = props.get("markup").is_some();
 
-    if has_text && has_markup {
-        bail!("Cannot set both 'text' and 'markup' for a label");
-    } else if has_text {
-        let text = get_string_prop(&props, "text", None)?;
-        let t = if show_truncated {
-            if limit_width == i32::MAX {
-                gtk_widget.set_max_width_chars(-1);
-            } else {
-                gtk_widget.set_max_width_chars(limit_width);
-            }
-            apply_ellipsize_settings(&gtk_widget, truncate, limit_width, truncate_left, show_truncated);
-            text
-        } else {
-            gtk_widget.set_ellipsize(pango::EllipsizeMode::None);
-
-            let limit_width = limit_width as usize;
-            let char_count = text.chars().count();
-            if char_count > limit_width {
-                if truncate_left {
-                    text.chars().skip(char_count - limit_width).collect()
-                } else {
-                    text.chars().take(limit_width).collect()
-                }
-            } else {
-                text
-            }
-        };
-
-        let unescaped = unescape::unescape(&t).ok_or_else(|| anyhow!("Failed to unescape..."))?;
-        let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
-        gtk_widget.set_text(&final_text);
-    } else if has_markup {
-        let markup = get_string_prop(&props, "markup", None)?;
-        apply_ellipsize_settings(&gtk_widget, truncate, limit_width, truncate_left, show_truncated);
-        gtk_widget.set_markup(&markup);
-    } else {
-        bail!("Either 'text' or 'markup' must be set");
-    }
-
-    if let Ok(wrap) = get_bool_prop(&props, "wrap", Some(false)) {
-        gtk_widget.set_line_wrap(wrap);
-    }
-
-    if let Ok(angle) = get_f64_prop(&props, "angle", Some(0.0)) {
-        gtk_widget.set_angle(angle);
-    }
-
-    let gravity = get_string_prop(&props, "gravity", Some("south"))?;
-    gtk_widget.pango_context().set_base_gravity(parse_gravity(&gravity)?);
-
-    if let Ok(xalign) = get_f64_prop(&props, "xalign", Some(0.5)) {
-        gtk_widget.set_xalign(xalign as f32);
-    }
-
-    if let Ok(yalign) = get_f64_prop(&props, "yalign", Some(0.5)) {
-        gtk_widget.set_yalign(yalign as f32);
-    }
-
-    let justify = get_string_prop(&props, "justify", Some("left"))?;
-    gtk_widget.set_justify(parse_justification(&justify)?);
-
-    let wrap_mode = get_string_prop(&props, "wrap_mode", Some("word"))?;
-    gtk_widget.set_wrap_mode(parse_wrap_mode(&wrap_mode)?);
-
-    if let Ok(lines) = get_i32_prop(&props, "lines", Some(-1)) {
-        gtk_widget.set_lines(lines);
-    }
-
-    let gtk_widget_clone = gtk_widget.clone();
-
-    let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        // Handle text or markup update
-        if let Some(text_val) = props.get("text").and_then(|v| v.clone().try_cast::<String>()) {
-            let truncate = get_bool_prop(props, "truncate", Some(false)).unwrap_or(false);
-            let limit_width = get_i32_prop(props, "limit_width", Some(i32::MAX)).unwrap_or(i32::MAX);
-            let truncate_left = get_bool_prop(props, "truncate_left", Some(false)).unwrap_or(false);
-            let show_truncated = get_bool_prop(props, "show_truncated", Some(true)).unwrap_or(true);
-            let unindent = get_bool_prop(props, "unindent", Some(true)).unwrap_or(true);
-
-            if show_truncated {
-                if limit_width == i32::MAX {
-                    gtk_widget_clone.set_max_width_chars(-1);
-                } else {
-                    gtk_widget_clone.set_max_width_chars(limit_width);
-                }
-                apply_ellipsize_settings(&gtk_widget_clone, truncate, limit_width, truncate_left, show_truncated);
-            } else {
-                gtk_widget_clone.set_ellipsize(pango::EllipsizeMode::None);
-            }
-
+        if has_text && has_markup {
+            bail!("Cannot set both 'text' and 'markup' for a label");
+        } else if has_text {
+            let text = get_string_prop(&props, "text", None)?;
             let t = if show_truncated {
-                text_val.clone()
+                if limit_width == i32::MAX {
+                    widget.set_max_width_chars(-1);
+                } else {
+                    widget.set_max_width_chars(limit_width);
+                }
+                apply_ellipsize_settings(&widget, truncate, limit_width, truncate_left, show_truncated);
+                text
             } else {
+                widget.set_ellipsize(pango::EllipsizeMode::None);
+
                 let limit_width = limit_width as usize;
-                let char_count = text_val.chars().count();
+                let char_count = text.chars().count();
                 if char_count > limit_width {
                     if truncate_left {
-                        text_val.chars().skip(char_count - limit_width).collect()
+                        text.chars().skip(char_count - limit_width).collect()
                     } else {
-                        text_val.chars().take(limit_width).collect()
+                        text.chars().take(limit_width).collect()
                     }
                 } else {
-                    text_val.clone()
+                    text
                 }
             };
 
-            if let Some(unescaped) = unescape::unescape(&t) {
-                let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
-                gtk_widget_clone.set_text(&final_text);
-            }
-        } else if let Some(markup_val) = props.get("markup").and_then(|v| v.clone().try_cast::<String>()) {
-            let truncate = get_bool_prop(props, "truncate", Some(false)).unwrap_or(false);
-            let limit_width = get_i32_prop(props, "limit_width", Some(i32::MAX)).unwrap_or(i32::MAX);
-            let truncate_left = get_bool_prop(props, "truncate_left", Some(false)).unwrap_or(false);
-            let show_truncated = get_bool_prop(props, "show_truncated", Some(true)).unwrap_or(true);
-
-            apply_ellipsize_settings(&gtk_widget_clone, truncate, limit_width, truncate_left, show_truncated);
-            gtk_widget_clone.set_markup(&markup_val);
+            let unescaped = unescape::unescape(&t).ok_or_else(|| anyhow!("Failed to unescape..."))?;
+            let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
+            widget.set_text(&final_text);
+        } else if has_markup {
+            let markup = get_string_prop(&props, "markup", None)?;
+            apply_ellipsize_settings(&widget, truncate, limit_width, truncate_left, show_truncated);
+            widget.set_markup(&markup);
+        } else {
+            bail!("Either 'text' or 'markup' must be set");
         }
 
-        if let Ok(wrap) = get_bool_prop(props, "wrap", Some(false)) {
-            gtk_widget_clone.set_line_wrap(wrap);
+        if let Ok(wrap) = get_bool_prop(&props, "wrap", Some(false)) {
+            widget.set_line_wrap(wrap);
         }
 
-        if let Ok(angle) = get_f64_prop(props, "angle", Some(0.0)) {
-            gtk_widget_clone.set_angle(angle);
+        if let Ok(angle) = get_f64_prop(&props, "angle", Some(0.0)) {
+            widget.set_angle(angle);
         }
 
-        if let Ok(xalign) = get_f64_prop(props, "xalign", Some(0.5)) {
-            gtk_widget_clone.set_xalign(xalign as f32);
+        let gravity = get_string_prop(&props, "gravity", Some("south"))?;
+        widget.pango_context().set_base_gravity(parse_gravity(&gravity)?);
+
+        if let Ok(xalign) = get_f64_prop(&props, "xalign", Some(0.5)) {
+            widget.set_xalign(xalign as f32);
         }
 
-        if let Ok(yalign) = get_f64_prop(props, "yalign", Some(0.5)) {
-            gtk_widget_clone.set_yalign(yalign as f32);
+        if let Ok(yalign) = get_f64_prop(&props, "yalign", Some(0.5)) {
+            widget.set_yalign(yalign as f32);
         }
 
-        if let Ok(justify) = get_string_prop(props, "justify", Some("left")) {
-            if let Ok(j) = parse_justification(&justify) {
-                gtk_widget_clone.set_justify(j);
-            }
+        let justify = get_string_prop(&props, "justify", Some("left"))?;
+        widget.set_justify(parse_justification(&justify)?);
+
+        let wrap_mode = get_string_prop(&props, "wrap_mode", Some("word"))?;
+        widget.set_wrap_mode(parse_wrap_mode(&wrap_mode)?);
+
+        if let Ok(lines) = get_i32_prop(&props, "lines", Some(-1)) {
+            widget.set_lines(lines);
         }
 
-        if let Ok(wrap_mode) = get_string_prop(props, "wrap_mode", Some("word")) {
-            if let Ok(wm) = parse_wrap_mode(&wrap_mode) {
-                gtk_widget_clone.set_wrap_mode(wm);
-            }
-        }
+        Ok(())
+    };
 
-        if let Ok(lines) = get_i32_prop(props, "lines", Some(-1)) {
-            gtk_widget_clone.set_lines(lines);
-        }
+    apply_props(&props, &gtk_widget)?;
 
-        if let Ok(gravity) = get_string_prop(props, "gravity", Some("south")) {
-            if let Ok(g) = parse_gravity(&gravity) {
-                gtk_widget_clone.pango_context().set_base_gravity(g);
-            }
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
@@ -1066,34 +1061,56 @@ pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) 
 pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Entry> {
     let gtk_widget = gtk::Entry::new();
 
-    if let Ok(value) = get_string_prop(&props, "value", None) {
-        gtk_widget.set_text(&value);
-    }
+    let apply_props = |props: &Map, widget: &gtk::Entry| -> Result<()> {
+        if let Ok(value) = get_string_prop(&props, "value", None) {
+            widget.set_text(&value);
+        }
 
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
-    if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_changed(move |gtk_widget| {
-                run_command(timeout, &onchange, &[gtk_widget.text().to_string()]);
-            })
-        );
-    }
+        if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_changed(move |widget| {
+                    run_command(timeout, &onchange, &[widget.text().to_string()]);
+                })
+            );
+        }
 
-    if let Ok(onaccept) = get_string_prop(&props, "onaccept", None) {
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_activate(move |gtk_widget| {
-                run_command(timeout, &onaccept, &[gtk_widget.text().to_string()]);
-            })
-        );
-    }
+        if let Ok(onaccept) = get_string_prop(&props, "onaccept", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_activate(move |widget| {
+                    run_command(timeout, &onaccept, &[widget.text().to_string()]);
+                })
+            );
+        }
 
-    let password: bool = get_bool_prop(&props, "password", Some(false))?;
-    gtk_widget.set_visibility(!password);
+        let password: bool = get_bool_prop(&props, "password", Some(false))?;
+        widget.set_visibility(!password);
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Input");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1101,61 +1118,82 @@ pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) 
 pub(super) fn build_gtk_calendar(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Calendar> {
     let gtk_widget = gtk::Calendar::new();
 
-    // day - the selected day
-    if let Ok(day) = get_f64_prop(&props, "day", None) {
-        if !(1f64..=31f64).contains(&day) {
-            log::warn!("Calendar day is not a number between 1 and 31");
-        } else {
-            gtk_widget.set_day(day as i32)
+    let apply_props = |props: &Map, widget: &gtk::Calendar| -> Result<()> {
+        // day - the selected day
+        if let Ok(day) = get_f64_prop(&props, "day", None) {
+            if !(1f64..=31f64).contains(&day) {
+                log::warn!("Calendar day is not a number between 1 and 31");
+            } else {
+                widget.set_day(day as i32)
+            }
         }
-    }
 
-    // month - the selected month
-    if let Ok(month) = get_f64_prop(&props, "month", None) {
-        if !(1f64..=12f64).contains(&month) {
-            log::warn!("Calendar month is not a number between 1 and 12");
-        } else {
-            gtk_widget.set_month(month as i32 - 1)
+        // month - the selected month
+        if let Ok(month) = get_f64_prop(&props, "month", None) {
+            if !(1f64..=12f64).contains(&month) {
+                log::warn!("Calendar month is not a number between 1 and 12");
+            } else {
+                widget.set_month(month as i32 - 1)
+            }
         }
-    }
 
-    // year - the selected year
-    if let Ok(year) = get_f64_prop(&props, "year", None) {
-        gtk_widget.set_year(year as i32)
-    }
+        // year - the selected year
+        if let Ok(year) = get_f64_prop(&props, "year", None) {
+            widget.set_year(year as i32)
+        }
 
-    // show-details - show details
-    if let Ok(show_details) = get_bool_prop(&props, "show_details", None) {
-        gtk_widget.set_show_details(show_details)
-    }
+        // show-details - show details
+        if let Ok(show_details) = get_bool_prop(&props, "show_details", None) {
+            widget.set_show_details(show_details)
+        }
 
-    // show-heading - show heading line
-    if let Ok(show_heading) = get_bool_prop(&props, "show_heading", None) {
-        gtk_widget.set_show_heading(show_heading)
-    }
+        // show-heading - show heading line
+        if let Ok(show_heading) = get_bool_prop(&props, "show_heading", None) {
+            widget.set_show_heading(show_heading)
+        }
 
-    // show-day-names - show names of days
-    if let Ok(show_day_names) = get_bool_prop(&props, "show_day_names", None) {
-        gtk_widget.set_show_day_names(show_day_names)
-    }
+        // show-day-names - show names of days
+        if let Ok(show_day_names) = get_bool_prop(&props, "show_day_names", None) {
+            widget.set_show_day_names(show_day_names)
+        }
 
-    // show-week-numbers - show week numbers
-    if let Ok(show_week_numbers) = get_bool_prop(&props, "show_week_numbers", None) {
-        gtk_widget.set_show_week_numbers(show_week_numbers)
-    }
+        // show-week-numbers - show week numbers
+        if let Ok(show_week_numbers) = get_bool_prop(&props, "show_week_numbers", None) {
+            widget.set_show_week_numbers(show_week_numbers)
+        }
 
-    // timeout - timeout of the command. Default: "200ms"
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        // timeout - timeout of the command. Default: "200ms"
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
-    // onclick - command to run when the user selects a date. The `{0}` placeholder will be replaced by the selected day, `{1}` will be replaced by the month, and `{2}` by the year.
-    if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_day_selected(move |w| { run_command(timeout, &onclick, &[w.day(), w.month(), w.year()]) })
-        );
-    }
+        // onclick - command to run when the user selects a date. The `{0}` placeholder will be replaced by the selected day, `{1}` will be replaced by the month, and `{2}` by the year.
+        if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_day_selected(move |w| { run_command(timeout, &onclick, &[w.day(), w.month(), w.year()]) })
+            );
+        }
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Calendar");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1163,24 +1201,46 @@ pub(super) fn build_gtk_calendar(props: Map, widget_registry: &mut WidgetRegistr
 pub(super) fn build_gtk_combo_box_text(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ComboBoxText> {
     let gtk_widget = gtk::ComboBoxText::new();
 
-    if let Ok(items) = get_vec_string_prop(&props, "items", None) {
-        gtk_widget.remove_all();
-        for i in items {
-            gtk_widget.append_text(&i);
+    let apply_props = |props: &Map, widget: &gtk::ComboBoxText| -> Result<()> {
+        if let Ok(items) = get_vec_string_prop(&props, "items", None) {
+            widget.remove_all();
+            for i in items {
+                widget.append_text(&i);
+            }
         }
-    }
 
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-    let onchange = get_string_prop(&props, "onchange", Some(""))?;
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        let onchange = get_string_prop(&props, "onchange", Some(""))?;
 
-    connect_signal_handler!(
-        gtk_widget,
-        gtk_widget.connect_changed(move |gtk_widget| {
-            run_command(timeout, &onchange, &[gtk_widget.active_text().unwrap_or_else(|| "".into())]);
-        })
-    );
+        connect_signal_handler!(
+            widget,
+            widget.connect_changed(move |widget| {
+                run_command(timeout, &onchange, &[widget.active_text().unwrap_or_else(|| "".into())]);
+            })
+        );
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "ComboBoxText");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1205,15 +1265,37 @@ pub(super) fn build_gtk_expander(
     gtk_widget.add(&child_widget);
     child_widget.show();
 
-    if let Ok(name) = get_string_prop(&props, "name", None) {
-        gtk_widget.set_label(Some(&name));
-    }
+    let apply_props = |props: &Map, widget: &gtk::Expander| -> Result<()> {
+        if let Ok(name) = get_string_prop(&props, "name", None) {
+            widget.set_label(Some(&name));
+        }
 
-    if let Ok(expanded) = get_bool_prop(&props, "expanded", None) {
-        gtk_widget.set_expanded(expanded);
-    }
+        if let Ok(expanded) = get_bool_prop(&props, "expanded", None) {
+            widget.set_expanded(expanded);
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Expander");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1225,16 +1307,36 @@ pub(super) fn build_gtk_revealer(
 ) -> Result<gtk::Revealer> {
     let gtk_widget = gtk::Revealer::new();
 
-    let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
-    gtk_widget.set_transition_type(parse_revealer_transition(&transition)?);
+    let apply_props = |props: &Map, widget: &gtk::Revealer| -> Result<()> {
+        let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
+        widget.set_transition_type(parse_revealer_transition(&transition)?);
 
-    if let Ok(reveal) = get_bool_prop(&props, "reveal", None) {
-        gtk_widget.set_reveal_child(reveal);
-    }
+        if let Ok(reveal) = get_bool_prop(&props, "reveal", None) {
+            widget.set_reveal_child(reveal);
+        }
 
-    let duration = get_duration_prop(&props, "duration", Some(Duration::from_millis(500)))?;
+        let duration = get_duration_prop(&props, "duration", Some(Duration::from_millis(500)))?;
 
-    gtk_widget.set_transition_duration(duration.as_millis() as u32);
+        widget.set_transition_duration(duration.as_millis() as u32);
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     match children.len() {
         0 => { /* maybe warn? */ }
@@ -1249,27 +1351,51 @@ pub(super) fn build_gtk_revealer(
 
     let id = hash_props_and_type(&props, "Revealer");
 
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
+
     Ok(gtk_widget)
 }
 
 pub(super) fn build_gtk_checkbox(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::CheckButton> {
     let gtk_widget = gtk::CheckButton::new();
 
-    let checked = get_bool_prop(&props, "checked", Some(false))?;
-    gtk_widget.set_active(checked);
+    let apply_props = |props: &Map, widget: &gtk::CheckButton| -> Result<()> {
+        let checked = get_bool_prop(&props, "checked", Some(false))?;
+        widget.set_active(checked);
 
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-    let onchecked = get_string_prop(&props, "onchecked", Some(""))?;
-    let onunchecked = get_string_prop(&props, "onchecked", Some(""))?;
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        let onchecked = get_string_prop(&props, "onchecked", Some(""))?;
+        let onunchecked = get_string_prop(&props, "onchecked", Some(""))?;
 
-    connect_signal_handler!(
-        gtk_widget,
-        gtk_widget.connect_toggled(move |gtk_widget| {
-            run_command(timeout, if gtk_widget.is_active() { &onchecked } else { &onunchecked }, &[] as &[&str]);
-        })
-    );
+        connect_signal_handler!(
+            widget,
+            widget.connect_toggled(move |widget| {
+                run_command(timeout, if widget.is_active() { &onchecked } else { &onunchecked }, &[] as &[&str]);
+            })
+        );
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Checkbox");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1277,25 +1403,47 @@ pub(super) fn build_gtk_checkbox(props: Map, widget_registry: &mut WidgetRegistr
 pub(super) fn build_gtk_color_button(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ColorButton> {
     let gtk_widget = gtk::ColorButton::builder().build();
 
-    // use-alpha - bool to wether or not use alpha
-    if let Ok(use_alpha) = get_bool_prop(&props, "use_alpha", None) {
-        gtk_widget.set_use_alpha(use_alpha);
-    }
+    let apply_props = |props: &Map, widget: &gtk::ColorButton| -> Result<()> {
+        // use-alpha - bool to wether or not use alpha
+        if let Ok(use_alpha) = get_bool_prop(&props, "use_alpha", None) {
+            widget.set_use_alpha(use_alpha);
+        }
 
-    // timeout - timeout of the command. Default: "200ms"
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        // timeout - timeout of the command. Default: "200ms"
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
-    // onchange - runs the code when the color was selected
-    if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_color_set(move |gtk_widget| {
-                run_command(timeout, &onchange, &[gtk_widget.rgba()]);
-            })
-        );
-    }
+        // onchange - runs the code when the color was selected
+        if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_color_set(move |widget| {
+                    run_command(timeout, &onchange, &[widget.rgba()]);
+                })
+            );
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "ColorButton");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1303,25 +1451,47 @@ pub(super) fn build_gtk_color_button(props: Map, widget_registry: &mut WidgetReg
 pub(super) fn build_gtk_color_chooser(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ColorChooserWidget> {
     let gtk_widget = gtk::ColorChooserWidget::new();
 
-    // use-alpha - bool to wether or not use alpha
-    if let Ok(use_alpha) = get_bool_prop(&props, "use_alpha", None) {
-        gtk_widget.set_use_alpha(use_alpha);
-    }
+    let apply_props = |props: &Map, widget: &gtk::ColorChooserWidget| -> Result<()> {
+        // use-alpha - bool to wether or not use alpha
+        if let Ok(use_alpha) = get_bool_prop(&props, "use_alpha", None) {
+            widget.set_use_alpha(use_alpha);
+        }
 
-    // timeout - timeout of the command. Default: "200ms"
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        // timeout - timeout of the command. Default: "200ms"
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
-    // onchange - runs the code when the color was selected
-    if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_color_activated(move |_a, color| {
-                run_command(timeout, &onchange, &[*color]);
-            })
-        );
-    }
+        // onchange - runs the code when the color was selected
+        if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_color_activated(move |_a, color| {
+                    run_command(timeout, &onchange, &[*color]);
+                })
+            );
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "ColorChooser");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1357,9 +1527,19 @@ pub(super) fn build_gtk_scale(props: Map, widget_registry: &mut WidgetRegistry) 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
         let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
     });
 
     let id = hash_props_and_type(&props, "Slider");
+
     widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
@@ -1373,13 +1553,33 @@ pub(super) fn build_gtk_scrolledwindow(
     // I don't have single idea of what those two generics are supposed to be, but this works.
     let gtk_widget = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
 
-    let hscroll = get_bool_prop(&props, "hscroll", Some(true))?;
-    let vscroll = get_bool_prop(&props, "vscroll", Some(true))?;
+    let apply_props = |props: &Map, widget: &gtk::ScrolledWindow| -> Result<()> {
+        let hscroll = get_bool_prop(&props, "hscroll", Some(true))?;
+        let vscroll = get_bool_prop(&props, "vscroll", Some(true))?;
 
-    gtk_widget.set_policy(
-        if hscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
-        if vscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
-    );
+        widget.set_policy(
+            if hscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
+            if vscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
+        );
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let count = children.len();
 
@@ -1395,6 +1595,8 @@ pub(super) fn build_gtk_scrolledwindow(
     child_widget.show();
 
     let id = hash_props_and_type(&props, "ScrolledWindow");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
