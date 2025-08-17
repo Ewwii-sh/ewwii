@@ -116,11 +116,7 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
         }
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -250,11 +246,7 @@ pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>, widget_reg
         gtk_widget_clone.set_orientation(orientation);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -466,11 +458,7 @@ pub(super) fn build_gtk_event_box(
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -532,11 +520,7 @@ pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>, widget_regi
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -586,7 +570,7 @@ pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) 
         if let Ok(scale_y) = get_string_prop(&props, "scale_y", None) {
             widget.set_property("scale-y", scale_y);
         }
-    
+
         Ok(())
     };
 
@@ -597,11 +581,7 @@ pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -643,11 +623,7 @@ pub(super) fn build_circular_progress_bar(props: Map, widget_registry: &mut Widg
         let _ = apply_props(props, &widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -728,11 +704,7 @@ pub(super) fn build_graph(props: Map, widget_registry: &mut WidgetRegistry) -> R
         let _ = apply_props(props, &widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -775,11 +747,7 @@ pub(super) fn build_gtk_progress(props: Map, widget_registry: &mut WidgetRegistr
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -857,11 +825,7 @@ pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -935,11 +899,7 @@ pub(super) fn build_gtk_button(props: Map, widget_registry: &mut WidgetRegistry)
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1042,11 +1002,7 @@ pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1099,11 +1055,7 @@ pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1182,11 +1134,7 @@ pub(super) fn build_gtk_calendar(props: Map, widget_registry: &mut WidgetRegistr
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1229,11 +1177,7 @@ pub(super) fn build_gtk_combo_box_text(props: Map, widget_registry: &mut WidgetR
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1284,11 +1228,7 @@ pub(super) fn build_gtk_expander(
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1329,11 +1269,7 @@ pub(super) fn build_gtk_revealer(
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1384,11 +1320,7 @@ pub(super) fn build_gtk_checkbox(props: Map, widget_registry: &mut WidgetRegistr
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1432,11 +1364,7 @@ pub(super) fn build_gtk_color_button(props: Map, widget_registry: &mut WidgetReg
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1480,11 +1408,7 @@ pub(super) fn build_gtk_color_chooser(props: Map, widget_registry: &mut WidgetRe
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1529,11 +1453,7 @@ pub(super) fn build_gtk_scale(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1572,11 +1492,7 @@ pub(super) fn build_gtk_scrolledwindow(
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(
-            None,
-            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
-            Some(props),
-        ) {
+        if let Err(err) = resolve_rhai_widget_attrs(None, &gtk_widget_clone.clone().upcast::<gtk::Widget>(), Some(props)) {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
