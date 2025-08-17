@@ -101,14 +101,14 @@ impl CodeFile {
 
 #[derive(Clone, Debug)]
 enum CodeSource {
-    File(std::path::PathBuf),
+    // File(std::path::PathBuf),
     Literal(String),
 }
 
 impl CodeSource {
     fn read_content(&self) -> std::io::Result<String> {
         match self {
-            CodeSource::File(path) => Ok(std::fs::read_to_string(path)?),
+            // CodeSource::File(path) => Ok(std::fs::read_to_string(path)?),
             CodeSource::Literal(x) => Ok(x.to_string()),
         }
     }

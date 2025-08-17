@@ -317,6 +317,6 @@
 //     chrono::offset::Utc::now().timestamp().to_string()
 // }
 
-pub fn register_all_signals(engine: &mut rhai::Engine) {
+pub fn register_all_signals(_engine: &mut rhai::Engine) {
     // TODO
 }

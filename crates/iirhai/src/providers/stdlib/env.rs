@@ -13,7 +13,7 @@ pub mod env {
     }
 
     pub fn get_home_dir() -> Option<String> {
-        std::env::home_dir().and_then(|p| p.into_os_string().into_string().ok())
+        std::env::var("HOME").ok()
     }
 
     #[rhai_fn(return_raw)]
