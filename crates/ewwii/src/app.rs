@@ -321,8 +321,8 @@ impl<B: DisplayBackend> App<B> {
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
-            /// Holds the id and the props of a widget
-            /// It is crutual for supporting dynamic updates
+            // Holds the id and the props of a widget
+            // It is crutual for supporting dynamic updates
             let mut widget_reg_store = WidgetRegistry::new();
             // note for future me: ^ this might need cloning.
 

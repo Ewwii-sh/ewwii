@@ -16,14 +16,23 @@ let object = #{
 
 // Widget: a single animal button
 fn animalButton(emoji, selected) {
+    print!(selected);
+    print!(emoji);
+
+    let class = "animal";
+
+    if selected == emoji {
+        class = "animal selected" 
+    }
+
     return box(#{ class: "animalLayout" }, [
         eventbox(#{ 
-            class: if selected == emoji { "animal selected" } else { "animal" },
+            class: class,
             cursor: "pointer",
-            onclick: "echo " + emoji + " > /tmp/selected_emoji.txt",
-            dyn_id: "dyn_eventbox",
+            onclick: "echo " + emoji + " >> /tmp/selected_emoji.txt",
+            dyn_id: "dyn_eventbox_" + emoji,  // unique per emoji
         }, [
-            label(#{ text: emoji })
+            label(#{ text: emoji, dyn_id: "dyn_label_" + emoji })  // unique per emoji
         ])
     ]);
 }
@@ -63,15 +72,15 @@ fn layout(stringArray, object, selected) {
 enter([
     // Track the selected emoji
     listen("selected", #{
-        cmd: "tail -n 1 -f /tmp/selected_emoji.txt",
-        initial: "🦝"
+        cmd: "scripts/readlast_and_truncate.sh",
+        initial: "🦝",
     }),
-
 
     defwindow("data-structures", #{
         monitor: 0,
         exclusive: false,
         focusable: "none",
+        windowtype: "normal",
         geometry: #{ anchor: "center", x: "0px", y: "0px", width: "100px", height: "10px" },
     }, layout(stringArray, object, selected))
 ])
