@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="getting_started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li></ol></li><li class="chapter-item expanded "><a href="config/config_and_syntax.html"><strong aria-hidden="true">2.</strong> Configuration &amp; Syntax</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="config/configuration.html"><strong aria-hidden="true">2.1.</strong> Configuration</a></li><li class="chapter-item expanded "><a href="config/rendering_and_best_practices.html"><strong aria-hidden="true">2.2.</strong> Rendering and Best Practices</a></li><li class="chapter-item expanded "><a href="config/config_fundamentals.html"><strong aria-hidden="true">2.3.</strong> Fundamentals</a></li><li class="chapter-item expanded "><a href="config/variables.html"><strong aria-hidden="true">2.4.</strong> Variables</a></li><li class="chapter-item expanded "><a href="config/expression_language.html"><strong aria-hidden="true">2.5.</strong> Expression Language</a></li></ol></li><li class="chapter-item expanded "><a href="theming/theming_and_ui.html"><strong aria-hidden="true">3.</strong> Theming &amp; UI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theming/working_with_gtk.html"><strong aria-hidden="true">3.1.</strong> Working With GTK</a></li><li class="chapter-item expanded "><a href="theming/styling_widgets.html"><strong aria-hidden="true">3.2.</strong> Styling Widgets</a></li></ol></li><li class="chapter-item expanded "><a href="modules/modules.html"><strong aria-hidden="true">4.</strong> Modules</a></li><li class="chapter-item expanded "><a href="widgets/widgets.html"><strong aria-hidden="true">5.</strong> Widgets</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="widgets/widgets_and_params.html"><strong aria-hidden="true">5.1.</strong> Widgets &amp; Parameters</a></li><li class="chapter-item expanded "><a href="widgets/props.html"><strong aria-hidden="true">5.2.</strong> Widget Properties</a></li></ol></li><li class="chapter-item expanded "><a href="examples/examples.html"><strong aria-hidden="true">6.</strong> Examples</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="examples/common_layouts.html"><strong aria-hidden="true">6.1.</strong> Common Layouts</a></li><li class="chapter-item expanded "><a href="examples/interactive.html"><strong aria-hidden="true">6.2.</strong> Interactive Widgets</a></li><li class="chapter-item expanded "><a href="examples/theming.html"><strong aria-hidden="true">6.3.</strong> Theming Tricks</a></li></ol></li><li class="chapter-item expanded "><a href="troubleshooting.html"><strong aria-hidden="true">7.</strong> Troubleshooting</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="getting_started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="statictranspl.html"><strong aria-hidden="true">1.2.</strong> Optional: Statictranspl</a></li></ol></li><li class="chapter-item expanded "><a href="config/config_and_syntax.html"><strong aria-hidden="true">2.</strong> Configuration &amp; Syntax</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="config/configuration.html"><strong aria-hidden="true">2.1.</strong> Configuration</a></li><li class="chapter-item expanded "><a href="config/rendering_and_best_practices.html"><strong aria-hidden="true">2.2.</strong> Rendering and Best Practices</a></li><li class="chapter-item expanded "><a href="config/config_fundamentals.html"><strong aria-hidden="true">2.3.</strong> Fundamentals</a></li><li class="chapter-item expanded "><a href="config/variables.html"><strong aria-hidden="true">2.4.</strong> Variables</a></li><li class="chapter-item expanded "><a href="config/expression_language.html"><strong aria-hidden="true">2.5.</strong> Expression Language</a></li></ol></li><li class="chapter-item expanded "><a href="theming/theming_and_ui.html"><strong aria-hidden="true">3.</strong> Theming &amp; UI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theming/working_with_gtk.html"><strong aria-hidden="true">3.1.</strong> Working With GTK</a></li><li class="chapter-item expanded "><a href="theming/styling_widgets.html"><strong aria-hidden="true">3.2.</strong> Styling Widgets</a></li></ol></li><li class="chapter-item expanded "><a href="modules/modules.html"><strong aria-hidden="true">4.</strong> Modules</a></li><li class="chapter-item expanded "><a href="widgets/widgets.html"><strong aria-hidden="true">5.</strong> Widgets</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="widgets/widgets_and_params.html"><strong aria-hidden="true">5.1.</strong> Widgets &amp; Parameters</a></li><li class="chapter-item expanded "><a href="widgets/props.html"><strong aria-hidden="true">5.2.</strong> Widget Properties</a></li></ol></li><li class="chapter-item expanded "><a href="examples/examples.html"><strong aria-hidden="true">6.</strong> Examples</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="examples/starter_bar.html"><strong aria-hidden="true">6.1.</strong> Starter Bar</a></li><li class="chapter-item expanded "><a href="examples/interactive.html"><strong aria-hidden="true">6.2.</strong> Interactive Widgets</a></li><li class="chapter-item expanded "><a href="examples/theming.html"><strong aria-hidden="true">6.3.</strong> Theming Tricks</a></li></ol></li><li class="chapter-item expanded "><a href="troubleshooting.html"><strong aria-hidden="true">7.</strong> Troubleshooting</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -254,6 +254,23 @@ When you're on Wayland, build with:</p>
 <p>You can run the following command to install ewwii from cargo:</p>
 <pre><code class="language-bash">cargo install --git https://github.com/Ewwii-sh/ewwii
 </code></pre>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="optional-statictranspl"><a class="header" href="#optional-statictranspl">Optional: Statictranspl</a></h1>
+<p>Before diving deeper into Ewwii and <strong>Rhai</strong> (Ewwii’s configuration language), check out <strong><a href="https://ewwii-sh.github.io/statictranspl/">Statictranspl</a></strong>.</p>
+<p>Rhai layouts are dynamic and can be verbose, which may feel overwhelming for users without experience in languages like Rust, C, or JavaScript. <strong>Statictranspl</strong> simplifies Rhai by abstracting much of the complexity, adding stricter compilation, and providing clearer error messages. Many issues can be caught <strong>at compile time</strong>, making it more beginner-friendly.</p>
+<p><strong>How it works:</strong>
+Statictranspl compiles a custom language called <code>stpl</code> into Rhai quickly and efficiently. For users creating <strong>static-only widgets</strong>, it can be a powerful way to simplify development.</p>
+<blockquote>
+<p><strong>Note:</strong>
+Statictranspl is <strong>experimental</strong>. It currently does <strong>not</strong> support most dynamic Rhai features, such as:</p>
+<ul>
+<li>Variables and updates</li>
+<li>Polling and listeners</li>
+<li>Functions and conditionals (<code>if/else</code>)</li>
+<li>Loops (<code>for</code>/<code>while</code>)</li>
+<li>Imports/exports</li>
+</ul>
+<p>While excellent for static widgets, it cannot yet match the full flexibility of raw Rhai.</p>
+</blockquote>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="configuration--syntax"><a class="header" href="#configuration--syntax">Configuration &amp; Syntax</a></h1>
 <p>This section introduces the foundational systems that define how you configure your UI, express logic, and work with dynamic data in Rahi (Ewwii's configuration language).</p>
 <p>The configuration model is imparative by nature but will be used in a declarative format that is made to make configuring ewwii easy as well as to provide a logical way of configuring. You'll also work with special built in functions and modules that expose live system state and other information.</p>
@@ -1108,7 +1125,23 @@ let lower = text::to_lower(&quot;HELLO&quot;); // output: &quot;hello&quot;
 <li><code>max</code>: <code>float</code> maximum value</li>
 </ul>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="common-layouts"><a class="header" href="#common-layouts">Common Layouts</a></h1>
+<p>This section provides hands-on, practical demonstrations of everything covered so far. Real layouts, interactive components, and theming techniques will be used in these examples.</p>
+<p>Each example is minimal but complete, focusing on a particular design pattern or technique. You can copy-paste them into your own config to experiment.</p>
+<p>Included:</p>
+<ul>
+<li>Common layout patterns (e.g., bars, panels, dashboards)</li>
+<li>Interactive elements like buttons, sliders, toggles</li>
+<li>Theming techniques and tricks to override or enhance GTK styles</li>
+</ul>
+<p>If you're stuck or just looking for inspiration, this is your go-to reference.</p>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="starter-bar"><a class="header" href="#starter-bar">Starter Bar</a></h1>
+<p><img src="https://raw.githubusercontent.com/ewwii-sh/ewwii/main/examples/ewwii-bar/ewwii-bar.png" alt="Example 1" /></p>
+<p>A basic starter bar which will be very helpful to beginners, see <a href="https://github.com/Ewwii-sh/ewwii/tree/main/examples/ewwii-bar">examples/ewwii-bar</a>.</p>
+<h2 id="installing"><a class="header" href="#installing">Installing</a></h2>
+<p>This starter bar is installable via <a href="https://ewwii-sh.github.io/docs/package-manager/overview/">eiipm</a>: ewwii's package manager.</p>
+<p>Just run the following command and have the template ready in the current working directory in an instant!</p>
+<pre><code class="language-bash">eiipm i starter_template
+</code></pre>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="interactive-widgets"><a class="header" href="#interactive-widgets">Interactive Widgets</a></h1>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="theming-tricks"><a class="header" href="#theming-tricks">Theming Tricks</a></h1>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
