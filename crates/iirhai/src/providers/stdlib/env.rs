@@ -12,8 +12,9 @@ pub mod env {
         std::env::set_var(var, value);
     }
 
-    pub fn get_home_dir() -> Option<String> {
-        std::env::var("HOME").ok()
+    #[rhai_fn(return_raw)]
+    pub fn get_home_dir() -> Result<String, Box<EvalAltResult>> {
+        std::env::var("HOME").map_err(|e| format!("Failed to get home directory: {e}").into())
     }
 
     #[rhai_fn(return_raw)]
