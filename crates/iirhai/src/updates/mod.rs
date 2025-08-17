@@ -20,12 +20,8 @@ mod poll;
 use crate::widgetnode::WidgetNode;
 use listen::handle_listen;
 use poll::handle_poll;
-use std::{
-    collections::HashMap,
-    sync::Arc,
-    sync::RwLock,
-};
-use tokio::sync::mpsc::{UnboundedSender};
+use std::{collections::HashMap, sync::Arc, sync::RwLock};
+use tokio::sync::mpsc::UnboundedSender;
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 
