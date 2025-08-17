@@ -1,5 +1,5 @@
 use ahash::AHasher;
-use anyhow::{Result};
+use anyhow::Result;
 use rhai::Map;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -124,7 +124,7 @@ pub fn get_id_to_props_map(root_node: &WidgetNode, id_to_props: &mut HashMap<u64
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
             }
-        },
+        }
         WidgetNode::OverLay { children } => {
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;
