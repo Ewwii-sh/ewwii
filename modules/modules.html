@@ -173,7 +173,7 @@
 <p>Modules undoubtedly are one of the most powerful features in Rhai. They provide infinite extensibility to ewwii.</p>
 <p>Every module follows the syntax:</p>
 <pre><code class="language-rust ignore">import &quot;std::env&quot; as env;
-let home = env::get_home_dir();
+let home = env::get_home_dir(); // returns `$HOME` env var value
 </code></pre>
 <p>This allows you to write expressive, modular Rhai code with functions grouped logically under <code>std</code> or custom namespaces.</p>
 <h2 id="stdenv"><a class="header" href="#stdenv"><code>std::env</code></a></h2>
