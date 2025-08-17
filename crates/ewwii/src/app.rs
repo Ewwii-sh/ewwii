@@ -3,7 +3,7 @@ use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
     error_handling_ctx,
-    gtk::prelude::{Cast, ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt},
+    gtk::prelude::{ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt},
     paths::EwwPaths,
     widgets::window::Window,
     // dynval::DynVal,
@@ -336,7 +336,6 @@ impl<B: DisplayBackend> App<B> {
 
             // listening/polling
             let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
-            let (update_sender, update_receiver) = glib::MainContext::channel(0.into());
             let config_path = self.paths.get_rhai_path();
             let store = iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
 
@@ -345,15 +344,13 @@ impl<B: DisplayBackend> App<B> {
                     log::debug!("Received update for var: {}", var_name);
                     let vars = store.read().unwrap().clone();
 
-                    match generate_new_widgetnode(&vars, &config_path).await {
-                        Ok(new_widget) => {
-                            if let Err(e) = update_sender.send(new_widget) {
-                                log::warn!("Failed to send new widget update: {:?}", e);
-                            }
-                        }
-                        Err(e) => {
-                            log::error!("Failed to generate new widgetnode: {:?}", e);
-                        }
+                    if let Ok(new_widget) = generate_new_widgetnode(&vars, &config_path).await {
+                        let mut id_to_prop = HashMap::new();
+                        let _ = get_id_to_props_map(&new_widget, &mut id_to_prop);
+
+                        widget_reg_store.update_prop_changes(id_to_prop);
+                    } else {
+                        log::error!("Failed to generate new widgetnode");
                     }
                 }
                 log::debug!("Receiver loop exited");
@@ -381,31 +378,6 @@ impl<B: DisplayBackend> App<B> {
                     }
                 }
             }));
-
-            update_receiver.attach(None, move |new_root_widget| {
-                let mut id_to_prop = HashMap::new();
-                let _ = get_id_to_props_map(&new_root_widget, &mut id_to_prop);
-
-                widget_reg_store.update_prop_changes(id_to_prop);
-
-                // for child in container_for_task.children() {
-                //     container_for_task.remove(&child);
-                // }
-
-                // match new_root_widget {
-                //     Ok(node) => {
-                //         let gtk_widget: gtk::Widget =
-                //             build_gtk_widget(WidgetInput::Node(node)).expect("Unable to create the gtk widget.");
-                //         container_for_task.add(&gtk_widget);
-                //         container_for_task.show_all();
-                //     }
-                //     Err(err) => {
-                //         eprintln!("Widget render failed: {:?}", err);
-                //     }
-                // }
-
-                glib::ControlFlow::Continue
-            });
 
             let duration = window_args.duration;
             if let Some(duration) = duration {

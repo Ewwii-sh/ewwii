@@ -203,11 +203,11 @@ impl From<RawOpt> for Opt {
 }
 
 /// Parse a window-name:window-id pair of the form `name:id` or `name` into a tuple of `(name, id)`.
-fn parse_window_config_and_id(s: &str) -> Result<(String, String)> {
-    let (name, id) = s.split_once(':').unwrap_or((s, s));
+// fn parse_window_config_and_id(s: &str) -> Result<(String, String)> {
+//     let (name, id) = s.split_once(':').unwrap_or((s, s));
 
-    Ok((name.to_string(), id.to_string()))
-}
+//     Ok((name.to_string(), id.to_string()))
+// }
 
 /// Parse a window-id specific variable value declaration with the syntax `window-id:variable_name="new_value"`
 /// into a tuple of `(id, variable_name, new_value)`.

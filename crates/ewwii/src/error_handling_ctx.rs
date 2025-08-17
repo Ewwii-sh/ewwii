@@ -15,9 +15,9 @@ use once_cell::sync::Lazy;
 
 pub static FILE_DATABASE: Lazy<Arc<RwLock<FileDatabase>>> = Lazy::new(|| Arc::new(RwLock::new(FileDatabase::new())));
 
-pub fn clear_files() {
-    *FILE_DATABASE.write().unwrap() = FileDatabase::new();
-}
+// pub fn clear_files() {
+//     *FILE_DATABASE.write().unwrap() = FileDatabase::new();
+// }
 
 pub fn print_error(err: anyhow::Error) {
     match anyhow_err_to_diagnostic(&err) {
