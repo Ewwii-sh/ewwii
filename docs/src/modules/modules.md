@@ -6,7 +6,7 @@ Every module follows the syntax:
 
 ```rust,ignore
 import "std::env" as env;
-let home = env::get_home_dir();
+let home = env::get_home_dir(); // returns `$HOME` env var value
 ```
 
 This allows you to write expressive, modular Rhai code with functions grouped logically under `std` or custom namespaces.

@@ -56,22 +56,22 @@ macro_rules! enum_parse {
 ///   elements that where in a but not in b,
 ///   elements that where in b but not in a
 /// ).
-pub fn list_difference<'a, 'b, T: PartialEq>(a: &'a [T], b: &'b [T]) -> (Vec<&'a T>, Vec<&'b T>) {
-    let mut missing = Vec::new();
-    for elem in a {
-        if !b.contains(elem) {
-            missing.push(elem);
-        }
-    }
+// pub fn list_difference<'a, 'b, T: PartialEq>(a: &'a [T], b: &'b [T]) -> (Vec<&'a T>, Vec<&'b T>) {
+//     let mut missing = Vec::new();
+//     for elem in a {
+//         if !b.contains(elem) {
+//             missing.push(elem);
+//         }
+//     }
 
-    let mut new = Vec::new();
-    for elem in b {
-        if !a.contains(elem) {
-            new.push(elem);
-        }
-    }
-    (missing, new)
-}
+//     let mut new = Vec::new();
+//     for elem in b {
+//         if !a.contains(elem) {
+//             new.push(elem);
+//         }
+//     }
+//     (missing, new)
+// }
 
 #[ext(pub, name = StringExt)]
 impl<T: AsRef<str>> T {
@@ -87,21 +87,21 @@ impl<T: AsRef<str>> T {
     }
 }
 
-pub trait IterAverage {
-    fn avg(self) -> f32;
-}
+// pub trait IterAverage {
+//     fn avg(self) -> f32;
+// }
 
-impl<I: Iterator<Item = f32>> IterAverage for I {
-    fn avg(self) -> f32 {
-        let mut total = 0f32;
-        let mut cnt = 0f32;
-        for value in self {
-            total += value;
-            cnt += 1f32;
-        }
-        total / cnt
-    }
-}
+// impl<I: Iterator<Item = f32>> IterAverage for I {
+//     fn avg(self) -> f32 {
+//         let mut total = 0f32;
+//         let mut cnt = 0f32;
+//         for value in self {
+//             total += value;
+//             cnt += 1f32;
+//         }
+//         total / cnt
+//     }
+// }
 
 /// Replace all env-var references of the format `"something ${foo}"` in a string
 /// by the actual env-variables. If the env-var isn't found, will replace the

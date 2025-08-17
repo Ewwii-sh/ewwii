@@ -61,7 +61,7 @@ impl BackendWindowOptionsDef {
 
     // pass rhai map from WindowDefinition here
     pub fn from_map(map: &Map) -> Result<Self> {
-        let get = |key: &str| map.get(key).cloned();
+        // let get = |key: &str| map.get(key).cloned();
 
         let struts = Self::get_optional(map, "reserve")?;
         let window_type = Self::get_optional(map, "windowtype")?;
