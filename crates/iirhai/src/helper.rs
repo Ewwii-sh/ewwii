@@ -27,7 +27,7 @@ pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<St
 pub fn extract_poll_listen_exprs(code: &str) -> Vec<String> {
     let mut exprs = Vec::new();
     let mut i = 0;
-    let code_bytes = code.as_bytes();
+    // let code_bytes = code.as_bytes();
     let len = code.len();
 
     while i < len {

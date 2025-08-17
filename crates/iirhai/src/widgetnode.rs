@@ -1,6 +1,6 @@
 use ahash::AHasher;
-use anyhow::{bail, Result};
-use rhai::{Array, Dynamic, Map};
+use anyhow::{Result};
+use rhai::Map;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
@@ -118,7 +118,13 @@ pub fn get_id_to_props_map(root_node: &WidgetNode, id_to_props: &mut HashMap<u64
                 get_id_to_props_map(child, id_to_props)?;
             }
         }
-        WidgetNode::Scroll { props, children } => insert_props(props, "Scroll", id_to_props)?,
+        WidgetNode::Scroll { props, children } => {
+            insert_props(props, "Scroll", id_to_props)?;
+
+            for child in children {
+                get_id_to_props_map(child, id_to_props)?;
+            }
+        },
         WidgetNode::OverLay { children } => {
             for child in children {
                 get_id_to_props_map(child, id_to_props)?;

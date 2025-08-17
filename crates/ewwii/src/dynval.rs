@@ -1,7 +1,7 @@
 use ewwii_shared_util::{Span, Spanned};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::{convert::TryFrom, fmt, iter::FromIterator, str::FromStr};
+use std::{convert::TryFrom, fmt, iter::FromIterator};
 
 pub type Result<T> = std::result::Result<T, ConversionError>;
 
@@ -80,18 +80,18 @@ impl std::str::FromStr for DynVal {
 //     fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err>;
 // }
 
-impl<E, T: FromStr<Err = E>> FromDynVal for T {
-    type Err = E;
+// impl<E, T: FromStr<Err = E>> FromDynVal for T {
+//     type Err = E;
 
-    fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err> {
-        x.0.parse()
-    }
-}
+//     fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err> {
+//         x.0.parse()
+//     }
+// }
 
-pub trait FromDynVal: Sized {
-    type Err;
-    fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err>;
-}
+// pub trait FromDynVal: Sized {
+//     type Err;
+//     fn from_dynval(x: &DynVal) -> std::result::Result<Self, Self::Err>;
+// }
 
 macro_rules! impl_dynval_from {
     ($($t:ty),*) => {
@@ -196,31 +196,31 @@ impl DynVal {
         }
     }
 
-    // TODO this should return Result<Vec<DynVal>> and use json parsing
-    pub fn as_vec(&self) -> Result<Vec<String>> {
-        if self.0.is_empty() {
-            Ok(Vec::new())
-        } else {
-            match self.0.strip_prefix('[').and_then(|x| x.strip_suffix(']')) {
-                Some(content) => {
-                    let mut items: Vec<String> = content.split(',').map(|x: &str| x.to_string()).collect();
-                    let mut removed = 0;
-                    for times_ran in 0..items.len() {
-                        // escapes `,` if there's a `\` before em
-                        if items[times_ran - removed].ends_with('\\') {
-                            items[times_ran - removed].pop();
-                            let it = items.remove((times_ran + 1) - removed);
-                            items[times_ran - removed] += ",";
-                            items[times_ran - removed] += &it;
-                            removed += 1;
-                        }
-                    }
-                    Ok(items)
-                }
-                None => Err(ConversionError { value: self.clone(), target_type: "vec", source: None }),
-            }
-        }
-    }
+    // // TODO this should return Result<Vec<DynVal>> and use json parsing
+    // pub fn as_vec(&self) -> Result<Vec<String>> {
+    //     if self.0.is_empty() {
+    //         Ok(Vec::new())
+    //     } else {
+    //         match self.0.strip_prefix('[').and_then(|x| x.strip_suffix(']')) {
+    //             Some(content) => {
+    //                 let mut items: Vec<String> = content.split(',').map(|x: &str| x.to_string()).collect();
+    //                 let mut removed = 0;
+    //                 for times_ran in 0..items.len() {
+    //                     // escapes `,` if there's a `\` before em
+    //                     if items[times_ran - removed].ends_with('\\') {
+    //                         items[times_ran - removed].pop();
+    //                         let it = items.remove((times_ran + 1) - removed);
+    //                         items[times_ran - removed] += ",";
+    //                         items[times_ran - removed] += &it;
+    //                         removed += 1;
+    //                     }
+    //                 }
+    //                 Ok(items)
+    //             }
+    //             None => Err(ConversionError { value: self.clone(), target_type: "vec", source: None }),
+    //         }
+    //     }
+    // }
 
     // pub fn as_json_value(&self) -> Result<serde_json::Value> {
     //     serde_json::from_str::<serde_json::Value>(&self.0)
@@ -235,11 +235,11 @@ impl DynVal {
     //         .ok_or_else(|| ConversionError { value: self.clone(), target_type: "json-array", source: None })
     // }
 
-    pub fn as_json_object(&self) -> Result<serde_json::Map<String, serde_json::Value>> {
-        serde_json::from_str::<serde_json::Value>(&self.0)
-            .map_err(|e| ConversionError::new(self.clone(), "json-value", Box::new(e)))?
-            .as_object()
-            .cloned()
-            .ok_or_else(|| ConversionError { value: self.clone(), target_type: "json-object", source: None })
-    }
+    // pub fn as_json_object(&self) -> Result<serde_json::Map<String, serde_json::Value>> {
+    //     serde_json::from_str::<serde_json::Value>(&self.0)
+    //         .map_err(|e| ConversionError::new(self.clone(), "json-value", Box::new(e)))?
+    //         .as_object()
+    //         .cloned()
+    //         .ok_or_else(|| ConversionError { value: self.clone(), target_type: "json-object", source: None })
+    // }
 }
