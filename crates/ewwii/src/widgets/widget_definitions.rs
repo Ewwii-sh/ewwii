@@ -114,6 +114,15 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
         if let Ok(space_evenly) = get_bool_prop(props, "space_evenly", Some(true)) {
             gtk_widget_clone.set_homogeneous(space_evenly);
         }
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
     });
 
     let id = hash_props_and_type(&props, "Box");
@@ -239,6 +248,15 @@ pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>, widget_reg
         };
 
         gtk_widget_clone.set_orientation(orientation);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
     });
 
     let id = hash_props_and_type(&props, "CenterBox");
@@ -446,6 +464,15 @@ pub(super) fn build_gtk_event_box(
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
         let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
     });
 
     let count = children.len();
@@ -545,23 +572,45 @@ pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) 
 pub(super) fn build_circular_progress_bar(props: Map, widget_registry: &mut WidgetRegistry) -> Result<CircProg> {
     let widget = CircProg::new();
 
-    if let Ok(value) = get_f64_prop(&props, "value", None) {
-        widget.set_property("value", value.clamp(0.0, 100.0));
-    }
+    let apply_props = |props: &Map, widget: &CircProg| -> Result<()> {
+        if let Ok(value) = get_f64_prop(&props, "value", None) {
+            widget.set_property("value", value.clamp(0.0, 100.0));
+        }
 
-    if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
-        widget.set_property("start-at", start_at.clamp(0.0, 100.0));
-    }
+        if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
+            widget.set_property("start-at", start_at.clamp(0.0, 100.0));
+        }
 
-    if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
-        widget.set_property("thickness", thickness);
-    }
+        if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
+            widget.set_property("thickness", thickness);
+        }
 
-    if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
-        widget.set_property("clockwise", clockwise);
-    }
+        if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
+            widget.set_property("clockwise", clockwise);
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &widget)?;
+
+    let widget_clone = widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "CircularProgressBar");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(widget)
 }
@@ -569,62 +618,84 @@ pub(super) fn build_circular_progress_bar(props: Map, widget_registry: &mut Widg
 pub(super) fn build_graph(props: Map, widget_registry: &mut WidgetRegistry) -> Result<super::graph::Graph> {
     let widget = super::graph::Graph::new();
 
-    if let Ok(value) = get_f64_prop(&props, "value", None) {
-        if value.is_nan() || value.is_infinite() {
-            return Err(anyhow!("Graph's value should never be NaN or infinite"));
+    let apply_props = |props: &Map, widget: &super::graph::Graph| -> Result<()> {
+        if let Ok(value) = get_f64_prop(&props, "value", None) {
+            if value.is_nan() || value.is_infinite() {
+                return Err(anyhow!("Graph's value should never be NaN or infinite"));
+            }
+            widget.set_property("value", value);
         }
-        widget.set_property("value", value);
-    }
 
-    if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
-        widget.set_property("thickness", thickness);
-    }
-
-    if let Ok(time_range) = get_duration_prop(&props, "time_range", None) {
-        widget.set_property("time-range", time_range.as_millis() as u64);
-    }
-
-    let min = get_f64_prop(&props, "min", Some(0.0)).ok();
-    let max = get_f64_prop(&props, "max", Some(100.0)).ok();
-
-    if let (Some(mi), Some(ma)) = (min, max) {
-        if mi > ma {
-            return Err(anyhow!("Graph's min ({mi}) should never be higher than max ({ma})"));
+        if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
+            widget.set_property("thickness", thickness);
         }
-    }
 
-    if let Some(mi) = min {
-        widget.set_property("min", mi);
-    }
+        if let Ok(time_range) = get_duration_prop(&props, "time_range", None) {
+            widget.set_property("time-range", time_range.as_millis() as u64);
+        }
 
-    if let Some(ma) = max {
-        widget.set_property("max", ma);
-    }
+        let min = get_f64_prop(&props, "min", Some(0.0)).ok();
+        let max = get_f64_prop(&props, "max", Some(100.0)).ok();
 
-    if let Ok(dynamic) = get_bool_prop(&props, "dynamic", None) {
-        widget.set_property("dynamic", dynamic);
-    }
+        if let (Some(mi), Some(ma)) = (min, max) {
+            if mi > ma {
+                return Err(anyhow!("Graph's min ({mi}) should never be higher than max ({ma})"));
+            }
+        }
 
-    if let Ok(line_style) = get_string_prop(&props, "line_style", None) {
-        widget.set_property("line-style", line_style);
-    }
+        if let Some(mi) = min {
+            widget.set_property("min", mi);
+        }
 
-    // flip-x - whether the x axis should go from high to low
-    if let Ok(flip_x) = get_bool_prop(&props, "flip_x", None) {
-        widget.set_property("flip-x", flip_x);
-    }
+        if let Some(ma) = max {
+            widget.set_property("max", ma);
+        }
 
-    // flip-y - whether the y axis should go from high to low
-    if let Ok(flip_y) = get_bool_prop(&props, "flip_y", None) {
-        widget.set_property("flip-y", flip_y);
-    }
+        if let Ok(dynamic) = get_bool_prop(&props, "dynamic", None) {
+            widget.set_property("dynamic", dynamic);
+        }
 
-    // vertical - if set to true, the x and y axes will be exchanged
-    if let Ok(vertical) = get_bool_prop(&props, "vertical", None) {
-        widget.set_property("vertical", vertical);
-    }
+        if let Ok(line_style) = get_string_prop(&props, "line_style", None) {
+            widget.set_property("line-style", line_style);
+        }
+
+        // flip-x - whether the x axis should go from high to low
+        if let Ok(flip_x) = get_bool_prop(&props, "flip_x", None) {
+            widget.set_property("flip-x", flip_x);
+        }
+
+        // flip-y - whether the y axis should go from high to low
+        if let Ok(flip_y) = get_bool_prop(&props, "flip_y", None) {
+            widget.set_property("flip-y", flip_y);
+        }
+
+        // vertical - if set to true, the x and y axes will be exchanged
+        if let Ok(vertical) = get_bool_prop(&props, "vertical", None) {
+            widget.set_property("vertical", vertical);
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &widget)?;
+
+    let widget_clone = widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Graph");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(widget)
 }
@@ -632,24 +703,46 @@ pub(super) fn build_graph(props: Map, widget_registry: &mut WidgetRegistry) -> R
 pub(super) fn build_gtk_progress(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ProgressBar> {
     let gtk_widget = gtk::ProgressBar::new();
 
-    let orientation = props
-        .get("orientation")
-        .and_then(|v| v.clone().try_cast::<String>())
-        .map(|s| parse_orientation(&s))
-        .transpose()?
-        .unwrap_or(gtk::Orientation::Horizontal);
+    let apply_props = |props: &Map, widget: &gtk::ProgressBar| -> Result<()> {
+        let orientation = props
+            .get("orientation")
+            .and_then(|v| v.clone().try_cast::<String>())
+            .map(|s| parse_orientation(&s))
+            .transpose()?
+            .unwrap_or(gtk::Orientation::Horizontal);
 
-    gtk_widget.set_orientation(orientation);
+        widget.set_orientation(orientation);
 
-    if let Ok(flipped) = get_bool_prop(&props, "flipped", Some(false)) {
-        gtk_widget.set_inverted(flipped)
-    }
+        if let Ok(flipped) = get_bool_prop(&props, "flipped", Some(false)) {
+            widget.set_inverted(flipped)
+        }
 
-    if let Ok(bar_value) = get_f64_prop(&props, "value", None) {
-        gtk_widget.set_fraction(bar_value / 100f64)
-    }
+        if let Ok(bar_value) = get_f64_prop(&props, "value", None) {
+            widget.set_fraction(bar_value / 100f64)
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Progress");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -657,59 +750,81 @@ pub(super) fn build_gtk_progress(props: Map, widget_registry: &mut WidgetRegistr
 pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Image> {
     let gtk_widget = gtk::Image::new();
 
-    let path = get_string_prop(&props, "path", None)?;
-    let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
-    let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
-    let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
-    let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
+    let apply_props = |props: &Map, widget: &gtk::Image| -> Result<()> {
+        let path = get_string_prop(&props, "path", None)?;
+        let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
+        let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
+        let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
+        let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
 
-    if !path.ends_with(".svg") && !fill_svg.is_empty() {
-        log::warn!("Fill attribute ignored, file is not an svg image");
-    }
-
-    if path.ends_with(".gif") {
-        let pixbuf_animation = gtk::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-        gtk_widget.set_from_animation(&pixbuf_animation);
-    } else {
-        let pixbuf;
-        // populate the pixel buffer
-        if path.ends_with(".svg") && !fill_svg.is_empty() {
-            let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
-            // The fastest way to add/change fill color
-            let svg_data = if svg_data.contains("fill=") {
-                let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
-                reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
-            } else {
-                let reg = regex::Regex::new(r"<svg")?;
-                reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
-            };
-            let stream = gtk::gio::MemoryInputStream::from_bytes(&gtk::glib::Bytes::from(svg_data.as_bytes()));
-            pixbuf = gtk::gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                &stream,
-                image_width,
-                image_height,
-                preserve_aspect_ratio,
-                None::<&gtk::gio::Cancellable>,
-            )?;
-            stream.close(None::<&gtk::gio::Cancellable>)?;
-        } else {
-            pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(
-                std::path::PathBuf::from(path),
-                image_width,
-                image_height,
-                preserve_aspect_ratio,
-            )?;
+        if !path.ends_with(".svg") && !fill_svg.is_empty() {
+            log::warn!("Fill attribute ignored, file is not an svg image");
         }
-        gtk_widget.set_from_pixbuf(Some(&pixbuf));
-    }
 
-    if let Ok(icon_name) = get_string_prop(&props, "icon", None) {
-        let icon_size = get_string_prop(&props, "icon-size", Some("button"))?;
-        gtk_widget.set_from_icon_name(Some(&icon_name), parse_icon_size(&icon_size)?);
-        return Ok(gtk_widget);
-    }
+        if path.ends_with(".gif") {
+            let pixbuf_animation = gtk::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
+            widget.set_from_animation(&pixbuf_animation);
+        } else {
+            let pixbuf;
+            // populate the pixel buffer
+            if path.ends_with(".svg") && !fill_svg.is_empty() {
+                let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
+                // The fastest way to add/change fill color
+                let svg_data = if svg_data.contains("fill=") {
+                    let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
+                    reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
+                } else {
+                    let reg = regex::Regex::new(r"<svg")?;
+                    reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
+                };
+                let stream = gtk::gio::MemoryInputStream::from_bytes(&gtk::glib::Bytes::from(svg_data.as_bytes()));
+                pixbuf = gtk::gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                    &stream,
+                    image_width,
+                    image_height,
+                    preserve_aspect_ratio,
+                    None::<&gtk::gio::Cancellable>,
+                )?;
+                stream.close(None::<&gtk::gio::Cancellable>)?;
+            } else {
+                pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file_at_scale(
+                    std::path::PathBuf::from(path),
+                    image_width,
+                    image_height,
+                    preserve_aspect_ratio,
+                )?;
+            }
+            widget.set_from_pixbuf(Some(&pixbuf));
+        }
+
+        if let Ok(icon_name) = get_string_prop(&props, "icon", None) {
+            let icon_size = get_string_prop(&props, "icon-size", Some("button"))?;
+            widget.set_from_icon_name(Some(&icon_name), parse_icon_size(&icon_size)?);
+            // return Ok(widget);
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) = resolve_rhai_widget_attrs(
+            None,
+            &gtk_widget_clone.clone().upcast::<gtk::Widget>(),
+            Some(props),
+        ) {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
     let id = hash_props_and_type(&props, "Image");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn });
 
     Ok(gtk_widget)
 }
@@ -1332,6 +1447,13 @@ pub(super) fn resolve_rhai_widget_attrs(node: Option<WidgetNode>, gtk_widget: &g
     // Handle classes
     if let Ok(class_str) = get_string_prop(&props, "class", None) {
         let style_context = gtk_widget.style_context();
+
+        // remove all classes
+        for class in style_context.list_classes() {
+            style_context.remove_class(&class);
+        }
+
+        // then apply the classes
         for class in class_str.split_whitespace() {
             style_context.add_class(class);
         }
