@@ -79,7 +79,9 @@ impl WidgetRegistry {
 
         for op in patch {
             match op {
-                PatchGtkWidget::Create(w_node, parent_id) => self.create_widget(w_node, parent_id).expect("failed to create new gtk widget"),
+                PatchGtkWidget::Create(w_node, parent_id) => {
+                    self.create_widget(w_node, parent_id).expect("failed to create new gtk widget")
+                }
                 PatchGtkWidget::Update(widget_id, new_props) => {
                     self.update_props(widget_id, new_props);
                 }
@@ -128,9 +130,9 @@ impl WidgetRegistry {
     pub fn create_widget(&mut self, widget_node: WidgetNode, parent_id: u64) -> Result<()> {
         if let Some(parent) = self.widgets.get(&parent_id) {
             let parent_widget = parent.widget.clone();
-            
+
             let gtk_widget = build_gtk_widget(WidgetInput::Node(widget_node.clone()), self)?;
-            
+
             if let Some(container) = parent_widget.dynamic_cast::<gtk::Container>().ok() {
                 container.add(&gtk_widget);
             }
