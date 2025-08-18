@@ -47,10 +47,7 @@ pub struct WidgetInfo {
     pub children: Vec<WidgetNode>,
 }
 
-pub fn get_id_to_widget_info(
-    node: &WidgetNode,
-    id_to_props: &mut HashMap<u64, WidgetInfo>,
-) -> Result<()> {
+pub fn get_id_to_widget_info(node: &WidgetNode, id_to_props: &mut HashMap<u64, WidgetInfo>) -> Result<()> {
     match node {
         WidgetNode::Box { props, children } => {
             insert_wdgt_info(node, props, "Box", children.clone(), id_to_props)?;
@@ -152,21 +149,15 @@ pub fn get_id_to_widget_info(
     Ok(())
 }
 
-
 fn insert_wdgt_info(
     node: &WidgetNode,
     props: &Map,
     widget_type: &str,
     children: Vec<WidgetNode>,
-    id_to_info: &mut HashMap<u64, WidgetInfo>
+    id_to_info: &mut HashMap<u64, WidgetInfo>,
 ) -> Result<()> {
     let id = hash_props_and_type(props, widget_type);
-    let info = WidgetInfo {
-        node: node.clone(),
-        props: props.clone(),
-        widget_type: widget_type.to_string(),
-        children,
-    };
+    let info = WidgetInfo { node: node.clone(), props: props.clone(), widget_type: widget_type.to_string(), children };
     id_to_info.insert(id, info);
     Ok(())
 }
