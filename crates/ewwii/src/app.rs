@@ -321,10 +321,9 @@ impl<B: DisplayBackend> App<B> {
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
-            // Holds the id and the props of a widget
-            // It is crutual for supporting dynamic updates
+            // Should hold the id and the props of a widget
+            // It is critical for supporting dynamic updates
             let mut widget_reg_store = WidgetRegistry::new();
-            // note for future me: ^ this might need cloning.
 
             let root_widget = build_gtk_widget(WidgetInput::Window(window_def), &mut widget_reg_store)?;
 

@@ -39,7 +39,14 @@ pub enum WidgetNode {
     Enter(Vec<WidgetNode>),
 }
 
-pub fn get_id_to_props_map(root_node: &WidgetNode, id_to_props: &mut HashMap<u64, Map>) -> Result<()> {
+// Get `HashMap<widget_id, widget_prop>`
+// not exactly a get function as it mutates id_to_props
+// instead of returning any value.
+// it sounds misleading but i cant think of a better name.
+pub fn get_id_to_props_map(
+    root_node: &WidgetNode, 
+    id_to_props: &mut HashMap<u64, Map>
+) -> Result<()> {
     match root_node {
         WidgetNode::Box { props, children } => {
             insert_props(props, "Box", id_to_props)?;
