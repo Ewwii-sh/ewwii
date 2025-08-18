@@ -24,6 +24,14 @@ pub fn build_gtk_widget(input: WidgetInput, widget_reg: &mut WidgetRegistry) -> 
 // TODO: implement the commented lines
 fn build_gtk_widget_from_node(root_node: WidgetNode, widget_reg: &mut WidgetRegistry) -> Result<gtk::Widget> {
     let root_node2 = root_node.clone();
+
+    /*
+        When a a new widget is added to the build process,
+        make sure to update get_id_to_props_map() found in
+        `iirhai/widgetnode.rs`. It is crutial to presrve 
+        dynamic update system in ewwii.
+    */
+    
     let gtk_widget = match root_node {
         WidgetNode::Box { props, children } => build_gtk_box(props, children, widget_reg)?.upcast(),
         WidgetNode::CenterBox { props, children } => build_center_box(props, children, widget_reg)?.upcast(),
