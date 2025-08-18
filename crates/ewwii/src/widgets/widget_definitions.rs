@@ -59,6 +59,13 @@ pub struct WidgetEntry {
 
 pub struct WidgetRegistry {
     widgets: HashMap<u64, WidgetEntry>,
+    stored_widget_node: Option<WidgetNode>,
+}
+
+pub enum PatchGtkWidget {
+    Create(u64, Map),
+    Update(u64, Map),
+    Remove(u64),
 }
 
 impl WidgetRegistry {
@@ -66,7 +73,28 @@ impl WidgetRegistry {
         Self { widgets: HashMap::new() }
     }
 
-    pub fn update_prop_changes(&self, id_to_props: HashMap<u64, Map>) {
+    fn diff_trees(old: Option<WidgetNode>, new: WidgetNode) -> Vec<PatchGtkWidget> {
+        let mut id_to_prop = HashMap::new();
+        let _ = get_id_to_props_map(&new_widget, &mut id_to_prop);
+    }
+
+    pub fn update_widget_tree(&mut self, new_tree: WidgetNode) {
+        let old_tree = self.stored_widget_node.take();
+
+        let patch = diff_trees(old_tree, new_tree.clone());
+
+        for op in patch {
+            match op {
+                PatchGtkWidget::Create(widget_id, props) => self.create_widget(widget_id, props),
+                PatchGtkWidget::Update(widget_id, new_props) => self.update_props(widget_id, new_props),
+                PatchGtkWidget::Remove(widget_id) => self.remove_widget(widget_id),
+            }
+        }
+
+        self.stored_widget_node = Some(new_tree);
+    }
+
+    pub fn update_props(&self, id_to_props: HashMap<u64, Map>) {
         for (id, props) in id_to_props {
             if let Some(entry) = self.widgets.get(&id) {
                 (entry.update_fn)(&props);
