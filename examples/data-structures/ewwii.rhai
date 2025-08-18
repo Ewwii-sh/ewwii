@@ -16,9 +16,6 @@ let object = #{
 
 // Widget: a single animal button
 fn animalButton(emoji, selected) {
-    print!(selected);
-    print!(emoji);
-
     let class = "animal";
 
     if selected == emoji {
