@@ -14,12 +14,13 @@
     }
 */
 
-use super::ReactiveVarStore;
+use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
 use ewwii_shared_util::general_helper::*;
 use rhai::Map;
 use std::time::Duration;
 use tokio::process::Command;
 use tokio::time::sleep;
+use tokio::sync::watch;
 
 pub fn handle_poll(var_name: String, props: Map, store: ReactiveVarStore, tx: tokio::sync::mpsc::UnboundedSender<String>) {
     // Parse polling interval
@@ -44,6 +45,9 @@ pub fn handle_poll(var_name: String, props: Map, store: ReactiveVarStore, tx: to
 
     let store = store.clone();
     let tx = tx.clone();
+
+    let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+    SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
     tokio::spawn(async move {
         let mut last_value: Option<String> = None;
@@ -71,7 +75,15 @@ pub fn handle_poll(var_name: String, props: Map, store: ReactiveVarStore, tx: to
                 }
             }
 
-            sleep(interval).await;
+            tokio::select! {
+                _ = sleep(interval) => { continue; }
+                _ = shutdown_rx.changed() => {
+                    if *shutdown_rx.borrow() {
+                        log::debug!("[{}] stopping task", var_name);
+                        break;
+                    }
+                }
+            }
         }
     });
 }
