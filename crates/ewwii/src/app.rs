@@ -23,7 +23,7 @@ use ewwii_shared_util::Span;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
-use iirhai::widgetnode::{get_id_to_props_map, WidgetNode};
+use iirhai::widgetnode::WidgetNode;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::{Dynamic, Scope};
@@ -344,10 +344,7 @@ impl<B: DisplayBackend> App<B> {
                     let vars = store.read().unwrap().clone();
 
                     if let Ok(new_widget) = generate_new_widgetnode(&vars, &config_path).await {
-                        let mut id_to_prop = HashMap::new();
-                        let _ = get_id_to_props_map(&new_widget, &mut id_to_prop);
-
-                        widget_reg_store.update_prop_changes(id_to_prop);
+                        widget_reg_store.update_widget_tree(new_widget);
                     } else {
                         log::error!("Failed to generate new widgetnode");
                     }
