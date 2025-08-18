@@ -286,6 +286,9 @@ impl<B: DisplayBackend> App<B> {
         // let scope_index = ewwii_window.scope_index;
         ewwii_window.close();
 
+        // kill all poll/listen instances
+        iirhai::updates::kill_state_change_handler();
+
         if auto_reopen {
             self.failed_windows.insert(instance_id.to_string());
             // There might be an alternative monitor available already, so try to re-open it immediately.
