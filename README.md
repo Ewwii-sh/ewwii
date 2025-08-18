@@ -8,8 +8,13 @@ Elkowars Wacky Widgets Imporved Interface is a fork of Elkowars Wacky Widgets wh
 
 ## Examples
 
--   A basic bar, see [examples](./examples/ewwii-bar)
+All examples are in the [examples, directory](./examples/).
+
+-   A basic bar [CLICK TO SEE](./examples/ewwii-bar) <br>
     ![Example 1](./examples/ewwii-bar/ewwii-bar.png)
+
+-   Data structures [CLICK TO SEE](./examples/data-structures) <br>
+    ![Example 2](./examples/data-structures/data-structures-preview.png)
 
 ## Contribewwtiing
 
