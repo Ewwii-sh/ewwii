@@ -330,7 +330,7 @@ impl<B: DisplayBackend> App<B> {
             root_widget.style_context().add_class(window_name);
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
-            let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
+            let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget.clone())?;
             ewwii_window.gtk_window.style_context().add_class(window_name);
 
             // listening/polling
@@ -345,7 +345,7 @@ impl<B: DisplayBackend> App<B> {
 
                     match generate_new_widgetnode(&vars, &config_path).await {
                         Ok(new_widget) => {
-                            let _ = widget_reg_store.update_widget_tree(new_widget);
+                            let _ = widget_reg_store.update_widget_tree(new_widget, root_widget.clone());
                         }
                         Err(e) => {
                             log::error!("Failed to generate new widgetnode: {:#}", e);
