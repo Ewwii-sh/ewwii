@@ -323,7 +323,7 @@ impl<B: DisplayBackend> App<B> {
 
             // Should hold the id and the props of a widget
             // It is critical for supporting dynamic updates
-            let mut widget_reg_store = WidgetRegistry::new();
+            let mut widget_reg_store = WidgetRegistry::new(Some(&window_def.root_widget));
 
             let root_widget = build_gtk_widget(WidgetInput::Window(window_def), &mut widget_reg_store)?;
 
@@ -343,10 +343,13 @@ impl<B: DisplayBackend> App<B> {
                     log::debug!("Received update for var: {}", var_name);
                     let vars = store.read().unwrap().clone();
 
-                    if let Ok(new_widget) = generate_new_widgetnode(&vars, &config_path).await {
-                        widget_reg_store.update_widget_tree(new_widget);
-                    } else {
-                        log::error!("Failed to generate new widgetnode");
+                    match generate_new_widgetnode(&vars, &config_path).await {
+                        Ok(new_widget) => {
+                            let _ = widget_reg_store.update_widget_tree(new_widget);
+                        }
+                        Err(e) => {
+                            log::error!("Failed to generate new widgetnode: {:#}", e);
+                        }
                     }
                 }
                 log::debug!("Receiver loop exited");

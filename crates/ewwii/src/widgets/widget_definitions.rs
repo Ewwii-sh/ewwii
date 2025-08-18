@@ -1,7 +1,7 @@
 #![allow(clippy::option_map_unit_fn)]
 
-use crate::gtk::glib::translate::FromGlib;
-use crate::gtk::prelude::LabelExt;
+use gtk::glib::translate::FromGlib;
+use gtk::prelude::LabelExt;
 use crate::util;
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use anyhow::{anyhow, bail, Result};
@@ -69,24 +69,28 @@ pub enum PatchGtkWidget {
 }
 
 impl WidgetRegistry {
-    pub fn new() -> Self {
-        Self { widgets: HashMap::new(), stored_widget_node: None }
+    pub fn new(wn: Option<&WidgetNode>) -> Self {
+        Self { widgets: HashMap::new(), stored_widget_node: wn.cloned() }
     }
 
-    pub fn update_widget_tree(&mut self, new_tree: WidgetNode) {
+    pub fn update_widget_tree(&mut self, new_tree: WidgetNode) -> Result<(), anyhow::Error> {
         let old_tree = self.stored_widget_node.take();
-
         let patch = Self::diff_trees(old_tree.as_ref(), &new_tree);
 
         for op in patch {
             match op {
-                PatchGtkWidget::Create(w_node) => build_gtk_widget(WidgetInput::Node(w_node), &mut self),
-                PatchGtkWidget::Update(widget_id, new_props) => self.update_props(widget_id, new_props),
+                PatchGtkWidget::Create(w_node) => {
+                    build_gtk_widget(WidgetInput::Node(w_node), self)?;
+                }
+                PatchGtkWidget::Update(widget_id, new_props) => {
+                    self.update_props(widget_id, new_props);
+                },
                 PatchGtkWidget::Remove(widget_id) => self.remove_widget(widget_id),
             }
         }
 
         self.stored_widget_node = Some(new_tree);
+        Ok(())
     }
 
     pub fn diff_trees(old: Option<&WidgetNode>, new: &WidgetNode) -> Vec<PatchGtkWidget> {
@@ -103,13 +107,12 @@ impl WidgetRegistry {
         // Updates and creations
         for (id, new_info) in &new_map {
             match old_map.get(id) {
-                Some(old_info) if old_info.props != new_info.props => {
+                Some(old_info) if props_differ(&old_info.props, &new_info.props) => {
+                    log::debug!("Widget {} props changed: {:?}", id, new_info.props);
                     patch.push(PatchGtkWidget::Update(*id, new_info.props.clone()));
                 }
                 None => {
-                    if let Some(info) = new_info.get(&id) {
-                        patch.push(PatchGtkWidget::Create(info.node.clone()));
-                    }
+                    patch.push(PatchGtkWidget::Create(new_info.node.clone()));
                 }
                 _ => {}
             }
@@ -125,16 +128,20 @@ impl WidgetRegistry {
         patch
     }
 
-    pub fn update_props(&self, id_to_props: HashMap<u64, Map>) {
-        for (id, props) in id_to_props {
-            if let Some(entry) = self.widgets.get(&id) {
-                (entry.update_fn)(&props);
-            }
+    pub fn update_props(&self, widget_id: u64, new_props: Map) {
+        if let Some(entry) = self.widgets.get(&widget_id) {
+            (entry.update_fn)(&new_props);
         }
     }
 
-    pub fn remove_widget(&self, widget_id: u64) {
-
+    pub fn remove_widget(&mut self, widget_id: u64) {
+        if let Some(entry) = self.widgets.remove(&widget_id) {
+            if let Some(parent) = entry.widget.parent() {
+                if let Ok(container) = parent.downcast::<gtk::Container>() {
+                    container.remove(&entry.widget);
+                }
+            }
+        }
     }
 }
 

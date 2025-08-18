@@ -2,6 +2,7 @@ use crate::gtk::prelude::LabelExt;
 use anyhow::{anyhow, Result};
 use gtk::pango;
 use std::process::Command;
+use rhai::Map;
 
 // Run a command and get the output
 pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
@@ -31,6 +32,41 @@ where
         })
         .expect("Failed to start command-execution-thread");
 }
+
+/// Dynamic system
+pub fn props_differ(old: &Map, new: &Map) -> bool {
+    if old.len() != new.len() {
+        return true;
+    }
+    for (k, v) in old.iter() {
+        match new.get(k) {
+            Some(nv) => {
+                if !dynamic_eq(v, nv) {
+                    return true;
+                }
+            }
+            None => return true,
+        }
+    }
+    false
+}
+
+pub fn dynamic_eq(a: &rhai::Dynamic, b: &rhai::Dynamic) -> bool {
+    match (a.clone().try_cast::<i64>(), b.clone().try_cast::<i64>()) {
+        (Some(a_int), Some(b_int)) => return a_int == b_int,
+        _ => {}
+    }
+    match (a.clone().try_cast::<f64>(), b.clone().try_cast::<f64>()) {
+        (Some(a_f), Some(b_f)) => return a_f == b_f,
+        _ => {}
+    }
+    match (a.clone().try_cast::<String>(), b.clone().try_cast::<String>()) {
+        (Some(a_s), Some(b_s)) => return a_s == b_s,
+        _ => {}
+    }
+    false
+}
+
 
 /// ALL WIDGETS
 pub(super) fn parse_align(o: &str) -> Result<gtk::Align> {
