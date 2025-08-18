@@ -1,14 +1,14 @@
 #![allow(clippy::option_map_unit_fn)]
 
-use gtk::glib::translate::FromGlib;
-use gtk::prelude::LabelExt;
 use crate::util;
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use anyhow::{anyhow, bail, Result};
 use gdk::{ModifierType, NotifyType};
+use gtk::glib::translate::FromGlib;
+use gtk::prelude::LabelExt;
 use gtk::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{gdk, glib, pango};
-use iirhai::widgetnode::{hash_props_and_type, WidgetNode, get_id_to_widget_info};
+use iirhai::widgetnode::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 use once_cell::sync::Lazy;
 use rhai::Map;
 
@@ -84,7 +84,7 @@ impl WidgetRegistry {
                 }
                 PatchGtkWidget::Update(widget_id, new_props) => {
                     self.update_props(widget_id, new_props);
-                },
+                }
                 PatchGtkWidget::Remove(widget_id) => self.remove_widget(widget_id),
             }
         }
@@ -191,13 +191,7 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
 
     let id = hash_props_and_type(&props, "Box");
 
-    widget_registry.widgets.insert(
-        id,
-        WidgetEntry {
-            widget: gtk_widget.clone().upcast(),
-            update_fn,
-        },
-    );
+    widget_registry.widgets.insert(id, WidgetEntry { widget: gtk_widget.clone().upcast(), update_fn });
 
     Ok(gtk_widget)
 }
@@ -546,7 +540,7 @@ pub(super) fn build_gtk_event_box(
 
     let id = hash_props_and_type(&props, "EventBox");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -595,7 +589,7 @@ pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>, widget_regi
 
     let id = hash_props_and_type(&props, "Stack");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -656,7 +650,7 @@ pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) 
 
     let id = hash_props_and_type(&props, "Transform");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
 
     Ok(widget)
 }
@@ -698,7 +692,7 @@ pub(super) fn build_circular_progress_bar(props: Map, widget_registry: &mut Widg
 
     let id = hash_props_and_type(&props, "CircularProgressBar");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
 
     Ok(widget)
 }
@@ -779,7 +773,7 @@ pub(super) fn build_graph(props: Map, widget_registry: &mut WidgetRegistry) -> R
 
     let id = hash_props_and_type(&props, "Graph");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
 
     Ok(widget)
 }
@@ -822,7 +816,7 @@ pub(super) fn build_gtk_progress(props: Map, widget_registry: &mut WidgetRegistr
 
     let id = hash_props_and_type(&props, "Progress");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -900,7 +894,7 @@ pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) 
 
     let id = hash_props_and_type(&props, "Image");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -974,7 +968,7 @@ pub(super) fn build_gtk_button(props: Map, widget_registry: &mut WidgetRegistry)
 
     let id = hash_props_and_type(&props, "Button");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1077,7 +1071,7 @@ pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) 
 
     let id = hash_props_and_type(&props, "Label");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1130,7 +1124,7 @@ pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) 
 
     let id = hash_props_and_type(&props, "Input");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1209,7 +1203,7 @@ pub(super) fn build_gtk_calendar(props: Map, widget_registry: &mut WidgetRegistr
 
     let id = hash_props_and_type(&props, "Calendar");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1252,7 +1246,7 @@ pub(super) fn build_gtk_combo_box_text(props: Map, widget_registry: &mut WidgetR
 
     let id = hash_props_and_type(&props, "ComboBoxText");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1303,7 +1297,7 @@ pub(super) fn build_gtk_expander(
 
     let id = hash_props_and_type(&props, "Expander");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1355,7 +1349,7 @@ pub(super) fn build_gtk_revealer(
 
     let id = hash_props_and_type(&props, "Revealer");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1395,7 +1389,7 @@ pub(super) fn build_gtk_checkbox(props: Map, widget_registry: &mut WidgetRegistr
 
     let id = hash_props_and_type(&props, "Checkbox");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1439,7 +1433,7 @@ pub(super) fn build_gtk_color_button(props: Map, widget_registry: &mut WidgetReg
 
     let id = hash_props_and_type(&props, "ColorButton");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1483,7 +1477,7 @@ pub(super) fn build_gtk_color_chooser(props: Map, widget_registry: &mut WidgetRe
 
     let id = hash_props_and_type(&props, "ColorChooser");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1528,7 +1522,7 @@ pub(super) fn build_gtk_scale(props: Map, widget_registry: &mut WidgetRegistry) 
 
     let id = hash_props_and_type(&props, "Slider");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
@@ -1580,7 +1574,7 @@ pub(super) fn build_gtk_scrolledwindow(
 
     let id = hash_props_and_type(&props, "ScrolledWindow");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast(), });
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     Ok(gtk_widget)
 }
