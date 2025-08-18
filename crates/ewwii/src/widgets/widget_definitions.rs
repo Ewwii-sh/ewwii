@@ -73,9 +73,9 @@ impl WidgetRegistry {
         Self { widgets: HashMap::new(), stored_widget_node: wn.cloned() }
     }
 
-    pub fn update_widget_tree(&mut self, new_tree: WidgetNode, root_widget: gtk::Widget) -> Result<()> {
+    pub fn update_widget_tree(&mut self, new_tree: WidgetNode) -> Result<()> {
         let old_tree = self.stored_widget_node.take();
-        let patch = Self::diff_trees(old_tree.as_ref(), &new_tree, root_widget);
+        let patch = Self::diff_trees(old_tree.as_ref(), &new_tree);
 
         for op in patch {
             match op {
@@ -91,7 +91,7 @@ impl WidgetRegistry {
         Ok(())
     }
 
-    pub fn diff_trees(old: Option<&WidgetNode>, new: &WidgetNode, root_widget: gtk::Widget) -> Vec<PatchGtkWidget> {
+    pub fn diff_trees(old: Option<&WidgetNode>, new: &WidgetNode) -> Vec<PatchGtkWidget> {
         let mut patch = Vec::new();
 
         let mut old_map = HashMap::new();
