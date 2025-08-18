@@ -1,8 +1,8 @@
 use crate::gtk::prelude::LabelExt;
 use anyhow::{anyhow, Result};
 use gtk::pango;
-use std::process::Command;
 use rhai::Map;
+use std::process::Command;
 
 // Run a command and get the output
 pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
@@ -66,7 +66,6 @@ pub fn dynamic_eq(a: &rhai::Dynamic, b: &rhai::Dynamic) -> bool {
     }
     false
 }
-
 
 /// ALL WIDGETS
 pub(super) fn parse_align(o: &str) -> Result<gtk::Align> {
