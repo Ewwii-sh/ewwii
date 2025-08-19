@@ -87,22 +87,19 @@ fn parse_geometry(val: &Dynamic, args: &WindowArguments, override_geom: bool) ->
 }
 
 fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str) -> Result<Coords> {
-    let raw_key1 = map
+    let key1 = map
         .get(x_key)
-        .ok_or_else(|| anyhow!("Missing field {}", x_key))?
-        .clone()
-        .into_string()
-        .map_err(|_| anyhow!("Expected string for field {}", x_key))?;
+        .and_then(|v| v.clone().into_string().ok())
+        .map(|s| NumWithUnit::from_str(&s))
+        .transpose()?
+        .unwrap_or_else(NumWithUnit::default);
 
-    let raw_key2 = map
+    let key2 = map
         .get(y_key)
-        .ok_or_else(|| anyhow!("Missing field {}", y_key))?
-        .clone()
-        .into_string()
-        .map_err(|_| anyhow!("Expected string for field {}", y_key))?;
-
-    let key1 = NumWithUnit::from_str(&raw_key1)?;
-    let key2 = NumWithUnit::from_str(&raw_key2)?;
+        .and_then(|v| v.clone().into_string().ok())
+        .map(|s| NumWithUnit::from_str(&s))
+        .transpose()?
+        .unwrap_or_else(NumWithUnit::default);
 
     Ok(Coords { x: key1, y: key2 })
 }

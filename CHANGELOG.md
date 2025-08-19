@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Added `std::json` module to handle all json related tasks in Rhai.
 -   Added `api::wifi` module for handling wifi related tasks.
 
+### Changed
+
+-   Made `x`, `y`, `widget` and `height` properties optional on window definition.
+
 ### Fixed
 
 -   Ewwii window not closing when user requests with `WM_DELETE_WINDOW` event.
