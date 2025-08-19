@@ -85,18 +85,18 @@ pub mod wifi {
     #[rhai_fn(return_raw)]
     pub fn current_connection_linux() -> Result<Map, Box<EvalAltResult>> {
         let output = Command::new("nmcli")
-            .args(&["-t", "-f", "SSID,SIGNAL,SECURITY", "connection", "show", "--active"])
+            .args(&["-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"])
             .output()
             .map_err(|e| format!("Failed to run nmcli: {e}"))?;
         let stdout = String::from_utf8(output.stdout)
             .map_err(|e| format!("Invalid UTF-8 output: {}", e))?;
         let mut map = Map::new();
-        if let Some(line) = stdout.lines().next() {
+        if let Some(line) = stdout.lines().find(|l| l.starts_with("yes:")) {
             let parts: Vec<&str> = line.split(':').collect();
-            if parts.len() == 3 {
-                map.insert("ssid".into(), parts[0].into());
-                map.insert("signal".into(), parts[1].into());
-                map.insert("security".into(), parts[2].into());
+            if parts.len() == 4 {
+                map.insert("ssid".into(), parts[1].into());
+                map.insert("signal".into(), parts[2].into());
+                map.insert("security".into(), parts[3].into());
             }
         }
         Ok(map)
