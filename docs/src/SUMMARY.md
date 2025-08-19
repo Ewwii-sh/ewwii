@@ -23,6 +23,9 @@
 
 -   [Modules](modules/modules.md)
 
+    -   [Std Library](modules/stdlib.md)
+    -   [API Library](modules/apilib.md)
+
 -   [Widgets](widgets/widgets.md)
 
     -   [Widgets & Parameters](widgets/widgets_and_params.md)
