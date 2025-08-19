@@ -28,7 +28,7 @@ use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::{Dynamic, Scope};
 use std::{
-    cell::RefCell,
+    cell::{RefCell, Cell},
     collections::{HashMap, HashSet},
     marker::PhantomData,
     rc::Rc,
@@ -78,6 +78,7 @@ pub enum DaemonCommand {
 pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
+    pub delete_event_handler_id: Option<glib::SignalHandlerId>,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
 
@@ -89,8 +90,11 @@ impl EwwiiWindow {
     pub fn close(self) {
         log::info!("Closing gtk window {}", self.name);
         self.gtk_window.close();
-        if let Some(handler_id) = self.destroy_event_handler_id {
-            self.gtk_window.disconnect(handler_id);
+
+        for handler_id_opt in [self.destroy_event_handler_id, self.delete_event_handler_id] {
+            if let Some(handler_id) = handler_id_opt {
+                self.gtk_window.disconnect(handler_id);
+            }
         }
     }
 }
@@ -358,25 +362,49 @@ impl<B: DisplayBackend> App<B> {
                 log::debug!("Receiver loop exited");
             });
 
-            ewwii_window.destroy_event_handler_id = Some(ewwii_window.gtk_window.connect_destroy({
+            let gtk_close_handler = {
                 let app_evt_sender = self.app_evt_send.clone();
                 let instance_id = instance_id.to_string();
-                move |_| {
-                    // we don't care about the actual error response from the daemon as this is mostly just a fallback.
-                    // Generally, this should get disconnected before the gtk window gets destroyed.
-                    // This callback is triggered in 2 cases:
-                    // - When the monitor of this window gets disconnected
-                    // - When the window is closed manually.
-                    // We don't distinguish here and assume the window should be reopened once a monitor
-                    // becomes available again
+                // we don't care about the actual error response from the daemon as this is mostly just a fallback.
+                // Generally, this should get disconnected before the gtk window gets destroyed.
+                // This callback is triggered in 2 cases:
+                // - When the monitor of this window gets disconnected
+                // - When the window is closed manually.
+                // We don't distinguish here and assume the window should be reopened once a monitor
+                // becomes available again
+                move |auto_reopen| {
                     let (response_sender, _) = daemon_response::create_pair();
                     let command = DaemonCommand::CloseWindows {
                         windows: vec![instance_id.clone()],
-                        auto_reopen: true,
+                        auto_reopen,
                         sender: response_sender,
                     };
                     if let Err(err) = app_evt_sender.send(command) {
-                        log::error!("Error sending close window command to daemon after gtk window destroy event: {}", err);
+                        log::error!("Error sending close window command: {}", err);
+                    }
+                }
+            };
+
+            let closed_by_user = Rc::new(Cell::new(false));
+            
+            // handling users close request
+            ewwii_window.delete_event_handler_id = Some(ewwii_window.gtk_window.connect_delete_event({
+                let handler = gtk_close_handler.clone();
+                let closed_by_user = closed_by_user.clone();
+                move |_, _| {
+                    handler(false); // -- false: don't reopen window to respect users intent
+                    closed_by_user.set(true);
+                    glib::Propagation::Proceed
+                }
+            }));
+
+            // handling destory request
+            ewwii_window.destroy_event_handler_id = Some(ewwii_window.gtk_window.connect_destroy({
+                let handler = gtk_close_handler.clone();
+                let closed_by_user = closed_by_user.clone();
+                move |_| {
+                    if !closed_by_user.get() {
+                        handler(true);
                     }
                 }
             }));
@@ -526,7 +554,12 @@ fn initialize_window<B: DisplayBackend>(
 
     window.show_all();
 
-    Ok(EwwiiWindow { name: window_init.name.clone(), gtk_window: window, destroy_event_handler_id: None })
+    Ok(EwwiiWindow { 
+        name: window_init.name.clone(), 
+        gtk_window: window, 
+        delete_event_handler_id: None, 
+        destroy_event_handler_id: None 
+    })
 }
 
 async fn generate_new_widgetnode(all_vars: &HashMap<String, String>, code_path: &Path) -> Result<WidgetNode> {
