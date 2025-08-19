@@ -19,8 +19,8 @@ use ewwii_shared_util::general_helper::*;
 use rhai::Map;
 use std::time::Duration;
 use tokio::process::Command;
-use tokio::time::sleep;
 use tokio::sync::watch;
+use tokio::time::sleep;
 
 pub fn handle_poll(var_name: String, props: Map, store: ReactiveVarStore, tx: tokio::sync::mpsc::UnboundedSender<String>) {
     // Parse polling interval

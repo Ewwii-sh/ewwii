@@ -28,7 +28,7 @@ use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::{Dynamic, Scope};
 use std::{
-    cell::{RefCell, Cell},
+    cell::{Cell, RefCell},
     collections::{HashMap, HashSet},
     marker::PhantomData,
     rc::Rc,
@@ -374,11 +374,8 @@ impl<B: DisplayBackend> App<B> {
                 // becomes available again
                 move |auto_reopen| {
                     let (response_sender, _) = daemon_response::create_pair();
-                    let command = DaemonCommand::CloseWindows {
-                        windows: vec![instance_id.clone()],
-                        auto_reopen,
-                        sender: response_sender,
-                    };
+                    let command =
+                        DaemonCommand::CloseWindows { windows: vec![instance_id.clone()], auto_reopen, sender: response_sender };
                     if let Err(err) = app_evt_sender.send(command) {
                         log::error!("Error sending close window command: {}", err);
                     }
@@ -386,7 +383,7 @@ impl<B: DisplayBackend> App<B> {
             };
 
             let closed_by_user = Rc::new(Cell::new(false));
-            
+
             // handling users close request
             ewwii_window.delete_event_handler_id = Some(ewwii_window.gtk_window.connect_delete_event({
                 let handler = gtk_close_handler.clone();
@@ -554,11 +551,11 @@ fn initialize_window<B: DisplayBackend>(
 
     window.show_all();
 
-    Ok(EwwiiWindow { 
-        name: window_init.name.clone(), 
-        gtk_window: window, 
-        delete_event_handler_id: None, 
-        destroy_event_handler_id: None 
+    Ok(EwwiiWindow {
+        name: window_init.name.clone(),
+        gtk_window: window,
+        delete_event_handler_id: None,
+        destroy_event_handler_id: None,
     })
 }
 
