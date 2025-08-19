@@ -12,14 +12,23 @@ mod builtin_signals;
 mod helper;
 mod stdlib;
 
-use apilib::register_apilib;
+use rhai::module_resolvers::StaticModuleResolver;
+use crate::module_resolver::{ChainedResolver, SimpleFileResolver};
+
+
 use builtin_signals::register_all_signals;
 use stdlib::register_stdlib;
+use apilib::register_apilib;
 
 pub fn register_all_providers(engine: &mut rhai::Engine) {
-    register_all_signals(engine);
+    let mut resolver = StaticModuleResolver::new();
+
+    register_all_signals(&mut resolver);
 
     // modules
-    register_stdlib(engine);
-    register_apilib(engine);
+    register_stdlib(&mut resolver);
+    register_apilib(&mut resolver);
+
+    let chained = ChainedResolver { first: SimpleFileResolver, second: resolver.clone() };
+    engine.set_module_resolver(chained);
 }
