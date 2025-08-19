@@ -7,14 +7,14 @@
     for providing data or doing certain actions.
 */
 
+mod apilib;
 mod builtin_signals;
 mod helper;
 mod stdlib;
-mod apilib;
 
+use apilib::register_apilib;
 use builtin_signals::register_all_signals;
 use stdlib::register_stdlib;
-use apilib::register_apilib;
 
 pub fn register_all_providers(engine: &mut rhai::Engine) {
     register_all_signals(engine);
