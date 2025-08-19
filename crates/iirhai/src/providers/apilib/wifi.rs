@@ -267,7 +267,7 @@ pub mod wifi {
 
         #[cfg(not(any(target_os = "linux", target_os = "macos")))]
         {
-            Err("wifi::disconnect not supported on this OS".into())
+            Err("wifi::disable_adapter not supported on this OS".into())
         }
     }
 
@@ -299,7 +299,51 @@ pub mod wifi {
 
         #[cfg(not(any(target_os = "linux", target_os = "macos")))]
         {
-            Err("wifi::enable not supported on this OS".into())
+            Err("wifi::enable_adapter not supported on this OS".into())
+        }
+    }
+
+    #[rhai_fn(return_raw)]
+    pub fn get_adapter_connectivity() -> Result<String, Box<EvalAltResult>> {
+        #[cfg(target_os = "linux")]
+        {
+            let output = Command::new("nmcli")
+                .args(&["networking", "connectivity"])
+                .output()
+                .map_err(|e| format!("Failed to run nmcli: {e}"))?;
+
+            if output.status.success() {
+                let connectivity = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                Ok(connectivity)
+            } else {
+                Err("Failed to get connectivity".into())
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let output = Command::new("networksetup")
+                .args(&["-getairportnetwork", "en0"])
+                .output()
+                .map_err(|e| format!("Failed to run networksetup: {e}"))?;
+
+            if output.status.success() {
+                let network_info = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+                // Normalize to "full" or "none"
+                if network_info.contains("You are not associated") {
+                    Ok("none".to_string())
+                } else {
+                    Ok("full".to_string())
+                }
+            } else {
+                Err("Failed to get connectivity".into())
+            }
+        }
+
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        {
+            Err("wifi::get_adapter_connectivity not supported on this OS".into())
         }
     }
 }
