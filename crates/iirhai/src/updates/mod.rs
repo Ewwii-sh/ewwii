@@ -19,12 +19,12 @@ mod poll;
 
 use crate::widgetnode::WidgetNode;
 use listen::handle_listen;
+use once_cell::sync::Lazy;
 use poll::handle_poll;
+use std::sync::Mutex;
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
 use tokio::sync::mpsc::UnboundedSender;
-use once_cell::sync::Lazy;
 use tokio::sync::watch;
-use std::sync::Mutex;
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> = Lazy::new(|| Mutex::new(Vec::new()));
@@ -56,7 +56,7 @@ pub fn handle_state_changes(enter_node: WidgetNode, tx: UnboundedSender<String>)
 pub fn kill_state_change_handler() {
     let registry = SHUTDOWN_REGISTRY.lock().unwrap();
     for sender in registry.iter() {
-        let _ = sender.send(true); 
+        let _ = sender.send(true);
     }
     log::debug!("All state change handlers requested to stop");
 }
