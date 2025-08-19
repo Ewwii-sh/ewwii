@@ -3,14 +3,11 @@ pub mod json;
 pub mod monitor;
 pub mod text;
 
-use crate::module_resolver::{ChainedResolver, SimpleFileResolver};
 use rhai::module_resolvers::StaticModuleResolver;
-use rhai::{exported_module, Engine};
+use rhai::exported_module;
 
-pub fn register_stdlib(engine: &mut Engine) {
+pub fn register_stdlib(resolver: &mut StaticModuleResolver) {
     use crate::providers::stdlib::{env::env, json::json, monitor::monitor, text::text};
-
-    let mut resolver = StaticModuleResolver::new();
 
     // adding modules
     let text_mod = exported_module!(text);
@@ -23,9 +20,4 @@ pub fn register_stdlib(engine: &mut Engine) {
     resolver.insert("std::env", env_mod);
     resolver.insert("std::monitor", monitor_mod);
     resolver.insert("std::json", json_mod);
-
-    let chained = ChainedResolver { first: SimpleFileResolver, second: resolver.clone() };
-
-    // Register the resolver
-    engine.set_module_resolver(chained);
 }
