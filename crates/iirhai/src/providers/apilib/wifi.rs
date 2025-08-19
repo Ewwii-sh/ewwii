@@ -1,6 +1,6 @@
 //! MacOS wifi api is Untested
 
-use rhai::{Array, Dynamic, EvalAltResult, Map, plugin::*};
+use rhai::{plugin::*, Array, Dynamic, EvalAltResult, Map};
 use std::process::Command;
 
 #[export_module]
@@ -15,13 +15,14 @@ pub mod wifi {
             .output()
             .map_err(|e| format!("Failed to run nmcli: {e}"))?;
 
-        let stdout = String::from_utf8(output.stdout)
-            .map_err(|e| format!("Invalid UTF-8 output from nmcli: {e}"))?;
+        let stdout = String::from_utf8(output.stdout).map_err(|e| format!("Invalid UTF-8 output from nmcli: {e}"))?;
 
         let mut result = Array::new();
         for line in stdout.lines() {
             let parts: Vec<&str> = line.split(':').collect();
-            if parts.len() != 3 { continue; }
+            if parts.len() != 3 {
+                continue;
+            }
             let mut map = Map::new();
             map.insert("ssid".into(), parts[0].into());
             map.insert("signal".into(), parts[1].into());
@@ -39,8 +40,7 @@ pub mod wifi {
             .output()
             .map_err(|e| format!("Failed to run airport: {e}"))?;
 
-        let stdout = String::from_utf8(output.stdout)
-            .map_err(|e| format!("Invalid UTF-8 output from airport: {e}"))?;
+        let stdout = String::from_utf8(output.stdout).map_err(|e| format!("Invalid UTF-8 output from airport: {e}"))?;
 
         let mut result = Array::new();
         for line in stdout.lines().skip(1) {
@@ -60,25 +60,37 @@ pub mod wifi {
     #[rhai_fn(return_raw)]
     pub fn scan() -> Result<Array, Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
-        { scan_linux() }
+        {
+            scan_linux()
+        }
 
         #[cfg(target_os = "macos")]
-        { scan_macos() }
+        {
+            scan_macos()
+        }
 
         #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-        { Err("wifi::scan not supported on this OS".into()) }
+        {
+            Err("wifi::scan not supported on this OS".into())
+        }
     }
 
     #[rhai_fn(return_raw)]
     pub fn current_connection() -> Result<Map, Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
-        { current_connection_linux() }
+        {
+            current_connection_linux()
+        }
 
         #[cfg(target_os = "macos")]
-        { current_connection_macos() }
+        {
+            current_connection_macos()
+        }
 
         #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-        { Err("wifi::current_connection not supported on this OS".into()) }
+        {
+            Err("wifi::current_connection not supported on this OS".into())
+        }
     }
 
     #[cfg(target_os = "linux")]
@@ -88,8 +100,7 @@ pub mod wifi {
             .args(&["-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"])
             .output()
             .map_err(|e| format!("Failed to run nmcli: {e}"))?;
-        let stdout = String::from_utf8(output.stdout)
-            .map_err(|e| format!("Invalid UTF-8 output: {}", e))?;
+        let stdout = String::from_utf8(output.stdout).map_err(|e| format!("Invalid UTF-8 output: {}", e))?;
         let mut map = Map::new();
         if let Some(line) = stdout.lines().find(|l| l.starts_with("yes:")) {
             let parts: Vec<&str> = line.split(':').collect();
@@ -133,8 +144,7 @@ pub mod wifi {
                 args.push("password");
                 args.push(pw);
             }
-            let status = Command::new("nmcli").args(&args).status()
-                .map_err(|e| format!("Failed to run nmcli: {e}"))?;
+            let status = Command::new("nmcli").args(&args).status().map_err(|e| format!("Failed to run nmcli: {e}"))?;
             if status.success() {
                 Ok(())
             } else {
@@ -186,8 +196,7 @@ pub mod wifi {
                 .output()
                 .map_err(|e| format!("Failed to run nmcli: {e}"))?;
 
-            let stdout = String::from_utf8(output.stdout)
-                .map_err(|e| format!("Invalid UTF-8 from nmcli: {e}"))?;
+            let stdout = String::from_utf8(output.stdout).map_err(|e| format!("Invalid UTF-8 from nmcli: {e}"))?;
 
             let ssid = stdout
                 .lines()
@@ -211,10 +220,11 @@ pub mod wifi {
         {
             use std::process::Command;
 
-            let status = Command::new("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport")
-                .arg("-z")
-                .status()
-                .map_err(|e| format!("Failed to run airport: {e}"))?;
+            let status =
+                Command::new("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport")
+                    .arg("-z")
+                    .status()
+                    .map_err(|e| format!("Failed to run airport: {e}"))?;
 
             if status.success() {
                 Ok(())
@@ -229,15 +239,12 @@ pub mod wifi {
         }
     }
 
-
     #[rhai_fn(return_raw)]
     pub fn disable_adapter() -> Result<(), Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
         {
-            let status = Command::new("nmcli")
-                .args(&["networking", "off"])
-                .status()
-                .map_err(|e| format!("Failed to run nmcli: {e}"))?;
+            let status =
+                Command::new("nmcli").args(&["networking", "off"]).status().map_err(|e| format!("Failed to run nmcli: {e}"))?;
             if status.success() {
                 Ok(())
             } else {
@@ -268,10 +275,8 @@ pub mod wifi {
     pub fn enable_adapter() -> Result<(), Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
         {
-            let status = Command::new("nmcli")
-                .args(&["networking", "on"])
-                .status()
-                .map_err(|e| format!("Failed to run nmcli: {e}"))?;
+            let status =
+                Command::new("nmcli").args(&["networking", "on"]).status().map_err(|e| format!("Failed to run nmcli: {e}"))?;
             if status.success() {
                 Ok(())
             } else {

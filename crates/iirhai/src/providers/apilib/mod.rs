@@ -5,9 +5,7 @@ use rhai::module_resolvers::StaticModuleResolver;
 use rhai::{exported_module, Engine};
 
 pub fn register_apilib(engine: &mut Engine) {
-    use crate::providers::apilib::{
-        wifi::wifi,
-    };
+    use crate::providers::apilib::wifi::wifi;
 
     let mut resolver = StaticModuleResolver::new();
 

@@ -1,19 +1,14 @@
 pub mod env;
+pub mod json;
 pub mod monitor;
 pub mod text;
-pub mod json;
 
 use crate::module_resolver::{ChainedResolver, SimpleFileResolver};
 use rhai::module_resolvers::StaticModuleResolver;
 use rhai::{exported_module, Engine};
 
 pub fn register_stdlib(engine: &mut Engine) {
-    use crate::providers::stdlib::{
-        env::env, 
-        monitor::monitor, 
-        text::text,
-        json::json,
-    };
+    use crate::providers::stdlib::{env::env, json::json, monitor::monitor, text::text};
 
     let mut resolver = StaticModuleResolver::new();
 
