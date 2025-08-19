@@ -207,6 +207,79 @@ let lower = text::to_lower("HELLO"); // output: "hello"</code></pre>
 <tr><td><code>to_lower</code></td><td>Converts a string to lowercase</td></tr>
 </tbody></table>
 </div>
+<h2 id="stdmonitor"><a class="header" href="#stdmonitor"><code>std::monitor</code></a></h2>
+<p>The <code>std::monitor</code> module provides utilities for querying information about connected monitors, including their resolution, dimensions, and DPI.</p>
+<h3 id="usage-2"><a class="header" href="#usage-2">Usage</a></h3>
+<pre><code class="language-rust ignore">import "std::monitor" as monitor;
+
+// Get number of monitors
+let count = monitor::count(); // e.g., 2
+
+// Get resolution of the primary monitor
+let (w, h) = monitor::primary_resolution();
+let res_str = monitor::primary_resolution_str(); // e.g., "1920x1080"
+
+// Get resolutions of all monitors
+let all_res = monitor::all_resolutions();
+let all_res_str = monitor::all_resolutions_str(); // e.g., "1920x1080, 1280x1024"
+
+// Get dimensions of a specific monitor
+let (x, y, w, h) = monitor::dimensions(0);
+let dim_str = monitor::dimensions_str(0); // e.g., "1920x1080"
+
+// Get DPI of a monitor
+let dpi = monitor::dpi(0);
+let dpi_str = monitor::dpi_str(0); // e.g., "96.0"</code></pre>
+<h3 id="functions-2"><a class="header" href="#functions-2">Functions</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>count()</code></td><td>Returns the number of connected monitors.</td></tr>
+<tr><td><code>primary_resolution()</code></td><td>Returns the width and height of the primary monitor as a tuple <code>(width, height)</code>.</td></tr>
+<tr><td><code>primary_resolution_str()</code></td><td>Returns the primary monitor resolution as a string in the format <code>"WIDTHxHEIGHT"</code>.</td></tr>
+<tr><td><code>all_resolutions()</code></td><td>Returns a vector of <code>(width, height)</code> tuples for all connected monitors.</td></tr>
+<tr><td><code>all_resolutions_str()</code></td><td>Returns a comma-separated string of all monitor resolutions in <code>"WIDTHxHEIGHT"</code> format.</td></tr>
+<tr><td><code>dimensions(index)</code></td><td>Returns <code>(x, y, width, height)</code> for the monitor at the given index.</td></tr>
+<tr><td><code>dimensions_str(index)</code></td><td>Returns the dimensions of the monitor at the given index as a formatted string <code>"x,y - WxH"</code>.</td></tr>
+<tr><td><code>dpi(index)</code></td><td>Returns the DPI (dots per inch) of the monitor at the given index, accounting for scaling.</td></tr>
+<tr><td><code>dpi_str(index)</code></td><td>Returns the DPI as a formatted string with one decimal place, e.g., <code>"96.0"</code>.</td></tr>
+</tbody></table>
+</div>
+<h3 id="notes"><a class="header" href="#notes">Notes</a></h3>
+<ul>
+<li>Monitor indices are zero-based: the primary monitor is index 0.</li>
+<li>DPI calculation assumes a base of 96 DPI multiplied by the monitor’s scale factor.</li>
+<li>The module automatically initializes GTK if it hasn’t been initialized on the main thread.</li>
+</ul>
+<h2 id="stdjson"><a class="header" href="#stdjson"><code>std::json</code></a></h2>
+<p>The <code>std::json</code> module provides utilities for working with JSON data within Rhai scripts. It allows parsing, serializing, and manipulating JSON objects dynamically.</p>
+<h3 id="usage-3"><a class="header" href="#usage-3">Usage</a></h3>
+<pre><code class="language-rust ignore">import "std::json" as json;
+
+// Parse a JSON string
+let json_val = json::parse_json(r#"{"name":"Alice","age":30}"#);
+
+// Convert JSON back to string
+let json_str = json::to_string(json_val);
+
+// Get a value from a JSON object
+let name = json::get(json_val, "name"); // "Alice"
+
+// Set a value in a JSON object
+json::set(json_val, "age", 31);</code></pre>
+<h3 id="functions-3"><a class="header" href="#functions-3">Functions</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>parse_json()</code></td><td>Parses a JSON string into a Rhai <code>Dynamic</code> representing a <code>serde_json::Value</code>. Returns an error if parsing fails.</td></tr>
+<tr><td><code>to_string()</code></td><td>Serializes a <code>Dynamic</code> JSON value back into a JSON string.</td></tr>
+<tr><td><code>get()</code></td><td>Retrieves a value by key from a JSON object. Returns <code>()</code> if the key does not exist.</td></tr>
+<tr><td><code>set()</code></td><td>Sets a key-value pair in a JSON object. Returns an error if the value is not a JSON object.</td></tr>
+</tbody></table>
+</div>
+<h3 id="notes-1"><a class="header" href="#notes-1">Notes</a></h3>
+<ul>
+<li>All JSON values are represented as Rhai <code>Dynamic</code> objects internally.</li>
+<li>Keys that do not exist in a JSON object return a <code>UNIT</code> value.</li>
+<li><code>set()</code> only works on JSON objects; trying to set a key on a non-object JSON value will produce an error.</li>
+<li>Parsing and serialization errors are returned as Rhai <code>EvalAltResult</code> errors.</li>
+</ul>
 <h2 id="future-plans"><a class="header" href="#future-plans">Future Plans</a></h2>
 <p>Other modules coming soon under <code>std</code>:</p>
 <ul>
