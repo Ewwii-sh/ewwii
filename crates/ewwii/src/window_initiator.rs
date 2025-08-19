@@ -46,9 +46,6 @@ impl WindowInitiator {
             .clone()
             .or_else(|| properties.get("monitor")?.clone().try_cast::<i64>().map(|n| MonitorIdentifier::Numeric(n as i32)));
         Ok(WindowInitiator {
-            // FIXME: window_def.backend_options is passed directly here
-            // window_def.backend_options is [`BackendWindowOptionsDef`] but
-            // [`WindowInitiator`] expects [`BackendWindowOptions`]
             backend_options: window_def.backend_options.eval(properties.clone())?,
             geometry,
             monitor,

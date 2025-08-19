@@ -71,7 +71,7 @@ impl BackendWindowOptionsDef {
             sticky: Self::get_optional(map, "sticky")?,
             struts,
             window_type,
-            wm_ignore: Self::get_optional(map, "wm-ignore")?,
+            wm_ignore: Self::get_optional(map, "wm_ignore")?,
         };
 
         let wayland = WlBackendWindowOptionsDef {
