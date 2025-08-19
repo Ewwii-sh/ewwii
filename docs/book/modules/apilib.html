@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Styling Widgets - Ewwii documentation</title>
+        <title>API Library - Ewwii documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -145,27 +145,70 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="styling-widgets"><a class="header" href="#styling-widgets">Styling Widgets</a></h1>
-<p>Ewwii also allows writing inline styles to widgets using the <code>style</code> property. These styles are then applied at runtime using GTK's CSS system.</p>
-<p><strong>Example:</strong></p>
-<pre><code class="language-rust ignore">fn foo() {
-    return box(#{
-        style: "color: black; background-color: #fff;",
-    }, [ label(#{ text: "baz" }) ]);
-}</code></pre>
+                        <h1 id="api-library"><a class="header" href="#api-library">API Library</a></h1>
+<h2 id="apiwifi"><a class="header" href="#apiwifi"><code>api::wifi</code></a></h2>
+<p>The <code>wifi</code> module provides cross-platform Wi-Fi management for Linux and macOS systems. Functions include scanning networks, querying the current connection, connecting/disconnecting, and enabling/disabling the Wi-Fi adapter.</p>
 <blockquote>
-<p>This example makes the text color of all child widgets of box to black and sets the background color of the box to white (<code>#fff</code> is the hexadecimal for white).</p>
+<p><strong>Note:</strong> macOS support is largely untested and may behave differently depending on system configuration.</p>
 </blockquote>
+<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
+<pre><code class="language-rust ignore">import "api::wifi" as wifi;
+
+// Scan for available networks
+let networks = wifi::scan();
+
+// Get current Wi-Fi connection info
+let current = wifi::current_connection();
+
+// Connect to a network
+wifi::connect("MySSID", "MyPassword");
+
+// Disconnect from the current network
+wifi::disconnect();
+
+// Enable/disable the Wi-Fi adapter
+wifi::enable_adapter();
+wifi::disable_adapter();</code></pre>
+<h3 id="functions"><a class="header" href="#functions">Functions</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>scan()</code></td><td>Returns a list of nearby Wi-Fi networks with <code>ssid</code>, <code>signal</code>, and <code>security</code> fields.</td></tr>
+<tr><td><code>scan_linux()</code></td><td><strong>Linux only</strong>. Returns a list of nearby Wi-Fi networks. Equivalent to <code>scan()</code>.</td></tr>
+<tr><td><code>scan_macos()</code></td><td><strong>macOS only (untested)</strong>. Returns a list of nearby Wi-Fi networks. Equivalent to <code>scan()</code>.</td></tr>
+<tr><td><code>current_connection()</code></td><td>Returns information about the current Wi-Fi connection as a map (<code>ssid</code>, <code>signal</code>, <code>security</code>).</td></tr>
+<tr><td><code>connect(ssid, password?)</code></td><td>Connects to a Wi-Fi network. <code>password</code> is optional for open networks.</td></tr>
+<tr><td><code>disconnect()</code></td><td>Disconnects from the currently connected network (does not disable the adapter).</td></tr>
+<tr><td><code>enable_adapter()</code></td><td>Turns the Wi-Fi adapter on.</td></tr>
+<tr><td><code>disable_adapter()</code></td><td>Turns the Wi-Fi adapter off.</td></tr>
+</tbody></table>
+</div>
+<h3 id="platform-notes"><a class="header" href="#platform-notes">Platform Notes</a></h3>
+<ul>
+<li><strong>Linux</strong>: Uses <code>nmcli</code> for all operations. The module assumes <code>nmcli</code> is installed and accessible in <code>$PATH</code>.</li>
+<li><strong>macOS</strong>: Uses <code>/System/Library/PrivateFrameworks/Apple80211.framework/.../airport</code> for scanning and disconnecting, and <code>networksetup</code> for connecting and enabling/disabling the adapter.</li>
+<li><strong>Unsupported OS</strong>: All functions return an error if the platform is neither Linux nor macOS.</li>
+</ul>
+<h3 id="returned-data-formats"><a class="header" href="#returned-data-formats">Returned Data Formats</a></h3>
+<ul>
+<li><code>scan()</code> (or <code>scan_linux</code> / <code>scan_macos</code>) returns an <strong>array of maps</strong>:</li>
+</ul>
+<pre><code class="language-rust ignore">[
+    { "ssid": "HomeWiFi", "signal": "78", "security": "WPA2" },
+    { "ssid": "CafeNet", "signal": "65", "security": "WPA" }
+]</code></pre>
+<ul>
+<li><code>current_connection()</code> returns a <strong>map</strong>:</li>
+</ul>
+<pre><code class="language-rust ignore">{ "ssid": "HomeWiFi", "signal": "78", "security": "WPA2" }</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../theming/working_with_gtk.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../modules/stdlib.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../modules/modules.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../widgets/widgets.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -175,11 +218,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../theming/working_with_gtk.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../modules/stdlib.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../modules/modules.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../widgets/widgets.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
