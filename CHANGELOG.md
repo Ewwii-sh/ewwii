@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 -   Ewwii window not closing when user requests with `WM_DELETE_WINDOW` event.
+-   Ewwii window not resizable by default.
 
 ## [0.1.0-alpha] - 2025-08-18
 
