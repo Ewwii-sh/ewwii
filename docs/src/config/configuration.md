@@ -71,6 +71,7 @@ This field can be:
 |          `x`, `y` | Position of the window. Values may be provided in `px` or `%`. Will be relative to `anchor`.                            |
 | `width`, `height` | Width and height of the window. Values may be provided in `px` or `%`.                                                  |
 |          `anchor` | Anchor-point of the window. Either `center` or combinations of `top`, `center`, `bottom` and `left`, `center`, `right`. |
+|       `resizable` | Whether to allow resizing the window or not. Eiither `true` or `false`.                                                 |
 
 <br/>
 Depending on if you are using X11 or Wayland, some additional properties exist:
