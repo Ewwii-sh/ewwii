@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.1.0-beta] - [UNRELEASED]
 
+### Added
+
+-   Added `std::json` module to handle all json related tasks in Rhai.
+-   Added `api::wifi` module for handling wifi related tasks.
+
 ### Fixed
 
 -   Ewwii window not closing when user requests with `WM_DELETE_WINDOW` event.
