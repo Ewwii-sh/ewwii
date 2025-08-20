@@ -63,9 +63,9 @@ pub struct WidgetRegistry {
 }
 
 pub enum PatchGtkWidget {
-    Create(WidgetNode, u64),
-    Update(u64, Map),
-    Remove(u64),
+    Create(WidgetNode, u64, u64), // node, widget_id, parent_id
+    Update(u64, Map), // widget_id, props
+    Remove(u64, u64), // widget_id, parent_id
 }
 
 impl WidgetRegistry {
@@ -75,17 +75,24 @@ impl WidgetRegistry {
 
     pub fn update_widget_tree(&mut self, new_tree: WidgetNode) -> Result<()> {
         let old_tree = self.stored_widget_node.take();
-        let patch = Self::diff_trees(old_tree.as_ref(), &new_tree);
+        let patches = Self::diff_trees(old_tree.as_ref(), &new_tree);
 
-        for op in patch {
-            match op {
-                PatchGtkWidget::Create(w_node, parent_id) => {
-                    self.create_widget(w_node, parent_id).expect("failed to create new gtk widget")
+        let mut seen_widget_ids = HashSet::new();
+
+        for patch_req in patches {
+            match patch_req {
+                PatchGtkWidget::Create(wdgt_node, wdgt_id, parent_id) => {
+                    if seen_widget_ids.insert(parent_id) {
+                        self.create_widget(wdgt_node, wdgt_id, parent_id)
+                            .expect("failed to create new gtk widget");
+                    }
                 }
                 PatchGtkWidget::Update(widget_id, new_props) => {
                     self.update_props(widget_id, new_props);
                 }
-                PatchGtkWidget::Remove(widget_id) => self.remove_widget(widget_id),
+                PatchGtkWidget::Remove(widget_id, parent_id) => self.remove_widget(
+                    widget_id, parent_id
+                ),
             }
         }
 
@@ -111,30 +118,64 @@ impl WidgetRegistry {
                     patch.push(PatchGtkWidget::Update(*id, new_info.props.clone()));
                 }
                 None => {
-                    patch.push(PatchGtkWidget::Create(new_info.node.clone(), new_info.parent_id.expect("Parent ID must exist")));
+                    patch.push(PatchGtkWidget::Create(
+                        new_info.node.clone(), 
+                        *id,
+                        new_info.parent_id.expect("Parent ID must exist")
+                    ));
                 }
                 _ => {}
             }
         }
 
         // Removals
-        for id in old_map.keys() {
+        for (id, new_info) in &old_map {
             if !new_map.contains_key(id) {
-                patch.push(PatchGtkWidget::Remove(*id));
+                patch.push(PatchGtkWidget::Remove(*id, new_info.parent_id.expect("Parent ID must exist")));
             }
         }
 
         patch
     }
 
-    pub fn create_widget(&mut self, widget_node: WidgetNode, parent_id: u64) -> Result<()> {
+    pub fn create_widget(
+        &mut self, 
+        widget_node: WidgetNode, 
+        widget_id: u64,
+        parent_id: u64
+    ) -> Result<()> {
         if let Some(parent) = self.widgets.get(&parent_id) {
             let parent_widget = parent.widget.clone();
 
-            let gtk_widget = build_gtk_widget(WidgetInput::Node(widget_node.clone()), self)?;
-
             if let Some(container) = parent_widget.dynamic_cast::<gtk::Container>().ok() {
-                container.add(&gtk_widget);
+                // check if the widget already exists
+                let position = self.widgets.get(&widget_id)
+                    .and_then(|old_entry| {
+                        container.children()
+                            .iter()
+                            .position(|w| w == &old_entry.widget)
+                    });
+
+                // obliterate that widget.... 
+                // how dare it try to create duplication...
+                if let Some(old_entry) = self.widgets.get(&widget_id) {
+                    container.remove(&old_entry.widget);
+                }
+
+                // `build_gtk_widget` also inserts info into widgetentry 
+                // self is passed for that reason.
+                let gtk_widget = build_gtk_widget(WidgetInput::Node(widget_node.clone()), self)?;
+
+                // insert into container
+                if let Some(box_container) = container.clone().dynamic_cast::<gtk::Box>().ok() {
+                    box_container.pack_end(&gtk_widget, true, true, 0);
+
+                    if let Some(pos) = position {
+                        box_container.reorder_child(&gtk_widget, pos as i32);
+                    }
+                } else {
+                    container.add(&gtk_widget);
+                }
             }
         }
 
@@ -147,10 +188,23 @@ impl WidgetRegistry {
         }
     }
 
-    pub fn remove_widget(&mut self, widget_id: u64) {
+    // pub fn remove_widget(&mut self, widget_id: u64) {
+    //     if let Some(entry) = self.widgets.remove(&widget_id) {
+    //         if let Some(parent) = entry.widget.parent() {
+    //             if let Ok(container) = parent.downcast::<gtk::Container>() {
+    //                 container.remove(&entry.widget);
+    //             }
+    //         }
+    //     }
+    // }
+
+    pub fn remove_widget(&mut self, widget_id: u64, parent_id: u64) {
+        println!("Removing {}!", widget_id);
         if let Some(entry) = self.widgets.remove(&widget_id) {
-            if let Some(parent) = entry.widget.parent() {
-                if let Ok(container) = parent.downcast::<gtk::Container>() {
+            if let Some(parent) = self.widgets.get(&parent_id) {
+                let parent_widget = parent.widget.clone();
+
+                if let Some(container) = parent_widget.dynamic_cast::<gtk::Container>().ok() {
                     container.remove(&entry.widget);
                 }
             }
