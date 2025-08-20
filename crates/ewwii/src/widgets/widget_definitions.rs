@@ -168,7 +168,7 @@ impl WidgetRegistry {
 
                 // insert into container
                 if let Some(box_container) = container.clone().dynamic_cast::<gtk::Box>().ok() {
-                    box_container.pack_end(&gtk_widget, true, true, 0);
+                    box_container.add(&gtk_widget);
 
                     if let Some(pos) = position {
                         box_container.reorder_child(&gtk_widget, pos as i32);
@@ -199,7 +199,6 @@ impl WidgetRegistry {
     // }
 
     pub fn remove_widget(&mut self, widget_id: u64, parent_id: u64) {
-        println!("Removing {}!", widget_id);
         if let Some(entry) = self.widgets.remove(&widget_id) {
             if let Some(parent) = self.widgets.get(&parent_id) {
                 let parent_widget = parent.widget.clone();
