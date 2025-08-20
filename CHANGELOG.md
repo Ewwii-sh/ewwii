@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Added `std::json` module to handle all json related tasks in Rhai.
 -   Added `api::wifi` module for handling wifi related tasks.
 -   Better error handling for `ErrorFunctionNotFound`.
--   Better dynamic system which can handle multiple widgets with same dyn_id.
+-   Better dynamic system which can handle dyn_id issues and reodering.
 
 ### Changed
 
