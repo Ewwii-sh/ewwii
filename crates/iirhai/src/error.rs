@@ -1,5 +1,5 @@
 use colored::Colorize;
-use rhai::{EvalAltResult, Position};
+use rhai::{EvalAltResult, Position, Engine};
 
 /// A little helper to carry all the pieces of a single‐line diagnostic.
 struct Diagnostic<'a> {
@@ -87,14 +87,14 @@ impl<'a> Diagnostic<'a> {
     }
 }
 
-pub fn format_rhai_error(error: &EvalAltResult, code: &str) -> String {
+pub fn format_rhai_error(error: &EvalAltResult, code: &str, engine: &Engine) -> String {
     let pos = get_deepest_position(error);
     let line = pos.line().unwrap_or(0);
     let column = pos.position().unwrap_or(1);
     let line_text = code.lines().nth(line.saturating_sub(1)).unwrap_or("");
 
     let filename = "<rhai>"; // DUMMY
-    let help_hint = get_error_info(get_root_cause(error), error);
+    let help_hint = get_error_info(get_root_cause(error), error, engine, code);
 
     let diag = Diagnostic {
         severity: "error",
@@ -127,7 +127,12 @@ fn get_root_cause<'a>(err: &'a EvalAltResult) -> &'a EvalAltResult {
     }
 }
 
-fn get_error_info(root_err: &EvalAltResult, outer_err: &EvalAltResult) -> ErrorHelp {
+fn get_error_info(
+    root_err: &EvalAltResult, 
+    outer_err: &EvalAltResult, 
+    engine: &Engine,
+    code: &str,
+) -> ErrorHelp {
     let (help, hint) = match root_err {
         EvalAltResult::ErrorParsing(..) => (
             "Syntax error encountered while parsing.".into(),
@@ -146,10 +151,43 @@ fn get_error_info(root_err: &EvalAltResult, outer_err: &EvalAltResult) -> ErrorH
             format!("Property '{}' not found on this object.", name),
             "Verify the property name and the object’s available fields.".into(),
         ),
-        EvalAltResult::ErrorFunctionNotFound(name, ..) => (
-            format!("Function '{}' is not defined.", name),
-            "Check spelling or ensure the function is registered or imported.".into(),
-        ),
+        EvalAltResult::ErrorFunctionNotFound(fn_sig, ..) => {
+            let base = fn_sig.split('(').next().unwrap_or(fn_sig).trim();
+
+            // Might be a bit less performant but I gotta pay the price of
+            // having "kinda good" errors with Rhai.
+            let ast = match engine.compile(code) {
+                Ok(ast) => ast,
+                Err(err) => {
+                    return ErrorHelp {
+                        help: format!("Failed to compile code for suggestions: {}", err),
+                        hint: String::new(),
+                        note: String::new(),
+                    };
+                }
+            };
+
+            let candidates: Vec<String> = ast
+                .iter_functions()
+                .filter(|f| f.name == base)
+                .map(|f| {
+                    let params = f.params.join(", ");
+                    format!("{}({})", f.name, params)
+                })
+                .collect();
+
+            if !candidates.is_empty() {
+                (
+                    format!("Function '{}' not found with this argument list.", fn_sig),
+                    format!("Did you mean one of:\n  {}", candidates.join("\n    ")),
+                )
+            } else {
+                (
+                    format!("Function '{}' is not defined.", fn_sig),
+                    "Check spelling, module path, or argument count.".into(),
+                )
+            }
+        },
         EvalAltResult::ErrorModuleNotFound(name, ..) => (
             format!("Module '{}' could not be located.", name),
             "Verify the module path and that it is included in your imports.".into(),

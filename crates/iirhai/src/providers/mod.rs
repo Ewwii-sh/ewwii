@@ -15,7 +15,6 @@ mod stdlib;
 use rhai::module_resolvers::StaticModuleResolver;
 use crate::module_resolver::{ChainedResolver, SimpleFileResolver};
 
-
 use builtin_signals::register_all_signals;
 use stdlib::register_stdlib;
 use apilib::register_apilib;
