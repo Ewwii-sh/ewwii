@@ -1,5 +1,5 @@
 use colored::Colorize;
-use rhai::{EvalAltResult, Position, Engine};
+use rhai::{Engine, EvalAltResult, Position};
 
 /// A little helper to carry all the pieces of a single‐line diagnostic.
 struct Diagnostic<'a> {
@@ -127,12 +127,7 @@ fn get_root_cause<'a>(err: &'a EvalAltResult) -> &'a EvalAltResult {
     }
 }
 
-fn get_error_info(
-    root_err: &EvalAltResult, 
-    outer_err: &EvalAltResult, 
-    engine: &Engine,
-    code: &str,
-) -> ErrorHelp {
+fn get_error_info(root_err: &EvalAltResult, outer_err: &EvalAltResult, engine: &Engine, code: &str) -> ErrorHelp {
     let (help, hint) = match root_err {
         EvalAltResult::ErrorParsing(..) => (
             "Syntax error encountered while parsing.".into(),
@@ -182,12 +177,9 @@ fn get_error_info(
                     format!("Did you mean one of:\n  {}", candidates.join("\n    ")),
                 )
             } else {
-                (
-                    format!("Function '{}' is not defined.", fn_sig),
-                    "Check spelling, module path, or argument count.".into(),
-                )
+                (format!("Function '{}' is not defined.", fn_sig), "Check spelling, module path, or argument count.".into())
             }
-        },
+        }
         EvalAltResult::ErrorModuleNotFound(name, ..) => (
             format!("Module '{}' could not be located.", name),
             "Verify the module path and that it is included in your imports.".into(),

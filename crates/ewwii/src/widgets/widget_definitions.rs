@@ -64,8 +64,8 @@ pub struct WidgetRegistry {
 
 pub enum PatchGtkWidget {
     Create(WidgetNode, u64, u64), // node, widget_id, parent_id
-    Update(u64, Map), // widget_id, props
-    Remove(u64, u64), // widget_id, parent_id
+    Update(u64, Map),             // widget_id, props
+    Remove(u64, u64),             // widget_id, parent_id
 }
 
 impl WidgetRegistry {
@@ -83,16 +83,13 @@ impl WidgetRegistry {
             match patch_req {
                 PatchGtkWidget::Create(wdgt_node, wdgt_id, parent_id) => {
                     if seen_widget_ids.insert(parent_id) {
-                        self.create_widget(wdgt_node, wdgt_id, parent_id)
-                            .expect("failed to create new gtk widget");
+                        self.create_widget(wdgt_node, wdgt_id, parent_id).expect("failed to create new gtk widget");
                     }
                 }
                 PatchGtkWidget::Update(widget_id, new_props) => {
                     self.update_props(widget_id, new_props);
                 }
-                PatchGtkWidget::Remove(widget_id, parent_id) => self.remove_widget(
-                    widget_id, parent_id
-                ),
+                PatchGtkWidget::Remove(widget_id, parent_id) => self.remove_widget(widget_id, parent_id),
             }
         }
 
@@ -119,9 +116,9 @@ impl WidgetRegistry {
                 }
                 None => {
                     patch.push(PatchGtkWidget::Create(
-                        new_info.node.clone(), 
+                        new_info.node.clone(),
                         *id,
-                        new_info.parent_id.expect("Parent ID must exist")
+                        new_info.parent_id.expect("Parent ID must exist"),
                     ));
                 }
                 _ => {}
@@ -138,31 +135,24 @@ impl WidgetRegistry {
         patch
     }
 
-    pub fn create_widget(
-        &mut self, 
-        widget_node: WidgetNode, 
-        widget_id: u64,
-        parent_id: u64
-    ) -> Result<()> {
+    pub fn create_widget(&mut self, widget_node: WidgetNode, widget_id: u64, parent_id: u64) -> Result<()> {
         if let Some(parent) = self.widgets.get(&parent_id) {
             let parent_widget = parent.widget.clone();
 
             if let Some(container) = parent_widget.dynamic_cast::<gtk::Container>().ok() {
                 // check if the widget already exists
-                let position = self.widgets.get(&widget_id)
-                    .and_then(|old_entry| {
-                        container.children()
-                            .iter()
-                            .position(|w| w == &old_entry.widget)
-                    });
+                let position = self
+                    .widgets
+                    .get(&widget_id)
+                    .and_then(|old_entry| container.children().iter().position(|w| w == &old_entry.widget));
 
-                // obliterate that widget.... 
+                // obliterate that widget....
                 // how dare it try to create duplication...
                 if let Some(old_entry) = self.widgets.get(&widget_id) {
                     container.remove(&old_entry.widget);
                 }
 
-                // `build_gtk_widget` also inserts info into widgetentry 
+                // `build_gtk_widget` also inserts info into widgetentry
                 // self is passed for that reason.
                 let gtk_widget = build_gtk_widget(WidgetInput::Node(widget_node.clone()), self)?;
 

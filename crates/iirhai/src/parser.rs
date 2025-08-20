@@ -36,7 +36,9 @@ impl ParseConfig {
             scope.set_value(var, value);
         }
 
-        self.engine.eval_with_scope::<WidgetNode>(&mut scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine)))
+        self.engine
+            .eval_with_scope::<WidgetNode>(&mut scope, code)
+            .map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine)))
     }
 
     pub fn eval_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<WidgetNode> {
@@ -55,10 +57,14 @@ impl ParseConfig {
 
     pub fn eval_code_with(&mut self, code: &str, mut scope: Scope, compiled_ast: Option<AST>) -> Result<WidgetNode> {
         match compiled_ast {
-            Some(ast) => {
-                self.engine.eval_ast_with_scope::<WidgetNode>(&mut scope, &ast).map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine)))
-            }
-            None => self.engine.eval_with_scope::<WidgetNode>(&mut scope, code).map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine))),
+            Some(ast) => self
+                .engine
+                .eval_ast_with_scope::<WidgetNode>(&mut scope, &ast)
+                .map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine))),
+            None => self
+                .engine
+                .eval_with_scope::<WidgetNode>(&mut scope, code)
+                .map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine))),
         }
     }
 

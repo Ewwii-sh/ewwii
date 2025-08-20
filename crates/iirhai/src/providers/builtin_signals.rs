@@ -317,8 +317,6 @@
 //     chrono::offset::Utc::now().timestamp().to_string()
 // }
 
-pub fn register_all_signals(
-    _resolver: &mut rhai::module_resolvers::StaticModuleResolver
-) {
+pub fn register_all_signals(_resolver: &mut rhai::module_resolvers::StaticModuleResolver) {
     // TODO
 }
