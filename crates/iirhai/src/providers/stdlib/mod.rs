@@ -3,8 +3,8 @@ pub mod json;
 pub mod monitor;
 pub mod text;
 
-use rhai::module_resolvers::StaticModuleResolver;
 use rhai::exported_module;
+use rhai::module_resolvers::StaticModuleResolver;
 
 pub fn register_stdlib(resolver: &mut StaticModuleResolver) {
     use crate::providers::stdlib::{env::env, json::json, monitor::monitor, text::text};
