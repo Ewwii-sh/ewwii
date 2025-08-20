@@ -340,6 +340,7 @@ These files must be placed under <code>$XDG_CONFIG_HOME/ewwii</code> (this is mo
 <tr><td align="right"><code>x</code>, <code>y</code></td><td>Position of the window. Values may be provided in <code>px</code> or <code>%</code>. Will be relative to <code>anchor</code>.</td></tr>
 <tr><td align="right"><code>width</code>, <code>height</code></td><td>Width and height of the window. Values may be provided in <code>px</code> or <code>%</code>.</td></tr>
 <tr><td align="right"><code>anchor</code></td><td>Anchor-point of the window. Either <code>center</code> or combinations of <code>top</code>, <code>center</code>, <code>bottom</code> and <code>left</code>, <code>center</code>, <code>right</code>.</td></tr>
+<tr><td align="right"><code>resizable</code></td><td>Whether to allow resizing the window or not. Eiither <code>true</code> or <code>false</code>.</td></tr>
 </tbody></table>
 <br/>
 Depending on if you are using X11 or Wayland, some additional properties exist:
@@ -946,6 +947,9 @@ wifi::disconnect();
 // Enable/disable the Wi-Fi adapter
 wifi::enable_adapter();
 wifi::disable_adapter();
+
+// Get adapter connection
+wifi::get_adapter_connectivity();
 </code></pre>
 <h3 id="functions-4"><a class="header" href="#functions-4">Functions</a></h3>
 <table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
@@ -956,8 +960,15 @@ wifi::disable_adapter();
 <tr><td><code>connect(ssid, password?)</code></td><td>Connects to a Wi-Fi network. <code>password</code> is optional for open networks.</td></tr>
 <tr><td><code>disconnect()</code></td><td>Disconnects from the currently connected network (does not disable the adapter).</td></tr>
 <tr><td><code>enable_adapter()</code></td><td>Turns the Wi-Fi adapter on.</td></tr>
-<tr><td><code>disable_adapter()</code></td><td>Turns the Wi-Fi adapter off.</td></tr>
+<tr><td><code>get_adapter_connectivity()</code></td><td>Returns a normalized connectivity status of the Wi-Fi adapter.</td></tr>
 </tbody></table>
+<h3 id="extra-notes"><a class="header" href="#extra-notes">Extra Notes</a></h3>
+<p><code>get_adapter_connectivity()</code> has different outcome possibilities in each OS.</p>
+<p><strong>All possible results:</strong></p>
+<ul>
+<li><strong>Linux</strong>: <code>&quot;full&quot;</code> (internet available), <code>&quot;limited&quot;</code> (network only, no internet), <code>&quot;portal&quot;</code> (captive portal), <code>&quot;none&quot;</code> (no connectivity)</li>
+<li><strong>macOS</strong>: <code>&quot;full&quot;</code> (connected to a Wi-Fi network) or <code>&quot;none&quot;</code> (not connected)</li>
+</ul>
 <h3 id="platform-notes"><a class="header" href="#platform-notes">Platform Notes</a></h3>
 <ul>
 <li><strong>Linux</strong>: Uses <code>nmcli</code> for all operations. The module assumes <code>nmcli</code> is installed and accessible in <code>$PATH</code>.</li>
