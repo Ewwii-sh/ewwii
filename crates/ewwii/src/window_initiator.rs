@@ -53,7 +53,7 @@ impl WindowInitiator {
             resizable: properties.get("resizable").map(|d| d.clone_cast::<bool>()).unwrap_or(true),
             stacking: match properties.get("stacking") {
                 Some(d) => WindowStacking::from_str(&d.clone_cast::<String>())?,
-                None => Ok(WindowStacking::Foreground), // or error
+                None => WindowStacking::Foreground, // or error
             },
         })
     }
