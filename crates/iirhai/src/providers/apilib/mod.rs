@@ -1,7 +1,7 @@
 pub mod wifi;
 
-use rhai::module_resolvers::StaticModuleResolver;
 use rhai::exported_module;
+use rhai::module_resolvers::StaticModuleResolver;
 
 pub fn register_apilib(resolver: &mut StaticModuleResolver) {
     use crate::providers::apilib::wifi::wifi;
