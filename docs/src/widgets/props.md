@@ -55,7 +55,7 @@ These properties apply to all widgets, and can be used anywhere!
 
 **Properties**
 
--   `use-alpha`: `bool` use alpha channel
+-   `use_alpha`: `bool` use alpha channel
 -   `onchange`: `string` command on color select
 -   `timeout`: `duration` Default: "200ms"
 
@@ -63,7 +63,7 @@ These properties apply to all widgets, and can be used anywhere!
 
 **Properties**
 
--   `use-alpha`: `bool` use alpha channel
+-   `use_alpha`: `bool` use alpha channel
 -   `onchange`: `string` command on color select
 -   `timeout`: `duration` Default: "200ms"
 
@@ -73,9 +73,9 @@ These properties apply to all widgets, and can be used anywhere!
 
 -   `flipped`: `bool` reverse direction
 -   `marks`: `string` draw marks
--   `draw-value`: `bool` show value
--   `value-pos`: `string` where to show value ("left", "right", etc.)
--   `round-digits`: `int` number of decimal places
+-   `draw_value`: `bool` show value
+-   `value_pos`: `string` where to show value ("left", "right", etc.)
+-   `round_digits`: `int` number of decimal places
 -   `value`: `float` current value
 -   `min`: `float` minimum value
 -   `max`: `float` maximum value
@@ -115,12 +115,12 @@ These properties apply to all widgets, and can be used anywhere!
 **Properties**
 
 -   `path`: `string` image file path
--   `image-width`: `int` image width
--   `image-height`: `int` image height
--   `preserve-aspect-ratio`: `bool` keep aspect ratio
--   `fill-svg`: `string` fill color for SVGs
+-   `image_width`: `int` image width
+-   `image_height`: `int` image height
+-   `preserve_aspect_ratio`: `bool` keep aspect ratio
+-   `fill_svg`: `string` fill color for SVGs
 -   `icon`: `string` theme icon name
--   `icon-size`: `string` size of the icon
+-   `icon_size`: `string` size of the icon
 
 ## box
 
@@ -128,7 +128,7 @@ These properties apply to all widgets, and can be used anywhere!
 
 -   `spacing`: `int` spacing between children
 -   `orientation`: `string` direction of children
--   `space-evenly`: `bool` distribute children evenly
+-   `space_evenly`: `bool` distribute children evenly
 
 ## overlay
 
@@ -154,6 +154,7 @@ _None listed_
 
 -   `hscroll`: `bool` allow horizontal scrolling
 -   `vscroll`: `bool` allow vertical scrolling
+-   `propagate_natural_height`: `bool` use the natural height if true
 
 ## eventbox
 
@@ -177,9 +178,9 @@ _None listed_
 
 -   `text`: `string` text to display
 -   `truncate`: `bool` truncate text
--   `limit-width`: `int` max characters to show
--   `truncate-left`: `bool` truncate beginning
--   `show-truncated`: `bool` show truncation
+-   `limit_width`: `int` max characters to show
+-   `truncate_left`: `bool` truncate beginning
+-   `show_truncated`: `bool` show truncation
 -   `unindent`: `bool` strip leading spaces
 -   `markup`: `string` Pango markup
 -   `wrap`: `bool` wrap text
@@ -188,7 +189,7 @@ _None listed_
 -   `xalign`: `float` horizontal alignment
 -   `yalign`: `float` vertical alignment
 -   `justify`: `string` text justification
--   `wrap-mode`: `string` wrap mode ("word", "char", etc.)
+-   `wrap_mode`: `string` wrap mode ("word", "char", etc.)
 -   `lines`: `int` max lines (−1 = unlimited)
 
 ## literal
@@ -204,10 +205,10 @@ _None listed_
 -   `day`: `float` selected day
 -   `month`: `float` selected month
 -   `year`: `float` selected year
--   `show-details`: `bool` show details
--   `show-heading`: `bool` show heading
--   `show-day-names`: `bool` show day names
--   `show-week-numbers`: `bool` show week numbers
+-   `show_details`: `bool` show details
+-   `show_heading`: `bool` show heading
+-   `show_day_names`: `bool` show day names
+-   `show_week_numbers`: `bool` show week numbers
 -   `onclick`: `string` command with `{0}`, `{1}`, `{2}` for day/month/year
 -   `timeout`: `duration` Default: "200ms"
 
@@ -217,17 +218,17 @@ _None listed_
 
 -   `selected`: `int` child index
 -   `transition`: `string` animation name
--   `same-size`: `bool` equal child size
+-   `same_size`: `bool` equal child size
 
 ## transform
 
 **Properties**
 
 -   `rotate`: `float` rotation angle
--   `transform-origin-x`: `string` transform origin x
--   `transform-origin-y`: `string` transform origin y
--   `translate-x`: `string` shift x
--   `translate-y`: `string` shift y
+-   `transform_origin_x`: `string` transform origin x
+-   `transform_origin_y`: `string` transform origin y
+-   `translate_x`: `string` shift x
+-   `translate_y`: `string` shift y
 -   `scale-x`: `string` scale x
 -   `scale-y`: `string` scale y
 
@@ -236,7 +237,7 @@ _None listed_
 **Properties**
 
 -   `value`: `float` 0–100 progress
--   `start-at`: `float` start percentage
+-   `start_at`: `float` start percentage
 -   `thickness`: `float` line thickness
 -   `clockwise`: `bool` direction
 
@@ -246,6 +247,6 @@ _None listed_
 
 -   `value`: `float` current value
 -   `thickness`: `float` line thickness
--   `time-range`: `duration` duration to track
+-   `time_range`: `duration` duration to track
 -   `min`: `float` minimum value
 -   `max`: `float` maximum value
