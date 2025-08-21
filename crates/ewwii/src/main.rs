@@ -64,6 +64,7 @@ fn main() {
     let trace_enabled = std::env::var("EWWII_TRACE").is_ok();
 
     let log_level_filter = if trace_enabled {
+        println!("EWWII_TRACE variable exists, trace level enabled.");
         log::LevelFilter::Trace
     } else if opts.log_debug {
         log::LevelFilter::Debug
