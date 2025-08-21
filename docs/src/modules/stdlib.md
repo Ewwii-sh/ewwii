@@ -157,14 +157,106 @@ json::set(json_val, "age", 31);
 -   `set()` only works on JSON objects; trying to set a key on a non-object JSON value will produce an error.
 -   Parsing and serialization errors are returned as Rhai `EvalAltResult` errors.
 
-## Future Plans
+## `std::math`
 
-Other modules coming soon under `std`:
+The `std::math` module provides a collection of mathematical constants and functions.
+It includes basic arithmetic, trigonometry, exponentiation, logarithms, and utility functions.
 
--   `std::fs` — Filesystem operations (e.g., `read_file`, `write_file`, `list_dir`)
--   `std::path` — Path helpers (e.g., `join`, `basename`, `dirname`)
--   `std::time` — Time utilities (e.g., `now`, `sleep`, `format_time`)
--   `std::math` — Numeric functions (e.g., `clamp`, `lerp`, `map_range`)
--   `std::color` — Color parsing and manipulation (e.g., `hex_to_rgb`, `blend`)
+### Usage
 
-You can easily extend or override these by adding `.rhai` modules in your config path.
+```rust,ignore
+import "std::math" as math;
+
+// Constants
+print(math::PI); // 3.14159...
+print(math::E); // 2.71828...
+print(math::TAU); // 6.28318...
+
+// Basic math
+let x = math::abs(-42.0); // 42
+let y = math::sqrt(9.0); // 3
+let z = math::pow(2.0, 10.0); // 1024
+
+// Trigonometry
+let s = math::sin(math::PI / 2); // 1
+let c = math::cos(0.0); // 1
+let t = math::tan(math::PI / 4); // 1
+
+// Exponentials & logs
+let e = math::exp(1.0); // ~2.718
+let l = math::ln(math::E); // 1
+let l10 = math::log10(100.0); // 2
+let l2 = math::log(2.0, 8.0); // 3
+
+// Inverse trig
+let a = math::asin(1.0); // PI/2
+let b = math::acos(0.0); // PI/2
+let c = math::atan(1.0); // PI/4
+let d = math::atan2(1.0, 1.0); // PI/4
+
+// Hyperbolic
+let sh = math::sinh(1.0);
+let ch = math::cosh(1.0);
+let th = math::tanh(1.0);
+
+// Utilities
+let f = math::floor(3.7); // 3
+let r = math::round(3.5); // 4
+let m = math::min(10.0, 20.0); // 10
+let M = math::max(10.0, 20.0); // 20
+let cl = math::clamp(15.0, 0.0, 10.0); // 10
+
+// Other Utilities
+let tof = math::to_float(42);   // 42 -> 42.0
+let toi = math::to_int(3.14);   // truncates toward zero -> 3
+// NOTE: to_int does NOT round!
+// If you want nearest integer, use: to_int(math::round(3.14))
+```
+
+### Constants
+
+| Constant | Value    | Description      |
+| -------- | -------- | ---------------- |
+| `PI`     | 3.14159… | Circle ratio π   |
+| `E`      | 2.71828… | Euler’s number   |
+| `TAU`    | 6.28318… | Full circle (2π) |
+
+### Functions
+
+| Function             | Description                                       |
+| -------------------- | ------------------------------------------------- |
+| `abs(x)`             | Absolute value of `x`                             |
+| `sqrt(x)`            | Square root of `x`                                |
+| `pow(base, exp)`     | Base raised to power of exponent                  |
+| `sin(x)`             | Sine of `x` (radians)                             |
+| `cos(x)`             | Cosine of `x` (radians)                           |
+| `tan(x)`             | Tangent of `x` (radians)                          |
+| `exp(x)`             | e raised to the power `x`                         |
+| `ln(x)`              | Natural log of `x`                                |
+| `log10(x)`           | Base-10 log of `x`                                |
+| `log(base, x)`       | Log of `x` in `base`                              |
+| `asin(x)`            | Inverse sine                                      |
+| `acos(x)`            | Inverse cosine                                    |
+| `atan(x)`            | Inverse tangent                                   |
+| `atan2(y, x)`        | Arctangent of `y/x` considering quadrant          |
+| `sinh(x)`            | Hyperbolic sine                                   |
+| `cosh(x)`            | Hyperbolic cosine                                 |
+| `tanh(x)`            | Hyperbolic tangent                                |
+| `floor(x)`           | Round down                                        |
+| `ceil(x)`            | Round up                                          |
+| `round(x)`           | Round to nearest                                  |
+| `trunc(x)`           | Round toward zero                                 |
+| `fract(x)`           | Fractional part                                   |
+| `min(a, b)`          | Smaller of two values                             |
+| `max(a, b)`          | Larger of two values                              |
+| `clamp(x, min, max)` | Clamp `x` into `[min, max]`                       |
+| `to_float`           | Convert an integer or float into a floating-point |
+| `to_int`             | Convert an integer or float into an integer       |
+
+### Note
+
+All functions in this module work with floating-point numbers (f64).
+
+If you pass an integer (e.g. `0`), Rhai will report an error because there is no math::cos(i64). Use a floating-point literal instead (e.g. `0.0`).
+
+All math functions return `f64`. If you need an integer result, use `to_int` to convert.
