@@ -136,6 +136,7 @@ impl WidgetRegistry {
     }
 
     pub fn create_widget(&mut self, widget_node: WidgetNode, widget_id: u64, parent_id: u64) -> Result<()> {
+        log::trace!("Creating '{}'", widget_id);
         if let Some(parent) = self.widgets.get(&parent_id) {
             let parent_widget = parent.widget.clone();
 
@@ -161,6 +162,7 @@ impl WidgetRegistry {
                     box_container.add(&gtk_widget);
 
                     if let Some(pos) = position {
+                        log::trace!("Reordering contents of gtk::Box. Position: '{}'", pos);
                         box_container.reorder_child(&gtk_widget, pos as i32);
                     }
                 } else {
@@ -189,6 +191,7 @@ impl WidgetRegistry {
     // }
 
     pub fn remove_widget(&mut self, widget_id: u64, parent_id: u64) {
+        log::trace!("Removing '{}' from '{}'", widget_id, parent_id);
         if let Some(entry) = self.widgets.remove(&widget_id) {
             if let Some(parent) = self.widgets.get(&parent_id) {
                 let parent_widget = parent.widget.clone();
