@@ -5,11 +5,13 @@ use rhai::EvalAltResult;
 pub mod math {
     // math constants
     pub const PI: f64 = std::f64::consts::PI;
-    pub const E: f64  = std::f64::consts::E;
+    pub const E: f64 = std::f64::consts::E;
     pub const TAU: f64 = std::f64::consts::TAU;
 
     // basics
-    pub fn abs(x: f64) -> f64 { x.abs() }
+    pub fn abs(x: f64) -> f64 {
+        x.abs()
+    }
 
     #[rhai_fn(return_raw)]
     pub fn sqrt(x: f64) -> Result<f64, Box<EvalAltResult>> {
@@ -20,14 +22,24 @@ pub mod math {
         }
     }
 
-    pub fn pow(base: f64, exp: f64) -> f64 { base.powf(exp) }
+    pub fn pow(base: f64, exp: f64) -> f64 {
+        base.powf(exp)
+    }
 
-    pub fn sin(x: f64) -> f64 { x.sin() }
-    pub fn cos(x: f64) -> f64 { x.cos() }
-    pub fn tan(x: f64) -> f64 { x.tan() }
+    pub fn sin(x: f64) -> f64 {
+        x.sin()
+    }
+    pub fn cos(x: f64) -> f64 {
+        x.cos()
+    }
+    pub fn tan(x: f64) -> f64 {
+        x.tan()
+    }
 
     // exponentiation
-    pub fn exp(x: f64) -> f64 { x.exp() }
+    pub fn exp(x: f64) -> f64 {
+        x.exp()
+    }
 
     #[rhai_fn(return_raw)]
     pub fn ln(x: f64) -> Result<f64, Box<EvalAltResult>> {
@@ -77,22 +89,48 @@ pub mod math {
         }
     }
 
-    pub fn atan(x: f64) -> f64 { x.atan() }
-    pub fn atan2(y: f64, x: f64) -> f64 { y.atan2(x) }
+    pub fn atan(x: f64) -> f64 {
+        x.atan()
+    }
+    pub fn atan2(y: f64, x: f64) -> f64 {
+        y.atan2(x)
+    }
 
-    pub fn sinh(x: f64) -> f64 { x.sinh() }
-    pub fn cosh(x: f64) -> f64 { x.cosh() }
-    pub fn tanh(x: f64) -> f64 { x.tanh() }
+    pub fn sinh(x: f64) -> f64 {
+        x.sinh()
+    }
+    pub fn cosh(x: f64) -> f64 {
+        x.cosh()
+    }
+    pub fn tanh(x: f64) -> f64 {
+        x.tanh()
+    }
 
-    pub fn floor(x: f64) -> f64 { x.floor() }
-    pub fn ceil(x: f64) -> f64 { x.ceil() }
-    pub fn round(x: f64) -> f64 { x.round() }
-    pub fn trunc(x: f64) -> f64 { x.trunc() }
-    pub fn fract(x: f64) -> f64 { x.fract() }
+    pub fn floor(x: f64) -> f64 {
+        x.floor()
+    }
+    pub fn ceil(x: f64) -> f64 {
+        x.ceil()
+    }
+    pub fn round(x: f64) -> f64 {
+        x.round()
+    }
+    pub fn trunc(x: f64) -> f64 {
+        x.trunc()
+    }
+    pub fn fract(x: f64) -> f64 {
+        x.fract()
+    }
 
-    pub fn min(a: f64, b: f64) -> f64 { a.min(b) }
-    pub fn max(a: f64, b: f64) -> f64 { a.max(b) }
-    pub fn clamp(x: f64, min: f64, max: f64) -> f64 { x.clamp(min, max) }
+    pub fn min(a: f64, b: f64) -> f64 {
+        a.min(b)
+    }
+    pub fn max(a: f64, b: f64) -> f64 {
+        a.max(b)
+    }
+    pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
+        x.clamp(min, max)
+    }
 
     // other api's
     #[rhai_fn(return_raw)]
