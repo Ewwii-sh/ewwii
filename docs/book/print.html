@@ -869,23 +869,102 @@ json::set(json_val, "age", 31);</code></pre>
 <li><code>set()</code> only works on JSON objects; trying to set a key on a non-object JSON value will produce an error.</li>
 <li>Parsing and serialization errors are returned as Rhai <code>EvalAltResult</code> errors.</li>
 </ul>
-<h2 id="future-plans"><a class="header" href="#future-plans">Future Plans</a></h2>
-<p>Other modules coming soon under <code>std</code>:</p>
-<ul>
-<li><code>std::fs</code> — Filesystem operations (e.g., <code>read_file</code>, <code>write_file</code>, <code>list_dir</code>)</li>
-<li><code>std::path</code> — Path helpers (e.g., <code>join</code>, <code>basename</code>, <code>dirname</code>)</li>
-<li><code>std::time</code> — Time utilities (e.g., <code>now</code>, <code>sleep</code>, <code>format_time</code>)</li>
-<li><code>std::math</code> — Numeric functions (e.g., <code>clamp</code>, <code>lerp</code>, <code>map_range</code>)</li>
-<li><code>std::color</code> — Color parsing and manipulation (e.g., <code>hex_to_rgb</code>, <code>blend</code>)</li>
-</ul>
-<p>You can easily extend or override these by adding <code>.rhai</code> modules in your config path.</p>
+<h2 id="stdmath"><a class="header" href="#stdmath"><code>std::math</code></a></h2>
+<p>The <code>std::math</code> module provides a collection of mathematical constants and functions.
+It includes basic arithmetic, trigonometry, exponentiation, logarithms, and utility functions.</p>
+<h3 id="usage-4"><a class="header" href="#usage-4">Usage</a></h3>
+<pre><code class="language-rust ignore">import "std::math" as math;
+
+// Constants
+print(math::PI);   // 3.14159...
+print(math::E);    // 2.71828...
+print(math::TAU);  // 6.28318...
+
+// Basic math
+let x = math::abs(-42.0); // 42
+let y = math::sqrt(9.0); // 3
+let z = math::pow(2.0, 10.0); // 1024
+
+// Trigonometry
+let s = math::sin(math::PI / 2); // 1
+let c = math::cos(0.0); // 1
+let t = math::tan(math::PI / 4); // 1
+
+// Exponentials &amp; logs
+let e = math::exp(1.0); // ~2.718
+let l = math::ln(math::E); // 1
+let l10 = math::log10(100.0); // 2
+let l2 = math::log(2.0, 8.0); // 3
+
+// Inverse trig
+let a = math::asin(1.0); // PI/2
+let b = math::acos(0.0); // PI/2
+let c = math::atan(1.0); // PI/4
+let d = math::atan2(1.0, 1.0); // PI/4
+
+// Hyperbolic
+let sh = math::sinh(1.0);
+let ch = math::cosh(1.0);
+let th = math::tanh(1.0);
+
+// Utilities
+let f = math::floor(3.7);  // 3
+let r = math::round(3.5);  // 4
+let m = math::min(10.0, 20.0); // 10
+let M = math::max(10.0, 20.0); // 20
+let cl = math::clamp(15.0, 0.0, 10.0); // 10
+
+// Other Utilities
+let tof = math::to_float(42);
+let toi = math::to_int(3.14);</code></pre>
+<h3 id="constants"><a class="header" href="#constants">Constants</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>PI</code></td><td>3.14159…</td><td>Circle ratio π</td></tr>
+<tr><td><code>E</code></td><td>2.71828…</td><td>Euler’s number</td></tr>
+<tr><td><code>TAU</code></td><td>6.28318…</td><td>Full circle (2π)</td></tr>
+</tbody></table>
+</div>
+<h3 id="functions-4"><a class="header" href="#functions-4">Functions</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>abs(x)</code></td><td>Absolute value of <code>x</code></td></tr>
+<tr><td><code>sqrt(x)</code></td><td>Square root of <code>x</code></td></tr>
+<tr><td><code>pow(base, exp)</code></td><td>Base raised to power of exponent</td></tr>
+<tr><td><code>sin(x)</code></td><td>Sine of <code>x</code> (radians)</td></tr>
+<tr><td><code>cos(x)</code></td><td>Cosine of <code>x</code> (radians)</td></tr>
+<tr><td><code>tan(x)</code></td><td>Tangent of <code>x</code> (radians)</td></tr>
+<tr><td><code>exp(x)</code></td><td>e raised to the power <code>x</code></td></tr>
+<tr><td><code>ln(x)</code></td><td>Natural log of <code>x</code></td></tr>
+<tr><td><code>log10(x)</code></td><td>Base-10 log of <code>x</code></td></tr>
+<tr><td><code>log(base, x)</code></td><td>Log of <code>x</code> in <code>base</code></td></tr>
+<tr><td><code>asin(x)</code></td><td>Inverse sine</td></tr>
+<tr><td><code>acos(x)</code></td><td>Inverse cosine</td></tr>
+<tr><td><code>atan(x)</code></td><td>Inverse tangent</td></tr>
+<tr><td><code>atan2(y, x)</code></td><td>Arctangent of <code>y/x</code> considering quadrant</td></tr>
+<tr><td><code>sinh(x)</code></td><td>Hyperbolic sine</td></tr>
+<tr><td><code>cosh(x)</code></td><td>Hyperbolic cosine</td></tr>
+<tr><td><code>tanh(x)</code></td><td>Hyperbolic tangent</td></tr>
+<tr><td><code>floor(x)</code></td><td>Round down</td></tr>
+<tr><td><code>ceil(x)</code></td><td>Round up</td></tr>
+<tr><td><code>round(x)</code></td><td>Round to nearest</td></tr>
+<tr><td><code>trunc(x)</code></td><td>Round toward zero</td></tr>
+<tr><td><code>fract(x)</code></td><td>Fractional part</td></tr>
+<tr><td><code>min(a, b)</code></td><td>Smaller of two values</td></tr>
+<tr><td><code>max(a, b)</code></td><td>Larger of two values</td></tr>
+<tr><td><code>clamp(x, min, max)</code></td><td>Clamp <code>x</code> into <code>[min, max]</code></td></tr>
+<tr><td><code>to_float</code></td><td>Convert an integer or float into a floating-point</td></tr>
+<tr><td><code>to_int</code></td><td>Convert an integer or float into an integer</td></tr>
+</tbody></table>
+</div>
+<h3 id="note"><a class="header" href="#note">Note</a></h3>
+<p>All math functions in this module expect floating-point numbers (<code>f64</code>).</p>
+<p>If you pass an integer (e.g. <code>0</code>), Rhai will report an error because there is no <code>math::cos(i64)</code> function. To fix this, use a floating-point literal instead (e.g. <code>0.0</code>).</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="api-library"><a class="header" href="#api-library">API Library</a></h1>
 <h2 id="apiwifi"><a class="header" href="#apiwifi"><code>api::wifi</code></a></h2>
 <p>The <code>wifi</code> module provides cross-platform Wi-Fi management for Linux and macOS systems. Functions include scanning networks, querying the current connection, connecting/disconnecting, and enabling/disabling the Wi-Fi adapter.</p>
 <blockquote>
 <p><strong>Note:</strong> macOS support is largely untested and may behave differently depending on system configuration.</p>
 </blockquote>
-<h3 id="usage-4"><a class="header" href="#usage-4">Usage</a></h3>
+<h3 id="usage-5"><a class="header" href="#usage-5">Usage</a></h3>
 <pre><code class="language-rust ignore">import "api::wifi" as wifi;
 
 // Scan for available networks
@@ -906,7 +985,7 @@ wifi::disable_adapter();
 
 // Get adapter connection
 wifi::get_adapter_connectivity();</code></pre>
-<h3 id="functions-4"><a class="header" href="#functions-4">Functions</a></h3>
+<h3 id="functions-5"><a class="header" href="#functions-5">Functions</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>scan()</code></td><td>Returns a list of nearby Wi-Fi networks with <code>ssid</code>, <code>signal</code>, and <code>security</code> fields.</td></tr>
 <tr><td><code>scan_linux()</code></td><td><strong>Linux only</strong>. Returns a list of nearby Wi-Fi networks. Equivalent to <code>scan()</code>.</td></tr>
