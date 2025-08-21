@@ -9,7 +9,7 @@ These functions correspond to actual GTK widgets and render visible UI elements.
 -   **box**: `props`, `children`
 -   **centerbox**: `props`, `children`
 -   **eventbox**: `props`, `children`
--   **tooltip**: `children`
+-   **tooltip**: `props`, `children`
 -   **circular_progress**: `props`
 -   **graph**: `props`
 -   **transform**: `props`
@@ -27,7 +27,7 @@ These functions correspond to actual GTK widgets and render visible UI elements.
 -   **checkbox**: `props`
 -   **revealer**: `props`, `children`
 -   **scroll**: `props`, `children`
--   **overlay**: `children`
+-   **overlay**: `props`, `children`
 -   **stack**: `props`, `children`
 
 ## Utility Functions
