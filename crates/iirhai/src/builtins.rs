@@ -50,7 +50,8 @@ pub fn register_all_widgets(engine: &mut Engine) {
 
     engine.register_fn("color_chooser", |props: Map| WidgetNode::ColorChooser { props });
 
-    engine.register_fn("overlay", |children: Array| WidgetNode::OverLay {
+    engine.register_fn("overlay", |props: Map, children: Array| WidgetNode::OverLay {
+        props,
         children: children.into_iter().map(|v| v.cast()).collect(),
     });
 
@@ -72,7 +73,8 @@ pub fn register_all_widgets(engine: &mut Engine) {
         children: children.into_iter().map(|v| v.cast()).collect(),
     });
 
-    engine.register_fn("tooltip", |children: Array| WidgetNode::ToolTip {
+    engine.register_fn("tooltip", |props: Map, children: Array| WidgetNode::ToolTip {
+        props,
         children: children.into_iter().map(|v| v.cast()).collect(),
     });
 
