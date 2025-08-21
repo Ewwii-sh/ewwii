@@ -61,7 +61,16 @@ fn main() {
     let eww_binary_name = std::env::args().next().unwrap();
     let opts: opts::Opt = opts::Opt::from_env(); // opts of clap (from ./opts.rs)
 
-    let log_level_filter = if opts.log_debug { log::LevelFilter::Debug } else { log::LevelFilter::Info }; // the level to log
+    let trace_enabled = std::env::var("EWWII_TRACE").is_ok();
+
+    let log_level_filter = if trace_enabled {
+        log::LevelFilter::Trace
+    } else if opts.log_debug {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    };
+
     if std::env::var("RUST_LOG").is_ok() {
         pretty_env_logger::init_timed();
     } else {
