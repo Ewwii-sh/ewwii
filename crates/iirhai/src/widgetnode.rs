@@ -19,7 +19,7 @@ pub enum WidgetNode {
     Expander { props: Map, children: Vec<WidgetNode> },
     Revealer { props: Map, children: Vec<WidgetNode> },
     Scroll { props: Map, children: Vec<WidgetNode> },
-    OverLay { children: Vec<WidgetNode> },
+    OverLay { props: Map, children: Vec<WidgetNode> },
     Stack { props: Map, children: Vec<WidgetNode> },
     Calendar { props: Map },
     ColorButton { props: Map },
@@ -28,7 +28,7 @@ pub enum WidgetNode {
     Graph { props: Map },
     Transform { props: Map },
     EventBox { props: Map, children: Vec<WidgetNode> },
-    ToolTip { children: Vec<WidgetNode> },
+    ToolTip { props: Map, children: Vec<WidgetNode> },
 
     // Top-level macros
     DefWindow { name: String, props: Map, node: Box<WidgetNode> },
@@ -126,9 +126,11 @@ pub fn get_id_to_widget_info(
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
-        WidgetNode::ToolTip { children } => {
+        WidgetNode::ToolTip { props, children } => {
+            let id = hash_props_and_type(props, "ToolTip");
+            insert_wdgt_info(node, props, "ToolTip", children.clone(), parent_id, id_to_props)?;
             for child in children {
-                get_id_to_widget_info(child, id_to_props, parent_id)?;
+                get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::ColorChooser { props } => {
@@ -157,9 +159,11 @@ pub fn get_id_to_widget_info(
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
-        WidgetNode::OverLay { children } => {
+        WidgetNode::OverLay { props, children } => {
+            let id = hash_props_and_type(props, "OverLay");
+            insert_wdgt_info(node, props, "OverLay", children.clone(), parent_id, id_to_props)?;
             for child in children {
-                get_id_to_widget_info(child, id_to_props, parent_id)?;
+                get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::Stack { props, children } => {

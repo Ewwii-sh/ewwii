@@ -23,8 +23,6 @@ pub fn build_gtk_widget(input: WidgetInput, widget_reg: &mut WidgetRegistry) -> 
 
 // TODO: implement the commented lines
 fn build_gtk_widget_from_node(root_node: WidgetNode, widget_reg: &mut WidgetRegistry) -> Result<gtk::Widget> {
-    let root_node2 = root_node.clone();
-
     /*
         When a a new widget is added to the build process,
         make sure to update get_id_to_props_map() found in
@@ -36,7 +34,7 @@ fn build_gtk_widget_from_node(root_node: WidgetNode, widget_reg: &mut WidgetRegi
         WidgetNode::Box { props, children } => build_gtk_box(props, children, widget_reg)?.upcast(),
         WidgetNode::CenterBox { props, children } => build_center_box(props, children, widget_reg)?.upcast(),
         WidgetNode::EventBox { props, children } => build_gtk_event_box(props, children, widget_reg)?.upcast(),
-        WidgetNode::ToolTip { children } => build_tooltip(children, widget_reg)?.upcast(),
+        WidgetNode::ToolTip { props, children } => build_tooltip(props, children, widget_reg)?.upcast(),
         WidgetNode::CircularProgress { props } => build_circular_progress_bar(props, widget_reg)?.upcast(),
         WidgetNode::Graph { props } => build_graph(props, widget_reg)?.upcast(),
         WidgetNode::Transform { props } => build_transform(props, widget_reg)?.upcast(),
@@ -55,14 +53,13 @@ fn build_gtk_widget_from_node(root_node: WidgetNode, widget_reg: &mut WidgetRegi
         WidgetNode::Checkbox { props } => build_gtk_checkbox(props, widget_reg)?.upcast(),
         WidgetNode::Revealer { props, children } => build_gtk_revealer(props, children, widget_reg)?.upcast(),
         WidgetNode::Scroll { props, children } => build_gtk_scrolledwindow(props, children, widget_reg)?.upcast(),
-        WidgetNode::OverLay { children } => build_gtk_overlay(children, widget_reg)?.upcast(),
+        WidgetNode::OverLay { props, children } => build_gtk_overlay(props, children, widget_reg)?.upcast(),
         WidgetNode::Stack { props, children } => build_gtk_stack(props, children, widget_reg)?.upcast(),
         // WIDGET_NAME_SYSTRAY => build_systray(node)?.upcast(),
         unknown => {
             return Err(anyhow::anyhow!("Cannot build GTK widget from node: {:?}", unknown));
         }
     };
-    // Add the widget in resolve_rhai_widget_attrs as well becase it also has a map
-    resolve_rhai_widget_attrs(Some(root_node2), &gtk_widget, None)?;
+
     Ok(gtk_widget)
 }
