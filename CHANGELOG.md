@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Better error handling for `ErrorFunctionNotFound`.
 -   Better dynamic system which can handle dyn_id issues and reodering.
 -   Added `std::math` module for mathematics related tasks.
+-   Added `propagate_natural_height` property to scroll widget.
 
 ### Changed
 

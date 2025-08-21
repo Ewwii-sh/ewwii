@@ -1652,6 +1652,10 @@ pub(super) fn build_gtk_scrolledwindow(
             if vscroll { gtk::PolicyType::Automatic } else { gtk::PolicyType::Never },
         );
 
+        if let Ok(natural_height_bool) = get_bool_prop(&props, "propagate_natural_height", None) {
+            widget.set_propagate_natural_height(natural_height_bool);
+        }
+
         Ok(())
     };
 
