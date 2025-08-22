@@ -77,14 +77,10 @@ impl WidgetRegistry {
         let old_tree = self.stored_widget_node.take();
         let patches = Self::diff_trees(old_tree.as_ref(), &new_tree);
 
-        let mut seen_widget_ids = HashSet::new();
-
         for patch_req in patches {
             match patch_req {
                 PatchGtkWidget::Create(wdgt_node, wdgt_id, parent_id) => {
-                    if seen_widget_ids.insert(parent_id) {
-                        self.create_widget(wdgt_node, wdgt_id, parent_id).expect("failed to create new gtk widget");
-                    }
+                    self.create_widget(wdgt_node, wdgt_id, parent_id).expect("failed to create new gtk widget");
                 }
                 PatchGtkWidget::Update(widget_id, new_props) => {
                     self.update_props(widget_id, new_props);
