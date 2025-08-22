@@ -146,7 +146,9 @@ fn reload_config_and_css(ui_send: &UnboundedSender<DaemonCommand>) -> Result<()>
     ui_send.send(DaemonCommand::ReloadConfigAndCss(daemon_resp_sender))?;
     tokio::spawn(async move {
         match daemon_resp_response.recv().await {
-            Some(daemon_response::DaemonResponse::Success(_)) => log::info!("Reloaded config successfully"),
+            Some(daemon_response::DaemonResponse::Success(_)) => {
+                log::info!("Reloaded config successfully")
+            }
             Some(daemon_response::DaemonResponse::Failure(e)) => eprintln!("{}", e),
             None => log::error!("No response to reload configuration-reload request"),
         }
