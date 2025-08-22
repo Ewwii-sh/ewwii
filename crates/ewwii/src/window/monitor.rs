@@ -48,7 +48,9 @@ impl From<&MonitorIdentifier> for DynVal {
 impl fmt::Display for MonitorIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::List(l) => write!(f, "[{}]", l.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(" ")),
+            Self::List(l) => {
+                write!(f, "[{}]", l.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(" "))
+            }
             Self::Numeric(n) => write!(f, "{}", n),
             Self::Name(n) => write!(f, "{}", n),
             Self::Primary => write!(f, "<primary>"),
