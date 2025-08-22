@@ -913,23 +913,104 @@ json::set(json_val, &quot;age&quot;, 31);
 <li><code>set()</code> only works on JSON objects; trying to set a key on a non-object JSON value will produce an error.</li>
 <li>Parsing and serialization errors are returned as Rhai <code>EvalAltResult</code> errors.</li>
 </ul>
-<h2 id="future-plans"><a class="header" href="#future-plans">Future Plans</a></h2>
-<p>Other modules coming soon under <code>std</code>:</p>
-<ul>
-<li><code>std::fs</code> — Filesystem operations (e.g., <code>read_file</code>, <code>write_file</code>, <code>list_dir</code>)</li>
-<li><code>std::path</code> — Path helpers (e.g., <code>join</code>, <code>basename</code>, <code>dirname</code>)</li>
-<li><code>std::time</code> — Time utilities (e.g., <code>now</code>, <code>sleep</code>, <code>format_time</code>)</li>
-<li><code>std::math</code> — Numeric functions (e.g., <code>clamp</code>, <code>lerp</code>, <code>map_range</code>)</li>
-<li><code>std::color</code> — Color parsing and manipulation (e.g., <code>hex_to_rgb</code>, <code>blend</code>)</li>
-</ul>
-<p>You can easily extend or override these by adding <code>.rhai</code> modules in your config path.</p>
+<h2 id="stdmath"><a class="header" href="#stdmath"><code>std::math</code></a></h2>
+<p>The <code>std::math</code> module provides a collection of mathematical constants and functions.
+It includes basic arithmetic, trigonometry, exponentiation, logarithms, and utility functions.</p>
+<h3 id="usage-4"><a class="header" href="#usage-4">Usage</a></h3>
+<pre><code class="language-rust ignore">import &quot;std::math&quot; as math;
+
+// Constants
+print(math::PI); // 3.14159...
+print(math::E); // 2.71828...
+print(math::TAU); // 6.28318...
+
+// Basic math
+let x = math::abs(-42.0); // 42
+let y = math::sqrt(9.0); // 3
+let z = math::pow(2.0, 10.0); // 1024
+
+// Trigonometry
+let s = math::sin(math::PI / 2); // 1
+let c = math::cos(0.0); // 1
+let t = math::tan(math::PI / 4); // 1
+
+// Exponentials &amp; logs
+let e = math::exp(1.0); // ~2.718
+let l = math::ln(math::E); // 1
+let l10 = math::log10(100.0); // 2
+let l2 = math::log(2.0, 8.0); // 3
+
+// Inverse trig
+let a = math::asin(1.0); // PI/2
+let b = math::acos(0.0); // PI/2
+let c = math::atan(1.0); // PI/4
+let d = math::atan2(1.0, 1.0); // PI/4
+
+// Hyperbolic
+let sh = math::sinh(1.0);
+let ch = math::cosh(1.0);
+let th = math::tanh(1.0);
+
+// Utilities
+let f = math::floor(3.7); // 3
+let r = math::round(3.5); // 4
+let m = math::min(10.0, 20.0); // 10
+let M = math::max(10.0, 20.0); // 20
+let cl = math::clamp(15.0, 0.0, 10.0); // 10
+
+// Other Utilities
+let tof = math::to_float(42);   // 42 -&gt; 42.0
+let toi = math::to_int(3.14);   // truncates toward zero -&gt; 3
+// NOTE: to_int does NOT round!
+// If you want nearest integer, use: to_int(math::round(3.14))
+</code></pre>
+<h3 id="constants"><a class="header" href="#constants">Constants</a></h3>
+<table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>PI</code></td><td>3.14159…</td><td>Circle ratio π</td></tr>
+<tr><td><code>E</code></td><td>2.71828…</td><td>Euler’s number</td></tr>
+<tr><td><code>TAU</code></td><td>6.28318…</td><td>Full circle (2π)</td></tr>
+</tbody></table>
+<h3 id="functions-4"><a class="header" href="#functions-4">Functions</a></h3>
+<table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>abs(x)</code></td><td>Absolute value of <code>x</code></td></tr>
+<tr><td><code>sqrt(x)</code></td><td>Square root of <code>x</code></td></tr>
+<tr><td><code>pow(base, exp)</code></td><td>Base raised to power of exponent</td></tr>
+<tr><td><code>sin(x)</code></td><td>Sine of <code>x</code> (radians)</td></tr>
+<tr><td><code>cos(x)</code></td><td>Cosine of <code>x</code> (radians)</td></tr>
+<tr><td><code>tan(x)</code></td><td>Tangent of <code>x</code> (radians)</td></tr>
+<tr><td><code>exp(x)</code></td><td>e raised to the power <code>x</code></td></tr>
+<tr><td><code>ln(x)</code></td><td>Natural log of <code>x</code></td></tr>
+<tr><td><code>log10(x)</code></td><td>Base-10 log of <code>x</code></td></tr>
+<tr><td><code>log(base, x)</code></td><td>Log of <code>x</code> in <code>base</code></td></tr>
+<tr><td><code>asin(x)</code></td><td>Inverse sine</td></tr>
+<tr><td><code>acos(x)</code></td><td>Inverse cosine</td></tr>
+<tr><td><code>atan(x)</code></td><td>Inverse tangent</td></tr>
+<tr><td><code>atan2(y, x)</code></td><td>Arctangent of <code>y/x</code> considering quadrant</td></tr>
+<tr><td><code>sinh(x)</code></td><td>Hyperbolic sine</td></tr>
+<tr><td><code>cosh(x)</code></td><td>Hyperbolic cosine</td></tr>
+<tr><td><code>tanh(x)</code></td><td>Hyperbolic tangent</td></tr>
+<tr><td><code>floor(x)</code></td><td>Round down</td></tr>
+<tr><td><code>ceil(x)</code></td><td>Round up</td></tr>
+<tr><td><code>round(x)</code></td><td>Round to nearest</td></tr>
+<tr><td><code>trunc(x)</code></td><td>Round toward zero</td></tr>
+<tr><td><code>fract(x)</code></td><td>Fractional part</td></tr>
+<tr><td><code>min(a, b)</code></td><td>Smaller of two values</td></tr>
+<tr><td><code>max(a, b)</code></td><td>Larger of two values</td></tr>
+<tr><td><code>clamp(x, min, max)</code></td><td>Clamp <code>x</code> into <code>[min, max]</code></td></tr>
+<tr><td><code>to_float</code></td><td>Convert an integer or float into a floating-point</td></tr>
+<tr><td><code>to_int</code></td><td>Convert an integer or float into an integer</td></tr>
+</tbody></table>
+<h3 id="note"><a class="header" href="#note">Note</a></h3>
+<p>All functions in this module work with floating-point numbers (f64).</p>
+<p>If you pass an integer (e.g. <code>0</code>), Rhai will report an error because there is no math::cos(i64). Use a floating-point literal instead (e.g. <code>0.0</code>).</p>
+<p>All math functions return <code>f64</code>. If you need an integer result, use <code>to_int</code> to convert.</p>
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="api-library"><a class="header" href="#api-library">API Library</a></h1>
 <h2 id="apiwifi"><a class="header" href="#apiwifi"><code>api::wifi</code></a></h2>
 <p>The <code>wifi</code> module provides cross-platform Wi-Fi management for Linux and macOS systems. Functions include scanning networks, querying the current connection, connecting/disconnecting, and enabling/disabling the Wi-Fi adapter.</p>
 <blockquote>
 <p><strong>Note:</strong> macOS support is largely untested and may behave differently depending on system configuration.</p>
 </blockquote>
-<h3 id="usage-4"><a class="header" href="#usage-4">Usage</a></h3>
+<h3 id="usage-5"><a class="header" href="#usage-5">Usage</a></h3>
 <pre><code class="language-rust ignore">import &quot;api::wifi&quot; as wifi;
 
 // Scan for available networks
@@ -951,7 +1032,7 @@ wifi::disable_adapter();
 // Get adapter connection
 wifi::get_adapter_connectivity();
 </code></pre>
-<h3 id="functions-4"><a class="header" href="#functions-4">Functions</a></h3>
+<h3 id="functions-5"><a class="header" href="#functions-5">Functions</a></h3>
 <table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>scan()</code></td><td>Returns a list of nearby Wi-Fi networks with <code>ssid</code>, <code>signal</code>, and <code>security</code> fields.</td></tr>
 <tr><td><code>scan_linux()</code></td><td><strong>Linux only</strong>. Returns a list of nearby Wi-Fi networks. Equivalent to <code>scan()</code>.</td></tr>
@@ -1007,7 +1088,7 @@ wifi::get_adapter_connectivity();
 <li><strong>box</strong>: <code>props</code>, <code>children</code></li>
 <li><strong>centerbox</strong>: <code>props</code>, <code>children</code></li>
 <li><strong>eventbox</strong>: <code>props</code>, <code>children</code></li>
-<li><strong>tooltip</strong>: <code>children</code></li>
+<li><strong>tooltip</strong>: <code>props</code>, <code>children</code></li>
 <li><strong>circular_progress</strong>: <code>props</code></li>
 <li><strong>graph</strong>: <code>props</code></li>
 <li><strong>transform</strong>: <code>props</code></li>
@@ -1025,7 +1106,7 @@ wifi::get_adapter_connectivity();
 <li><strong>checkbox</strong>: <code>props</code></li>
 <li><strong>revealer</strong>: <code>props</code>, <code>children</code></li>
 <li><strong>scroll</strong>: <code>props</code>, <code>children</code></li>
-<li><strong>overlay</strong>: <code>children</code></li>
+<li><strong>overlay</strong>: <code>props</code>, <code>children</code></li>
 <li><strong>stack</strong>: <code>props</code>, <code>children</code></li>
 </ul>
 <h2 id="utility-functions"><a class="header" href="#utility-functions">Utility Functions</a></h2>
@@ -1093,14 +1174,14 @@ wifi::get_adapter_connectivity();
 <h2 id="color-button"><a class="header" href="#color-button">color-button</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
-<li><code>use-alpha</code>: <code>bool</code> use alpha channel</li>
+<li><code>use_alpha</code>: <code>bool</code> use alpha channel</li>
 <li><code>onchange</code>: <code>string</code> command on color select</li>
 <li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
 </ul>
 <h2 id="color-chooser"><a class="header" href="#color-chooser">color-chooser</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
-<li><code>use-alpha</code>: <code>bool</code> use alpha channel</li>
+<li><code>use_alpha</code>: <code>bool</code> use alpha channel</li>
 <li><code>onchange</code>: <code>string</code> command on color select</li>
 <li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
 </ul>
@@ -1109,9 +1190,9 @@ wifi::get_adapter_connectivity();
 <ul>
 <li><code>flipped</code>: <code>bool</code> reverse direction</li>
 <li><code>marks</code>: <code>string</code> draw marks</li>
-<li><code>draw-value</code>: <code>bool</code> show value</li>
-<li><code>value-pos</code>: <code>string</code> where to show value (&quot;left&quot;, &quot;right&quot;, etc.)</li>
-<li><code>round-digits</code>: <code>int</code> number of decimal places</li>
+<li><code>draw_value</code>: <code>bool</code> show value</li>
+<li><code>value_pos</code>: <code>string</code> where to show value (&quot;left&quot;, &quot;right&quot;, etc.)</li>
+<li><code>round_digits</code>: <code>int</code> number of decimal places</li>
 <li><code>value</code>: <code>float</code> current value</li>
 <li><code>min</code>: <code>float</code> minimum value</li>
 <li><code>max</code>: <code>float</code> maximum value</li>
@@ -1147,19 +1228,19 @@ wifi::get_adapter_connectivity();
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>path</code>: <code>string</code> image file path</li>
-<li><code>image-width</code>: <code>int</code> image width</li>
-<li><code>image-height</code>: <code>int</code> image height</li>
-<li><code>preserve-aspect-ratio</code>: <code>bool</code> keep aspect ratio</li>
-<li><code>fill-svg</code>: <code>string</code> fill color for SVGs</li>
+<li><code>image_width</code>: <code>int</code> image width</li>
+<li><code>image_height</code>: <code>int</code> image height</li>
+<li><code>preserve_aspect_ratio</code>: <code>bool</code> keep aspect ratio</li>
+<li><code>fill_svg</code>: <code>string</code> fill color for SVGs</li>
 <li><code>icon</code>: <code>string</code> theme icon name</li>
-<li><code>icon-size</code>: <code>string</code> size of the icon</li>
+<li><code>icon_size</code>: <code>string</code> size of the icon</li>
 </ul>
 <h2 id="box"><a class="header" href="#box">box</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>spacing</code>: <code>int</code> spacing between children</li>
 <li><code>orientation</code>: <code>string</code> direction of children</li>
-<li><code>space-evenly</code>: <code>bool</code> distribute children evenly</li>
+<li><code>space_evenly</code>: <code>bool</code> distribute children evenly</li>
 </ul>
 <h2 id="overlay"><a class="header" href="#overlay">overlay</a></h2>
 <p><strong>Properties</strong></p>
@@ -1177,6 +1258,7 @@ wifi::get_adapter_connectivity();
 <ul>
 <li><code>hscroll</code>: <code>bool</code> allow horizontal scrolling</li>
 <li><code>vscroll</code>: <code>bool</code> allow vertical scrolling</li>
+<li><code>propagate_natural_height</code>: <code>bool</code> use the natural height if true</li>
 </ul>
 <h2 id="eventbox"><a class="header" href="#eventbox">eventbox</a></h2>
 <p><strong>Properties</strong></p>
@@ -1198,9 +1280,9 @@ wifi::get_adapter_connectivity();
 <ul>
 <li><code>text</code>: <code>string</code> text to display</li>
 <li><code>truncate</code>: <code>bool</code> truncate text</li>
-<li><code>limit-width</code>: <code>int</code> max characters to show</li>
-<li><code>truncate-left</code>: <code>bool</code> truncate beginning</li>
-<li><code>show-truncated</code>: <code>bool</code> show truncation</li>
+<li><code>limit_width</code>: <code>int</code> max characters to show</li>
+<li><code>truncate_left</code>: <code>bool</code> truncate beginning</li>
+<li><code>show_truncated</code>: <code>bool</code> show truncation</li>
 <li><code>unindent</code>: <code>bool</code> strip leading spaces</li>
 <li><code>markup</code>: <code>string</code> Pango markup</li>
 <li><code>wrap</code>: <code>bool</code> wrap text</li>
@@ -1209,7 +1291,7 @@ wifi::get_adapter_connectivity();
 <li><code>xalign</code>: <code>float</code> horizontal alignment</li>
 <li><code>yalign</code>: <code>float</code> vertical alignment</li>
 <li><code>justify</code>: <code>string</code> text justification</li>
-<li><code>wrap-mode</code>: <code>string</code> wrap mode (&quot;word&quot;, &quot;char&quot;, etc.)</li>
+<li><code>wrap_mode</code>: <code>string</code> wrap mode (&quot;word&quot;, &quot;char&quot;, etc.)</li>
 <li><code>lines</code>: <code>int</code> max lines (−1 = unlimited)</li>
 </ul>
 <h2 id="literal"><a class="header" href="#literal">literal</a></h2>
@@ -1223,10 +1305,10 @@ wifi::get_adapter_connectivity();
 <li><code>day</code>: <code>float</code> selected day</li>
 <li><code>month</code>: <code>float</code> selected month</li>
 <li><code>year</code>: <code>float</code> selected year</li>
-<li><code>show-details</code>: <code>bool</code> show details</li>
-<li><code>show-heading</code>: <code>bool</code> show heading</li>
-<li><code>show-day-names</code>: <code>bool</code> show day names</li>
-<li><code>show-week-numbers</code>: <code>bool</code> show week numbers</li>
+<li><code>show_details</code>: <code>bool</code> show details</li>
+<li><code>show_heading</code>: <code>bool</code> show heading</li>
+<li><code>show_day_names</code>: <code>bool</code> show day names</li>
+<li><code>show_week_numbers</code>: <code>bool</code> show week numbers</li>
 <li><code>onclick</code>: <code>string</code> command with <code>{0}</code>, <code>{1}</code>, <code>{2}</code> for day/month/year</li>
 <li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
 </ul>
@@ -1235,16 +1317,16 @@ wifi::get_adapter_connectivity();
 <ul>
 <li><code>selected</code>: <code>int</code> child index</li>
 <li><code>transition</code>: <code>string</code> animation name</li>
-<li><code>same-size</code>: <code>bool</code> equal child size</li>
+<li><code>same_size</code>: <code>bool</code> equal child size</li>
 </ul>
 <h2 id="transform"><a class="header" href="#transform">transform</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>rotate</code>: <code>float</code> rotation angle</li>
-<li><code>transform-origin-x</code>: <code>string</code> transform origin x</li>
-<li><code>transform-origin-y</code>: <code>string</code> transform origin y</li>
-<li><code>translate-x</code>: <code>string</code> shift x</li>
-<li><code>translate-y</code>: <code>string</code> shift y</li>
+<li><code>transform_origin_x</code>: <code>string</code> transform origin x</li>
+<li><code>transform_origin_y</code>: <code>string</code> transform origin y</li>
+<li><code>translate_x</code>: <code>string</code> shift x</li>
+<li><code>translate_y</code>: <code>string</code> shift y</li>
 <li><code>scale-x</code>: <code>string</code> scale x</li>
 <li><code>scale-y</code>: <code>string</code> scale y</li>
 </ul>
@@ -1252,7 +1334,7 @@ wifi::get_adapter_connectivity();
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>value</code>: <code>float</code> 0–100 progress</li>
-<li><code>start-at</code>: <code>float</code> start percentage</li>
+<li><code>start_at</code>: <code>float</code> start percentage</li>
 <li><code>thickness</code>: <code>float</code> line thickness</li>
 <li><code>clockwise</code>: <code>bool</code> direction</li>
 </ul>
@@ -1261,7 +1343,7 @@ wifi::get_adapter_connectivity();
 <ul>
 <li><code>value</code>: <code>float</code> current value</li>
 <li><code>thickness</code>: <code>float</code> line thickness</li>
-<li><code>time-range</code>: <code>duration</code> duration to track</li>
+<li><code>time_range</code>: <code>duration</code> duration to track</li>
 <li><code>min</code>: <code>float</code> minimum value</li>
 <li><code>max</code>: <code>float</code> maximum value</li>
 </ul>
