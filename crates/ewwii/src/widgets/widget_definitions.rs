@@ -234,7 +234,7 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
             gtk_widget_clone.set_spacing(spacing_val as i32);
         }
 
-        if let Ok(space_evenly) = get_bool_prop(props, "space_evenly", Some(true)) {
+        if let Ok(space_evenly) = get_bool_prop(props, "space_evenly", None) {
             gtk_widget_clone.set_homogeneous(space_evenly);
         }
 
