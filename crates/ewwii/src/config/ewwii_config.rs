@@ -13,7 +13,7 @@ use crate::{
 
 use iirhai::{parser::ParseConfig, widgetnode::WidgetNode};
 
-use rhai::Map;
+use rhai::{Map, AST};
 
 // use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
 
@@ -28,6 +28,7 @@ pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwiiConfig> {
 pub struct EwwiiConfig {
     windows: HashMap<String, WindowDefinition>,
     root_node: Option<WidgetNode>,
+    compiled_ast: Option<AST>,
 }
 
 #[derive(Debug, Clone)]
@@ -46,9 +47,16 @@ impl EwwiiConfig {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
         }
 
-        // get the iirhai widget tree
+        // initialize configuration parser
         let mut config_parser = ParseConfig::new();
-        let config_tree = config_parser.eval_file(rhai_path)?;
+
+        // get code from file
+        let rhai_code = config_parser.code_from_file(&rhai_path)?;
+
+        // get the iirhai widget tree
+        let compiled_ast = config_parser.compile_code(&rhai_code)?;
+        let poll_listen_scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
+        let config_tree = config_parser.eval_code_with(&rhai_code, Some(poll_listen_scope), Some(&compiled_ast))?;
 
         let mut window_definitions = HashMap::new();
 
@@ -68,7 +76,7 @@ impl EwwiiConfig {
             bail!("Expected root node to be `Enter`, but got something else.");
         }
 
-        Ok(EwwiiConfig { windows: window_definitions, root_node: Some(config_tree) })
+        Ok(EwwiiConfig { windows: window_definitions, root_node: Some(config_tree), compiled_ast: Some(compiled_ast) })
     }
 
     pub fn get_windows(&self) -> &HashMap<String, WindowDefinition> {
@@ -100,5 +108,9 @@ impl EwwiiConfig {
         } else {
             bail!("Expected root node to be `Enter`, but got something else.");
         }
+    }
+
+    pub fn get_owned_compiled_ast(&self) -> Option<AST> {
+        self.compiled_ast.clone()
     }
 }

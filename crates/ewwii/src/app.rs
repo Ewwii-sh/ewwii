@@ -343,6 +343,7 @@ impl<B: DisplayBackend> App<B> {
             // listening/polling
             let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
             let config_path = self.paths.get_rhai_path();
+            let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
             let store = iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
 
             glib::MainContext::default().spawn_local(async move {
@@ -350,7 +351,7 @@ impl<B: DisplayBackend> App<B> {
                     log::debug!("Received update for var: {}", var_name);
                     let vars = store.read().unwrap().clone();
 
-                    match generate_new_widgetnode(&vars, &config_path).await {
+                    match generate_new_widgetnode(&vars, &config_path, compiled_ast.as_ref()).await {
                         Ok(new_widget) => {
                             let _ = widget_reg_store.update_widget_tree(new_widget);
                         }
@@ -559,7 +560,11 @@ fn initialize_window<B: DisplayBackend>(
     })
 }
 
-async fn generate_new_widgetnode(all_vars: &HashMap<String, String>, code_path: &Path) -> Result<WidgetNode> {
+async fn generate_new_widgetnode(
+    all_vars: &HashMap<String, String>,
+    code_path: &Path,
+    compiled_ast: Option<&rhai::AST>,
+) -> Result<WidgetNode> {
     let mut scope = Scope::new();
     for (name, val) in all_vars {
         scope.set_value(name.clone(), Dynamic::from(val.clone()));
@@ -570,7 +575,8 @@ async fn generate_new_widgetnode(all_vars: &HashMap<String, String>, code_path: 
     }
 
     let mut reeval_parser = iirhai::parser::ParseConfig::new();
-    let new_root_widget = reeval_parser.eval_file_with(code_path, scope, None);
+    let rhai_code = reeval_parser.code_from_file(&code_path)?;
+    let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast);
 
     Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget?)?)
 }
