@@ -63,7 +63,14 @@ pub fn get_id_to_widget_info<'a>(
         }
         WidgetNode::CenterBox { props, children } => {
             let id = hash_props_and_type(props, "CenterBox");
-            insert_wdgt_info(node, props, "CenterBox", children.as_slice(), parent_id, id_to_props)?;
+            insert_wdgt_info(
+                node,
+                props,
+                "CenterBox",
+                children.as_slice(),
+                parent_id,
+                id_to_props,
+            )?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
@@ -188,13 +195,8 @@ fn insert_wdgt_info<'a>(
     id_to_info: &mut HashMap<u64, WidgetInfo<'a>>,
 ) -> Result<()> {
     let id = hash_props_and_type(props, widget_type);
-    let info = WidgetInfo {
-        node,
-        props,
-        widget_type,
-        children: children.iter().collect(),
-        parent_id,
-    };
+    let info =
+        WidgetInfo { node, props, widget_type, children: children.iter().collect(), parent_id };
     id_to_info.insert(id, info);
     Ok(())
 }

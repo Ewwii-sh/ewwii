@@ -1,3 +1,4 @@
+use crate::error::format_rhai_error;
 use rhai::{Engine, EvalAltResult, Module, ModuleResolver, Position, Scope, AST};
 use std::fs;
 use std::path::PathBuf;
@@ -44,7 +45,11 @@ impl ModuleResolver for SimpleFileResolver {
 
         let ast: AST = engine.compile(&script)?;
         let scope = Scope::new();
-        let mut module = Module::eval_ast_as_new(scope, &ast, engine)?;
+        let mut module = Module::eval_ast_as_new(scope, &ast, engine)
+            .map_err(|e| {
+                log::error!("{}", format_rhai_error(&e, &script, engine));
+                e
+            })?;
 
         module.build_index();
         Ok(Rc::new(module))
@@ -64,32 +69,9 @@ impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<
         path: &str,
         pos: Position,
     ) -> Result<Rc<Module>, Box<EvalAltResult>> {
-        self.first
-            .resolve(engine, source_path, path, pos)
-            .or_else(|_| self.second.resolve(engine, source_path, path, pos))
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::parser::ParseConfig;
-
-    #[test]
-    fn test_mod_resolver() -> Result<(), Box<dyn std::error::Error>> {
-        let mut engine = Engine::new();
-
-        // Set the custom module resolver into the 'Engine'.
-        engine.set_module_resolver(SimpleFileResolver);
-
-        let test_code = r#"
-            import "/home/byson94/.config/ewwii/foo/baz" as baz;  // this 'import' statement will call
-            baz::greet();
-        "#;
-
-        let mut parser = ParseConfig::new();
-        println!("{:#?}", parser.eval_code(test_code));
-
-        Ok(())
+        self.first.resolve(engine, source_path, path, pos).or_else(|e| {
+            log::trace!("Error executing resolver 1, falling back to resolver 2. Error details: {}", e);
+            self.second.resolve(engine, source_path, path, pos)
+        })
     }
 }
