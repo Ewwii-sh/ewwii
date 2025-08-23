@@ -382,7 +382,7 @@ impl<B: DisplayBackend> App<B> {
                     match generate_new_widgetnode(
                         &*vars,
                         &config_path,
-                        compiled_ast.as_ref(),
+                        compiled_ast.as_deref(),
                         Some(&mut stored_parser),
                     )
                     .await
