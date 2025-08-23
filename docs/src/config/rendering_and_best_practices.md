@@ -111,12 +111,15 @@ There are two options to achieve this:
 
 ```rust,ignore
 // in ./foo/baz.rhai
+/// Note: all functions are automatically exported.
 fn greet() { return "Greetings!" }
-export greet;
+let PI = 3.14159
+export PI; // we need to export variables manually
 
 // in ./ewwii.rhai
 import "foo/baz" as example;
-print(example::greet()); // output: Greetings!
+print(example::greet()); // Greetings!
+print(example::PI); // 3.14159
 ```
 
 A rhai file may import the contents of any other rhai file that they export. For this, make use of the `import` directive. If you are exporting a variable/function, make use the `export` directive.
