@@ -128,7 +128,7 @@ pub fn format_parse_error(error: &ParseError, code: &str) -> String {
     let pos = error.position();
     let line = pos.line().unwrap_or(0);
     let column = pos.position().unwrap_or(1);
-    
+
     let line_text = code.lines().nth(line.saturating_sub(1)).unwrap_or("");
     let filename = "<rhai>";
 
