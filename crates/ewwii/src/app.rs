@@ -31,12 +31,13 @@ use gtk::{gdk, glib};
 use iirhai::widgetnode::WidgetNode;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
-use rhai::{Dynamic, Scope};
+use rhai::Dynamic;
 use std::{
     cell::{Cell, RefCell},
     collections::{HashMap, HashSet},
     marker::PhantomData,
     rc::Rc,
+    sync::{Arc, Mutex},
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -76,15 +77,34 @@ pub enum DaemonCommand {
     PrintDebug(DaemonResponseSender),
     ListWindows(DaemonResponseSender),
     ListActiveWindows(DaemonResponseSender),
+    TriggerUpdateUI {
+        window: String,
+        inject_vars: Option<HashMap<String, String>>,
+    },
+    CallRhaiFns {
+        calls: Vec<String>,
+    },
 }
 
 /// An opened window.
-#[derive(Debug)]
 pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
+    pub widget_reg_store: Arc<Mutex<WidgetRegistry>>,
     pub delete_event_handler_id: Option<glib::SignalHandlerId>,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
+}
+
+impl std::fmt::Debug for EwwiiWindow {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EwwiiWindow")
+            .field("name", &self.name)
+            .field("gtk_window", &"<GtkWindow>")
+            .field("widget_reg_store", &"<WidgetRegistry>")
+            .field("delete_event_handler_id", &self.delete_event_handler_id)
+            .field("destroy_event_handler_id", &self.destroy_event_handler_id)
+            .finish()
+    }
 }
 
 impl EwwiiWindow {
@@ -283,6 +303,12 @@ impl<B: DisplayBackend> App<B> {
                 let output = format!("{:#?}", &self);
                 sender.send_success(output)?
             }
+            DaemonCommand::TriggerUpdateUI { window, inject_vars } => {
+                let _ = self.trigger_ui_update_with(window, inject_vars)?;
+            }
+            DaemonCommand::CallRhaiFns { calls } => {
+                let _ = self.call_rhai_fns(calls)?;
+            }
         }
         Ok(())
     }
@@ -352,15 +378,19 @@ impl<B: DisplayBackend> App<B> {
 
             // Should hold the id and the props of a widget
             // It is critical for supporting dynamic updates
-            let mut widget_reg_store = WidgetRegistry::new(Some(&window_def.root_widget));
+            let widget_reg_store =
+                Arc::new(Mutex::new(WidgetRegistry::new(Some(&window_def.root_widget))));
 
-            let root_widget =
-                build_gtk_widget(WidgetInput::Window(window_def), &mut widget_reg_store)?;
+            let root_widget = {
+                let mut store = widget_reg_store.lock().unwrap();
+                build_gtk_widget(WidgetInput::Window(window_def), &mut *store)?
+            };
 
             root_widget.style_context().add_class(window_name);
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
-            let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
+            let mut ewwii_window =
+                initialize_window::<B>(&initiator, monitor, root_widget, widget_reg_store.clone())?;
             ewwii_window.gtk_window.style_context().add_class(window_name);
 
             // listening/polling
@@ -372,6 +402,8 @@ impl<B: DisplayBackend> App<B> {
                 self.ewwii_config.get_root_node()?.as_ref(),
                 tx,
             );
+
+            let widget_reg_store = widget_reg_store.clone();
 
             glib::MainContext::default().spawn_local(async move {
                 while let Some(var_name) = rx.recv().await {
@@ -387,7 +419,7 @@ impl<B: DisplayBackend> App<B> {
                     .await
                     {
                         Ok(new_widget) => {
-                            let _ = widget_reg_store.update_widget_tree(new_widget);
+                            let _ = widget_reg_store.lock().unwrap().update_widget_tree(new_widget);
                         }
                         Err(e) => {
                             log::error!("Failed to generate new widgetnode: {:#}", e);
@@ -534,12 +566,82 @@ impl<B: DisplayBackend> App<B> {
             Ok(())
         }
     }
+
+    /// Trigger a UI update with the given flags.
+    /// Even if there are no flags, the UI will still be updated.
+    pub fn trigger_ui_update_with(
+        &self,
+        window_name: String,
+        inject_vars: Option<HashMap<String, String>>,
+    ) -> Result<()> {
+        let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
+        let config_path = self.paths.get_rhai_path();
+
+        let mut reeval_parser = ParseConfig::new();
+        let rhai_code = reeval_parser.code_from_file(&config_path)?;
+
+        let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
+        if let Some(vars) = inject_vars {
+            for (name, val) in vars {
+                scope.set_value(name, Dynamic::from(val));
+            }
+        }
+
+        if !config_path.exists() {
+            bail!("The configuration file `{}` does not exist", config_path.display());
+        }
+
+        let new_root_widget =
+            reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast.as_deref())?;
+
+        match config::EwwiiConfig::get_windows_root_widget(new_root_widget) {
+            Ok(new_widget) => {
+                if let Some(window) = self.open_windows.get(&window_name) {
+                    let widget_reg_store = window.widget_reg_store.clone();
+
+                    if let Ok(mut store) = widget_reg_store.lock() {
+                        let _ = store.update_widget_tree(new_widget);
+                    } else {
+                        log::error!("Failed to acquire lock on widget registry");
+                    };
+                } else {
+                    log::error!("Failed to get a window with the name: '{}'", window_name);
+                }
+            }
+            Err(e) => {
+                log::error!("Failed to generate new widgetnode: {:#}", e);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn call_rhai_fns(&self, calls: Vec<String>) -> Result<()> {
+        let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
+        let config_path = self.paths.get_rhai_path();
+
+        let mut reeval_parser = ParseConfig::new();
+        let rhai_code = reeval_parser.code_from_file(&config_path)?;
+
+        let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
+
+        // unwrap Arc<AST>
+        let ast_ref: &rhai::AST =
+            compiled_ast.as_ref().ok_or_else(|| anyhow!("AST not compiled yet"))?.as_ref();
+
+        for fn_call in calls {
+            reeval_parser.call_rhai_fn(ast_ref, &fn_call, Some(&mut scope))?;
+        }
+
+        Ok(())
+    }
 }
 
 fn initialize_window<B: DisplayBackend>(
     window_init: &WindowInitiator,
     monitor: Monitor,
     root_widget: gtk::Widget,
+    widget_reg_store: Arc<Mutex<WidgetRegistry>>,
 ) -> Result<EwwiiWindow> {
     let monitor_geometry = monitor.geometry();
     let (actual_window_rect, x, y) = match window_init.geometry {
@@ -608,6 +710,7 @@ fn initialize_window<B: DisplayBackend>(
         gtk_window: window,
         delete_event_handler_id: None,
         destroy_event_handler_id: None,
+        widget_reg_store,
     })
 }
 
@@ -619,15 +722,6 @@ async fn generate_new_widgetnode(
     compiled_ast: Option<&rhai::AST>,
     parser: Option<&mut ParseConfig>,
 ) -> Result<WidgetNode> {
-    let mut scope = Scope::new();
-    for (name, val) in all_vars {
-        scope.set_value(name.clone(), Dynamic::from(val.clone()));
-    }
-
-    if !code_path.exists() {
-        bail!("The configuration file `{}` does not exist", code_path.display());
-    }
-
     let mut owned_parser;
     let reeval_parser: &mut ParseConfig = match parser {
         Some(p) => p,
@@ -636,11 +730,20 @@ async fn generate_new_widgetnode(
             &mut owned_parser
         }
     };
-
     let rhai_code = reeval_parser.code_from_file(&code_path)?;
-    let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast);
 
-    Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget?)?)
+    let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
+    for (name, val) in all_vars {
+        scope.set_value(name.clone(), Dynamic::from(val.clone()));
+    }
+
+    if !code_path.exists() {
+        bail!("The configuration file `{}` does not exist", code_path.display());
+    }
+
+    let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast)?;
+
+    Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget)?)
 }
 
 /// Apply the provided window-positioning rules to the window.
