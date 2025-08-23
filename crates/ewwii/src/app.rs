@@ -367,6 +367,7 @@ impl<B: DisplayBackend> App<B> {
             let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
+            let mut stored_parser = iirhai::parser::ParseConfig::new();
             let store =
                 iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
 
@@ -375,7 +376,13 @@ impl<B: DisplayBackend> App<B> {
                     log::debug!("Received update for var: {}", var_name);
                     let vars = store.read().unwrap().clone();
 
-                    match generate_new_widgetnode(&vars, &config_path, compiled_ast.as_ref()).await
+                    match generate_new_widgetnode(
+                        &vars,
+                        &config_path,
+                        compiled_ast.as_ref(),
+                        Some(&mut stored_parser),
+                    )
+                    .await
                     {
                         Ok(new_widget) => {
                             let _ = widget_reg_store.update_widget_tree(new_widget);
@@ -602,10 +609,13 @@ fn initialize_window<B: DisplayBackend>(
     })
 }
 
+use iirhai::parser::ParseConfig;
+
 async fn generate_new_widgetnode(
     all_vars: &HashMap<String, String>,
     code_path: &Path,
     compiled_ast: Option<&rhai::AST>,
+    parser: Option<&mut ParseConfig>,
 ) -> Result<WidgetNode> {
     let mut scope = Scope::new();
     for (name, val) in all_vars {
@@ -616,9 +626,23 @@ async fn generate_new_widgetnode(
         bail!("The configuration file `{}` does not exist", code_path.display());
     }
 
-    let mut reeval_parser = iirhai::parser::ParseConfig::new();
+    let start_eval = std::time::Instant::now();
+
+    let mut owned_parser;
+    let reeval_parser: &mut ParseConfig = match parser {
+        Some(p) => p,
+        None => {
+            owned_parser = ParseConfig::new();
+            &mut owned_parser
+        }
+    };
+
     let rhai_code = reeval_parser.code_from_file(&code_path)?;
     let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast);
+
+    let duration = start_eval.elapsed();
+
+    println!("Elapsed time: {:?}", duration);
 
     Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget?)?)
 }
