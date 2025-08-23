@@ -3,6 +3,7 @@
 // I wonder how honorificabilitudinitatibus will I feel after replacing yuck...
 use anyhow::{bail, Context, Result};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::{
     // ipc_server,
@@ -28,7 +29,7 @@ pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwiiConfig> {
 pub struct EwwiiConfig {
     windows: HashMap<String, WindowDefinition>,
     root_node: Option<WidgetNode>,
-    compiled_ast: Option<AST>,
+    compiled_ast: Option<Arc<AST>>,
 }
 
 #[derive(Debug, Clone)]
@@ -83,7 +84,7 @@ impl EwwiiConfig {
         Ok(EwwiiConfig {
             windows: window_definitions,
             root_node: Some(config_tree),
-            compiled_ast: Some(compiled_ast),
+            compiled_ast: Some(Arc::new(compiled_ast)),
         })
     }
 
@@ -118,7 +119,7 @@ impl EwwiiConfig {
         }
     }
 
-    pub fn get_owned_compiled_ast(&self) -> Option<AST> {
+    pub fn get_owned_compiled_ast(&self) -> Option<Arc<AST>> {
         self.compiled_ast.clone()
     }
 }
