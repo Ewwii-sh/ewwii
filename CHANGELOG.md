@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Added `std::math` module for mathematics related tasks.
 -   Added `propagate_natural_height` property to scroll widget.
 -   Faster re-evaluation of configuration by reusing compiled configuration.
+-   Improved runtime error handling of WidgetNode casting.
 
 ### Changed
 
