@@ -81,4 +81,44 @@ impl ParseConfig {
 
         Ok(scope)
     }
+
+    pub fn call_rhai_fn(&self, ast: &AST, expr: &str, scope: Option<&mut Scope>) -> Result<()> {
+        // very naive split
+        let (fn_name, args_str) =
+            expr.split_once('(').ok_or_else(|| anyhow::anyhow!("Invalid expression: {}", expr))?;
+        let fn_name = fn_name.trim();
+        let args_str = args_str.trim_end_matches(')');
+
+        // parse args into Dynamics
+        let args: Vec<rhai::Dynamic> = args_str
+            .split(',')
+            .filter(|s| !s.trim().is_empty())
+            .map(|s| {
+                let s = s.trim();
+                if let Ok(i) = s.parse::<i64>() {
+                    rhai::Dynamic::from(i)
+                } else if let Ok(f) = s.parse::<f64>() {
+                    rhai::Dynamic::from(f)
+                } else {
+                    rhai::Dynamic::from(s.to_string())
+                }
+            })
+            .collect();
+
+        let mut scope = match scope {
+            Some(s) => s,
+            None => &mut Scope::new(),
+        };
+
+        match self.engine.call_fn::<rhai::Dynamic>(&mut scope, ast, fn_name, args) {
+            Ok(result) => {
+                log::debug!("Call `{}` returned {:?}", fn_name, result);
+                Ok(())
+            }
+            Err(e) => {
+                log::error!("Call `{}` failed: {}", fn_name, e);
+                Err(anyhow::anyhow!(e.to_string()))
+            }
+        }
+    }
 }
