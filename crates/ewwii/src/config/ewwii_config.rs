@@ -28,7 +28,7 @@ pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwiiConfig> {
 #[derive(Debug, Clone, Default)]
 pub struct EwwiiConfig {
     windows: HashMap<String, WindowDefinition>,
-    root_node: Option<WidgetNode>,
+    root_node: Option<Arc<WidgetNode>>,
     compiled_ast: Option<Arc<AST>>,
 }
 
@@ -83,7 +83,7 @@ impl EwwiiConfig {
 
         Ok(EwwiiConfig {
             windows: window_definitions,
-            root_node: Some(config_tree),
+            root_node: Some(Arc::new(config_tree)),
             compiled_ast: Some(Arc::new(compiled_ast)),
         })
     }
@@ -102,7 +102,7 @@ impl EwwiiConfig {
         })
     }
 
-    pub fn get_root_node(&self) -> Result<WidgetNode> {
+    pub fn get_root_node(&self) -> Result<Arc<WidgetNode>> {
         self.root_node.clone().ok_or_else(|| anyhow::anyhow!("root_node is missing"))
     }
 
