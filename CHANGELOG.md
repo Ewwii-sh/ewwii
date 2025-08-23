@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 -   Made `x`, `y`, `widget` and `height` properties optional on window definition.
 -   Stopped setting **homogeneous** to true if `space_evenly` property (on box) is not defined.
+-   Made internal **Id to WidgetInfo** only borrow values instead of owning to improve performance.
 
 ### Fixed
 
