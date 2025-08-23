@@ -1,4 +1,4 @@
-use crate::error::format_rhai_error;
+use crate::error::format_eval_error;
 use anyhow::Result;
 use rhai::Engine;
 
@@ -16,7 +16,7 @@ pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<St
                 results.push((sig.var, initial));
             }
             Err(e) => {
-                return Err(anyhow::anyhow!(format_rhai_error(&e, code, &engine)));
+                return Err(anyhow::anyhow!(format_eval_error(&e, code, &engine)));
             }
         }
     }

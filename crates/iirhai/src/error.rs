@@ -1,5 +1,5 @@
 use colored::Colorize;
-use rhai::{Engine, EvalAltResult, Position};
+use rhai::{Engine, EvalAltResult, ParseError, Position};
 
 /// A little helper to carry all the pieces of a single‐line diagnostic.
 struct Diagnostic<'a> {
@@ -98,7 +98,8 @@ impl<'a> Diagnostic<'a> {
     }
 }
 
-pub fn format_rhai_error(error: &EvalAltResult, code: &str, engine: &Engine) -> String {
+/// Return a formatted Rhai evaluation error.
+pub fn format_eval_error(error: &EvalAltResult, code: &str, engine: &Engine) -> String {
     let pos = get_deepest_position(error);
     let line = pos.line().unwrap_or(0);
     let column = pos.position().unwrap_or(1);
@@ -117,6 +118,32 @@ pub fn format_rhai_error(error: &EvalAltResult, code: &str, engine: &Engine) -> 
         help: if help_hint.help.is_empty() { None } else { Some(help_hint.help) },
         hint: if help_hint.hint.is_empty() { None } else { Some(help_hint.hint) },
         note: if help_hint.note.is_empty() { None } else { Some(help_hint.note) },
+    };
+
+    diag.render()
+}
+
+/// Return a formatted Rhai parse error.
+pub fn format_parse_error(error: &ParseError, code: &str) -> String {
+    let pos = error.position();
+    let line = pos.line().unwrap_or(0);
+    let column = pos.position().unwrap_or(1);
+    
+    let line_text = code.lines().nth(line.saturating_sub(1)).unwrap_or("");
+    let filename = "<rhai>";
+
+    let diag = Diagnostic {
+        severity: "error",
+        message: error.to_string(),
+        file: filename,
+        line,
+        column,
+        line_text,
+        help: Some("Syntax error detected.".into()),
+        hint: Some(
+            "Check for missing tokens, unmatched parentheses, or invalid constructs.".into(),
+        ),
+        note: None,
     };
 
     diag.render()
