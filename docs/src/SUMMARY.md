@@ -23,6 +23,7 @@
 
 -   [Modules](modules/modules.md)
 
+    -   [User Defined Modules](modules/user_defined.md)
     -   [Std Library](modules/stdlib.md)
     -   [API Library](modules/apilib.md)
 
