@@ -1,111 +1,102 @@
 use crate::widgetnode::WidgetNode;
-use rhai::{Array, Engine, Map};
+use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
+
+/// Converts a Dynamic array into a Vec<WidgetNode>, returning proper errors with position.
+fn children_to_vec(
+    children: Array,
+    ctx: &NativeCallContext,
+) -> Result<Vec<WidgetNode>, Box<EvalAltResult>> {
+    children
+        .into_iter()
+        .map(|v| {
+            let type_name = v.type_name();
+            v.try_cast::<WidgetNode>().ok_or_else(|| {
+                Box::new(EvalAltResult::ErrorRuntime(
+                    format!("Expected WidgetNode in children array, found {}", type_name).into(),
+                    ctx.call_position(),
+                ))
+            })
+        })
+        .collect()
+}
 
 pub fn register_all_widgets(engine: &mut Engine) {
     engine.register_type::<WidgetNode>();
 
-    // Primitive widgets
-    engine.register_fn("label", |props: Map| WidgetNode::Label { props });
+    // --- Primitive widgets ---
+    macro_rules! register_primitive {
+        ($name:expr, $variant:ident) => {
+            engine.register_fn($name, |props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
+                Ok(WidgetNode::$variant { props })
+            });
+        };
+    }
 
-    engine.register_fn("box", |props: Map, children: Array| WidgetNode::Box {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
+    register_primitive!("label", Label);
+    register_primitive!("button", Button);
+    register_primitive!("image", Image);
+    register_primitive!("input", Input);
+    register_primitive!("progress", Progress);
+    register_primitive!("combo_box_text", ComboBoxText);
+    register_primitive!("slider", Slider);
+    register_primitive!("checkbox", Checkbox);
+    register_primitive!("calendar", Calendar);
+    register_primitive!("graph", Graph);
+    register_primitive!("transform", Transform);
+    register_primitive!("circular_progress", CircularProgress);
+    register_primitive!("color_button", ColorButton);
+    register_primitive!("color_chooser", ColorChooser);
 
-    engine.register_fn("centerbox", |props: Map, children: Array| WidgetNode::CenterBox {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
+    // --- Widgets with children ---
+    macro_rules! register_with_children {
+        ($name:expr, $variant:ident) => {
+            engine.register_fn(
+                $name,
+                |ctx: NativeCallContext,
+                 props: Map,
+                 children: Array|
+                 -> Result<WidgetNode, Box<EvalAltResult>> {
+                    let children_vec = children_to_vec(children, &ctx)?;
+                    Ok(WidgetNode::$variant { props, children: children_vec })
+                },
+            );
+        };
+    }
 
-    engine.register_fn("button", |props: Map| WidgetNode::Button { props });
-
-    engine.register_fn("image", |props: Map| WidgetNode::Image { props });
-
-    engine.register_fn("input", |props: Map| WidgetNode::Input { props });
-
-    engine.register_fn("progress", |props: Map| WidgetNode::Progress { props });
-
-    engine.register_fn("combo_box_text", |props: Map| WidgetNode::ComboBoxText { props });
-
-    engine.register_fn("slider", |props: Map| WidgetNode::Slider { props });
-
-    engine.register_fn("checkbox", |props: Map| WidgetNode::Checkbox { props });
-
-    engine.register_fn("expander", |props: Map, children: Array| WidgetNode::Expander {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
-
-    engine.register_fn("revealer", |props: Map, children: Array| WidgetNode::Revealer {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
-
-    engine.register_fn("scroll", |props: Map, children: Array| WidgetNode::Scroll {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
-
-    engine.register_fn("color_button", |props: Map| WidgetNode::ColorButton { props });
-
-    engine.register_fn("color_chooser", |props: Map| WidgetNode::ColorChooser { props });
-
-    engine.register_fn("overlay", |props: Map, children: Array| WidgetNode::OverLay {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
-
-    engine.register_fn("stack", |props: Map, children: Array| WidgetNode::Stack {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
-
-    engine.register_fn("calendar", |props: Map| WidgetNode::Calendar { props });
-
-    engine.register_fn("graph", |props: Map| WidgetNode::Graph { props });
-
-    engine.register_fn("transform", |props: Map| WidgetNode::Transform { props });
-
-    engine.register_fn("circular_progress", |props: Map| WidgetNode::CircularProgress { props });
-
-    engine.register_fn("eventbox", |props: Map, children: Array| WidgetNode::EventBox {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
-
-    engine.register_fn("tooltip", |props: Map, children: Array| WidgetNode::ToolTip {
-        props,
-        children: children.into_iter().map(|v| v.cast()).collect(),
-    });
+    register_with_children!("box", Box);
+    register_with_children!("centerbox", CenterBox);
+    register_with_children!("expander", Expander);
+    register_with_children!("revealer", Revealer);
+    register_with_children!("scroll", Scroll);
+    register_with_children!("overlay", OverLay);
+    register_with_children!("stack", Stack);
+    register_with_children!("eventbox", EventBox);
+    register_with_children!("tooltip", ToolTip);
 
     // --- Top-level macros ---
+    engine.register_fn(
+        "defwindow",
+        |name: &str, props: Map, node: WidgetNode| -> Result<WidgetNode, Box<EvalAltResult>> {
+            Ok(WidgetNode::DefWindow { name: name.to_string(), props, node: Box::new(node) })
+        },
+    );
 
-    /*  defwidget is not needed in rhai because it is an imprative language.
-        Because of this, functions are basically defwidget itself!
-        There is no requirement to build a function just to match yucks syntax.
-    */
-    // engine.register_fn("defwidget", |name: &str, node: WidgetNode| {
-    //     WidgetNode::DefWidget {
-    //         name: name.to_string(),
-    //         node: Box::new(node),
-    //     }
-    // });
-
-    engine.register_fn("defwindow", |name: &str, props: Map, node: WidgetNode| {
-        WidgetNode::DefWindow { name: name.to_string(), props, node: Box::new(node) }
+    engine.register_fn("poll", |var: &str, props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
+        Ok(WidgetNode::Poll { var: var.to_string(), props })
     });
 
-    engine.register_fn("poll", |var: &str, props: Map| WidgetNode::Poll {
-        var: var.to_string(),
-        props,
-    });
+    engine.register_fn(
+        "listen",
+        |var: &str, props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
+            Ok(WidgetNode::Listen { var: var.to_string(), props })
+        },
+    );
 
-    engine.register_fn("listen", |var: &str, props: Map| WidgetNode::Listen {
-        var: var.to_string(),
-        props,
-    });
-
-    engine.register_fn("enter", |children: Array| {
-        WidgetNode::Enter(children.into_iter().map(|v| v.cast()).collect())
-    });
+    engine.register_fn(
+        "enter",
+        |ctx: NativeCallContext, children: Array| -> Result<WidgetNode, Box<EvalAltResult>> {
+            let children_vec = children_to_vec(children, &ctx)?;
+            Ok(WidgetNode::Enter(children_vec))
+        },
+    );
 }
