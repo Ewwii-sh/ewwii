@@ -35,7 +35,7 @@ pub struct WindowInitiator {
 
 impl WindowInitiator {
     pub fn new(window_def: &WindowDefinition, args: &WindowArguments) -> Result<Self> {
-        let properties = window_def.props.clone();
+        let properties = &window_def.props;
         let geometry = match properties.get("geometry") {
             Some(val) => Some(parse_geometry(val, args, true)?),
             // Some(geo) => Some(geo.eval(&vars)?.override_if_given(args.anchor, args.pos, args.size)),
