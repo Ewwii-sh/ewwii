@@ -629,8 +629,6 @@ async fn generate_new_widgetnode(
         bail!("The configuration file `{}` does not exist", code_path.display());
     }
 
-    let start_eval = std::time::Instant::now();
-
     let mut owned_parser;
     let reeval_parser: &mut ParseConfig = match parser {
         Some(p) => p,
@@ -642,10 +640,6 @@ async fn generate_new_widgetnode(
 
     let rhai_code = reeval_parser.code_from_file(&code_path)?;
     let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast);
-
-    let duration = start_eval.elapsed();
-
-    println!("Elapsed time: {:?}", duration);
 
     Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget?)?)
 }
