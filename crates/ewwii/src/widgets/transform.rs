@@ -126,7 +126,9 @@ impl ContainerImpl for TransformPriv {
     fn add(&self, widget: &gtk::Widget) {
         if let Some(content) = &*self.content.borrow() {
             // TODO: Handle this error when populating children widgets instead
-            error_handling_ctx::print_error(anyhow!("Error, trying to add multiple children to a circular-progress widget"));
+            error_handling_ctx::print_error(anyhow!(
+                "Error, trying to add multiple children to a circular-progress widget"
+            ));
             self.parent_remove(content);
         }
         self.parent_add(widget);
@@ -145,31 +147,43 @@ impl WidgetImpl for TransformPriv {
             cr.save()?;
 
             let transform_origin_x = match &*self.transform_origin_x.borrow() {
-                Some(rcx) => NumWithUnit::from_str(rcx)?.pixels_relative_to(total_width as i32) as f64,
+                Some(rcx) => {
+                    NumWithUnit::from_str(rcx)?.pixels_relative_to(total_width as i32) as f64
+                }
                 None => 0.0,
             };
             let transform_origin_y = match &*self.transform_origin_y.borrow() {
-                Some(rcy) => NumWithUnit::from_str(rcy)?.pixels_relative_to(total_height as i32) as f64,
+                Some(rcy) => {
+                    NumWithUnit::from_str(rcy)?.pixels_relative_to(total_height as i32) as f64
+                }
                 None => 0.0,
             };
 
             let translate_x = match &*self.translate_x.borrow() {
-                Some(tx) => NumWithUnit::from_str(tx)?.pixels_relative_to(total_width as i32) as f64,
+                Some(tx) => {
+                    NumWithUnit::from_str(tx)?.pixels_relative_to(total_width as i32) as f64
+                }
                 None => 0.0,
             };
 
             let translate_y = match &*self.translate_y.borrow() {
-                Some(ty) => NumWithUnit::from_str(ty)?.pixels_relative_to(total_height as i32) as f64,
+                Some(ty) => {
+                    NumWithUnit::from_str(ty)?.pixels_relative_to(total_height as i32) as f64
+                }
                 None => 0.0,
             };
 
             let scale_x = match &*self.scale_x.borrow() {
-                Some(sx) => NumWithUnit::from_str(sx)?.perc_relative_to(total_width as i32) as f64 / 100.0,
+                Some(sx) => {
+                    NumWithUnit::from_str(sx)?.perc_relative_to(total_width as i32) as f64 / 100.0
+                }
                 None => 1.0,
             };
 
             let scale_y = match &*self.scale_y.borrow() {
-                Some(sy) => NumWithUnit::from_str(sy)?.perc_relative_to(total_height as i32) as f64 / 100.0,
+                Some(sy) => {
+                    NumWithUnit::from_str(sy)?.perc_relative_to(total_height as i32) as f64 / 100.0
+                }
                 None => 1.0,
             };
 

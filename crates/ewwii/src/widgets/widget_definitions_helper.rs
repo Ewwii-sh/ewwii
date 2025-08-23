@@ -14,7 +14,11 @@ where
     std::thread::Builder::new()
         .name("command-execution-thread".to_string())
         .spawn(move || {
-            log::debug!("Running command from widget [timeout: {}ms]: {}", timeout.as_millis(), cmd);
+            log::debug!(
+                "Running command from widget [timeout: {}ms]: {}",
+                timeout.as_millis(),
+                cmd
+            );
             let child = Command::new("/bin/sh").arg("-c").arg(&cmd).spawn();
             match child {
                 Ok(mut child) => match child.wait_timeout(timeout) {
@@ -89,10 +93,20 @@ pub(super) fn parse_orientation(ori: &str) -> Result<gtk::Orientation> {
 }
 
 /// Gtk Label
-pub(super) fn apply_ellipsize_settings(label: &gtk::Label, truncate: bool, limit_width: i32, truncate_left: bool, show: bool) {
+pub(super) fn apply_ellipsize_settings(
+    label: &gtk::Label,
+    truncate: bool,
+    limit_width: i32,
+    truncate_left: bool,
+    show: bool,
+) {
     if (truncate || limit_width != i32::MAX) && show {
         label.set_max_width_chars(if limit_width == i32::MAX { -1 } else { limit_width });
-        label.set_ellipsize(if truncate_left { pango::EllipsizeMode::Start } else { pango::EllipsizeMode::End });
+        label.set_ellipsize(if truncate_left {
+            pango::EllipsizeMode::Start
+        } else {
+            pango::EllipsizeMode::End
+        });
     } else {
         label.set_ellipsize(pango::EllipsizeMode::None);
     }
@@ -146,7 +160,9 @@ where
 {
     if !args.is_empty() {
         let cmd = cmd.replace("{}", &format!("{}", args[0]));
-        args.iter().enumerate().fold(cmd, |acc, (i, arg)| acc.replace(&format!("{{{}}}", i), &format!("{}", arg)))
+        args.iter()
+            .enumerate()
+            .fold(cmd, |acc, (i, arg)| acc.replace(&format!("{{{}}}", i), &format!("{}", arg)))
     } else {
         cmd.to_string()
     }

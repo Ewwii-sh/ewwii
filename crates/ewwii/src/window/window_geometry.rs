@@ -35,7 +35,8 @@ impl FromStr for Coords {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (sx, sy) = s.split_once(|c: char| c == 'x' || c == '*').ok_or(Error::MalformedCoords)?;
+        let (sx, sy) =
+            s.split_once(|c: char| c == 'x' || c == '*').ok_or(Error::MalformedCoords)?;
         Ok(Coords { x: sx.parse()?, y: sy.parse()? })
     }
 }
@@ -113,9 +114,10 @@ impl std::str::FromStr for AnchorPoint {
     type Err = EnumParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (x_str, y_str) = s
-            .split_once(' ')
-            .ok_or_else(|| EnumParseError { input: s.to_string(), expected: vec!["<horizontal> <vertical>"] })?;
+        let (x_str, y_str) = s.split_once(' ').ok_or_else(|| EnumParseError {
+            input: s.to_string(),
+            expected: vec!["<horizontal> <vertical>"],
+        })?;
 
         let x = AnchorAlignment::from_x_alignment(x_str)?;
         let y = AnchorAlignment::from_y_alignment(y_str)?;

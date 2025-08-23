@@ -3,11 +3,16 @@ use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
     error_handling_ctx,
-    gtk::prelude::{ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt},
+    gtk::prelude::{
+        ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt,
+    },
     paths::EwwPaths,
     widgets::window::Window,
     // dynval::DynVal,
-    widgets::{build_widget::build_gtk_widget, build_widget::WidgetInput, widget_definitions::WidgetRegistry},
+    widgets::{
+        build_widget::build_gtk_widget, build_widget::WidgetInput,
+        widget_definitions::WidgetRegistry,
+    },
     window::{
         coords::Coords,
         monitor::MonitorIdentifier,
@@ -139,8 +144,8 @@ async fn wait_for_monitor_model() {
     let display = gdk::Display::default().expect("could not get default display");
     let start = std::time::Instant::now();
     loop {
-        let all_monitors_set =
-            (0..display.n_monitors()).all(|i| display.monitor(i).and_then(|monitor| monitor.model()).is_some());
+        let all_monitors_set = (0..display.n_monitors())
+            .all(|i| display.monitor(i).and_then(|monitor| monitor.model()).is_some());
         if all_monitors_set {
             break;
         }
@@ -241,13 +246,24 @@ impl<B: DisplayBackend> App<B> {
                 let result = if should_toggle && is_open {
                     self.close_window(&instance_id, false)
                 } else {
-                    self.open_window(&WindowArguments { instance_id, window_name, pos, size, monitor, anchor, duration })
+                    self.open_window(&WindowArguments {
+                        instance_id,
+                        window_name,
+                        pos,
+                        size,
+                        monitor,
+                        anchor,
+                        duration,
+                    })
                 };
 
                 sender.respond_with_result(result)?;
             }
             DaemonCommand::CloseWindows { windows, auto_reopen, sender } => {
-                let errors = windows.iter().map(|window| self.close_window(window, auto_reopen)).filter_map(Result::err);
+                let errors = windows
+                    .iter()
+                    .map(|window| self.close_window(window, auto_reopen))
+                    .filter_map(Result::err);
                 // Ignore sending errors, as the channel might already be closed
                 let _ = sender.respond_with_error_list(errors);
             }
@@ -256,7 +272,11 @@ impl<B: DisplayBackend> App<B> {
                 sender.send_success(output)?
             }
             DaemonCommand::ListActiveWindows(sender) => {
-                let output = self.open_windows.iter().map(|(id, window)| format!("{id}: {}", window.name)).join("\n");
+                let output = self
+                    .open_windows
+                    .iter()
+                    .map(|(id, window)| format!("{id}: {}", window.name))
+                    .join("\n");
                 sender.send_success(output)?
             }
             DaemonCommand::PrintDebug(sender) => {
@@ -282,10 +302,9 @@ impl<B: DisplayBackend> App<B> {
         if let Some(old_abort_send) = self.window_close_timer_abort_senders.remove(instance_id) {
             _ = old_abort_send.send(());
         }
-        let ewwii_window = self
-            .open_windows
-            .remove(instance_id)
-            .with_context(|| format!("Tried to close window with id '{instance_id}', but no such window was open"))?;
+        let ewwii_window = self.open_windows.remove(instance_id).with_context(|| {
+            format!("Tried to close window with id '{instance_id}', but no such window was open")
+        })?;
 
         // let scope_index = ewwii_window.scope_index;
         ewwii_window.close();
@@ -324,7 +343,10 @@ impl<B: DisplayBackend> App<B> {
             let window_name: &str = &window_args.window_name;
 
             let window_def = self.ewwii_config.get_window(window_name)?.clone();
-            assert_eq!(window_def.name, window_name, "window definition name did not equal the called window");
+            assert_eq!(
+                window_def.name, window_name,
+                "window definition name did not equal the called window"
+            );
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
@@ -332,7 +354,8 @@ impl<B: DisplayBackend> App<B> {
             // It is critical for supporting dynamic updates
             let mut widget_reg_store = WidgetRegistry::new(Some(&window_def.root_widget));
 
-            let root_widget = build_gtk_widget(WidgetInput::Window(window_def), &mut widget_reg_store)?;
+            let root_widget =
+                build_gtk_widget(WidgetInput::Window(window_def), &mut widget_reg_store)?;
 
             root_widget.style_context().add_class(window_name);
 
@@ -344,14 +367,16 @@ impl<B: DisplayBackend> App<B> {
             let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-            let store = iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
+            let store =
+                iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
 
             glib::MainContext::default().spawn_local(async move {
                 while let Some(var_name) = rx.recv().await {
                     log::debug!("Received update for var: {}", var_name);
                     let vars = store.read().unwrap().clone();
 
-                    match generate_new_widgetnode(&vars, &config_path, compiled_ast.as_ref()).await {
+                    match generate_new_widgetnode(&vars, &config_path, compiled_ast.as_ref()).await
+                    {
                         Ok(new_widget) => {
                             let _ = widget_reg_store.update_widget_tree(new_widget);
                         }
@@ -375,8 +400,11 @@ impl<B: DisplayBackend> App<B> {
                 // becomes available again
                 move |auto_reopen| {
                     let (response_sender, _) = daemon_response::create_pair();
-                    let command =
-                        DaemonCommand::CloseWindows { windows: vec![instance_id.clone()], auto_reopen, sender: response_sender };
+                    let command = DaemonCommand::CloseWindows {
+                        windows: vec![instance_id.clone()],
+                        auto_reopen,
+                        sender: response_sender,
+                    };
                     if let Err(err) = app_evt_sender.send(command) {
                         log::error!("Error sending close window command: {}", err);
                     }
@@ -386,26 +414,28 @@ impl<B: DisplayBackend> App<B> {
             let closed_by_user = Rc::new(Cell::new(false));
 
             // handling users close request
-            ewwii_window.delete_event_handler_id = Some(ewwii_window.gtk_window.connect_delete_event({
-                let handler = gtk_close_handler.clone();
-                let closed_by_user = closed_by_user.clone();
-                move |_, _| {
-                    handler(false); // -- false: don't reopen window to respect users intent
-                    closed_by_user.set(true);
-                    glib::Propagation::Proceed
-                }
-            }));
+            ewwii_window.delete_event_handler_id =
+                Some(ewwii_window.gtk_window.connect_delete_event({
+                    let handler = gtk_close_handler.clone();
+                    let closed_by_user = closed_by_user.clone();
+                    move |_, _| {
+                        handler(false); // -- false: don't reopen window to respect users intent
+                        closed_by_user.set(true);
+                        glib::Propagation::Proceed
+                    }
+                }));
 
             // handling destory request
-            ewwii_window.destroy_event_handler_id = Some(ewwii_window.gtk_window.connect_destroy({
-                let handler = gtk_close_handler.clone();
-                let closed_by_user = closed_by_user.clone();
-                move |_| {
-                    if !closed_by_user.get() {
-                        handler(true);
+            ewwii_window.destroy_event_handler_id =
+                Some(ewwii_window.gtk_window.connect_destroy({
+                    let handler = gtk_close_handler.clone();
+                    let closed_by_user = closed_by_user.clone();
+                    move |_| {
+                        if !closed_by_user.get() {
+                            handler(true);
+                        }
                     }
-                }
-            }));
+                }));
 
             let duration = window_args.duration;
             if let Some(duration) = duration {
@@ -430,7 +460,10 @@ impl<B: DisplayBackend> App<B> {
                     }
                 });
 
-                if let Some(old_abort_send) = self.window_close_timer_abort_senders.insert(instance_id.to_string(), abort_send) {
+                if let Some(old_abort_send) = self
+                    .window_close_timer_abort_senders
+                    .insert(instance_id.to_string(), abort_send)
+                {
                     _ = old_abort_send.send(());
                 }
             }
@@ -454,8 +487,13 @@ impl<B: DisplayBackend> App<B> {
 
         self.ewwii_config = config;
 
-        let open_window_ids: Vec<String> =
-            self.open_windows.keys().cloned().chain(self.failed_windows.iter().cloned()).dedup().collect();
+        let open_window_ids: Vec<String> = self
+            .open_windows
+            .keys()
+            .cloned()
+            .chain(self.failed_windows.iter().cloned())
+            .dedup()
+            .collect();
         for instance_id in &open_window_ids {
             let window_arguments = self.instance_id_to_args.get(instance_id).with_context(|| {
                 format!("Cannot reopen window, initial parameters were not saved correctly for {instance_id}")
@@ -468,7 +506,8 @@ impl<B: DisplayBackend> App<B> {
     /// Load a given CSS string into the gtk css provider, returning a nicely formatted [`DiagError`] when GTK errors out
     pub fn load_css(&mut self, file_id: usize, css: &str) -> Result<()> {
         if let Err(err) = self.css_provider.load_from_data(css.as_bytes()) {
-            static PATTERN: Lazy<regex::Regex> = Lazy::new(|| regex::Regex::new(r"[^:]*:(\d+):(\d+)(.*)$").unwrap());
+            static PATTERN: Lazy<regex::Regex> =
+                Lazy::new(|| regex::Regex::new(r"[^:]*:(\d+):(\d+)(.*)$").unwrap());
             let nice_error_option: Option<_> = (|| {
                 let captures = PATTERN.captures(err.message())?;
                 let line = captures.get(1).unwrap().as_str().parse::<usize>().ok()?;
@@ -501,8 +540,9 @@ fn initialize_window<B: DisplayBackend>(
         }
         _ => (None, 0, 0),
     };
-    let window = B::initialize_window(window_init, monitor_geometry, x, y)
-        .with_context(|| format!("monitor {} is unavailable", window_init.monitor.clone().unwrap()))?;
+    let window = B::initialize_window(window_init, monitor_geometry, x, y).with_context(|| {
+        format!("monitor {} is unavailable", window_init.monitor.clone().unwrap())
+    })?;
 
     window.set_title(&format!("Ewwii - {}", window_init.name));
     window.set_position(gtk::WindowPosition::None);
@@ -528,7 +568,9 @@ fn initialize_window<B: DisplayBackend>(
     if B::IS_X11 {
         if let Some(geometry) = window_init.geometry {
             let _ = apply_window_position(geometry, monitor_geometry, &window);
-            if window_init.backend_options.x11.window_type != crate::window::backend_window_options::X11WindowType::Normal {
+            if window_init.backend_options.x11.window_type
+                != crate::window::backend_window_options::X11WindowType::Normal
+            {
                 let last_pos = Rc::new(RefCell::new(None));
                 window.connect_configure_event({
                     let last_pos = last_pos.clone();
@@ -583,7 +625,11 @@ async fn generate_new_widgetnode(
 
 /// Apply the provided window-positioning rules to the window.
 #[cfg(feature = "x11")]
-fn apply_window_position(mut window_geometry: WindowGeometry, monitor_geometry: gdk::Rectangle, window: &Window) -> Result<()> {
+fn apply_window_position(
+    mut window_geometry: WindowGeometry,
+    monitor_geometry: gdk::Rectangle,
+    window: &Window,
+) -> Result<()> {
     let gdk_window = window.window().context("Failed to get gdk window from gtk window")?;
     window_geometry.size = crate::window::window_geometry::Coords::from_pixels(window.size());
     let actual_window_rect = get_window_rectangle(window_geometry, monitor_geometry);
@@ -598,8 +644,9 @@ fn apply_window_position(mut window_geometry: WindowGeometry, monitor_geometry: 
 }
 
 fn on_screen_changed(window: &Window, _old_screen: Option<&gdk::Screen>) {
-    let visual = gtk::prelude::GtkWindowExt::screen(window)
-        .and_then(|screen| screen.rgba_visual().filter(|_| screen.is_composited()).or_else(|| screen.system_visual()));
+    let visual = gtk::prelude::GtkWindowExt::screen(window).and_then(|screen| {
+        screen.rgba_visual().filter(|_| screen.is_composited()).or_else(|| screen.system_visual())
+    });
     window.set_visual(visual.as_ref());
 }
 
@@ -633,7 +680,10 @@ fn get_gdk_monitor(identifier: Option<MonitorIdentifier>) -> Result<Monitor> {
 fn get_monitor_plug_name(display: &gdk::Display, monitor_num: i32) -> Option<&str> {
     unsafe {
         use glib::translate::ToGlibPtr;
-        let plug_name_pointer = gdk_sys::gdk_screen_get_monitor_plug_name(display.default_screen().to_glib_none().0, monitor_num);
+        let plug_name_pointer = gdk_sys::gdk_screen_get_monitor_plug_name(
+            display.default_screen().to_glib_none().0,
+            monitor_num,
+        );
         use std::ffi::CStr;
         CStr::from_ptr(plug_name_pointer).to_str().ok()
     }
@@ -641,7 +691,10 @@ fn get_monitor_plug_name(display: &gdk::Display, monitor_num: i32) -> Option<&st
 
 /// Returns the [Monitor][gdk::Monitor] structure corresponding to the identifer.
 /// Outside of x11, only [MonitorIdentifier::Numeric] is supported
-pub fn get_monitor_from_display(display: &gdk::Display, identifier: &MonitorIdentifier) -> Option<gdk::Monitor> {
+pub fn get_monitor_from_display(
+    display: &gdk::Display,
+    identifier: &MonitorIdentifier,
+) -> Option<gdk::Monitor> {
     match identifier {
         MonitorIdentifier::List(list) => {
             for ident in list {
@@ -666,10 +719,18 @@ pub fn get_monitor_from_display(display: &gdk::Display, identifier: &MonitorIden
     }
 }
 
-pub fn get_window_rectangle(geometry: WindowGeometry, screen_rect: gdk::Rectangle) -> gdk::Rectangle {
-    let (offset_x, offset_y) = geometry.offset.relative_to(screen_rect.width(), screen_rect.height());
+pub fn get_window_rectangle(
+    geometry: WindowGeometry,
+    screen_rect: gdk::Rectangle,
+) -> gdk::Rectangle {
+    let (offset_x, offset_y) =
+        geometry.offset.relative_to(screen_rect.width(), screen_rect.height());
     let (width, height) = geometry.size.relative_to(screen_rect.width(), screen_rect.height());
-    let x = screen_rect.x() + offset_x + geometry.anchor_point.x.alignment_to_coordinate(width, screen_rect.width());
-    let y = screen_rect.y() + offset_y + geometry.anchor_point.y.alignment_to_coordinate(height, screen_rect.height());
+    let x = screen_rect.x()
+        + offset_x
+        + geometry.anchor_point.x.alignment_to_coordinate(width, screen_rect.width());
+    let y = screen_rect.y()
+        + offset_y
+        + geometry.anchor_point.y.alignment_to_coordinate(height, screen_rect.height());
     gdk::Rectangle::new(x, y, width, height)
 }

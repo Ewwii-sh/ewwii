@@ -13,7 +13,8 @@ use codespan_reporting::{
 use ewwii_shared_util::Span;
 use once_cell::sync::Lazy;
 
-pub static FILE_DATABASE: Lazy<Arc<RwLock<FileDatabase>>> = Lazy::new(|| Arc::new(RwLock::new(FileDatabase::new())));
+pub static FILE_DATABASE: Lazy<Arc<RwLock<FileDatabase>>> =
+    Lazy::new(|| Arc::new(RwLock::new(FileDatabase::new())));
 
 // pub fn clear_files() {
 //     *FILE_DATABASE.write().unwrap() = FileDatabase::new();
@@ -30,7 +31,9 @@ pub fn print_error(err: anyhow::Error) {
 }
 
 pub fn format_error(err: &anyhow::Error) -> String {
-    anyhow_err_to_diagnostic(err).and_then(|diag| stringify_diagnostic(diag).ok()).unwrap_or_else(|| format!("{:?}", err))
+    anyhow_err_to_diagnostic(err)
+        .and_then(|diag| stringify_diagnostic(diag).ok())
+        .unwrap_or_else(|| format!("{:?}", err))
 }
 
 // * OLD
@@ -63,8 +66,12 @@ pub fn anyhow_err_to_diagnostic(err: &anyhow::Error) -> Option<Diagnostic<usize>
     }
 }
 
-pub fn stringify_diagnostic(mut diagnostic: codespan_reporting::diagnostic::Diagnostic<usize>) -> anyhow::Result<String> {
-    diagnostic.labels.retain(|label| !Span(label.range.start, label.range.end, label.file_id).is_dummy());
+pub fn stringify_diagnostic(
+    mut diagnostic: codespan_reporting::diagnostic::Diagnostic<usize>,
+) -> anyhow::Result<String> {
+    diagnostic
+        .labels
+        .retain(|label| !Span(label.range.start, label.range.end, label.file_id).is_dummy());
 
     let mut config = term::Config::default();
     let mut chars = Chars::box_drawing();

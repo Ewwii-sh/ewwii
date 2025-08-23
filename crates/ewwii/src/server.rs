@@ -25,8 +25,9 @@ pub fn initialize_server<B: DisplayBackend>(
 ) -> Result<ForkResult> {
     let (ui_send, mut ui_recv) = tokio::sync::mpsc::unbounded_channel();
 
-    std::env::set_current_dir(paths.get_config_dir())
-        .with_context(|| format!("Failed to change working directory to {}", paths.get_config_dir().display()))?;
+    std::env::set_current_dir(paths.get_config_dir()).with_context(|| {
+        format!("Failed to change working directory to {}", paths.get_config_dir().display())
+    })?;
 
     log::info!("Loading paths: {}", &paths);
 
@@ -63,13 +64,16 @@ pub fn initialize_server<B: DisplayBackend>(
 "#
     );
 
-    simple_signal::set_handler(&[simple_signal::Signal::Int, simple_signal::Signal::Term], move |_| {
-        log::info!("Shutting down ewwii daemon...");
-        if let Err(e) = crate::application_lifecycle::send_exit() {
-            log::error!("Failed to send application shutdown event to workers: {:?}", e);
-            std::process::exit(1);
-        }
-    });
+    simple_signal::set_handler(
+        &[simple_signal::Signal::Int, simple_signal::Signal::Term],
+        move |_| {
+            log::info!("Shutting down ewwii daemon...");
+            if let Err(e) = crate::application_lifecycle::send_exit() {
+                log::error!("Failed to send application shutdown event to workers: {:?}", e);
+                std::process::exit(1);
+            }
+        },
+    );
 
     if B::IS_WAYLAND {
         std::env::set_var("GDK_BACKEND", "wayland")
@@ -89,7 +93,11 @@ pub fn initialize_server<B: DisplayBackend>(
     };
 
     if let Some(screen) = gtk::gdk::Screen::default() {
-        gtk::StyleContext::add_provider_for_screen(&screen, &app.css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk::StyleContext::add_provider_for_screen(
+            &screen,
+            &app.css_provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 
     if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
@@ -156,7 +164,10 @@ fn reload_config_and_css(ui_send: &UnboundedSender<DaemonCommand>) -> Result<()>
     Ok(())
 }
 
-fn init_async_part(paths: EwwPaths, ui_send: UnboundedSender<app::DaemonCommand>) -> tokio::runtime::Handle {
+fn init_async_part(
+    paths: EwwPaths,
+    ui_send: UnboundedSender<app::DaemonCommand>,
+) -> tokio::runtime::Handle {
     let rt = tokio::runtime::Builder::new_multi_thread()
         .thread_name("main-async-runtime")
         .enable_all()
@@ -176,7 +187,9 @@ fn init_async_part(paths: EwwPaths, ui_send: UnboundedSender<app::DaemonCommand>
 
                 let ipc_server_join_handle = {
                     let ui_send = ui_send.clone();
-                    tokio::spawn(async move { ipc_server::run_ewwii_server(ui_send, paths.get_ipc_socket_file()).await })
+                    tokio::spawn(async move {
+                        ipc_server::run_ewwii_server(ui_send, paths.get_ipc_socket_file()).await
+                    })
                 };
 
                 let forward_exit_to_app_handle = {
@@ -190,7 +203,11 @@ fn init_async_part(paths: EwwPaths, ui_send: UnboundedSender<app::DaemonCommand>
                     })
                 };
 
-                let result = tokio::try_join!(filewatch_join_handle, ipc_server_join_handle, forward_exit_to_app_handle);
+                let result = tokio::try_join!(
+                    filewatch_join_handle,
+                    ipc_server_join_handle,
+                    forward_exit_to_app_handle
+                );
 
                 if let Err(e) = result {
                     log::error!("Ewwii exiting with error: {:?}", e);
@@ -203,25 +220,29 @@ fn init_async_part(paths: EwwPaths, ui_send: UnboundedSender<app::DaemonCommand>
 }
 
 /// Watch configuration files for changes, sending reload events to the eww app when the files change.
-async fn run_filewatch<P: AsRef<Path>>(config_dir: P, evt_send: UnboundedSender<app::DaemonCommand>) -> Result<()> {
+async fn run_filewatch<P: AsRef<Path>>(
+    config_dir: P,
+    evt_send: UnboundedSender<app::DaemonCommand>,
+) -> Result<()> {
     use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
-    let mut watcher: RecommendedWatcher = notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
-        Ok(notify::Event { kind: notify::EventKind::Modify(_), paths, .. }) => {
-            let relevant_files_changed = paths.iter().any(|path| {
-                let ext = path.extension().unwrap_or_default();
-                ext == "rhai" || ext == "scss" || ext == "css"
-            });
-            if relevant_files_changed {
-                if let Err(err) = tx.send(()) {
-                    log::warn!("Error forwarding file update event: {:?}", err);
+    let mut watcher: RecommendedWatcher =
+        notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
+            Ok(notify::Event { kind: notify::EventKind::Modify(_), paths, .. }) => {
+                let relevant_files_changed = paths.iter().any(|path| {
+                    let ext = path.extension().unwrap_or_default();
+                    ext == "rhai" || ext == "scss" || ext == "css"
+                });
+                if relevant_files_changed {
+                    if let Err(err) = tx.send(()) {
+                        log::warn!("Error forwarding file update event: {:?}", err);
+                    }
                 }
             }
-        }
-        Ok(_) => {}
-        Err(e) => log::error!("Encountered Error While Watching Files: {}", e),
-    })?;
+            Ok(_) => {}
+            Err(e) => log::error!("Encountered Error While Watching Files: {}", e),
+        })?;
     watcher.watch(config_dir.as_ref(), RecursiveMode::Recursive)?;
 
     // make sure to not trigger reloads too much by only accepting one reload every 500ms.
@@ -271,11 +292,15 @@ fn do_detach(log_file_path: impl AsRef<Path>) -> Result<ForkResult> {
         }
     }
 
-    let file = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&log_file_path)
-        .unwrap_or_else(|_| panic!("Error opening log file ({}), for writing", log_file_path.as_ref().to_string_lossy()));
+    let file =
+        std::fs::OpenOptions::new().create(true).append(true).open(&log_file_path).unwrap_or_else(
+            |_| {
+                panic!(
+                    "Error opening log file ({}), for writing",
+                    log_file_path.as_ref().to_string_lossy()
+                )
+            },
+        );
     let fd = file.as_raw_fd();
 
     if nix::unistd::isatty(1)? {
@@ -297,7 +322,9 @@ fn cleanup_log_dir(log_dir: impl AsRef<Path>) -> Result<()> {
             let entry = entry.ok()?;
             let path = entry.path();
             if let Some(file_name) = path.file_name() {
-                if file_name.to_string_lossy().starts_with("ewwii_") && file_name.to_string_lossy().ends_with(".log") {
+                if file_name.to_string_lossy().starts_with("ewwii_")
+                    && file_name.to_string_lossy().ends_with(".log")
+                {
                     Some(path)
                 } else {
                     None

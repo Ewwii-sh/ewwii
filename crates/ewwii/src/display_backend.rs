@@ -12,7 +12,12 @@ pub trait DisplayBackend: Send + Sync + 'static {
     const IS_X11: bool;
     const IS_WAYLAND: bool;
 
-    fn initialize_window(window_init: &WindowInitiator, monitor: gdk::Rectangle, x: i32, y: i32) -> Option<Window>;
+    fn initialize_window(
+        window_init: &WindowInitiator,
+        monitor: gdk::Rectangle,
+        x: i32,
+        y: i32,
+    ) -> Option<Window>;
 }
 
 pub struct NoBackend;
@@ -21,7 +26,12 @@ impl DisplayBackend for NoBackend {
     const IS_X11: bool = false;
     const IS_WAYLAND: bool = false;
 
-    fn initialize_window(_window_init: &WindowInitiator, _monitor: gdk::Rectangle, x: i32, y: i32) -> Option<Window> {
+    fn initialize_window(
+        _window_init: &WindowInitiator,
+        _monitor: gdk::Rectangle,
+        x: i32,
+        y: i32,
+    ) -> Option<Window> {
         Some(Window::new(gtk::WindowType::Toplevel, x, y))
     }
 }
@@ -43,7 +53,12 @@ mod platform_wayland {
         const IS_X11: bool = false;
         const IS_WAYLAND: bool = true;
 
-        fn initialize_window(window_init: &WindowInitiator, monitor: gdk::Rectangle, x: i32, y: i32) -> Option<Window> {
+        fn initialize_window(
+            window_init: &WindowInitiator,
+            monitor: gdk::Rectangle,
+            x: i32,
+            y: i32,
+        ) -> Option<Window> {
             let window = Window::new(gtk::WindowType::Toplevel, x, y);
             // Initialising a layer shell surface
             window.init_layer_shell();
@@ -155,9 +170,17 @@ mod platform_x11 {
         const IS_X11: bool = true;
         const IS_WAYLAND: bool = false;
 
-        fn initialize_window(window_init: &WindowInitiator, _monitor: gdk::Rectangle, x: i32, y: i32) -> Option<Window> {
-            let window_type =
-                if window_init.backend_options.x11.wm_ignore { gtk::WindowType::Popup } else { gtk::WindowType::Toplevel };
+        fn initialize_window(
+            window_init: &WindowInitiator,
+            _monitor: gdk::Rectangle,
+            x: i32,
+            y: i32,
+        ) -> Option<Window> {
+            let window_type = if window_init.backend_options.x11.wm_ignore {
+                gtk::WindowType::Popup
+            } else {
+                gtk::WindowType::Toplevel
+            };
             let window = Window::new(window_type, x, y);
             window.set_resizable(window_init.resizable);
             window.set_keep_above(window_init.stacking == WindowStacking::Foreground);
@@ -171,7 +194,11 @@ mod platform_x11 {
         }
     }
 
-    pub fn set_xprops(window: &Window, monitor: Monitor, window_init: &WindowInitiator) -> Result<()> {
+    pub fn set_xprops(
+        window: &Window,
+        monitor: Monitor,
+        window_init: &WindowInitiator,
+    ) -> Result<()> {
         let backend = X11BackendConnection::new()?;
         backend.set_xprops_for(window, monitor, window_init)?;
         Ok(())
@@ -191,12 +218,19 @@ mod platform_x11 {
             Ok(X11BackendConnection { conn, root_window: screen.root, atoms })
         }
 
-        fn set_xprops_for(&self, window: &Window, monitor: Monitor, window_init: &WindowInitiator) -> Result<()> {
+        fn set_xprops_for(
+            &self,
+            window: &Window,
+            monitor: Monitor,
+            window_init: &WindowInitiator,
+        ) -> Result<()> {
             let monitor_rect = monitor.geometry();
             let scale_factor = monitor.scale_factor() as u32;
             let gdk_window = window.window().context("Couldn't get gdk window from gtk window")?;
-            let win_id =
-                gdk_window.downcast_ref::<gdkx11::X11Window>().context("Failed to get x11 window for gtk window")?.xid() as u32;
+            let win_id = gdk_window
+                .downcast_ref::<gdkx11::X11Window>()
+                .context("Failed to get x11 window for gtk window")?
+                .xid() as u32;
             let strut_def = window_init.backend_options.x11.struts;
             let root_window_geometry = self.conn.get_geometry(self.root_window)?.reply()?;
 
@@ -206,8 +240,12 @@ mod platform_x11 {
             let mon_end_y = scale_factor * (monitor_rect.y() + monitor_rect.height()) as u32 - 1u32;
 
             let dist = match strut_def.side {
-                Side::Left | Side::Right => strut_def.distance.pixels_relative_to(monitor_rect.width()) as u32,
-                Side::Top | Side::Bottom => strut_def.distance.pixels_relative_to(monitor_rect.height()) as u32,
+                Side::Left | Side::Right => {
+                    strut_def.distance.pixels_relative_to(monitor_rect.width()) as u32
+                }
+                Side::Top | Side::Bottom => {
+                    strut_def.distance.pixels_relative_to(monitor_rect.height()) as u32
+                }
             };
 
             // don't question it,.....

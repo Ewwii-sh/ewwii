@@ -28,15 +28,22 @@ pub fn create_pair() -> (DaemonResponseSender, mpsc::UnboundedReceiver<DaemonRes
 
 impl DaemonResponseSender {
     pub fn send_success(&self, s: String) -> Result<()> {
-        self.0.send(DaemonResponse::Success(s)).context("Failed to send success response from application thread")
+        self.0
+            .send(DaemonResponse::Success(s))
+            .context("Failed to send success response from application thread")
     }
 
     pub fn send_failure(&self, s: String) -> Result<()> {
-        self.0.send(DaemonResponse::Failure(s)).context("Failed to send failure response from application thread")
+        self.0
+            .send(DaemonResponse::Failure(s))
+            .context("Failed to send failure response from application thread")
     }
 
     /// Given a list of errors, respond with an error value if there are any errors, and respond with success otherwise.
-    pub fn respond_with_error_list(&self, errors: impl IntoIterator<Item = anyhow::Error>) -> Result<()> {
+    pub fn respond_with_error_list(
+        &self,
+        errors: impl IntoIterator<Item = anyhow::Error>,
+    ) -> Result<()> {
         let errors = errors.into_iter().map(|e| error_handling_ctx::format_error(&e)).join("\n");
         if errors.is_empty() {
             self.send_success(String::new())

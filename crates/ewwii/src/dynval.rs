@@ -18,7 +18,11 @@ pub struct ConversionError {
 pub struct DurationParseError;
 
 impl ConversionError {
-    pub fn new(value: DynVal, target_type: &'static str, source: impl std::error::Error + 'static + Sync + Send) -> Self {
+    pub fn new(
+        value: DynVal,
+        target_type: &'static str,
+        source: impl std::error::Error + 'static + Sync + Send,
+    ) -> Self {
         ConversionError { value, target_type, source: Some(Box::new(source)) }
     }
 }
@@ -113,7 +117,11 @@ impl TryFrom<serde_json::Value> for DynVal {
 
 impl From<Vec<DynVal>> for DynVal {
     fn from(v: Vec<DynVal>) -> Self {
-        let span = if let (Some(first), Some(last)) = (v.first(), v.last()) { first.span().to(last.span()) } else { Span::DUMMY };
+        let span = if let (Some(first), Some(last)) = (v.first(), v.last()) {
+            first.span().to(last.span())
+        } else {
+            Span::DUMMY
+        };
         let elements = v.into_iter().map(|x| x.as_string().unwrap()).collect::<Vec<_>>();
         DynVal(serde_json::to_string(&elements).unwrap(), span)
     }
@@ -174,10 +182,15 @@ impl DynVal {
         let s = &self.0;
         if s.ends_with("ms") {
             Ok(Duration::from_millis(
-                s.trim_end_matches("ms").parse().map_err(|e| ConversionError::new(self.clone(), "integer", e))?,
+                s.trim_end_matches("ms")
+                    .parse()
+                    .map_err(|e| ConversionError::new(self.clone(), "integer", e))?,
             ))
         } else if s.ends_with('s') {
-            let secs = s.trim_end_matches('s').parse::<f64>().map_err(|e| ConversionError::new(self.clone(), "number", e))?;
+            let secs = s
+                .trim_end_matches('s')
+                .parse::<f64>()
+                .map_err(|e| ConversionError::new(self.clone(), "number", e))?;
             Ok(Duration::from_millis(f64::floor(secs * 1000f64) as u64))
         } else if s.ends_with('m') || s.ends_with("min") {
             let minutes = s
@@ -187,12 +200,19 @@ impl DynVal {
                 .map_err(|e| ConversionError::new(self.clone(), "number", e))?;
             Ok(Duration::from_secs(f64::floor(minutes * 60f64) as u64))
         } else if s.ends_with('h') {
-            let hours = s.trim_end_matches('h').parse::<f64>().map_err(|e| ConversionError::new(self.clone(), "number", e))?;
+            let hours = s
+                .trim_end_matches('h')
+                .parse::<f64>()
+                .map_err(|e| ConversionError::new(self.clone(), "number", e))?;
             Ok(Duration::from_secs(f64::floor(hours * 60f64 * 60f64) as u64))
         } else if let Ok(millis) = s.parse() {
             Ok(Duration::from_millis(millis))
         } else {
-            Err(ConversionError { value: self.clone(), target_type: "duration", source: Some(Box::new(DurationParseError)) })
+            Err(ConversionError {
+                value: self.clone(),
+                target_type: "duration",
+                source: Some(Box::new(DurationParseError)),
+            })
         }
     }
 
