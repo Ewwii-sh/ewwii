@@ -368,19 +368,16 @@ impl<B: DisplayBackend> App<B> {
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
             let mut stored_parser = iirhai::parser::ParseConfig::new();
-            let store = Rc::new(RefCell::new(
-                iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx)
-            ));
+            let store =
+                iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
 
-            let store_clone = store.clone();
             glib::MainContext::default().spawn_local(async move {
                 while let Some(var_name) = rx.recv().await {
                     log::debug!("Received update for var: {}", var_name);
-                    let store_ref = store_clone.borrow();
-                    let vars = store_ref.read().unwrap();
+                    let vars = store.read().unwrap().clone();
 
                     match generate_new_widgetnode(
-                        &*vars,
+                        &vars,
                         &config_path,
                         compiled_ast.as_deref(),
                         Some(&mut stored_parser),
