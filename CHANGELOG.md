@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Improved runtime error handling of WidgetNode casting.
 -   Caching for ParseConfig in re-evaluation system.
 -   Proper error handling for invalid external module code.
+-   **call-fns** command for calling a Rhai function. Note: The function can only see poll/listen variables as their initial value.
+-   **update** command with **--inject-vars** flag to update widget state. Note: All poll/listen variables will reset to their initial values.
 
 ### Changed
 

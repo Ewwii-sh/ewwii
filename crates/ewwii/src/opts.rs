@@ -10,6 +10,8 @@ use crate::{
     window::{coords::Coords, monitor::MonitorIdentifier, window_geometry::AnchorPoint},
 };
 
+use std::collections::HashMap;
+
 /// Struct that gets generated from `RawOpt`.
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Opt {
@@ -186,6 +188,27 @@ pub enum ActionWithServer {
     // /// Print out the scope graph structure in graphviz dot format.
     // #[command(name = "graph")]
     // ShowGraph,
+    /// Update the widgets of a particular window. Poll/Listen variables will be cleared
+    #[command(name = "update", alias = "u")]
+    TriggerUpdateUI {
+        /// Name of the window you want to update.
+        #[arg(long, short)]
+        window: String,
+
+        /// Inject variables while updating the UI
+        ///
+        /// Format: --inject-vars foo="val1" baz="val2"
+        /// Only variables used by the widget tree will affect the UI.
+        #[arg(long, value_parser = parse_inject_var_map)]
+        inject_vars: Option<HashMap<String, String>>,
+    },
+
+    /// Call rhai functions. (NOTE: All poll/listen will default to their initial value)
+    #[command(name = "call-fns")]
+    CallRhaiFns {
+        // Rhai functions to call. Format: --fn-calls "fn_name1(args)" "fn_name2(args)"
+        calls: Vec<String>,
+    },
 }
 
 impl Opt {
@@ -247,6 +270,11 @@ impl ActionWithServer {
         self,
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
+            ActionWithServer::TriggerUpdateUI { window, inject_vars } => {
+                app::DaemonCommand::TriggerUpdateUI { window, inject_vars }
+            }
+            ActionWithServer::CallRhaiFns { calls } => app::DaemonCommand::CallRhaiFns { calls },
+
             ActionWithServer::OpenInspector => app::DaemonCommand::OpenInspector,
 
             ActionWithServer::KillServer => app::DaemonCommand::KillServer,
@@ -334,4 +362,13 @@ mod serde_shell {
         let s = String::deserialize(deserializer)?;
         Shell::from_str(&s).map_err(serde::de::Error::custom)
     }
+}
+
+fn parse_inject_var_map(s: &str) -> Result<HashMap<String, String>, String> {
+    let mut map = HashMap::new();
+    for pair in s.split(',') {
+        let pos = pair.find('=').ok_or_else(|| format!("invalid KEY=VALUE: {}", pair))?;
+        map.insert(pair[..pos].to_string(), pair[pos + 1..].to_string());
+    }
+    Ok(map)
 }
