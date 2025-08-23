@@ -368,8 +368,10 @@ impl<B: DisplayBackend> App<B> {
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
             let mut stored_parser = iirhai::parser::ParseConfig::new();
-            let store =
-                iirhai::updates::handle_state_changes(self.ewwii_config.get_root_node()?, tx);
+            let store = iirhai::updates::handle_state_changes(
+                self.ewwii_config.get_root_node()?.as_ref(),
+                tx,
+            );
 
             glib::MainContext::default().spawn_local(async move {
                 while let Some(var_name) = rx.recv().await {
