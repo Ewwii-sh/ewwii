@@ -225,6 +225,8 @@ mod tests {
         props.insert("class".into(), Dynamic::from("mywidget"));
         props.insert("enabled".into(), Dynamic::from(true));
         props.insert("count".into(), Dynamic::from(42_i64));
+        //? IMPORTANT
+        props.insert("dyn_id".into(), Dynamic::from("mywidget_test"));
 
         // Nested map
         let mut nested = Map::new();
