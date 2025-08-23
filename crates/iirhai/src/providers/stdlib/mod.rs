@@ -8,7 +8,9 @@ use rhai::exported_module;
 use rhai::module_resolvers::StaticModuleResolver;
 
 pub fn register_stdlib(resolver: &mut StaticModuleResolver) {
-    use crate::providers::stdlib::{env::env, json::json, math::math, monitor::monitor, text::text};
+    use crate::providers::stdlib::{
+        env::env, json::json, math::math, monitor::monitor, text::text,
+    };
 
     // adding modules
     let text_mod = exported_module!(text);

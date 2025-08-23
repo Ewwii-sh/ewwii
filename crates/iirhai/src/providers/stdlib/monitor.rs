@@ -22,7 +22,11 @@ pub mod monitor {
     }
 
     pub fn all_resolutions_str() -> String {
-        get_all_monitor_resolutions().into_iter().map(|(w, h)| format!("{w}x{h}")).collect::<Vec<_>>().join(", ")
+        get_all_monitor_resolutions()
+            .into_iter()
+            .map(|(w, h)| format!("{w}x{h}"))
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 
     pub fn dimensions(index: i64) -> (i64, i64, i64, i64) {

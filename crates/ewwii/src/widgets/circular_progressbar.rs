@@ -13,13 +13,37 @@ wrapper! {
 #[derive(Properties)]
 #[properties(wrapper_type = CircProg)]
 pub struct CircProgPriv {
-    #[property(get, set, nick = "Starting at", blurb = "Starting at", minimum = 0f64, maximum = 100f64, default = 0f64)]
+    #[property(
+        get,
+        set,
+        nick = "Starting at",
+        blurb = "Starting at",
+        minimum = 0f64,
+        maximum = 100f64,
+        default = 0f64
+    )]
     start_at: RefCell<f64>,
 
-    #[property(get, set, nick = "Value", blurb = "The value", minimum = 0f64, maximum = 100f64, default = 0f64)]
+    #[property(
+        get,
+        set,
+        nick = "Value",
+        blurb = "The value",
+        minimum = 0f64,
+        maximum = 100f64,
+        default = 0f64
+    )]
     value: RefCell<f64>,
 
-    #[property(get, set, nick = "Thickness", blurb = "Thickness", minimum = 0f64, maximum = 100f64, default = 1f64)]
+    #[property(
+        get,
+        set,
+        nick = "Thickness",
+        blurb = "Thickness",
+        minimum = 0f64,
+        maximum = 100f64,
+        default = 1f64
+    )]
     thickness: RefCell<f64>,
 
     #[property(get, set, nick = "Clockwise", blurb = "Clockwise", default = true)]
@@ -98,7 +122,9 @@ impl ContainerImpl for CircProgPriv {
     fn add(&self, widget: &gtk::Widget) {
         if let Some(content) = &*self.content.borrow() {
             // TODO: Handle this error when populating children widgets instead
-            error_handling_ctx::print_error(anyhow!("Error, trying to add multiple children to a circular-progress widget"));
+            error_handling_ctx::print_error(anyhow!(
+                "Error, trying to add multiple children to a circular-progress widget"
+            ));
             self.parent_remove(content);
         }
         self.parent_add(widget);
@@ -125,9 +151,13 @@ impl WidgetImpl for CircProgPriv {
 
         if let Some(child) = &*self.content.borrow() {
             let (min_child, natural_child) = calc_widget_lowest_preferred_dimension(child);
-            (min_child + margin.right as i32 + margin.left as i32, natural_child + margin.right as i32 + margin.left as i32)
+            (
+                min_child + margin.right as i32 + margin.left as i32,
+                natural_child + margin.right as i32 + margin.left as i32,
+            )
         } else {
-            let empty_width = (2 * *self.thickness.borrow() as i32) + margin.right as i32 + margin.left as i32;
+            let empty_width =
+                (2 * *self.thickness.borrow() as i32) + margin.right as i32 + margin.left as i32;
             (empty_width, empty_width)
         }
     }
@@ -142,9 +172,13 @@ impl WidgetImpl for CircProgPriv {
 
         if let Some(child) = &*self.content.borrow() {
             let (min_child, natural_child) = calc_widget_lowest_preferred_dimension(child);
-            (min_child + margin.bottom as i32 + margin.top as i32, natural_child + margin.bottom as i32 + margin.top as i32)
+            (
+                min_child + margin.bottom as i32 + margin.top as i32,
+                natural_child + margin.bottom as i32 + margin.top as i32,
+            )
         } else {
-            let empty_height = (2 * *self.thickness.borrow() as i32) + margin.right as i32 + margin.left as i32;
+            let empty_height =
+                (2 * *self.thickness.borrow() as i32) + margin.right as i32 + margin.left as i32;
             (empty_height, empty_height)
         }
     }
@@ -164,9 +198,14 @@ impl WidgetImpl for CircProgPriv {
             let margin = styles.margin(gtk::StateFlags::NORMAL);
             // Padding is not supported yet
             let fg_color: gdk::RGBA = styles.color(gtk::StateFlags::NORMAL);
-            let bg_color: gdk::RGBA = styles.style_property_for_state("background-color", gtk::StateFlags::NORMAL).get()?;
-            let (start_angle, end_angle) =
-                if clockwise { (0.0, perc_to_rad(value)) } else { (perc_to_rad(100.0 - value), 2f64 * std::f64::consts::PI) };
+            let bg_color: gdk::RGBA = styles
+                .style_property_for_state("background-color", gtk::StateFlags::NORMAL)
+                .get()?;
+            let (start_angle, end_angle) = if clockwise {
+                (0.0, perc_to_rad(value))
+            } else {
+                (perc_to_rad(100.0 - value), 2f64 * std::f64::consts::PI)
+            };
 
             let total_width = self.obj().allocated_width() as f64;
             let total_height = self.obj().allocated_height() as f64;

@@ -56,7 +56,11 @@ impl EwwiiConfig {
         // get the iirhai widget tree
         let compiled_ast = config_parser.compile_code(&rhai_code)?;
         let poll_listen_scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
-        let config_tree = config_parser.eval_code_with(&rhai_code, Some(poll_listen_scope), Some(&compiled_ast))?;
+        let config_tree = config_parser.eval_code_with(
+            &rhai_code,
+            Some(poll_listen_scope),
+            Some(&compiled_ast),
+        )?;
 
         let mut window_definitions = HashMap::new();
 
@@ -76,7 +80,11 @@ impl EwwiiConfig {
             bail!("Expected root node to be `Enter`, but got something else.");
         }
 
-        Ok(EwwiiConfig { windows: window_definitions, root_node: Some(config_tree), compiled_ast: Some(compiled_ast) })
+        Ok(EwwiiConfig {
+            windows: window_definitions,
+            root_node: Some(config_tree),
+            compiled_ast: Some(compiled_ast),
+        })
     }
 
     pub fn get_windows(&self) -> &HashMap<String, WindowDefinition> {

@@ -37,7 +37,10 @@ pub struct BackendWindowOptionsDef {
 
 impl BackendWindowOptionsDef {
     pub fn eval(&self, properties: Map) -> Result<BackendWindowOptions, Error> {
-        Ok(BackendWindowOptions { wayland: self.wayland.eval(properties.clone())?, x11: self.x11.eval(properties)? })
+        Ok(BackendWindowOptions {
+            wayland: self.wayland.eval(properties.clone())?,
+            x11: self.x11.eval(properties)?,
+        })
     }
 
     // pub fn from_attrs(attrs: &mut Attributes) -> DiagResult<Self> {
@@ -119,13 +122,22 @@ impl X11BackendWindowOptionsDef {
 
             struts: match properties.get("reserve") {
                 Some(dynval) => {
-                    let obj_map = dynval.read_lock::<Map>().ok_or(Error::EnumParseErrorMessage("Expected map for reserve"))?;
+                    let obj_map = dynval
+                        .read_lock::<Map>()
+                        .ok_or(Error::EnumParseErrorMessage("Expected map for reserve"))?;
 
-                    let distance_str = obj_map.get("distance").ok_or(Error::MissingField("distance"))?.clone_cast::<String>();
+                    let distance_str = obj_map
+                        .get("distance")
+                        .ok_or(Error::MissingField("distance"))?
+                        .clone_cast::<String>();
 
                     let distance = NumWithUnit::from_str(&distance_str)?;
 
-                    let side = obj_map.get("side").map(|s| s.clone_cast::<String>()).map(|s| Side::from_str(&s)).transpose()?;
+                    let side = obj_map
+                        .get("side")
+                        .map(|s| s.clone_cast::<String>())
+                        .map(|s| Side::from_str(&s))
+                        .transpose()?;
 
                     X11StrutDefinition { distance, side: side.unwrap_or(Side::default()) }
                 }
@@ -142,7 +154,9 @@ impl X11BackendWindowOptionsDef {
 
             wm_ignore: {
                 let wm_ignore = properties.get("wm_ignore").map(|d| d.clone_cast::<bool>());
-                wm_ignore.unwrap_or_else(|| properties.get("windowtype").is_none() && properties.get("reserve").is_none())
+                wm_ignore.unwrap_or_else(|| {
+                    properties.get("windowtype").is_none() && properties.get("reserve").is_none()
+                })
             },
         })
     }

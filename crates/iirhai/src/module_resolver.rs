@@ -21,21 +21,26 @@ impl ModuleResolver for SimpleFileResolver {
 
         let base_dir = if let Some(src) = source_path {
             PathBuf::from(src).parent().map(|p| p.to_path_buf()).unwrap_or(
-                std::env::current_dir().map_err(|e| EvalAltResult::ErrorSystem("getting current_dir".into(), e.into()))?,
+                std::env::current_dir().map_err(|e| {
+                    EvalAltResult::ErrorSystem("getting current_dir".into(), e.into())
+                })?,
             )
         } else {
-            std::env::current_dir().map_err(|e| EvalAltResult::ErrorSystem("getting current_dir".into(), e.into()))?
+            std::env::current_dir()
+                .map_err(|e| EvalAltResult::ErrorSystem("getting current_dir".into(), e.into()))?
         };
 
         if !file_path.is_absolute() {
             file_path = base_dir.join(file_path);
         }
 
-        let full_path =
-            file_path.canonicalize().map_err(|e| EvalAltResult::ErrorSystem(format!("resolving path: {path}"), e.into()))?;
+        let full_path = file_path
+            .canonicalize()
+            .map_err(|e| EvalAltResult::ErrorSystem(format!("resolving path: {path}"), e.into()))?;
 
-        let script = fs::read_to_string(&full_path)
-            .map_err(|e| EvalAltResult::ErrorSystem(format!("reading file: {full_path:?}"), e.into()))?;
+        let script = fs::read_to_string(&full_path).map_err(|e| {
+            EvalAltResult::ErrorSystem(format!("reading file: {full_path:?}"), e.into())
+        })?;
 
         let ast: AST = engine.compile(&script)?;
         let scope = Scope::new();
@@ -59,7 +64,9 @@ impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<
         path: &str,
         pos: Position,
     ) -> Result<Rc<Module>, Box<EvalAltResult>> {
-        self.first.resolve(engine, source_path, path, pos).or_else(|_| self.second.resolve(engine, source_path, path, pos))
+        self.first
+            .resolve(engine, source_path, path, pos)
+            .or_else(|_| self.second.resolve(engine, source_path, path, pos))
     }
 }
 

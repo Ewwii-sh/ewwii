@@ -108,7 +108,9 @@ impl<T: AsRef<str>> T {
 /// reference with an empty string.
 pub fn replace_env_var_references(input: String) -> String {
     regex!(r"\$\{([^\s]*)\}")
-        .replace_all(&input, |var_name: &regex::Captures| std::env::var(var_name.get(1).unwrap().as_str()).unwrap_or_default())
+        .replace_all(&input, |var_name: &regex::Captures| {
+            std::env::var(var_name.get(1).unwrap().as_str()).unwrap_or_default()
+        })
         .into_owned()
 }
 

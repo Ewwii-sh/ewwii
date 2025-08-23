@@ -12,7 +12,16 @@ impl Display for EnumParseError {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, derive_more::Display, smart_default::SmartDefault, serde::Serialize)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    derive_more::Display,
+    smart_default::SmartDefault,
+    serde::Serialize,
+)]
 pub enum WindowStacking {
     #[default]
     Foreground,

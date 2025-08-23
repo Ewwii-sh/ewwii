@@ -1,4 +1,7 @@
-use crate::{window::coords::Coords, window::monitor::MonitorIdentifier, window::window_geometry::AnchorPoint};
+use crate::{
+    window::coords::Coords, window::monitor::MonitorIdentifier,
+    window::window_geometry::AnchorPoint,
+};
 
 /// This stores the arguments given in the command line to create a window
 /// While creating a window, we combine this with information from the

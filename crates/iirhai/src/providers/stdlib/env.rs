@@ -21,7 +21,9 @@ pub mod env {
     pub fn get_current_dir() -> Result<String, Box<EvalAltResult>> {
         std::env::current_dir()
             .map_err(|e| format!("Failed to get CURRENT DIRECTORY: {e}").into())
-            .and_then(|p| p.into_os_string().into_string().map_err(|_| "Invalid path encoding".into()))
+            .and_then(|p| {
+                p.into_os_string().into_string().map_err(|_| "Invalid path encoding".into())
+            })
     }
 
     #[rhai_fn(return_raw)]
