@@ -1,6 +1,10 @@
 use crate::{
-    builtins::register_all_widgets, error::format_rhai_error, helper::extract_poll_and_listen_vars,
-    module_resolver::SimpleFileResolver, providers::register_all_providers, widgetnode::WidgetNode,
+    builtins::register_all_widgets,
+    error::{format_eval_error, format_parse_error},
+    helper::extract_poll_and_listen_vars,
+    module_resolver::SimpleFileResolver,
+    providers::register_all_providers,
+    widgetnode::WidgetNode,
 };
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, Scope, AST};
@@ -29,11 +33,11 @@ impl ParseConfig {
         let mut scope = Scope::new();
         self.engine
             .eval_with_scope::<WidgetNode>(&mut scope, code)
-            .map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine)))
+            .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))
     }
 
     pub fn compile_code(&mut self, code: &str) -> Result<AST> {
-        Ok(self.engine.compile(code)?)
+        self.engine.compile(code).map_err(|e| anyhow!(format_parse_error(&e, code)))
     }
 
     pub fn eval_code_with(
@@ -51,11 +55,11 @@ impl ParseConfig {
             Some(ast) => self
                 .engine
                 .eval_ast_with_scope::<WidgetNode>(&mut scope, &ast)
-                .map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine))),
+                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine))),
             None => self
                 .engine
                 .eval_with_scope::<WidgetNode>(&mut scope, code)
-                .map_err(|e| anyhow!(format_rhai_error(&e, code, &self.engine))),
+                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine))),
         }
     }
 
