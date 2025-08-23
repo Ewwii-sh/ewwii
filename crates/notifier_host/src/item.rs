@@ -65,16 +65,24 @@ impl Item {
             } else if service.starts_with(':') {
                 (
                     service.to_owned(),
-                    resolve_pathless_address(con, service, "/".to_owned())
-                        .await?
-                        .ok_or_else(|| zbus::Error::Failure(format!("no StatusNotifierItem found for {service}")))?,
+                    resolve_pathless_address(con, service, "/".to_owned()).await?.ok_or_else(
+                        || {
+                            zbus::Error::Failure(format!(
+                                "no StatusNotifierItem found for {service}"
+                            ))
+                        },
+                    )?,
                 )
             } else {
                 return Err(zbus::Error::Address(service.to_owned()));
             }
         };
 
-        let sni = proxy::StatusNotifierItemProxy::builder(con).destination(addr)?.path(path)?.build().await?;
+        let sni = proxy::StatusNotifierItemProxy::builder(con)
+            .destination(addr)?
+            .path(path)?
+            .build()
+            .await?;
 
         Ok(Self { sni, gtk_menu: None })
     }
@@ -95,7 +103,12 @@ impl Item {
         Ok(())
     }
 
-    pub async fn popup_menu(&self, event: &gtk::gdk::EventButton, x: i32, y: i32) -> zbus::Result<()> {
+    pub async fn popup_menu(
+        &self,
+        event: &gtk::gdk::EventButton,
+        x: i32,
+        y: i32,
+    ) -> zbus::Result<()> {
         if let Some(menu) = &self.gtk_menu {
             menu.popup_at_pointer(event.downcast_ref::<gtk::gdk::Event>());
             Ok(())
@@ -131,12 +144,21 @@ struct DBusInterface {
     name: String,
 }
 
-async fn resolve_pathless_address(con: &zbus::Connection, service: &str, path: String) -> zbus::Result<Option<String>> {
-    let introspection_xml =
-        IntrospectableProxy::builder(con).destination(service)?.path(path.as_str())?.build().await?.introspect().await?;
+async fn resolve_pathless_address(
+    con: &zbus::Connection,
+    service: &str,
+    path: String,
+) -> zbus::Result<Option<String>> {
+    let introspection_xml = IntrospectableProxy::builder(con)
+        .destination(service)?
+        .path(path.as_str())?
+        .build()
+        .await?
+        .introspect()
+        .await?;
 
-    let dbus_node =
-        quick_xml::de::from_str::<DBusNode>(&introspection_xml).map_err(|err| zbus::Error::Failure(err.to_string()))?;
+    let dbus_node = quick_xml::de::from_str::<DBusNode>(&introspection_xml)
+        .map_err(|err| zbus::Error::Failure(err.to_string()))?;
 
     if dbus_node.interface.iter().any(|interface| interface.name == "org.kde.StatusNotifierItem") {
         // This item implements the desired interface, so bubble it back up
@@ -150,7 +172,9 @@ async fn resolve_pathless_address(con: &zbus::Connection, service: &str, path: S
                     return Ok(Some(join_to_path(&path, name)));
                 }
 
-                let path = Box::pin(resolve_pathless_address(con, service, join_to_path(&path, name))).await?;
+                let path =
+                    Box::pin(resolve_pathless_address(con, service, join_to_path(&path, name)))
+                        .await?;
 
                 if path.is_some() {
                     // Return the first item found from a child

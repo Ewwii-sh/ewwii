@@ -79,7 +79,9 @@ impl GraphPriv {
         *last_updated_at = std::time::Instant::now();
 
         while let Some(entry) = history.front() {
-            if last_updated_at.duration_since(entry.0).as_millis() as u64 > *self.time_range.borrow() {
+            if last_updated_at.duration_since(entry.0).as_millis() as u64
+                > *self.time_range.borrow()
+            {
                 *last_value = history.pop_front();
             } else {
                 break;
@@ -243,14 +245,24 @@ impl WidgetImpl for GraphPriv {
                     .iter()
                     .map(|(instant, value)| {
                         let t = last_updated_at.duration_since(*instant).as_millis() as f64;
-                        self.value_to_point(width, height, t / time_range, (value - min) / value_range)
+                        self.value_to_point(
+                            width,
+                            height,
+                            t / time_range,
+                            (value - min) / value_range,
+                        )
                     })
                     .collect::<VecDeque<(f64, f64)>>();
 
                 // Aad an extra point outside of the graph to extend the line to the left
                 if let Some((instant, value)) = extra_point {
                     let t = last_updated_at.duration_since(instant).as_millis() as f64;
-                    let (x, y) = self.value_to_point(width, height, (t - time_range) / time_range, (value - min) / value_range);
+                    let (x, y) = self.value_to_point(
+                        width,
+                        height,
+                        (t - time_range) / time_range,
+                        (value - min) / value_range,
+                    );
                     points.push_front(if *self.vertical.borrow() { (x, -y) } else { (-x, y) });
                 }
                 points
@@ -263,7 +275,9 @@ impl WidgetImpl for GraphPriv {
             cr.clip();
 
             // Draw Background
-            let bg_color: gdk::RGBA = styles.style_property_for_state("background-color", gtk::StateFlags::NORMAL).get()?;
+            let bg_color: gdk::RGBA = styles
+                .style_property_for_state("background-color", gtk::StateFlags::NORMAL)
+                .get()?;
             if bg_color.alpha() > 0.0 {
                 if let Some(first_point) = points.front() {
                     cr.line_to(first_point.0, height + margin_bottom);
@@ -273,7 +287,12 @@ impl WidgetImpl for GraphPriv {
                 }
                 cr.line_to(width, height);
 
-                cr.set_source_rgba(bg_color.red(), bg_color.green(), bg_color.blue(), bg_color.alpha());
+                cr.set_source_rgba(
+                    bg_color.red(),
+                    bg_color.green(),
+                    bg_color.blue(),
+                    bg_color.alpha(),
+                );
                 cr.fill()?;
             }
 
@@ -288,7 +307,12 @@ impl WidgetImpl for GraphPriv {
                 let line_style = &*self.line_style.borrow();
                 apply_line_style(line_style.as_str(), cr)?;
                 cr.set_line_width(thickness);
-                cr.set_source_rgba(line_color.red(), line_color.green(), line_color.blue(), line_color.alpha());
+                cr.set_source_rgba(
+                    line_color.red(),
+                    line_color.green(),
+                    line_color.blue(),
+                    line_color.alpha(),
+                );
                 cr.stroke()?;
             }
 

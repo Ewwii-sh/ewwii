@@ -28,7 +28,8 @@ pub trait Host {
 /// removed items.
 pub async fn register_as_host(
     con: &zbus::Connection,
-) -> zbus::Result<(zbus::names::WellKnownName<'static>, proxy::StatusNotifierWatcherProxy<'static>)> {
+) -> zbus::Result<(zbus::names::WellKnownName<'static>, proxy::StatusNotifierWatcherProxy<'static>)>
+{
     let snw = proxy::StatusNotifierWatcherProxy::new(con).await?;
 
     // get a well-known name
@@ -39,14 +40,17 @@ pub async fn register_as_host(
 
         i += 1;
         let wellknown = format!("org.freedesktop.StatusNotifierHost-{}-{}", pid, i);
-        let wellknown: zbus::names::WellKnownName = wellknown.try_into().expect("generated well-known name is invalid");
+        let wellknown: zbus::names::WellKnownName =
+            wellknown.try_into().expect("generated well-known name is invalid");
 
         let flags = [zbus::fdo::RequestNameFlags::DoNotQueue];
         match con.request_name_with_flags(&wellknown, flags.into_iter().collect()).await? {
             PrimaryOwner => break wellknown,
             Exists => {}
             AlreadyOwner => {}
-            InQueue => unreachable!("request_name_with_flags returned InQueue even though we specified DoNotQueue"),
+            InQueue => unreachable!(
+                "request_name_with_flags returned InQueue even though we specified DoNotQueue"
+            ),
         };
     };
 
@@ -64,7 +68,10 @@ pub async fn register_as_host(
 /// This async function runs forever, and only returns if it gets an error! As such, it is
 /// recommended to call this via something like `tokio::spawn` that runs this in the
 /// background.
-pub async fn run_host(host: &mut dyn Host, snw: &proxy::StatusNotifierWatcherProxy<'static>) -> zbus::Error {
+pub async fn run_host(
+    host: &mut dyn Host,
+    snw: &proxy::StatusNotifierWatcherProxy<'static>,
+) -> zbus::Error {
     // Replacement for ? operator since we're not returning a Result.
     macro_rules! try_ {
         ($e:expr) => {
@@ -116,7 +123,11 @@ pub async fn run_host(host: &mut dyn Host, snw: &proxy::StatusNotifierWatcherPro
                             host.add_item(svc, item);
                         }
                         Err(e) => {
-                            log::warn!("Could not create StatusNotifierItem from address {:?}: {:?}", svc, e);
+                            log::warn!(
+                                "Could not create StatusNotifierItem from address {:?}: {:?}",
+                                svc,
+                                e
+                            );
                         }
                     }
                 }

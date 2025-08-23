@@ -91,15 +91,21 @@ pub fn register_all_widgets(engine: &mut Engine) {
     //     }
     // });
 
-    engine.register_fn("defwindow", |name: &str, props: Map, node: WidgetNode| WidgetNode::DefWindow {
-        name: name.to_string(),
-        props,
-        node: Box::new(node),
+    engine.register_fn("defwindow", |name: &str, props: Map, node: WidgetNode| {
+        WidgetNode::DefWindow { name: name.to_string(), props, node: Box::new(node) }
     });
 
-    engine.register_fn("poll", |var: &str, props: Map| WidgetNode::Poll { var: var.to_string(), props });
+    engine.register_fn("poll", |var: &str, props: Map| WidgetNode::Poll {
+        var: var.to_string(),
+        props,
+    });
 
-    engine.register_fn("listen", |var: &str, props: Map| WidgetNode::Listen { var: var.to_string(), props });
+    engine.register_fn("listen", |var: &str, props: Map| WidgetNode::Listen {
+        var: var.to_string(),
+        props,
+    });
 
-    engine.register_fn("enter", |children: Array| WidgetNode::Enter(children.into_iter().map(|v| v.cast()).collect()));
+    engine.register_fn("enter", |children: Array| {
+        WidgetNode::Enter(children.into_iter().map(|v| v.cast()).collect())
+    });
 }

@@ -6,7 +6,8 @@ use anyhow::{Context, Result};
 use once_cell::sync::Lazy;
 use tokio::sync::broadcast;
 
-pub static APPLICATION_EXIT_SENDER: Lazy<broadcast::Sender<()>> = Lazy::new(|| broadcast::channel(2).0);
+pub static APPLICATION_EXIT_SENDER: Lazy<broadcast::Sender<()>> =
+    Lazy::new(|| broadcast::channel(2).0);
 
 /// Notify all listening tasks of the termination of the eww application process.
 pub fn send_exit() -> Result<()> {

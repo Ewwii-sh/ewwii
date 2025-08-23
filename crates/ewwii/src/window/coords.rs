@@ -45,10 +45,16 @@ impl FromStr for NumWithUnit {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        static PATTERN: Lazy<regex::Regex> = Lazy::new(|| regex::Regex::new("^(-?\\d+(?:.\\d+)?)(.*)$").unwrap());
+        static PATTERN: Lazy<regex::Regex> =
+            Lazy::new(|| regex::Regex::new("^(-?\\d+(?:.\\d+)?)(.*)$").unwrap());
 
         let captures = PATTERN.captures(s).ok_or_else(|| Error::NumParseFailed(s.to_string()))?;
-        let value = captures.get(1).unwrap().as_str().parse::<f32>().map_err(|_| Error::NumParseFailed(s.to_string()))?;
+        let value = captures
+            .get(1)
+            .unwrap()
+            .as_str()
+            .parse::<f32>()
+            .map_err(|_| Error::NumParseFailed(s.to_string()))?;
         match captures.get(2).unwrap().as_str() {
             "px" | "" => Ok(NumWithUnit::Pixels(value.floor() as i32)),
             "%" => Ok(NumWithUnit::Percent(value)),
@@ -109,7 +115,10 @@ mod test {
 
     #[test]
     fn test_parse_coords() {
-        assert_eq!(Coords { x: NumWithUnit::Pixels(50), y: NumWithUnit::Pixels(60) }, Coords::from_str("50x60").unwrap());
+        assert_eq!(
+            Coords { x: NumWithUnit::Pixels(50), y: NumWithUnit::Pixels(60) },
+            Coords::from_str("50x60").unwrap()
+        );
         assert!(Coords::from_str("5060").is_err());
     }
 }

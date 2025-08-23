@@ -22,7 +22,12 @@ use tokio::process::Command;
 use tokio::sync::watch;
 use tokio::time::sleep;
 
-pub fn handle_poll(var_name: String, props: Map, store: ReactiveVarStore, tx: tokio::sync::mpsc::UnboundedSender<String>) {
+pub fn handle_poll(
+    var_name: String,
+    props: Map,
+    store: ReactiveVarStore,
+    tx: tokio::sync::mpsc::UnboundedSender<String>,
+) {
     // Parse polling interval
     let interval = get_duration_prop(&props, "interval", Some(Duration::from_secs(1)));
     let interval = interval.expect("Error parsing interval property of poll");
