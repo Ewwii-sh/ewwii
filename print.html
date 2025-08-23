@@ -254,14 +254,14 @@ When you're on Wayland, build with:</p>
 <p>You can run the following command to install ewwii from cargo:</p>
 <pre><code class="language-bash">cargo install --git https://github.com/Ewwii-sh/ewwii
 </code></pre>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="optional-statictranspl"><a class="header" href="#optional-statictranspl">Optional: Statictranspl</a></h1>
-<p>Before diving deeper into Ewwii and <strong>Rhai</strong> (Ewwii’s configuration language), check out <strong><a href="https://ewwii-sh.github.io/statictranspl/">Statictranspl</a></strong>.</p>
-<p>Rhai layouts are dynamic and can be verbose, which may feel overwhelming for users without experience in languages like Rust, C, or JavaScript. <strong>Statictranspl</strong> simplifies Rhai by abstracting much of the complexity, adding stricter compilation, and providing clearer error messages. Many issues can be caught <strong>at compile time</strong>, making it more beginner-friendly.</p>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="optional-staticscript"><a class="header" href="#optional-staticscript">Optional: StaticScript</a></h1>
+<p>Before diving deeper into Ewwii and <strong>Rhai</strong> (Ewwii’s configuration language), check out <strong><a href="https://ewwii-sh.github.io/staticscript/">StaticScript</a></strong>.</p>
+<p>Rhai layouts are dynamic and can be verbose, which may feel overwhelming for users without experience in languages like Rust, C, or JavaScript. <strong>StaticScript</strong> simplifies Rhai by abstracting much of the complexity, adding stricter compilation, and providing clearer error messages. Many issues can be caught <strong>at compile time</strong>, making it more beginner-friendly.</p>
 <p><strong>How it works:</strong>
-Statictranspl compiles a custom language called <code>stpl</code> into Rhai quickly and efficiently. For users creating <strong>static-only widgets</strong>, it can be a powerful way to simplify development.</p>
+StaticScript compiles a custom language called <code>sts</code> into Rhai quickly and efficiently. For users creating <strong>static-only widgets</strong>, it can be a powerful way to simplify development.</p>
 <blockquote>
 <p><strong>Note:</strong>
-Statictranspl is <strong>experimental</strong>. It currently does <strong>not</strong> support most dynamic Rhai features, such as:</p>
+StaticScript is <strong>experimental</strong>. It currently does <strong>not</strong> support most dynamic Rhai features, such as:</p>
 <ul>
 <li>Variables and updates</li>
 <li>Polling and listeners</li>
