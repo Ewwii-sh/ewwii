@@ -24,15 +24,15 @@ use tokio::time::sleep;
 
 pub fn handle_poll(
     var_name: String,
-    props: Map,
+    props: &Map,
     store: ReactiveVarStore,
     tx: tokio::sync::mpsc::UnboundedSender<String>,
 ) {
     // Parse polling interval
-    let interval = get_duration_prop(&props, "interval", Some(Duration::from_secs(1)));
+    let interval = get_duration_prop(props, "interval", Some(Duration::from_secs(1)));
     let interval = interval.expect("Error parsing interval property of poll");
 
-    let cmd = match get_string_prop(&props, "cmd", Some("")) {
+    let cmd = match get_string_prop(props, "cmd", Some("")) {
         Ok(c) => c,
         Err(e) => {
             log::warn!("Poll {} missing cmd property: {}", var_name, e);

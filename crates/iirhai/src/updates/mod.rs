@@ -31,7 +31,7 @@ pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
 
 pub fn handle_state_changes(
-    enter_node: WidgetNode,
+    enter_node: &WidgetNode,
     tx: UnboundedSender<String>,
 ) -> ReactiveVarStore {
     // Enter node is the WidgetNode of Enter()
@@ -42,10 +42,10 @@ pub fn handle_state_changes(
         for child in children {
             match child {
                 WidgetNode::Poll { var, props } => {
-                    handle_poll(var, props, store.clone(), tx.clone());
+                    handle_poll(var.to_string(), props, store.clone(), tx.clone());
                 }
                 WidgetNode::Listen { var, props } => {
-                    handle_listen(var, props, store.clone(), tx.clone());
+                    handle_listen(var.to_string(), props, store.clone(), tx.clone());
                 }
                 _ => {}
             }
