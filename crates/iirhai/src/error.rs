@@ -204,7 +204,7 @@ fn get_error_info(
         }
         EvalAltResult::ErrorModuleNotFound(name, ..) => (
             format!("Module '{}' could not be located.", name),
-            "Verify the module path and that it is included in your imports.".into(),
+            "Check that the path is correct, the module is imported, and its code is valid.".into(),
         ),
         EvalAltResult::ErrorInFunctionCall(fn_name, msg, ..) => (
             format!("Error inside function '{}': {}", fn_name, msg),
