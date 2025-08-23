@@ -1,4 +1,4 @@
-use crate::error::format_rhai_error;
+use crate::error::format_eval_error;
 use rhai::{Engine, EvalAltResult, Module, ModuleResolver, Position, Scope, AST};
 use std::fs;
 use std::path::PathBuf;
@@ -45,11 +45,10 @@ impl ModuleResolver for SimpleFileResolver {
 
         let ast: AST = engine.compile(&script)?;
         let scope = Scope::new();
-        let mut module = Module::eval_ast_as_new(scope, &ast, engine)
-            .map_err(|e| {
-                log::error!("{}", format_rhai_error(&e, &script, engine));
-                e
-            })?;
+        let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {
+            log::error!("{}", format_eval_error(&e, &script, engine));
+            e
+        })?;
 
         module.build_index();
         Ok(Rc::new(module))
@@ -70,7 +69,10 @@ impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<
         pos: Position,
     ) -> Result<Rc<Module>, Box<EvalAltResult>> {
         self.first.resolve(engine, source_path, path, pos).or_else(|e| {
-            log::trace!("Error executing resolver 1, falling back to resolver 2. Error details: {}", e);
+            log::trace!(
+                "Error executing resolver 1, falling back to resolver 2. Error details: {}",
+                e
+            );
             self.second.resolve(engine, source_path, path, pos)
         })
     }
