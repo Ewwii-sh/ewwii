@@ -27,9 +27,13 @@ use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::watch;
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
-pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> = Lazy::new(|| Mutex::new(Vec::new()));
+pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
+    Lazy::new(|| Mutex::new(Vec::new()));
 
-pub fn handle_state_changes(enter_node: WidgetNode, tx: UnboundedSender<String>) -> ReactiveVarStore {
+pub fn handle_state_changes(
+    enter_node: WidgetNode,
+    tx: UnboundedSender<String>,
+) -> ReactiveVarStore {
     // Enter node is the WidgetNode of Enter()
     // it is the very root of every config.
     let store: ReactiveVarStore = Arc::new(RwLock::new(HashMap::new()));

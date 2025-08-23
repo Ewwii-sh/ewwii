@@ -197,8 +197,17 @@ impl Opt {
 
 impl From<RawOpt> for Opt {
     fn from(other: RawOpt) -> Self {
-        let RawOpt { log_debug, force_wayland, config, show_logs, no_daemonize, restart, action } = other;
-        Opt { log_debug, force_wayland, show_logs, restart, config_path: config, action, no_daemonize }
+        let RawOpt { log_debug, force_wayland, config, show_logs, no_daemonize, restart, action } =
+            other;
+        Opt {
+            log_debug,
+            force_wayland,
+            show_logs,
+            restart,
+            config_path: config,
+            action,
+            no_daemonize,
+        }
     }
 }
 
@@ -234,7 +243,9 @@ impl ActionWithServer {
         matches!(self, ActionWithServer::OpenWindow { .. })
     }
 
-    pub fn into_daemon_command(self) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
+    pub fn into_daemon_command(
+        self,
+    ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
             ActionWithServer::OpenInspector => app::DaemonCommand::OpenInspector,
 
@@ -248,7 +259,16 @@ impl ActionWithServer {
             // ActionWithServer::OpenMany { windows, should_toggle } => {
             //     return with_response_channel(|sender| app::DaemonCommand::OpenMany { windows, should_toggle, sender });
             // }
-            ActionWithServer::OpenWindow { window_name, id, pos, size, screen, anchor, should_toggle, duration } => {
+            ActionWithServer::OpenWindow {
+                window_name,
+                id,
+                pos,
+                size,
+                screen,
+                anchor,
+                should_toggle,
+                duration,
+            } => {
                 return with_response_channel(|sender| app::DaemonCommand::OpenWindow {
                     window_name,
                     instance_id: id,
@@ -263,18 +283,32 @@ impl ActionWithServer {
                 });
             }
             ActionWithServer::CloseWindows { windows } => {
-                return with_response_channel(|sender| app::DaemonCommand::CloseWindows { windows, auto_reopen: false, sender });
+                return with_response_channel(|sender| app::DaemonCommand::CloseWindows {
+                    windows,
+                    auto_reopen: false,
+                    sender,
+                });
             }
-            ActionWithServer::Reload => return with_response_channel(app::DaemonCommand::ReloadConfigAndCss),
-            ActionWithServer::ListWindows => return with_response_channel(app::DaemonCommand::ListWindows),
-            ActionWithServer::ListActiveWindows => return with_response_channel(app::DaemonCommand::ListActiveWindows),
-            ActionWithServer::ShowDebug => return with_response_channel(app::DaemonCommand::PrintDebug),
+            ActionWithServer::Reload => {
+                return with_response_channel(app::DaemonCommand::ReloadConfigAndCss)
+            }
+            ActionWithServer::ListWindows => {
+                return with_response_channel(app::DaemonCommand::ListWindows)
+            }
+            ActionWithServer::ListActiveWindows => {
+                return with_response_channel(app::DaemonCommand::ListActiveWindows)
+            }
+            ActionWithServer::ShowDebug => {
+                return with_response_channel(app::DaemonCommand::PrintDebug)
+            }
         };
         (command, None)
     }
 }
 
-fn with_response_channel<O, F>(f: F) -> (O, Option<tokio::sync::mpsc::UnboundedReceiver<DaemonResponse>>)
+fn with_response_channel<O, F>(
+    f: F,
+) -> (O, Option<tokio::sync::mpsc::UnboundedReceiver<DaemonResponse>>)
 where
     F: FnOnce(DaemonResponseSender) -> O,
 {

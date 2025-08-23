@@ -80,12 +80,15 @@ impl WidgetRegistry {
         for patch_req in patches {
             match patch_req {
                 PatchGtkWidget::Create(wdgt_node, wdgt_id, parent_id) => {
-                    self.create_widget(wdgt_node, wdgt_id, parent_id).expect("failed to create new gtk widget");
+                    self.create_widget(wdgt_node, wdgt_id, parent_id)
+                        .expect("failed to create new gtk widget");
                 }
                 PatchGtkWidget::Update(widget_id, new_props) => {
                     self.update_props(widget_id, new_props);
                 }
-                PatchGtkWidget::Remove(widget_id, parent_id) => self.remove_widget(widget_id, parent_id),
+                PatchGtkWidget::Remove(widget_id, parent_id) => {
+                    self.remove_widget(widget_id, parent_id)
+                }
             }
         }
 
@@ -124,24 +127,31 @@ impl WidgetRegistry {
         // Removals
         for (id, new_info) in &old_map {
             if !new_map.contains_key(id) {
-                patch.push(PatchGtkWidget::Remove(*id, new_info.parent_id.expect("Parent ID must exist")));
+                patch.push(PatchGtkWidget::Remove(
+                    *id,
+                    new_info.parent_id.expect("Parent ID must exist"),
+                ));
             }
         }
 
         patch
     }
 
-    pub fn create_widget(&mut self, widget_node: WidgetNode, widget_id: u64, parent_id: u64) -> Result<()> {
+    pub fn create_widget(
+        &mut self,
+        widget_node: WidgetNode,
+        widget_id: u64,
+        parent_id: u64,
+    ) -> Result<()> {
         log::trace!("Creating '{}'", widget_id);
         if let Some(parent) = self.widgets.get(&parent_id) {
             let parent_widget = parent.widget.clone();
 
             if let Some(container) = parent_widget.dynamic_cast::<gtk::Container>().ok() {
                 // check if the widget already exists
-                let position = self
-                    .widgets
-                    .get(&widget_id)
-                    .and_then(|old_entry| container.children().iter().position(|w| w == &old_entry.widget));
+                let position = self.widgets.get(&widget_id).and_then(|old_entry| {
+                    container.children().iter().position(|w| w == &old_entry.widget)
+                });
 
                 // obliterate that widget....
                 // how dare it try to create duplication...
@@ -200,7 +210,11 @@ impl WidgetRegistry {
     }
 }
 
-pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Box> {
+pub(super) fn build_gtk_box(
+    props: Map,
+    children: Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Box> {
     // Parse initial props to create the widget:
     let orientation = props
         .get("orientation")
@@ -209,7 +223,8 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
         .transpose()?
         .unwrap_or(gtk::Orientation::Horizontal);
 
-    let spacing = props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()).unwrap_or(0) as i32;
+    let spacing =
+        props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()).unwrap_or(0) as i32;
 
     let space_evenly = get_bool_prop(&props, "space_evenly", Some(true))?;
 
@@ -224,7 +239,9 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
     let gtk_widget_clone = gtk_widget.clone();
 
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        if let Some(orientation_str) = props.get("orientation").and_then(|v| v.clone().try_cast::<String>()) {
+        if let Some(orientation_str) =
+            props.get("orientation").and_then(|v| v.clone().try_cast::<String>())
+        {
             if let Ok(orientation) = parse_orientation(&orientation_str) {
                 gtk_widget_clone.set_orientation(orientation);
             }
@@ -239,14 +256,18 @@ pub(super) fn build_gtk_box(props: Map, children: Vec<WidgetNode>, widget_regist
         }
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Box");
 
-    widget_registry.widgets.insert(id, WidgetEntry { widget: gtk_widget.clone().upcast(), update_fn });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { widget: gtk_widget.clone().upcast(), update_fn });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
@@ -266,7 +287,9 @@ pub(super) fn build_gtk_overlay(
         bail!("overlay must contain at least one element");
     }
 
-    let mut children = children.into_iter().map(|child| build_gtk_widget(WidgetInput::Node(child), widget_registry));
+    let mut children = children
+        .into_iter()
+        .map(|child| build_gtk_widget(WidgetInput::Node(child), widget_registry));
 
     // we have more than one child, we can unwrap
     let first = children.next().unwrap()?;
@@ -284,7 +307,11 @@ pub(super) fn build_gtk_overlay(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_tooltip(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Box> {
+pub(super) fn build_tooltip(
+    props: Map,
+    children: Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Box> {
     let gtk_widget = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     gtk_widget.set_has_tooltip(true);
 
@@ -304,8 +331,11 @@ pub(super) fn build_tooltip(props: Map, children: Vec<WidgetNode>, widget_regist
     gtk_widget.add(&content_widget);
 
     let tooltip_node = Rc::new(tooltip_node);
-    let tooltip_widget = build_gtk_widget(WidgetInput::Node(Rc::clone(&tooltip_node).as_ref().clone()), widget_registry)
-        .expect("Failed to build tooltip widget");
+    let tooltip_widget = build_gtk_widget(
+        WidgetInput::Node(Rc::clone(&tooltip_node).as_ref().clone()),
+        widget_registry,
+    )
+    .expect("Failed to build tooltip widget");
 
     gtk_widget.connect_query_tooltip(move |_widget, _x, _y, _keyboard_mode, tooltip| {
         tooltip.set_custom(Some(&tooltip_widget));
@@ -317,7 +347,11 @@ pub(super) fn build_tooltip(props: Map, children: Vec<WidgetNode>, widget_regist
     Ok(gtk_widget)
 }
 
-pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Box> {
+pub(super) fn build_center_box(
+    props: Map,
+    children: Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Box> {
     let orientation = props
         .get("orientation")
         .and_then(|v| v.clone().try_cast::<String>())
@@ -374,14 +408,18 @@ pub(super) fn build_center_box(props: Map, children: Vec<WidgetNode>, widget_reg
         gtk_widget_clone.set_orientation(orientation);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "CenterBox");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
@@ -435,7 +473,11 @@ pub(super) fn build_gtk_event_box(
                     let delta = evt.delta().1;
                     if delta != 0f64 {
                         // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
-                        run_command(timeout, &onscroll, &[if delta < 0f64 { "up" } else { "down" }]);
+                        run_command(
+                            timeout,
+                            &onscroll,
+                            &[if delta < 0f64 { "up" } else { "down" }],
+                        );
                     }
                     glib::Propagation::Proceed
                 })
@@ -482,7 +524,8 @@ pub(super) fn build_gtk_event_box(
                         let display = gdk::Display::default();
                         let gdk_window = widget.window();
                         if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
-                            gdk_window.set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
+                            gdk_window
+                                .set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
                         }
                     }
                     glib::Propagation::Proceed
@@ -507,20 +550,38 @@ pub(super) fn build_gtk_event_box(
             widget.drag_dest_set(
                 DestDefaults::ALL,
                 &[
-                    TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
-                    TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0),
+                    TargetEntry::new(
+                        "text/uri-list",
+                        gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET,
+                        0,
+                    ),
+                    TargetEntry::new(
+                        "text/plain",
+                        gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET,
+                        0,
+                    ),
                 ],
                 gdk::DragAction::COPY,
             );
             connect_signal_handler!(
                 widget,
-                widget.connect_drag_data_received(move |_, _, _x, _y, selection_data, _target_type, _timestamp| {
-                    if let Some(data) = selection_data.uris().first() {
-                        run_command(timeout, &ondropped, &[data.to_string(), "file".to_string()]);
-                    } else if let Some(data) = selection_data.text() {
-                        run_command(timeout, &ondropped, &[data.to_string(), "text".to_string()]);
+                widget.connect_drag_data_received(
+                    move |_, _, _x, _y, selection_data, _target_type, _timestamp| {
+                        if let Some(data) = selection_data.uris().first() {
+                            run_command(
+                                timeout,
+                                &ondropped,
+                                &[data.to_string(), "file".to_string()],
+                            );
+                        } else if let Some(data) = selection_data.text() {
+                            run_command(
+                                timeout,
+                                &ondropped,
+                                &[data.to_string(), "text".to_string()],
+                            );
+                        }
                     }
-                })
+                )
             );
         }
 
@@ -534,12 +595,16 @@ pub(super) fn build_gtk_event_box(
                 widget.drag_source_unset();
             } else {
                 let target_entry = match dragtype {
-                    DragEntryType::File => {
-                        TargetEntry::new("text/uri-list", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
-                    }
-                    DragEntryType::Text => {
-                        TargetEntry::new("text/plain", gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET, 0)
-                    }
+                    DragEntryType::File => TargetEntry::new(
+                        "text/uri-list",
+                        gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET,
+                        0,
+                    ),
+                    DragEntryType::Text => TargetEntry::new(
+                        "text/plain",
+                        gtk::TargetFlags::OTHER_APP | gtk::TargetFlags::OTHER_WIDGET,
+                        0,
+                    ),
                 };
                 widget.drag_source_set(
                     ModifierType::BUTTON1_MASK,
@@ -588,7 +653,9 @@ pub(super) fn build_gtk_event_box(
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -608,21 +675,29 @@ pub(super) fn build_gtk_event_box(
 
     let id = hash_props_and_type(&props, "EventBox");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>, widget_registry: &mut WidgetRegistry) -> Result<gtk::Stack> {
+pub(super) fn build_gtk_stack(
+    props: Map,
+    children: Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Stack> {
     let gtk_widget = gtk::Stack::new();
 
     if children.is_empty() {
         return Err(anyhow!("stack must contain at least one element"));
     }
 
-    let children = children.into_iter().map(|child| build_gtk_widget(WidgetInput::Node(child), widget_registry));
+    let children = children
+        .into_iter()
+        .map(|child| build_gtk_widget(WidgetInput::Node(child), widget_registry));
 
     for (i, child) in children.enumerate() {
         let child = child?;
@@ -652,21 +727,28 @@ pub(super) fn build_gtk_stack(props: Map, children: Vec<WidgetNode>, widget_regi
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Stack");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) -> Result<Transform> {
+pub(super) fn build_transform(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<Transform> {
     let widget = Transform::new();
 
     let apply_props = |props: &Map, widget: &Transform| -> Result<()> {
@@ -715,7 +797,9 @@ pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -729,7 +813,10 @@ pub(super) fn build_transform(props: Map, widget_registry: &mut WidgetRegistry) 
     Ok(widget)
 }
 
-pub(super) fn build_circular_progress_bar(props: Map, widget_registry: &mut WidgetRegistry) -> Result<CircProg> {
+pub(super) fn build_circular_progress_bar(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<CircProg> {
     let widget = CircProg::new();
 
     let apply_props = |props: &Map, widget: &CircProg| -> Result<()> {
@@ -759,7 +846,9 @@ pub(super) fn build_circular_progress_bar(props: Map, widget_registry: &mut Widg
         let _ = apply_props(props, &widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -773,7 +862,10 @@ pub(super) fn build_circular_progress_bar(props: Map, widget_registry: &mut Widg
     Ok(widget)
 }
 
-pub(super) fn build_graph(props: Map, widget_registry: &mut WidgetRegistry) -> Result<super::graph::Graph> {
+pub(super) fn build_graph(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<super::graph::Graph> {
     let widget = super::graph::Graph::new();
 
     let apply_props = |props: &Map, widget: &super::graph::Graph| -> Result<()> {
@@ -842,7 +934,9 @@ pub(super) fn build_graph(props: Map, widget_registry: &mut WidgetRegistry) -> R
         let _ = apply_props(props, &widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -856,7 +950,10 @@ pub(super) fn build_graph(props: Map, widget_registry: &mut WidgetRegistry) -> R
     Ok(widget)
 }
 
-pub(super) fn build_gtk_progress(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ProgressBar> {
+pub(super) fn build_gtk_progress(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::ProgressBar> {
     let gtk_widget = gtk::ProgressBar::new();
 
     let apply_props = |props: &Map, widget: &gtk::ProgressBar| -> Result<()> {
@@ -887,21 +984,28 @@ pub(super) fn build_gtk_progress(props: Map, widget_registry: &mut WidgetRegistr
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Progress");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Image> {
+pub(super) fn build_gtk_image(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Image> {
     let gtk_widget = gtk::Image::new();
 
     let apply_props = |props: &Map, widget: &gtk::Image| -> Result<()> {
@@ -916,7 +1020,8 @@ pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) 
         }
 
         if path.ends_with(".gif") {
-            let pixbuf_animation = gtk::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
+            let pixbuf_animation =
+                gtk::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
             widget.set_from_animation(&pixbuf_animation);
         } else {
             let pixbuf;
@@ -931,7 +1036,9 @@ pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) 
                     let reg = regex::Regex::new(r"<svg")?;
                     reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
                 };
-                let stream = gtk::gio::MemoryInputStream::from_bytes(&gtk::glib::Bytes::from(svg_data.as_bytes()));
+                let stream = gtk::gio::MemoryInputStream::from_bytes(&gtk::glib::Bytes::from(
+                    svg_data.as_bytes(),
+                ));
                 pixbuf = gtk::gdk_pixbuf::Pixbuf::from_stream_at_scale(
                     &stream,
                     image_width,
@@ -967,21 +1074,28 @@ pub(super) fn build_gtk_image(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Image");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_button(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Button> {
+pub(super) fn build_gtk_button(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Button> {
     let gtk_widget = gtk::Button::new();
 
     let apply_props = |props: &Map, widget: &gtk::Button| -> Result<()> {
@@ -1043,21 +1157,28 @@ pub(super) fn build_gtk_button(props: Map, widget_registry: &mut WidgetRegistry)
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Button");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Label> {
+pub(super) fn build_gtk_label(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Label> {
     let gtk_widget = gtk::Label::new(None);
 
     let apply_props = |props: &Map, widget: &gtk::Label| -> Result<()> {
@@ -1080,7 +1201,13 @@ pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) 
                 } else {
                     widget.set_max_width_chars(limit_width);
                 }
-                apply_ellipsize_settings(&widget, truncate, limit_width, truncate_left, show_truncated);
+                apply_ellipsize_settings(
+                    &widget,
+                    truncate,
+                    limit_width,
+                    truncate_left,
+                    show_truncated,
+                );
                 text
             } else {
                 widget.set_ellipsize(pango::EllipsizeMode::None);
@@ -1098,7 +1225,8 @@ pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) 
                 }
             };
 
-            let unescaped = unescape::unescape(&t).ok_or_else(|| anyhow!("Failed to unescape..."))?;
+            let unescaped =
+                unescape::unescape(&t).ok_or_else(|| anyhow!("Failed to unescape..."))?;
             let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
             widget.set_text(&final_text);
         } else if has_markup {
@@ -1148,21 +1276,28 @@ pub(super) fn build_gtk_label(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Label");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Entry> {
+pub(super) fn build_gtk_input(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Entry> {
     let gtk_widget = gtk::Entry::new();
 
     let apply_props = |props: &Map, widget: &gtk::Entry| -> Result<()> {
@@ -1203,21 +1338,28 @@ pub(super) fn build_gtk_input(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Input");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_calendar(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Calendar> {
+pub(super) fn build_gtk_calendar(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Calendar> {
     let gtk_widget = gtk::Calendar::new();
 
     let apply_props = |props: &Map, widget: &gtk::Calendar| -> Result<()> {
@@ -1271,7 +1413,9 @@ pub(super) fn build_gtk_calendar(props: Map, widget_registry: &mut WidgetRegistr
         if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
             connect_signal_handler!(
                 widget,
-                widget.connect_day_selected(move |w| { run_command(timeout, &onclick, &[w.day(), w.month(), w.year()]) })
+                widget.connect_day_selected(move |w| {
+                    run_command(timeout, &onclick, &[w.day(), w.month(), w.year()])
+                })
             );
         }
         Ok(())
@@ -1284,21 +1428,28 @@ pub(super) fn build_gtk_calendar(props: Map, widget_registry: &mut WidgetRegistr
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Calendar");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_combo_box_text(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ComboBoxText> {
+pub(super) fn build_gtk_combo_box_text(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::ComboBoxText> {
     let gtk_widget = gtk::ComboBoxText::new();
 
     let apply_props = |props: &Map, widget: &gtk::ComboBoxText| -> Result<()> {
@@ -1315,7 +1466,11 @@ pub(super) fn build_gtk_combo_box_text(props: Map, widget_registry: &mut WidgetR
         connect_signal_handler!(
             widget,
             widget.connect_changed(move |widget| {
-                run_command(timeout, &onchange, &[widget.active_text().unwrap_or_else(|| "".into())]);
+                run_command(
+                    timeout,
+                    &onchange,
+                    &[widget.active_text().unwrap_or_else(|| "".into())],
+                );
             })
         );
 
@@ -1329,14 +1484,18 @@ pub(super) fn build_gtk_combo_box_text(props: Map, widget_registry: &mut WidgetR
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "ComboBoxText");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
@@ -1382,14 +1541,18 @@ pub(super) fn build_gtk_expander(
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Expander");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
@@ -1425,7 +1588,9 @@ pub(super) fn build_gtk_revealer(
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1433,7 +1598,8 @@ pub(super) fn build_gtk_revealer(
     match children.len() {
         0 => { /* maybe warn? */ }
         1 => {
-            let child_widget = build_gtk_widget(WidgetInput::Node(children[0].clone()), widget_registry)?;
+            let child_widget =
+                build_gtk_widget(WidgetInput::Node(children[0].clone()), widget_registry)?;
             gtk_widget.set_child(Some(&child_widget));
         }
         n => {
@@ -1443,14 +1609,19 @@ pub(super) fn build_gtk_revealer(
 
     let id = hash_props_and_type(&props, "Revealer");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_checkbox(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::CheckButton> {
+pub(super) fn build_gtk_checkbox(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::CheckButton> {
     let gtk_widget = gtk::CheckButton::new();
 
     let apply_props = |props: &Map, widget: &gtk::CheckButton| -> Result<()> {
@@ -1464,7 +1635,11 @@ pub(super) fn build_gtk_checkbox(props: Map, widget_registry: &mut WidgetRegistr
         connect_signal_handler!(
             widget,
             widget.connect_toggled(move |widget| {
-                run_command(timeout, if widget.is_active() { &onchecked } else { &onunchecked }, &[] as &[&str]);
+                run_command(
+                    timeout,
+                    if widget.is_active() { &onchecked } else { &onunchecked },
+                    &[] as &[&str],
+                );
             })
         );
 
@@ -1478,21 +1653,28 @@ pub(super) fn build_gtk_checkbox(props: Map, widget_registry: &mut WidgetRegistr
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Checkbox");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_color_button(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ColorButton> {
+pub(super) fn build_gtk_color_button(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::ColorButton> {
     let gtk_widget = gtk::ColorButton::builder().build();
 
     let apply_props = |props: &Map, widget: &gtk::ColorButton| -> Result<()> {
@@ -1524,21 +1706,28 @@ pub(super) fn build_gtk_color_button(props: Map, widget_registry: &mut WidgetReg
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "ColorButton");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_color_chooser(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::ColorChooserWidget> {
+pub(super) fn build_gtk_color_chooser(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::ColorChooserWidget> {
     let gtk_widget = gtk::ColorChooserWidget::new();
 
     let apply_props = |props: &Map, widget: &gtk::ColorChooserWidget| -> Result<()> {
@@ -1570,22 +1759,32 @@ pub(super) fn build_gtk_color_chooser(props: Map, widget_registry: &mut WidgetRe
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "ColorChooser");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_scale(props: Map, widget_registry: &mut WidgetRegistry) -> Result<gtk::Scale> {
-    let gtk_widget = gtk::Scale::new(gtk::Orientation::Horizontal, Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
+pub(super) fn build_gtk_scale(
+    props: Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk::Scale> {
+    let gtk_widget = gtk::Scale::new(
+        gtk::Orientation::Horizontal,
+        Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
+    );
 
     // Reusable closure for applying props
     let apply_props = |props: &Map, widget: &gtk::Scale| -> Result<()> {
@@ -1617,14 +1816,18 @@ pub(super) fn build_gtk_scale(props: Map, widget_registry: &mut WidgetRegistry) 
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
 
     let id = hash_props_and_type(&props, "Slider");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
@@ -1662,7 +1865,9 @@ pub(super) fn build_gtk_scrolledwindow(
         let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
-        if let Err(err) = resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props) {
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk::Widget>(), &props)
+        {
             eprintln!("Failed to update widget attrs: {:?}", err);
         }
     });
@@ -1682,7 +1887,9 @@ pub(super) fn build_gtk_scrolledwindow(
 
     let id = hash_props_and_type(&props, "ScrolledWindow");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk::Widget>(), &props)?;
 
@@ -1730,14 +1937,20 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk::Widget, props: &Map) -
     if let Ok(style_str) = get_string_prop(&props, "style", None) {
         let css_provider = gtk::CssProvider::new();
         let scss = format!("* {{ {} }}", style_str);
-        css_provider.load_from_data(grass::from_string(scss, &grass::Options::default())?.as_bytes())?;
-        gtk_widget.style_context().add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        css_provider
+            .load_from_data(grass::from_string(scss, &grass::Options::default())?.as_bytes())?;
+        gtk_widget
+            .style_context()
+            .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
     if let Ok(css_str) = get_string_prop(&props, "css", None) {
         let css_provider = gtk::CssProvider::new();
-        css_provider.load_from_data(grass::from_string(css_str, &grass::Options::default())?.as_bytes())?;
-        gtk_widget.style_context().add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        css_provider
+            .load_from_data(grass::from_string(css_str, &grass::Options::default())?.as_bytes())?;
+        gtk_widget
+            .style_context()
+            .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
 
     if let Ok(valign) = get_string_prop(&props, "valign", None) {

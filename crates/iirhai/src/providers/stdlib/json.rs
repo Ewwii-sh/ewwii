@@ -8,7 +8,9 @@ pub mod json {
     // parse a JSON string into a Dynamic representing serde_json::Value
     #[rhai_fn(return_raw)]
     pub fn parse_json(json_str: &str) -> Result<Dynamic, Box<EvalAltResult>> {
-        serde_json::from_str::<Value>(json_str).map(Dynamic::from).map_err(|e| format!("Failed to parse JSON: {e}").into())
+        serde_json::from_str::<Value>(json_str)
+            .map(Dynamic::from)
+            .map_err(|e| format!("Failed to parse JSON: {e}").into())
     }
 
     // Turn a dyn JSON val back to a string

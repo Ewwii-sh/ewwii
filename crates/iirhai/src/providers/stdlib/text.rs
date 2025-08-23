@@ -5,7 +5,10 @@ pub mod text {
     pub fn to_slug(text: &str) -> String {
         let lower = text.to_lowercase();
 
-        let sanitized: String = lower.chars().map(|c| if c.is_alphanumeric() || c.is_whitespace() { c } else { ' ' }).collect();
+        let sanitized: String = lower
+            .chars()
+            .map(|c| if c.is_alphanumeric() || c.is_whitespace() { c } else { ' ' })
+            .collect();
 
         let words = sanitized.split_whitespace();
         let slug = words.collect::<Vec<_>>().join("-");
@@ -14,7 +17,10 @@ pub mod text {
     }
 
     pub fn to_camel_case(text: &str) -> String {
-        let cleaned: String = text.chars().map(|c| if c.is_alphanumeric() || c.is_whitespace() { c } else { ' ' }).collect();
+        let cleaned: String = text
+            .chars()
+            .map(|c| if c.is_alphanumeric() || c.is_whitespace() { c } else { ' ' })
+            .collect();
 
         let words = cleaned.split_whitespace();
 

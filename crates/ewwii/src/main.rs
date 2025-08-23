@@ -83,7 +83,12 @@ fn main() {
     }
 
     if let opts::Action::ShellCompletions { shell } = opts.action {
-        clap_complete::generate(shell, &mut opts::RawOpt::command(), "ewwii", &mut std::io::stdout());
+        clap_complete::generate(
+            shell,
+            &mut opts::RawOpt::command(),
+            "ewwii",
+            &mut std::io::stdout(),
+        );
         return;
     }
 
@@ -92,10 +97,18 @@ fn main() {
     let use_wayland = opts.force_wayland || detected_wayland;
     #[cfg(all(feature = "wayland", feature = "x11"))]
     let result = if use_wayland {
-        log::debug!("Running on wayland. force_wayland={}, detected_wayland={}", opts.force_wayland, detected_wayland);
+        log::debug!(
+            "Running on wayland. force_wayland={}, detected_wayland={}",
+            opts.force_wayland,
+            detected_wayland
+        );
         run::<display_backend::WaylandBackend>(opts, eww_binary_name)
     } else {
-        log::debug!("Running on X11. force_wayland={}, detected_wayland={}", opts.force_wayland, detected_wayland);
+        log::debug!(
+            "Running on X11. force_wayland={}, detected_wayland={}",
+            opts.force_wayland,
+            detected_wayland
+        );
         run::<display_backend::X11Backend>(opts, eww_binary_name)
     };
 
@@ -123,7 +136,8 @@ fn main() {
 fn detect_wayland() -> bool {
     let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
     let wayland_display = std::env::var("WAYLAND_DISPLAY").unwrap_or_default();
-    session_type.contains("wayland") || (!wayland_display.is_empty() && !session_type.contains("x11"))
+    session_type.contains("wayland")
+        || (!wayland_display.is_empty() && !session_type.contains("x11"))
 }
 
 fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()> {
@@ -165,14 +179,19 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
             let _ = std::fs::remove_file(paths.get_ipc_socket_file());
 
             if !opts.show_logs {
-                println!("Run `{} logs` to see any errors while editing your configuration.", eww_binary_name);
+                println!(
+                    "Run `{} logs` to see any errors while editing your configuration.",
+                    eww_binary_name
+                );
             }
-            let fork_result = server::initialize_server::<B>(paths.clone(), None, !opts.no_daemonize)?;
+            let fork_result =
+                server::initialize_server::<B>(paths.clone(), None, !opts.no_daemonize)?;
             opts.no_daemonize || fork_result == ForkResult::Parent
         }
 
         opts::Action::WithServer(ActionWithServer::KillServer) => {
-            if let Some(response) = handle_server_command(&paths, &ActionWithServer::KillServer, 1)? {
+            if let Some(response) = handle_server_command(&paths, &ActionWithServer::KillServer, 1)?
+            {
                 handle_daemon_response(response);
             }
             false
@@ -191,15 +210,22 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
                 Err(err) if action.can_start_daemon() && !opts.no_daemonize => {
                     // connecting to the daemon failed. Thus, start the daemon here!
                     log::warn!("Failed to connect to daemon: {}", err);
-                    log::info!("Initializing ewwii server. ({})", paths.get_ipc_socket_file().display());
+                    log::info!(
+                        "Initializing ewwii server. ({})",
+                        paths.get_ipc_socket_file().display()
+                    );
                     let _ = std::fs::remove_file(paths.get_ipc_socket_file());
                     if !opts.show_logs {
-                        println!("Run `{} logs` to see any errors while editing your configuration.", eww_binary_name);
+                        println!(
+                            "Run `{} logs` to see any errors while editing your configuration.",
+                            eww_binary_name
+                        );
                     }
 
                     let (command, response_recv) = action.into_daemon_command();
                     // start the daemon and give it the command
-                    let fork_result = server::initialize_server::<B>(paths.clone(), Some(command), true)?;
+                    let fork_result =
+                        server::initialize_server::<B>(paths.clone(), Some(command), true)?;
                     let is_parent = fork_result == ForkResult::Parent;
                     if let (Some(recv), true) = (response_recv, is_parent) {
                         listen_for_daemon_response(recv);
@@ -224,16 +250,26 @@ fn listen_for_daemon_response(mut recv: DaemonResponseReceiver) {
         .build()
         .expect("Failed to initialize tokio runtime");
     rt.block_on(async {
-        if let Ok(Some(response)) = tokio::time::timeout(Duration::from_millis(100), recv.recv()).await {
+        if let Ok(Some(response)) =
+            tokio::time::timeout(Duration::from_millis(100), recv.recv()).await
+        {
             println!("{}", response);
         }
     })
 }
 
 /// attempt to send a command to the daemon and send it the given action repeatedly.
-fn handle_server_command(paths: &EwwPaths, action: &ActionWithServer, connect_attempts: usize) -> Result<Option<DaemonResponse>> {
-    log::debug!("Trying to find server process at socket {}", paths.get_ipc_socket_file().display());
-    let mut stream = attempt_connect(paths.get_ipc_socket_file(), connect_attempts).context("Failed to connect to daemon")?;
+fn handle_server_command(
+    paths: &EwwPaths,
+    action: &ActionWithServer,
+    connect_attempts: usize,
+) -> Result<Option<DaemonResponse>> {
+    log::debug!(
+        "Trying to find server process at socket {}",
+        paths.get_ipc_socket_file().display()
+    );
+    let mut stream = attempt_connect(paths.get_ipc_socket_file(), connect_attempts)
+        .context("Failed to connect to daemon")?;
     log::debug!("Connected to Ewwii server ({}).", &paths.get_ipc_socket_file().display());
     client::do_server_call(&mut stream, action).context("Error while forwarding command to server")
 }
@@ -262,8 +298,8 @@ fn attempt_connect(socket_path: impl AsRef<Path>, attempts: usize) -> Option<net
 
 /// Check if a eww server is currently running by trying to send a ping message to it.
 fn check_server_running(socket_path: impl AsRef<Path>) -> bool {
-    let response = net::UnixStream::connect(socket_path)
-        .ok()
-        .and_then(|mut stream| client::do_server_call(&mut stream, &opts::ActionWithServer::Ping).ok());
+    let response = net::UnixStream::connect(socket_path).ok().and_then(|mut stream| {
+        client::do_server_call(&mut stream, &opts::ActionWithServer::Ping).ok()
+    });
     response.is_some()
 }

@@ -33,7 +33,13 @@ impl<'a> Diagnostic<'a> {
         // bar seperator
         out.push_str(&format!("   {bar}\n", bar = "|".dimmed()));
 
-        out.push_str(&format!("{:>width$} {sep} {}\n", self.line, self.line_text, width = num_width, sep = "|".dimmed(),));
+        out.push_str(&format!(
+            "{:>width$} {sep} {}\n",
+            self.line,
+            self.line_text,
+            width = num_width,
+            sep = "|".dimmed(),
+        ));
 
         // The caret line, pointing at the column
         let caret_padding = " ".repeat(self.column.saturating_sub(1));
@@ -72,7 +78,12 @@ impl<'a> Diagnostic<'a> {
             ));
 
             for line in note_lines {
-                out.push_str(&format!("{v} {line:<width$} {v}\n", v = "│".green().bold(), line = line.green(), width = width));
+                out.push_str(&format!(
+                    "{v} {line:<width$} {v}\n",
+                    v = "│".green().bold(),
+                    line = line.green(),
+                    width = width
+                ));
             }
 
             out.push_str(&format!(
@@ -127,21 +138,29 @@ fn get_root_cause<'a>(err: &'a EvalAltResult) -> &'a EvalAltResult {
     }
 }
 
-fn get_error_info(root_err: &EvalAltResult, outer_err: &EvalAltResult, engine: &Engine, code: &str) -> ErrorHelp {
+fn get_error_info(
+    root_err: &EvalAltResult,
+    outer_err: &EvalAltResult,
+    engine: &Engine,
+    code: &str,
+) -> ErrorHelp {
     let (help, hint) = match root_err {
         EvalAltResult::ErrorParsing(..) => (
             "Syntax error encountered while parsing.".into(),
             "Check for unmatched tokens, invalid constructs, or misplaced punctuation.".into(),
         ),
-        EvalAltResult::ErrorVariableExists(name, ..) => {
-            (format!("Variable '{}' is already defined.", name), "Remove or rename the duplicate declaration.".into())
-        }
-        EvalAltResult::ErrorForbiddenVariable(name, ..) => {
-            (format!("Usage of forbidden variable '{}'.", name), "Avoid using reserved or protected variable names.".into())
-        }
-        EvalAltResult::ErrorVariableNotFound(name, ..) => {
-            (format!("Unknown variable '{}'.", name), "Check for typos or ensure the variable is initialized before use.".into())
-        }
+        EvalAltResult::ErrorVariableExists(name, ..) => (
+            format!("Variable '{}' is already defined.", name),
+            "Remove or rename the duplicate declaration.".into(),
+        ),
+        EvalAltResult::ErrorForbiddenVariable(name, ..) => (
+            format!("Usage of forbidden variable '{}'.", name),
+            "Avoid using reserved or protected variable names.".into(),
+        ),
+        EvalAltResult::ErrorVariableNotFound(name, ..) => (
+            format!("Unknown variable '{}'.", name),
+            "Check for typos or ensure the variable is initialized before use.".into(),
+        ),
         EvalAltResult::ErrorPropertyNotFound(name, ..) => (
             format!("Property '{}' not found on this object.", name),
             "Verify the property name and the object’s available fields.".into(),
@@ -177,7 +196,10 @@ fn get_error_info(root_err: &EvalAltResult, outer_err: &EvalAltResult, engine: &
                     format!("Did you mean one of:\n  {}", candidates.join("\n    ")),
                 )
             } else {
-                (format!("Function '{}' is not defined.", fn_sig), "Check spelling, module path, or argument count.".into())
+                (
+                    format!("Function '{}' is not defined.", fn_sig),
+                    "Check spelling, module path, or argument count.".into(),
+                )
             }
         }
         EvalAltResult::ErrorModuleNotFound(name, ..) => (
@@ -188,12 +210,14 @@ fn get_error_info(root_err: &EvalAltResult, outer_err: &EvalAltResult, engine: &
             format!("Error inside function '{}': {}", fn_name, msg),
             "Inspect the function implementation and arguments passed.".into(),
         ),
-        EvalAltResult::ErrorInModule(name, ..) => {
-            (format!("Error while loading module '{}'.", name), "Check the module code for syntax or runtime errors.".into())
-        }
-        EvalAltResult::ErrorUnboundThis(..) => {
-            ("`this` is unbound in this context.".into(), "Only use `this` inside methods or bound closures.".into())
-        }
+        EvalAltResult::ErrorInModule(name, ..) => (
+            format!("Error while loading module '{}'.", name),
+            "Check the module code for syntax or runtime errors.".into(),
+        ),
+        EvalAltResult::ErrorUnboundThis(..) => (
+            "`this` is unbound in this context.".into(),
+            "Only use `this` inside methods or bound closures.".into(),
+        ),
         EvalAltResult::ErrorMismatchDataType(found, expected, ..) => (
             format!("Data type mismatch: found '{}', expected '{}'.", found, expected),
             "Convert or cast values to the required type.".into(),
@@ -206,9 +230,10 @@ fn get_error_info(root_err: &EvalAltResult, outer_err: &EvalAltResult, engine: &
             format!("Cannot index into value of type '{}'.", typ),
             "Only arrays, maps, bitfields, or strings support indexing.".into(),
         ),
-        EvalAltResult::ErrorArrayBounds(len, idx, ..) => {
-            (format!("Array index {} out of bounds (0..{}).", idx, len), "Use a valid index within the array’s range.".into())
-        }
+        EvalAltResult::ErrorArrayBounds(len, idx, ..) => (
+            format!("Array index {} out of bounds (0..{}).", idx, len),
+            "Use a valid index within the array’s range.".into(),
+        ),
         EvalAltResult::ErrorStringBounds(len, idx, ..) => (
             format!("String index {} out of bounds (0..{}).", idx, len),
             "Ensure you index only valid character positions.".into(),
@@ -217,47 +242,61 @@ fn get_error_info(root_err: &EvalAltResult, outer_err: &EvalAltResult, engine: &
             format!("Bitfield index {} out of bounds (0..{}).", idx, len),
             "Use a valid bit position within the bitfield’s size.".into(),
         ),
-        EvalAltResult::ErrorFor(..) => {
-            ("`for` loop value is not iterable.".into(), "Iterate only over arrays, strings, ranges, or iterators.".into())
+        EvalAltResult::ErrorFor(..) => (
+            "`for` loop value is not iterable.".into(),
+            "Iterate only over arrays, strings, ranges, or iterators.".into(),
+        ),
+        EvalAltResult::ErrorDataRace(name, ..) => (
+            format!("Data race detected on '{}'.", name),
+            "Avoid shared mutable data or use synchronization primitives.".into(),
+        ),
+        EvalAltResult::ErrorAssignmentToConstant(name, ..) => (
+            format!("Cannot assign to constant '{}'.", name),
+            "Constants cannot be reassigned after declaration.".into(),
+        ),
+        EvalAltResult::ErrorDotExpr(field, ..) => (
+            format!("Invalid member access '{}'.", field),
+            "Verify the object has this member or method.".into(),
+        ),
+        EvalAltResult::ErrorArithmetic(msg, ..) => {
+            ("Arithmetic error encountered.".into(), msg.clone())
         }
-        EvalAltResult::ErrorDataRace(name, ..) => {
-            (format!("Data race detected on '{}'.", name), "Avoid shared mutable data or use synchronization primitives.".into())
-        }
-        EvalAltResult::ErrorAssignmentToConstant(name, ..) => {
-            (format!("Cannot assign to constant '{}'.", name), "Constants cannot be reassigned after declaration.".into())
-        }
-        EvalAltResult::ErrorDotExpr(field, ..) => {
-            (format!("Invalid member access '{}'.", field), "Verify the object has this member or method.".into())
-        }
-        EvalAltResult::ErrorArithmetic(msg, ..) => ("Arithmetic error encountered.".into(), msg.clone()),
         EvalAltResult::ErrorTooManyOperations(..) => (
             "Script exceeded the maximum number of operations.".into(),
             "Break complex expressions into smaller steps or increase the limit.".into(),
         ),
-        EvalAltResult::ErrorTooManyModules(..) => {
-            ("Too many modules have been loaded.".into(), "Use fewer modules or increase the module limit.".into())
-        }
-        EvalAltResult::ErrorStackOverflow(..) => {
-            ("Call stack overflow detected.".into(), "Check for infinite recursion or deeply nested calls.".into())
-        }
-        EvalAltResult::ErrorDataTooLarge(name, ..) => {
-            (format!("Data '{}' is too large to handle.", name), "Use smaller data sizes or adjust engine limits.".into())
-        }
-        EvalAltResult::ErrorTerminated(..) => {
-            ("Script execution was terminated.".into(), "This occurs when a `stop` or external termination is triggered.".into())
-        }
-        EvalAltResult::ErrorCustomSyntax(msg, options, ..) => {
-            (format!("Custom syntax error: {}.", msg), format!("Expected one of: {}.", options.join(", ")))
-        }
-        EvalAltResult::ErrorRuntime(..) => {
-            ("Runtime error encountered.".into(), "Inspect the error message and script logic for issues.".into())
-        }
-        EvalAltResult::LoopBreak(..) => {
-            ("`break` used outside of a loop.".into(), "Only use `break` inside `for` or `while` loops.".into())
-        }
-        EvalAltResult::Return(..) => {
-            ("`return` statement encountered.".into(), "Script terminated with an explicit return value.".into())
-        }
+        EvalAltResult::ErrorTooManyModules(..) => (
+            "Too many modules have been loaded.".into(),
+            "Use fewer modules or increase the module limit.".into(),
+        ),
+        EvalAltResult::ErrorStackOverflow(..) => (
+            "Call stack overflow detected.".into(),
+            "Check for infinite recursion or deeply nested calls.".into(),
+        ),
+        EvalAltResult::ErrorDataTooLarge(name, ..) => (
+            format!("Data '{}' is too large to handle.", name),
+            "Use smaller data sizes or adjust engine limits.".into(),
+        ),
+        EvalAltResult::ErrorTerminated(..) => (
+            "Script execution was terminated.".into(),
+            "This occurs when a `stop` or external termination is triggered.".into(),
+        ),
+        EvalAltResult::ErrorCustomSyntax(msg, options, ..) => (
+            format!("Custom syntax error: {}.", msg),
+            format!("Expected one of: {}.", options.join(", ")),
+        ),
+        EvalAltResult::ErrorRuntime(..) => (
+            "Runtime error encountered.".into(),
+            "Inspect the error message and script logic for issues.".into(),
+        ),
+        EvalAltResult::LoopBreak(..) => (
+            "`break` used outside of a loop.".into(),
+            "Only use `break` inside `for` or `while` loops.".into(),
+        ),
+        EvalAltResult::Return(..) => (
+            "`return` statement encountered.".into(),
+            "Script terminated with an explicit return value.".into(),
+        ),
         _ => ("Unknown error".into(), "No additional information available for this error.".into()),
     };
 

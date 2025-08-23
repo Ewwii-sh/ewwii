@@ -30,7 +30,8 @@ enum IconError {
 /// Get the fallback GTK icon, as a final fallback if the tray item has no icon.
 async fn fallback_icon(size: i32, scale: i32) -> Option<gtk::gdk_pixbuf::Pixbuf> {
     let theme = gtk::IconTheme::default().expect("Could not get default gtk theme");
-    match theme.load_icon_for_scale("image-missing", size, scale, gtk::IconLookupFlags::FORCE_SIZE) {
+    match theme.load_icon_for_scale("image-missing", size, scale, gtk::IconLookupFlags::FORCE_SIZE)
+    {
         Ok(pb) => pb,
         Err(e) => {
             log::error!("failed to load \"image-missing\" from default theme: {}", e);
@@ -70,7 +71,10 @@ fn icon_from_pixmap(width: i32, height: i32, mut data: Vec<u8>) -> gtk::gdk_pixb
 /// From a list of pixmaps, create an icon from the most appropriately sized one.
 ///
 /// This function returns None if and only if no pixmaps are provided.
-fn icon_from_pixmaps(pixmaps: Vec<(i32, i32, Vec<u8>)>, size: i32) -> Option<gtk::gdk_pixbuf::Pixbuf> {
+fn icon_from_pixmaps(
+    pixmaps: Vec<(i32, i32, Vec<u8>)>,
+    size: i32,
+) -> Option<gtk::gdk_pixbuf::Pixbuf> {
     pixmaps
         .into_iter()
         .max_by(|(w1, h1, _), (w2, h2, _)| {
@@ -190,7 +194,9 @@ pub async fn load_icon_from_sni(
         },
         Err(zbus::Error::FDO(e)) => match *e {
             // property not existing is an expected error
-            zbus::fdo::Error::UnknownProperty(_) | zbus::fdo::Error::InvalidArgs(_) => Err(IconError::NotAvailable),
+            zbus::fdo::Error::UnknownProperty(_) | zbus::fdo::Error::InvalidArgs(_) => {
+                Err(IconError::NotAvailable)
+            }
 
             _ => Err(IconError::DBusPixmap(zbus::Error::FDO(e))),
         },

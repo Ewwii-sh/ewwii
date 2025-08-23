@@ -36,7 +36,12 @@ impl ParseConfig {
         Ok(self.engine.compile(code)?)
     }
 
-    pub fn eval_code_with(&mut self, code: &str, rhai_scope: Option<Scope>, compiled_ast: Option<&AST>) -> Result<WidgetNode> {
+    pub fn eval_code_with(
+        &mut self,
+        code: &str,
+        rhai_scope: Option<Scope>,
+        compiled_ast: Option<&AST>,
+    ) -> Result<WidgetNode> {
         let mut scope = match rhai_scope {
             Some(s) => s,
             None => Scope::new(),
@@ -55,7 +60,8 @@ impl ParseConfig {
     }
 
     pub fn code_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<String> {
-        Ok(fs::read_to_string(&file_path).map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)
+        Ok(fs::read_to_string(&file_path)
+            .map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)
     }
 
     pub fn initial_poll_listen_scope(code: &str) -> Result<Scope> {

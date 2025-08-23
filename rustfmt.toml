@@ -1,5 +1,5 @@
 use_small_heuristics = "Max"
-max_width = 130
+max_width = 100
 use_field_init_shorthand = true
 
 # these where set when we where still on nightly

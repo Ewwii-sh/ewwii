@@ -73,7 +73,13 @@ struct TempSignal {
 fn register_temp_poll_listen(engine: &mut rhai::Engine) {
     engine.register_type::<TempSignal>();
 
-    engine.register_fn("poll", |var: &str, props: rhai::Map| TempSignal { var: var.to_string(), props });
+    engine.register_fn("poll", |var: &str, props: rhai::Map| TempSignal {
+        var: var.to_string(),
+        props,
+    });
 
-    engine.register_fn("listen", |var: &str, props: rhai::Map| TempSignal { var: var.to_string(), props });
+    engine.register_fn("listen", |var: &str, props: rhai::Map| TempSignal {
+        var: var.to_string(),
+        props,
+    });
 }

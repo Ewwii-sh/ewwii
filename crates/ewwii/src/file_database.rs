@@ -40,7 +40,12 @@ impl FileDatabase {
 
     pub fn insert_string(&mut self, name: String, content: String) -> Result<usize, DiagError> {
         let line_starts = codespan_reporting::files::line_starts(&content).collect();
-        let code_file = CodeFile { name, line_starts, source_len_bytes: content.len(), source: CodeSource::Literal(content) };
+        let code_file = CodeFile {
+            name,
+            line_starts,
+            source_len_bytes: content.len(),
+            source: CodeSource::Literal(content),
+        };
         let file_id = self.insert_code_file(code_file);
         Ok(file_id)
     }
@@ -55,12 +60,23 @@ impl<'a> Files<'a> for FileDatabase {
         Ok(&self.get_file(id)?.name)
     }
 
-    fn source(&'a self, id: Self::FileId) -> Result<Self::Source, codespan_reporting::files::Error> {
+    fn source(
+        &'a self,
+        id: Self::FileId,
+    ) -> Result<Self::Source, codespan_reporting::files::Error> {
         self.get_file(id)?.source.read_content().map_err(codespan_reporting::files::Error::Io)
     }
 
-    fn line_index(&self, id: Self::FileId, byte_index: usize) -> Result<usize, codespan_reporting::files::Error> {
-        Ok(self.get_file(id)?.line_starts.binary_search(&byte_index).unwrap_or_else(|next_line| next_line - 1))
+    fn line_index(
+        &self,
+        id: Self::FileId,
+        byte_index: usize,
+    ) -> Result<usize, codespan_reporting::files::Error> {
+        Ok(self
+            .get_file(id)?
+            .line_starts
+            .binary_search(&byte_index)
+            .unwrap_or_else(|next_line| next_line - 1))
     }
 
     fn line_range(
@@ -90,11 +106,16 @@ impl CodeFile {
         use std::cmp::Ordering;
 
         match line_index.cmp(&self.line_starts.len()) {
-            Ordering::Less => Ok(self.line_starts.get(line_index).cloned().expect("failed despite previous check")),
+            Ordering::Less => Ok(self
+                .line_starts
+                .get(line_index)
+                .cloned()
+                .expect("failed despite previous check")),
             Ordering::Equal => Ok(self.source_len_bytes),
-            Ordering::Greater => {
-                Err(codespan_reporting::files::Error::LineTooLarge { given: line_index, max: self.line_starts.len() - 1 })
-            }
+            Ordering::Greater => Err(codespan_reporting::files::Error::LineTooLarge {
+                given: line_index,
+                max: self.line_starts.len() - 1,
+            }),
         }
     }
 }

@@ -75,7 +75,8 @@ impl Watcher {
                 };
 
                 if removed_last {
-                    if let Err(e) = Watcher::is_status_notifier_host_registered_refresh(&ctxt).await {
+                    if let Err(e) = Watcher::is_status_notifier_host_registered_refresh(&ctxt).await
+                    {
                         log::error!("failed to signal Watcher: {}", e);
                     }
                 }
@@ -149,7 +150,9 @@ impl Watcher {
                 if let Err(e) = Watcher::registered_status_notifier_items_refresh(&ctxt).await {
                     log::error!("failed to signal Watcher: {}", e);
                 }
-                if let Err(e) = Watcher::status_notifier_item_unregistered(&ctxt, item.as_ref()).await {
+                if let Err(e) =
+                    Watcher::status_notifier_item_unregistered(&ctxt, item.as_ref()).await
+                {
                     log::error!("failed to signal Watcher: {}", e);
                 }
             }
@@ -160,11 +163,17 @@ impl Watcher {
 
     /// StatusNotifierItemRegistered signal
     #[dbus_interface(signal)]
-    async fn status_notifier_item_registered(ctxt: &zbus::SignalContext<'_>, service: &str) -> zbus::Result<()>;
+    async fn status_notifier_item_registered(
+        ctxt: &zbus::SignalContext<'_>,
+        service: &str,
+    ) -> zbus::Result<()>;
 
     /// StatusNotifierItemUnregistered signal
     #[dbus_interface(signal)]
-    async fn status_notifier_item_unregistered(ctxt: &zbus::SignalContext<'_>, service: &str) -> zbus::Result<()>;
+    async fn status_notifier_item_unregistered(
+        ctxt: &zbus::SignalContext<'_>,
+        service: &str,
+    ) -> zbus::Result<()>;
 
     /// RegisteredStatusNotifierItems property
     #[dbus_interface(property)]
@@ -208,7 +217,9 @@ impl Watcher {
 
     /// Equivalent to `is_status_notifier_host_registered_invalidate`, but without requiring
     /// `self`.
-    async fn is_status_notifier_host_registered_refresh(ctxt: &zbus::SignalContext<'_>) -> zbus::Result<()> {
+    async fn is_status_notifier_host_registered_refresh(
+        ctxt: &zbus::SignalContext<'_>,
+    ) -> zbus::Result<()> {
         zbus::fdo::Properties::properties_changed(
             ctxt,
             Self::name(),
@@ -219,7 +230,9 @@ impl Watcher {
     }
 
     /// Equivalent to `registered_status_notifier_items_invalidate`, but without requiring `self`.
-    async fn registered_status_notifier_items_refresh(ctxt: &zbus::SignalContext<'_>) -> zbus::Result<()> {
+    async fn registered_status_notifier_items_refresh(
+        ctxt: &zbus::SignalContext<'_>,
+    ) -> zbus::Result<()> {
         zbus::fdo::Properties::properties_changed(
             ctxt,
             Self::name(),
@@ -279,7 +292,10 @@ async fn parse_service<'a>(
 }
 
 /// Wait for a DBus service to disappear
-async fn wait_for_service_exit(con: &zbus::Connection, service: zbus::names::BusName<'_>) -> zbus::fdo::Result<()> {
+async fn wait_for_service_exit(
+    con: &zbus::Connection,
+    service: zbus::names::BusName<'_>,
+) -> zbus::fdo::Result<()> {
     let dbus = zbus::fdo::DBusProxy::new(con).await?;
     let mut owner_changes = dbus.receive_name_owner_changed_with_args(&[(0, &service)]).await?;
 

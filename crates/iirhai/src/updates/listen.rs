@@ -22,7 +22,12 @@ use tokio::io::BufReader;
 use tokio::process::Command;
 use tokio::sync::watch;
 
-pub fn handle_listen(var_name: String, props: Map, store: ReactiveVarStore, tx: tokio::sync::mpsc::UnboundedSender<String>) {
+pub fn handle_listen(
+    var_name: String,
+    props: Map,
+    store: ReactiveVarStore,
+    tx: tokio::sync::mpsc::UnboundedSender<String>,
+) {
     let cmd = match get_string_prop(&props, "cmd", Some("")) {
         Ok(c) => c,
         Err(e) => {
