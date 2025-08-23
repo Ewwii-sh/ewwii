@@ -40,135 +40,135 @@ pub enum WidgetNode {
 }
 
 #[derive(Clone)]
-pub struct WidgetInfo {
-    pub node: WidgetNode,
-    pub props: Map,
-    pub widget_type: String,
-    pub children: Vec<WidgetNode>,
+pub struct WidgetInfo<'a> {
+    pub node: &'a WidgetNode,
+    pub props: &'a Map,
+    pub widget_type: &'a str,
+    pub children: Vec<&'a WidgetNode>,
     pub parent_id: Option<u64>,
 }
 
-pub fn get_id_to_widget_info(
-    node: &WidgetNode,
-    id_to_props: &mut HashMap<u64, WidgetInfo>,
+pub fn get_id_to_widget_info<'a>(
+    node: &'a WidgetNode,
+    id_to_props: &mut HashMap<u64, WidgetInfo<'a>>,
     parent_id: Option<u64>,
 ) -> Result<()> {
     match node {
         WidgetNode::Box { props, children } => {
             let id = hash_props_and_type(props, "Box");
-            insert_wdgt_info(node, props, "Box", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Box", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::CenterBox { props, children } => {
             let id = hash_props_and_type(props, "CenterBox");
-            insert_wdgt_info(node, props, "CenterBox", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "CenterBox", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::EventBox { props, children } => {
             let id = hash_props_and_type(props, "EventBox");
-            insert_wdgt_info(node, props, "EventBox", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "EventBox", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::CircularProgress { props } => {
             // let id = hash_props_and_type(props, "CircularProgress");
-            insert_wdgt_info(node, props, "CircularProgress", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "CircularProgress", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Graph { props } => {
             // let id = hash_props_and_type(props, "Graph");
-            insert_wdgt_info(node, props, "Graph", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Graph", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Transform { props } => {
             // let id = hash_props_and_type(props, "Transform");
-            insert_wdgt_info(node, props, "Transform", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Transform", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Slider { props } => {
             // let id = hash_props_and_type(props, "Slider");
-            insert_wdgt_info(node, props, "Slider", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Slider", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Progress { props } => {
             // let id = hash_props_and_type(props, "Progress");
-            insert_wdgt_info(node, props, "Progress", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Progress", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Image { props } => {
             // let id = hash_props_and_type(props, "Image");
-            insert_wdgt_info(node, props, "Image", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Image", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Button { props } => {
             // let id = hash_props_and_type(props, "Button");
-            insert_wdgt_info(node, props, "Button", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Button", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Label { props } => {
             // let id = hash_props_and_type(props, "Label");
-            insert_wdgt_info(node, props, "Label", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Label", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Input { props } => {
             // let id = hash_props_and_type(props, "Input");
-            insert_wdgt_info(node, props, "Input", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Input", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Calendar { props } => {
             // let id = hash_props_and_type(props, "Calendar");
-            insert_wdgt_info(node, props, "Calendar", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Calendar", &[], parent_id, id_to_props)?;
         }
         WidgetNode::ColorButton { props } => {
             // let id = hash_props_and_type(props, "ColorButton");
-            insert_wdgt_info(node, props, "ColorButton", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "ColorButton", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Expander { props, children } => {
             let id = hash_props_and_type(props, "Expander");
-            insert_wdgt_info(node, props, "Expander", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Expander", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::ToolTip { props, children } => {
             let id = hash_props_and_type(props, "ToolTip");
-            insert_wdgt_info(node, props, "ToolTip", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "ToolTip", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::ColorChooser { props } => {
             // let id = hash_props_and_type(props, "ColorChooser");
-            insert_wdgt_info(node, props, "ColorChooser", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "ColorChooser", &[], parent_id, id_to_props)?;
         }
         WidgetNode::ComboBoxText { props } => {
             // let id = hash_props_and_type(props, "ComboBoxText");
-            insert_wdgt_info(node, props, "ComboBoxText", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "ComboBoxText", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Checkbox { props } => {
             // let id = hash_props_and_type(props, "Checkbox");
-            insert_wdgt_info(node, props, "Checkbox", vec![], parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Checkbox", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Revealer { props, children } => {
             let id = hash_props_and_type(props, "Revealer");
-            insert_wdgt_info(node, props, "Revealer", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Revealer", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::Scroll { props, children } => {
             let id = hash_props_and_type(props, "Scroll");
-            insert_wdgt_info(node, props, "Scroll", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Scroll", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::OverLay { props, children } => {
             let id = hash_props_and_type(props, "OverLay");
-            insert_wdgt_info(node, props, "OverLay", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "OverLay", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
         WidgetNode::Stack { props, children } => {
             let id = hash_props_and_type(props, "Stack");
-            insert_wdgt_info(node, props, "Stack", children.clone(), parent_id, id_to_props)?;
+            insert_wdgt_info(node, props, "Stack", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
@@ -179,20 +179,20 @@ pub fn get_id_to_widget_info(
     Ok(())
 }
 
-fn insert_wdgt_info(
-    node: &WidgetNode,
-    props: &Map,
-    widget_type: &str,
-    children: Vec<WidgetNode>,
+fn insert_wdgt_info<'a>(
+    node: &'a WidgetNode,
+    props: &'a Map,
+    widget_type: &'a str,
+    children: &'a [WidgetNode],
     parent_id: Option<u64>,
-    id_to_info: &mut HashMap<u64, WidgetInfo>,
+    id_to_info: &mut HashMap<u64, WidgetInfo<'a>>,
 ) -> Result<()> {
     let id = hash_props_and_type(props, widget_type);
     let info = WidgetInfo {
-        node: node.clone(),
-        props: props.clone(),
-        widget_type: widget_type.to_string(),
-        children,
+        node,
+        props,
+        widget_type,
+        children: children.iter().collect(),
         parent_id,
     };
     id_to_info.insert(id, info);
