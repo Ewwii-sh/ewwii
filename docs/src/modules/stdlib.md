@@ -260,3 +260,32 @@ All functions in this module work with floating-point numbers (f64).
 If you pass an integer (e.g. `0`), Rhai will report an error because there is no math::cos(i64). Use a floating-point literal instead (e.g. `0.0`).
 
 All math functions return `f64`. If you need an integer result, use `to_int` to convert.
+
+## `std::command`
+
+The `std::command` module provides functions which you can use to run shell commands on your system.
+
+### Usage
+
+```rust,ignore
+import "std::command" as command;
+
+// run a command
+command::run("notify-send Hello!");
+
+// run a command and read output from stdout
+let output = command::run_and_read("pwd"); // example output: /home/foo/.config/ewwii/
+```
+
+### Functions
+
+| Function          | Description                                        |
+| ----------------- | -------------------------------------------------- |
+| `run(x)`          | Run the shell command in `x`                       |
+| `run_and_read(x)` | Run the shell command in `x` and return the stdout |
+
+### Note
+
+The functions in `std::command` execute arbitrary shell commands. Only run scripts you trust, as misuse can compromise your system.
+
+This, along with features like `poll`, `listen`, `onclick`, `onhover`, etc., which also run shell commands, can be abused by bad actors. Always verify and trust a package before installing it via [eiipm](https://github.com/Ewwii-sh/eiipm). Even if a package is registered in [eii-manifests](https://github.com/Ewwii-sh/eii-manifests), bad actors could change the code of their package without the awareness of maintainers.

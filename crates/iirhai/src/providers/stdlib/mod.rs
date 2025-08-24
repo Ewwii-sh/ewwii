@@ -1,3 +1,4 @@
+pub mod command;
 pub mod env;
 pub mod json;
 pub mod math;
@@ -9,7 +10,7 @@ use rhai::module_resolvers::StaticModuleResolver;
 
 pub fn register_stdlib(resolver: &mut StaticModuleResolver) {
     use crate::providers::stdlib::{
-        env::env, json::json, math::math, monitor::monitor, text::text,
+        env::env, json::json, math::math, monitor::monitor, text::text, command::command
     };
 
     // adding modules
@@ -18,6 +19,7 @@ pub fn register_stdlib(resolver: &mut StaticModuleResolver) {
     let monitor_mod = exported_module!(monitor);
     let json_mod = exported_module!(json);
     let math_mod = exported_module!(math);
+    let command_mod = exported_module!(command);
 
     // inserting modules
     resolver.insert("std::text", text_mod);
@@ -25,4 +27,5 @@ pub fn register_stdlib(resolver: &mut StaticModuleResolver) {
     resolver.insert("std::monitor", monitor_mod);
     resolver.insert("std::json", json_mod);
     resolver.insert("std::math", math_mod);
+    resolver.insert("std::command", command_mod);
 }
