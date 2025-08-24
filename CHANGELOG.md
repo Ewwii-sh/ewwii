@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   **call-fns** command for calling a Rhai function. Note: The function can only see poll/listen variables as their initial value.
 -   **update** command with **--inject-vars** flag to update widget state. Note: All poll/listen variables will reset to their initial values.
 -   `std::command` module for running shell commands.
+-   `INPUT_VAL` environment variable for Input widget commands (`onchange` and `onaccept`), containing the current text of the input field.
 
 ### Changed
 
