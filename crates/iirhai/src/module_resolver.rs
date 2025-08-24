@@ -1,4 +1,4 @@
-use crate::error::format_eval_error;
+use crate::error::{format_eval_error, format_parse_error};
 use rhai::{Engine, EvalAltResult, Module, ModuleResolver, Position, Scope, AST};
 use std::fs;
 use std::path::PathBuf;
@@ -43,7 +43,10 @@ impl ModuleResolver for SimpleFileResolver {
             EvalAltResult::ErrorSystem(format!("reading file: {full_path:?}"), e.into())
         })?;
 
-        let ast: AST = engine.compile(&script)?;
+        let ast: AST = engine.compile(&script).map_err(|e| {
+            log::error!("{}", format_parse_error(&e, &script));
+            e
+        })?;
         let scope = Scope::new();
         let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {
             log::error!("{}", format_eval_error(&e, &script, engine));

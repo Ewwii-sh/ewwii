@@ -18,11 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Faster re-evaluation of configuration by reusing compiled configuration.
 -   Improved runtime error handling of WidgetNode casting.
 -   Caching for ParseConfig in re-evaluation system.
--   Proper error handling for invalid external module code.
+-   Proper error handling for runtime error in external module code.
 -   **call-fns** command for calling a Rhai function. Note: The function can only see poll/listen variables as their initial value.
 -   **update** command with **--inject-vars** flag to update widget state. Note: All poll/listen variables will reset to their initial values.
 -   `std::command` module for running shell commands.
 -   `INPUT_VAL` environment variable for Input widget commands (`onchange` and `onaccept`), containing the current text of the input field.
+-   Parse error handling for external module code.
 
 ### Changed
 
