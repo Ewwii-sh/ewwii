@@ -117,7 +117,10 @@ impl WidgetRegistry {
                     patch.push(PatchGtkWidget::Create(
                         new_info.node.clone(),
                         *id,
-                        new_info.parent_id.expect("Parent ID must exist"),
+                        new_info.parent_id.expect(&format!(
+                            "Parent ID must exist. Widget type: {}",
+                            &new_info.widget_type
+                        )),
                     ));
                 }
                 _ => {}
@@ -129,7 +132,10 @@ impl WidgetRegistry {
             if !new_map.contains_key(id) {
                 patch.push(PatchGtkWidget::Remove(
                     *id,
-                    new_info.parent_id.expect("Parent ID must exist"),
+                    new_info.parent_id.expect(&format!(
+                        "Parent ID must exist. Widget type: {}",
+                        &new_info.widget_type
+                    )),
                 ));
             }
         }
