@@ -366,9 +366,42 @@ mod serde_shell {
 
 fn parse_inject_var_map(s: &str) -> Result<HashMap<String, String>, String> {
     let mut map = HashMap::new();
-    for pair in s.split(',') {
-        let pos = pair.find('=').ok_or_else(|| format!("invalid KEY=VALUE: {}", pair))?;
-        map.insert(pair[..pos].to_string(), pair[pos + 1..].to_string());
+    let mut chars = s.chars().peekable();
+    let mut key = String::new();
+    let mut val = String::new();
+    let mut in_key = true;
+    let mut in_quotes = false;
+
+    while let Some(&c) = chars.peek() {
+        match c {
+            '"' => {
+                in_quotes = !in_quotes;
+                chars.next();
+            }
+            '=' if in_key => {
+                in_key = false;
+                chars.next();
+            }
+            ',' if !in_key && !in_quotes => {
+                map.insert(key.trim().to_string(), val.trim().to_string());
+                key.clear();
+                val.clear();
+                in_key = true;
+                chars.next();
+            }
+            _ => {
+                if in_key {
+                    key.push(c);
+                } else {
+                    val.push(c);
+                }
+                chars.next();
+            }
+        }
+    }
+
+    if !key.is_empty() {
+        map.insert(key.trim().to_string(), val.trim().to_string());
     }
     Ok(map)
 }
