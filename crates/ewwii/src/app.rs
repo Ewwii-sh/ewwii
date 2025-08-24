@@ -378,8 +378,11 @@ impl<B: DisplayBackend> App<B> {
 
             // Should hold the id and the props of a widget
             // It is critical for supporting dynamic updates
-            let widget_reg_store =
-                Arc::new(Mutex::new(WidgetRegistry::new(Some(&window_def.root_widget))));
+            let widget_reg_store = Arc::new(Mutex::new(WidgetRegistry::new(Some(
+                config::EwwiiConfig::get_borrowed_windows_root_widget(
+                    self.ewwii_config.get_root_node()?.as_ref(),
+                )?,
+            ))));
 
             let root_widget = {
                 let mut store = widget_reg_store.lock().unwrap();
