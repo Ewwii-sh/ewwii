@@ -93,12 +93,14 @@ These properties apply to all widgets, and can be used anywhere!
 
 ## input
 
+**NOTE:** This widget exposes a special environment variable `INPUT_VAL` to the commands specified in `onchange` and `onaccept`.
+
 **Properties**
 
 -   `value`: `string` current text
--   `onchange`: `string` command on change
+-   `onchange`: `string` command on change; `INPUT_VAL` contains the new value
 -   `timeout`: `duration` Default: "200ms"
--   `onaccept`: `string` command on Enter
+-   `onaccept`: `string` command on Enter; `INPUT_VAL` contains the new value
 -   `password`: `bool` obscure input
 
 ## button
