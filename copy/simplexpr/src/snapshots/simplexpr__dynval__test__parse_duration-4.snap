@@ -1,8 +1,0 @@
----
-source: crates/simplexpr/src/dynval.rs
-expression: "DynVal::from(\"5m\").as_duration()"
-
----
-Ok(
-    300s,
-)

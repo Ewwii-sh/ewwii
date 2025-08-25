@@ -17,8 +17,11 @@ let networks = wifi::scan();
 // Get current Wi-Fi connection info
 let current = wifi::current_connection();
 
-// Connect to a network
+// Connect to a network with password
 wifi::connect("MySSID", "MyPassword");
+
+// Connect to a network without password (using saved profile)
+wifi::connect_without_password("MySSID");
 
 // Disconnect from the current network
 wifi::disconnect();
@@ -33,16 +36,17 @@ wifi::get_adapter_connectivity();
 
 ### Functions
 
-| Function                     | Description                                                                                     |
-| ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `scan()`                     | Returns a list of nearby Wi-Fi networks with `ssid`, `signal`, and `security` fields.           |
-| `scan_linux()`               | **Linux only**. Returns a list of nearby Wi-Fi networks. Equivalent to `scan()`.                |
-| `scan_macos()`               | **macOS only (untested)**. Returns a list of nearby Wi-Fi networks. Equivalent to `scan()`.     |
-| `current_connection()`       | Returns information about the current Wi-Fi connection as a map (`ssid`, `signal`, `security`). |
-| `connect(ssid, password?)`   | Connects to a Wi-Fi network. `password` is optional for open networks.                          |
-| `disconnect()`               | Disconnects from the currently connected network (does not disable the adapter).                |
-| `enable_adapter()`           | Turns the Wi-Fi adapter on.                                                                     |
-| `get_adapter_connectivity()` | Returns a normalized connectivity status of the Wi-Fi adapter.                                  |
+| Function                         | Description                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `scan()`                         | Returns a list of nearby Wi-Fi networks with `ssid`, `signal`, and `security` fields.           |
+| `scan_linux()`                   | **Linux only**. Returns a list of nearby Wi-Fi networks. Equivalent to `scan()`.                |
+| `scan_macos()`                   | **macOS only (untested)**. Returns a list of nearby Wi-Fi networks. Equivalent to `scan()`.     |
+| `current_connection()`           | Returns information about the current Wi-Fi connection as a map (`ssid`, `signal`, `security`). |
+| `connect(ssid, password)`        | Connects to a Wi-Fi network.                                                                    |
+| `connect_without_password(ssid)` | Connects to a Wi-Fi network without password by using the saved profile.                        |
+| `disconnect()`                   | Disconnects from the currently connected network (does not disable the adapter).                |
+| `enable_adapter()`               | Turns the Wi-Fi adapter on.                                                                     |
+| `get_adapter_connectivity()`     | Returns a normalized connectivity status of the Wi-Fi adapter.                                  |
 
 ### Extra Notes
 

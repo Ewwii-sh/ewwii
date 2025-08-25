@@ -1,6 +1,0 @@
----
-source: crates/simplexpr/src/parser/lexer.rs
-expression: "v!(r#\"12\"#)"
-
----
-(0, NumLit("12"), 2)
