@@ -1,6 +1,0 @@
----
-source: crates/simplexpr/src/parser/lexer.rs
-assertion_line: 313
-expression: "v!(r#\"\"\\\"#)"
----
-
