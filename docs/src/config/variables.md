@@ -12,7 +12,7 @@ In Rhai, all variables are dynamically typed bindings to values. You can define 
 
 **Basic variables (`let`)**
 
-```rust,ignore
+```js
 let foo = "value";
 ```
 
@@ -25,15 +25,18 @@ Just having static variables that wont update is pretty limiting. So, ewwii has 
 
 **Polling variables (`poll`)**
 
-```rust,ignore
-poll("var_name", #{
-  // It is recommended to have initial property passed.
-  // If not provided, it will default to no value which may cause problems when used.
-  // You can pass something like "" if you want no initial value.
-  initial: "inital value",
-  interval: "2s",
-  cmd: "date +%H:%M:%S", // command to execute
-})
+```js
+poll(
+    "var_name",
+    #{
+        // It is recommended to have initial property passed.
+        // If not provided, it will default to no value which may cause problems when used.
+        // You can pass something like "" if you want no initial value.
+        initial: "inital value",
+        interval: "2s",
+        cmd: "date +%H:%M:%S", // command to execute
+    }
+);
 ```
 
 A polling variable is a variable which runs a provided shell-script repeatedly, in a given interval.
@@ -50,11 +53,14 @@ To externally update a polling variable, `ewwii update` can be used like with b
 
 **Listening variables (`listen`)**
 
-```rust,ignore
-listen("foo", #{
-  initial: "whatever",
-  cmd: "tail -F /tmp/some_file",
-})
+```js
+listen(
+    "foo",
+    #{
+        initial: "whatever",
+        cmd: "tail -F /tmp/some_file",
+    }
+);
 ```
 
 Listening variables might be the most confusing of the bunch.
@@ -84,7 +90,7 @@ As we discussed earlier, all variables are only available locally. So, you would
 
 Here is an example of how it is done:
 
-```rust,ignore
+```js
 let foo = "example";
 
 poll("time", #{
@@ -109,7 +115,7 @@ fn wont_work() {
 
 **Example usage:**
 
-```rust,ignore
+```js
 fn foo(foo_var) {
   return box(#{}, [
     label(#{ text: foo_var, dyn_id: "foo_var_user" }); // dyn_id used to make label dynamic

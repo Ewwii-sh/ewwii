@@ -9,7 +9,7 @@ In Rhai modules:
 -   **Functions are automatically exported** by default. You do **not** need to use `export` for functions.
 -   **Variables, constants, and objects must be exported manually** using the `export` keyword.
 
-```rust,ignore
+```js
 // File: ./foo/baz.rhai
 
 /// A function that is automatically exported
@@ -35,7 +35,7 @@ export PI;
 
 You can import a module using the `import` keyword:
 
-```rust,ignore
+```js
 // File: ./ewwii.rhai
 
 import "foo/baz" // just runs the script without importing it.
