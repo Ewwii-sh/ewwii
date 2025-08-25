@@ -139,14 +139,10 @@ pub mod wifi {
     }
 
     #[rhai_fn(return_raw)]
-    pub fn connect(ssid: &str, password: Option<&str>) -> Result<(), Box<EvalAltResult>> {
+    pub fn connect(ssid: &str, password: &str) -> Result<(), Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
         {
-            let mut args = vec!["dev", "wifi", "connect", ssid];
-            if let Some(pw) = password {
-                args.push("password");
-                args.push(pw);
-            }
+            let args = vec!["dev", "wifi", "connect", ssid, "password", password];
             let status = Command::new("nmcli")
                 .args(&args)
                 .status()
@@ -162,7 +158,7 @@ pub mod wifi {
         {
             if let Some(pw) = password {
                 let status = Command::new("networksetup")
-                    .args(&["-setairportnetwork", "en0", ssid, pw])
+                    .args(&["-setairportnetwork", "en0", ssid, password])
                     .status()
                     .map_err(|e| format!("Failed to run networksetup: {e}"))?;
                 if status.success() {
@@ -181,6 +177,41 @@ pub mod wifi {
                 } else {
                     Err(format!("Failed to connect to {}", ssid).into())
                 }
+            }
+        }
+
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        {
+            Err("wifi::connect not supported on this OS".into())
+        }
+    }
+
+    #[rhai_fn(return_raw)]
+    pub fn connect_without_password(ssid: &str) -> Result<(), Box<EvalAltResult>> {
+        #[cfg(target_os = "linux")]
+        {
+            let args = vec!["dev", "wifi", "connect", ssid];
+            let status = Command::new("nmcli")
+                .args(&args)
+                .status()
+                .map_err(|e| format!("Failed to run nmcli: {e}"))?;
+            if status.success() {
+                Ok(())
+            } else {
+                Err(format!("Failed to connect to {}", ssid).into())
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            let status = Command::new("networksetup")
+                .args(&["-setairportnetwork", "en0", ssid])
+                .status()
+                .map_err(|e| format!("Failed to run networksetup: {e}"))?;
+            if status.success() {
+                Ok(())
+            } else {
+                Err(format!("Failed to connect to {}", ssid).into())
             }
         }
 

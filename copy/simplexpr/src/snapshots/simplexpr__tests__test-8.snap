@@ -1,8 +1,0 @@
----
-source: src/lib.rs
-expression: "p.parse(Lexer::new(\"foo(1, 2)\"))"
-
----
-Ok(
-    foo("1", "2"),
-)
