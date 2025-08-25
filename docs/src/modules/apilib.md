@@ -8,7 +8,7 @@ The `wifi` module provides cross-platform Wi-Fi management for Linux and macOS s
 
 ### Usage
 
-```rust,ignore
+```js
 import "api::wifi" as wifi;
 
 // Scan for available networks
@@ -67,15 +67,15 @@ wifi::get_adapter_connectivity();
 
 -   `scan()` (or `scan_linux` / `scan_macos`) returns an **array of maps**:
 
-```rust,ignore
+```js
 [
-    { "ssid": "HomeWiFi", "signal": "78", "security": "WPA2" },
-    { "ssid": "CafeNet", "signal": "65", "security": "WPA" }
-]
+    { ssid: "HomeWiFi", signal: "78", security: "WPA2" },
+    { ssid: "CafeNet", signal: "65", security: "WPA" },
+];
 ```
 
 -   `current_connection()` returns a **map**:
 
-```rust,ignore
+```js
 { "ssid": "HomeWiFi", "signal": "78", "security": "WPA2" }
 ```

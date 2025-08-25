@@ -6,7 +6,7 @@ The `std::env` module provides access to common system-level environment queries
 
 ### Usage
 
-```rust,ignore
+```js
 import "std::env" as env;
 
 // Get an environment variable, or fallback to a default
@@ -41,7 +41,7 @@ The `std::text` module provides access to more string manipulation that Rhai lac
 
 ### Usage
 
-```rust,ignore
+```js
 import "std::text" as text;
 
 // Convert a string to a URL-friendly slug
@@ -76,7 +76,7 @@ The `std::monitor` module provides utilities for querying information about conn
 
 ### Usage
 
-```rust,ignore
+```js
 import "std::monitor" as monitor;
 
 // Get number of monitors
@@ -125,7 +125,7 @@ The `std::json` module provides utilities for working with JSON data within Rhai
 
 ### Usage
 
-```rust,ignore
+```js
 import "std::json" as json;
 
 // Parse a JSON string
@@ -164,7 +164,7 @@ It includes basic arithmetic, trigonometry, exponentiation, logarithms, and util
 
 ### Usage
 
-```rust,ignore
+```js
 import "std::math" as math;
 
 // Constants
@@ -267,7 +267,7 @@ The `std::command` module provides functions which you can use to run shell comm
 
 ### Usage
 
-```rust,ignore
+```js
 import "std::command" as command;
 
 // run a command
