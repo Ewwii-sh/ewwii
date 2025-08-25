@@ -14,7 +14,7 @@ For example, `defwindow` expects a **String**, **Properties**, and a function ca
 
 **Example:**
 
-```rust,ignore
+```js
 enter([
   // the string here (the text in "") is the name of the window
   // the content in #{} is the properties
@@ -48,7 +48,7 @@ The root is defined as `enter()` and it is where you should write `defwindow`.
 
 Here is an example:
 
-```rust,ignore
+```js
 enter([
   defwindow("example", #{
       monitor: 0,
@@ -85,7 +85,7 @@ The `[]` is used for adding **children** to a widget.
 
 **Example:**
 
-```rust,ignore
+```js
 fn greeter(foo) {
   return box(#{
     orientation: "horizontal",
@@ -103,7 +103,7 @@ The `#{}` works similar to the `[]` but, it is used to add properties into the w
 
 **Example:**
 
-```rust,ignore
+```js
 fn greeter(foo) {
   // the `#{}` holds the properties of the box widget
   // each element in a `#{}` should end in a comma (,) instead of a semi-colon (;).

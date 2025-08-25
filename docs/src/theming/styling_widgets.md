@@ -4,7 +4,7 @@ Ewwii also allows writing inline styles to widgets using the `style` property. T
 
 **Example:**
 
-```rust,ignore
+```js
 fn foo() {
     return box(#{
         style: "color: black; background-color: #fff;",
