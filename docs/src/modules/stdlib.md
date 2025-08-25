@@ -178,9 +178,9 @@ let y = math::sqrt(9.0); // 3
 let z = math::pow(2.0, 10.0); // 1024
 
 // Trigonometry
-let s = math::sin(math::PI / 2); // 1
+let s = math::sin(math::PI / 2); // ~1
 let c = math::cos(0.0); // 1
-let t = math::tan(math::PI / 4); // 1
+let t = math::tan(math::PI / 4); // ~1
 
 // Exponentials & logs
 let e = math::exp(1.0); // ~2.718
