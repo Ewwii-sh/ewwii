@@ -6,7 +6,8 @@ src = "src"
 title = "Ewwii documentation"
 
 [output.html]
-default-theme = "navy"
+default-theme = "latte"
+preferred-dark-theme = "macchiato"
 git-repository-url = "https://github.com/Ewwii-sh/ewwii"
-site-url = "/"
 additional-js = ["js/home_button.js"]
+additional-css = ["./theme/catppuccin.css"]
