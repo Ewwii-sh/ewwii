@@ -68,7 +68,7 @@ impl ParseConfig {
             .map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)
     }
 
-    pub fn initial_poll_listen_scope(code: &str) -> Result<Scope> {
+    pub fn initial_poll_listen_scope(code: &str) -> Result<Scope<'_>> {
         // Setting the initial value of poll/listen
         let mut scope = Scope::new();
         for (var, initial) in extract_poll_and_listen_vars(code)? {

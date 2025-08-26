@@ -10,17 +10,17 @@ pub struct FileDatabase {
     latest_id: usize,
 }
 
-#[derive(thiserror::Error, Debug)]
-pub enum FilesError {
-    #[error(transparent)]
-    IoError(#[from] std::io::Error),
+// #[derive(thiserror::Error, Debug)]
+// pub enum FilesError {
+//     #[error(transparent)]
+//     IoError(#[from] std::io::Error),
 
-    #[error(transparent)]
-    DiagError(#[from] DiagError),
+//     #[error(transparent)]
+//     DiagError(#[from] DiagError),
 
-    #[error(transparent)]
-    ParserError(#[from] anyhow::Error),
-}
+//     #[error(transparent)]
+//     ParserError(#[from] anyhow::Error),
+// }
 
 impl FileDatabase {
     pub fn new() -> Self {

@@ -3,7 +3,7 @@
 
     This file mostly contains wayland/x11 setup and args stuff
     If you are interesting in something like window rendering,
-    then you can read `app.rs`. It is like the heart of ewwii.
+    then you can read `app.rs`. It is where daemon commands are handled.
 
     The full options (arguments) are parsed in `opts.rs` as well as `app.rs`.
 
@@ -45,7 +45,6 @@ mod dynval;
 mod error_handling_ctx;
 mod file_database;
 mod gen_diagnostic_macro;
-mod geometry;
 mod ipc_server;
 mod opts;
 mod paths;
