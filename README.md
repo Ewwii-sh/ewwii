@@ -30,10 +30,10 @@ If you want to contribute anything, like adding new widgets, features, or subcom
 
 ## Licensing
 
-This project is a fork of Eww (MIT License).
+This project is a fork of [Eww](https://github.com/elkowar/eww) (MIT License).
 
--   Original Eww code remains under MIT (see LICENSE-MIT).
--   Modifications and additions in this fork are licensed under GPL-3 (see LICENSE).
+-   Original Eww code remains under MIT License (see `licenses/eww-MIT.txt`).
+-   Modifications and additions in this fork are licensed under GPL-3.0 (see `LICENSE`).
 
 ## Widget
 
