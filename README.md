@@ -28,9 +28,12 @@ If you want to contribute anything, like adding new widgets, features, or subcom
 4. Write down your changes in CHANGELOG.md
 5. Open a pull request once you're finished
 
-## Credits
+## Licensing
 
-This is a fork of [EWW (Elkowars Wacky Widgets)](https://github.com/elkowar/eww) made to make yuck easy, fix things that bother people, and provide better resolution compatability.
+This project is a fork of [Eww](https://github.com/elkowar/eww) (MIT License).
+
+-   Original Eww code remains under MIT License (see `licenses/eww-MIT.txt`).
+-   Modifications and additions in this fork are licensed under GPL-3.0 (see `LICENSE`).
 
 ## Widget
 
