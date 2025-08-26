@@ -1,0 +1,360 @@
+.ewwii.hljs {
+  color: #c1c3c8;
+  background: #17181c;
+}
+.ewwii .hljs-keyword {
+  color: #8839ef;
+}
+.ewwii .hljs-built_in {
+  color: #d20f39;
+}
+.ewwii .hljs-type {
+  color: #df8e1d;
+}
+.ewwii .hljs-literal {
+  color: #fe640b;
+}
+.ewwii .hljs-number {
+  color: #fe640b;
+}
+.ewwii .hljs-operator {
+  color: #04a5e5;
+}
+.ewwii .hljs-punctuation {
+  color: #5c5f77;
+}
+.ewwii .hljs-property {
+  color: #179299;
+}
+.ewwii .hljs-regexp {
+  color: #ea76cb;
+}
+.ewwii .hljs-string {
+  color: #40a02b;
+}
+.ewwii .hljs-char.escape_ {
+  color: #40a02b;
+}
+.ewwii .hljs-subst {
+  color: #6c6f85;
+}
+.ewwii .hljs-symbol {
+  color: #dd7878;
+}
+.ewwii .hljs-variable {
+  color: #8839ef;
+}
+.ewwii .hljs-variable.language_ {
+  color: #8839ef;
+}
+.ewwii .hljs-variable.constant_ {
+  color: #fe640b;
+}
+.ewwii .hljs-title {
+  color: #b3c7ff;
+}
+.ewwii .hljs-title.class_ {
+  color: #df8e1d;
+}
+.ewwii .hljs-title.function_ {
+  color: #b3c7ff;
+}
+.ewwii .hljs-params {
+  color: #c1c3c8;
+}
+.ewwii .hljs-comment {
+  color: #7c7f93;
+}
+.ewwii .hljs-doctag {
+  color: #d20f39;
+}
+.ewwii .hljs-meta {
+  color: #fe640b;
+}
+.ewwii .hljs-section {
+  color: #b3c7ff;
+}
+.ewwii .hljs-tag {
+  color: #179299;
+}
+.ewwii .hljs-name {
+  color: #8839ef;
+}
+.ewwii .hljs-attr {
+  color: #b3c7ff;
+}
+.ewwii .hljs-attribute {
+  color: #40a02b;
+}
+.ewwii .hljs-bullet {
+  color: #179299;
+}
+.ewwii .hljs-code {
+  color: #40a02b;
+}
+.ewwii .hljs-emphasis {
+  color: #d20f39;
+  font-style: italic;
+}
+.ewwii .hljs-strong {
+  color: #d20f39;
+  font-weight: bold;
+}
+.ewwii .hljs-formula {
+  color: #179299;
+}
+.ewwii .hljs-link {
+  color: #209fb5;
+  font-style: italic;
+}
+.ewwii .hljs-quote {
+  color: #40a02b;
+  font-style: italic;
+}
+.ewwii .hljs-selector-tag {
+  color: #df8e1d;
+}
+.ewwii .hljs-selector-id {
+  color: #b3c7ff;
+}
+.ewwii .hljs-selector-class {
+  color: #179299;
+}
+.ewwii .hljs-selector-attr {
+  color: #8839ef;
+}
+.ewwii .hljs-selector-pseudo {
+  color: #179299;
+}
+.ewwii .hljs-template-tag {
+  color: #dd7878;
+}
+.ewwii .hljs-template-variable {
+  color: #dd7878;
+}
+.ewwii .hljs-addition {
+  color: #40a02b;
+  background: rgba(64, 160, 43, 0.15);
+}
+.ewwii .hljs-deletion {
+  color: #d20f39;
+  background: rgba(210, 15, 57, 0.15);
+}
+.ewwii.hljs {
+  color: #c1c3c8;
+  background: #17181c;
+}
+.ewwii .hljs-keyword {
+  color: #8839ef;
+}
+.ewwii .hljs-built_in {
+  color: #d20f39;
+}
+.ewwii .hljs-type {
+  color: #df8e1d;
+}
+.ewwii .hljs-literal {
+  color: #fe640b;
+}
+.ewwii .hljs-number {
+  color: #fe640b;
+}
+.ewwii .hljs-operator {
+  color: #04a5e5;
+}
+.ewwii .hljs-punctuation {
+  color: #5c5f77;
+}
+.ewwii .hljs-property {
+  color: #179299;
+}
+.ewwii .hljs-regexp {
+  color: #ea76cb;
+}
+.ewwii .hljs-string {
+  color: #40a02b;
+}
+.ewwii .hljs-char.escape_ {
+  color: #40a02b;
+}
+.ewwii .hljs-subst {
+  color: #6c6f85;
+}
+.ewwii .hljs-symbol {
+  color: #dd7878;
+}
+.ewwii .hljs-variable {
+  color: #8839ef;
+}
+.ewwii .hljs-variable.language_ {
+  color: #8839ef;
+}
+.ewwii .hljs-variable.constant_ {
+  color: #fe640b;
+}
+.ewwii .hljs-title {
+  color: #b3c7ff;
+}
+.ewwii .hljs-title.class_ {
+  color: #df8e1d;
+}
+.ewwii .hljs-title.function_ {
+  color: #b3c7ff;
+}
+.ewwii .hljs-params {
+  color: #c1c3c8;
+}
+.ewwii .hljs-comment {
+  color: #7c7f93;
+}
+.ewwii .hljs-doctag {
+  color: #d20f39;
+}
+.ewwii .hljs-meta {
+  color: #fe640b;
+}
+.ewwii .hljs-section {
+  color: #b3c7ff;
+}
+.ewwii .hljs-tag {
+  color: #179299;
+}
+.ewwii .hljs-name {
+  color: #8839ef;
+}
+.ewwii .hljs-attr {
+  color: #b3c7ff;
+}
+.ewwii .hljs-attribute {
+  color: #40a02b;
+}
+.ewwii .hljs-bullet {
+  color: #179299;
+}
+.ewwii .hljs-code {
+  color: #40a02b;
+}
+.ewwii .hljs-emphasis {
+  color: #d20f39;
+  font-style: italic;
+}
+.ewwii .hljs-strong {
+  color: #d20f39;
+  font-weight: bold;
+}
+.ewwii .hljs-formula {
+  color: #179299;
+}
+.ewwii .hljs-link {
+  color: #209fb5;
+  font-style: italic;
+}
+.ewwii .hljs-quote {
+  color: #40a02b;
+  font-style: italic;
+}
+.ewwii .hljs-selector-tag {
+  color: #df8e1d;
+}
+.ewwii .hljs-selector-id {
+  color: #b3c7ff;
+}
+.ewwii .hljs-selector-class {
+  color: #179299;
+}
+.ewwii .hljs-selector-attr {
+  color: #8839ef;
+}
+.ewwii .hljs-selector-pseudo {
+  color: #179299;
+}
+.ewwii .hljs-template-tag {
+  color: #dd7878;
+}
+.ewwii .hljs-template-variable {
+  color: #dd7878;
+}
+.ewwii .hljs-addition {
+  color: #40a02b;
+  background: rgba(64, 160, 43, 0.15);
+}
+.ewwii .hljs-deletion {
+  color: #d20f39;
+  background: rgba(210, 15, 57, 0.15);
+}
+.ewwii :is(h1, h2, h3, h4, h5, h6) a code {
+  color: #c1c3c8;
+}
+.ewwii a code {
+  color: #b3c7ff;
+}
+.ewwii code {
+  color: #c1c3c8;
+  background: #23262f;
+}
+.ewwii pre {
+  border-top: 2px solid #7c7f93;
+  padding-top: 0.2em;
+}
+.ewwii blockquote blockquote {
+  border-top: 0.1em solid #23262f;
+  border-bottom: 0.1em solid #23262f;
+}
+.ewwii hr {
+  border-color: #23262f;
+  border-style: solid;
+}
+.ewwii del {
+  color: #7c7f93;
+}
+.ewwii .tooltiptext {
+  background: #23262f;
+  color: #c1c3c8;
+}
+
+.ewwii .ace_gutter {
+  color: #7c7f93;
+  background: #23262f;
+}
+
+.ewwii .ace_gutter-active-line.ace_gutter-cell {
+  color: #ea76cb;
+  background: #23262f;
+}
+
+.ewwii {
+  --bg: #17181c; /* book background */
+  --fg: #c1c3c8; /* default text color */
+  --sidebar-bg: #23262f;
+  --sidebar-fg: #c1c3c8;
+  --sidebar-non-existant: #7c7f93;
+  --sidebar-active: #b3c7ff;
+  --sidebar-spacer: #7c7f93;
+  --scrollbar: #7c7f93;
+  --icons: #7c7f93;
+  --icons-hover: #c1c3c8;
+  --links: #b3c7ff;
+  --inline-code-color: #c1c3c8;
+  --theme-popup-bg: #23262f;
+  --theme-popup-border: #7c7f93;
+  --theme-hover: #2c2f3b;
+  --quote-bg: #23262f;
+  --quote-border: #2c2f3b;
+  --table-border-color: #2c2f3b;
+  --table-header-bg: #23262f;
+  --table-alternate-bg: #1c1d21;
+  --searchbar-border-color: #2c2f3b;
+  --searchbar-bg: #23262f;
+  --searchbar-fg: #c1c3c8;
+  --searchbar-shadow-color: #1c1d21;
+  --searchresults-header-fg: #c1c3c8;
+  --searchresults-border-color: #2c2f3b;
+  --searchresults-li-bg: #17181c;
+  --search-mark-bg: #fe640b;
+  --warning-border: #fe640b;
+  --color-scheme: dark;
+  --copy-button-filter: brightness(0) saturate(100%) invert(47%) sepia(6%)
+    saturate(1263%) hue-rotate(195deg) brightness(90%) contrast(81%);
+  --copy-button-filter-hover: brightness(0) saturate(100%) invert(30%)
+    sepia(80%) saturate(1850%) hue-rotate(209deg) brightness(94%) contrast(105%);
+}
