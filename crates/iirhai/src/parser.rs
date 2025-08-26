@@ -23,6 +23,7 @@ impl ParseConfig {
 
         engine.set_max_expr_depths(128, 128);
         engine.set_module_resolver(SimpleFileResolver);
+
         register_all_widgets(&mut engine);
         register_all_providers(&mut engine);
 
@@ -45,11 +46,36 @@ impl ParseConfig {
         code: &str,
         rhai_scope: Option<Scope>,
         compiled_ast: Option<&AST>,
+        optimize_before_eval: bool,
     ) -> Result<WidgetNode> {
         let mut scope = match rhai_scope {
             Some(s) => s,
             None => Scope::new(),
         };
+
+        // RHAI GO BRRRR...
+        if optimize_before_eval {
+            // level to reset to
+            let original_level = self.engine.optimization_level();
+
+            self.engine.set_optimization_level(rhai::OptimizationLevel::Full);
+
+            let result = match compiled_ast {
+                Some(ast) => self
+                    .engine
+                    .eval_ast_with_scope::<WidgetNode>(&mut scope, &ast)
+                    .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine))),
+                None => self
+                    .engine
+                    .eval_with_scope::<WidgetNode>(&mut scope, code)
+                    .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine))),
+            };
+
+            // resetting back to previous level
+            self.engine.set_optimization_level(original_level);
+
+            return result;
+        }
 
         match compiled_ast {
             Some(ast) => self

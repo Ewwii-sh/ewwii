@@ -483,7 +483,7 @@ pub(super) fn build_gtk_event_box(
                             timeout,
                             &onscroll,
                             &[if delta < 0f64 { "up" } else { "down" }],
-                            None
+                            None,
                         );
                     }
                     glib::Propagation::Proceed
@@ -512,7 +512,12 @@ pub(super) fn build_gtk_event_box(
                 widget,
                 widget.connect_leave_notify_event(move |_, evt| {
                     if evt.detail() != NotifyType::Inferior {
-                        run_command(timeout, &onhoverlost, &[evt.position().0, evt.position().1], None);
+                        run_command(
+                            timeout,
+                            &onhoverlost,
+                            &[evt.position().0, evt.position().1],
+                            None,
+                        );
                     }
                     glib::Propagation::Proceed
                 })
@@ -579,14 +584,14 @@ pub(super) fn build_gtk_event_box(
                                 timeout,
                                 &ondropped,
                                 &[data.to_string(), "file".to_string()],
-                                None
+                                None,
                             );
                         } else if let Some(data) = selection_data.text() {
                             run_command(
                                 timeout,
                                 &ondropped,
                                 &[data.to_string(), "text".to_string()],
-                                None
+                                None,
                             );
                         }
                     }
@@ -1491,7 +1496,7 @@ pub(super) fn build_gtk_combo_box_text(
                     timeout,
                     &onchange,
                     &[widget.active_text().unwrap_or_else(|| "".into())],
-                    None
+                    None,
                 );
             })
         );
@@ -1661,7 +1666,7 @@ pub(super) fn build_gtk_checkbox(
                     timeout,
                     if widget.is_active() { &onchecked } else { &onunchecked },
                     &[] as &[&str],
-                    None
+                    None,
                 );
             })
         );
