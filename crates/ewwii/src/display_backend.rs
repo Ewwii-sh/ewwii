@@ -20,21 +20,21 @@ pub trait DisplayBackend: Send + Sync + 'static {
     ) -> Option<Window>;
 }
 
-pub struct NoBackend;
+// pub struct NoBackend;
 
-impl DisplayBackend for NoBackend {
-    const IS_X11: bool = false;
-    const IS_WAYLAND: bool = false;
+// impl DisplayBackend for NoBackend {
+//     const IS_X11: bool = false;
+//     const IS_WAYLAND: bool = false;
 
-    fn initialize_window(
-        _window_init: &WindowInitiator,
-        _monitor: gdk::Rectangle,
-        x: i32,
-        y: i32,
-    ) -> Option<Window> {
-        Some(Window::new(gtk::WindowType::Toplevel, x, y))
-    }
-}
+//     fn initialize_window(
+//         _window_init: &WindowInitiator,
+//         _monitor: gdk::Rectangle,
+//         x: i32,
+//         y: i32,
+//     ) -> Option<Window> {
+//         Some(Window::new(gtk::WindowType::Toplevel, x, y))
+//     }
+// }
 
 #[cfg(feature = "wayland")]
 mod platform_wayland {
