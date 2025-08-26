@@ -16,6 +16,11 @@ All examples are in the [examples directory](./examples/).
 -   Data structures [CLICK TO SEE](./examples/data-structures) <br>
     ![Example 2](./examples/data-structures/data-structures-preview.png)
 
+## Templates
+
+-   A wifi gui template [CLICK TO SEE](https://github.com/Ewwii-sh/ewifi_gui_template) <br>
+    ![Template 1](https://raw.githubusercontent.com/Ewwii-sh/ewifi_gui_template/main/.github/ewifi_gui_screenshot.png)
+
 ## Contribewwtiing
 
 If you want to contribute anything, like adding new widgets, features, or subcommands (including sample configs), you should definitely do so.
