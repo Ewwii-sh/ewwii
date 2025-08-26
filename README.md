@@ -19,7 +19,7 @@ All examples are in the [examples directory](./examples/).
 ## Templates
 
 -   A wifi gui template [CLICK TO SEE](https://github.com/Ewwii-sh/ewifi_gui_template) <br>
-    ![Template 1](https://raw.githubusercontent.com/Ewwii-sh/ewifi_gui_template/main/.github/ewifi_gui_screenshot.png)
+    <img src="https://raw.githubusercontent.com/Ewwii-sh/ewifi_gui_template/main/.github/ewifi_gui_screenshot.png" width="400" />
 
 ## Contribewwtiing
 
