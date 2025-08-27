@@ -113,7 +113,6 @@ pub fn handle_listen(
 
         let _ = terminate_child(child).await;
     });
-
 }
 
 async fn terminate_child(mut child: tokio::process::Child) {
