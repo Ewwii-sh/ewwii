@@ -61,7 +61,6 @@ impl EwwiiConfig {
             &rhai_code,
             Some(poll_listen_scope),
             Some(&compiled_ast),
-            true,
         )?;
 
         let mut window_definitions = HashMap::new();
