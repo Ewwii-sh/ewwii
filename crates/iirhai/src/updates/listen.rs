@@ -63,7 +63,7 @@ pub fn handle_listen(
     tokio::spawn(async move {
         // child should live as long as this task
         // else kill_on_drop will kill it
-        let mut child = child;
+        let _ = &child;
         let mut last_value: Option<String> = None;
         let mut lines = stdout.lines();
 
