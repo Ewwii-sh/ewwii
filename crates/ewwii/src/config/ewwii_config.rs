@@ -64,17 +64,20 @@ impl EwwiiConfig {
         )?;
 
         let mut window_definitions = HashMap::new();
+        let config_tree_clone = config_tree.clone();
 
-        if let WidgetNode::Enter(ref children) = config_tree {
+        if let WidgetNode::Enter(children) = config_tree_clone {
             for node in children {
                 if let WidgetNode::DefWindow { name, props, node } = node {
+                    let backend_options = BackendWindowOptionsDef::from_map(&props)?;
+                    
                     let win_def = WindowDefinition {
-                        name: name.clone(),
-                        props: props.clone(),
-                        backend_options: BackendWindowOptionsDef::from_map(&props)?,
-                        root_widget: Arc::new(*node.clone()),
+                        name: name,
+                        props: props,
+                        backend_options,
+                        root_widget: Arc::new(*node),
                     };
-                    window_definitions.insert(name.clone(), win_def);
+                    window_definitions.insert(win_def.name.clone(), win_def);
                 }
             }
         } else {
