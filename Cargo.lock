@@ -1463,6 +1463,7 @@ dependencies = [
  "ewwii_shared_util",
  "gtk",
  "log",
+ "nix 0.29.0",
  "once_cell",
  "rhai",
  "serde",
