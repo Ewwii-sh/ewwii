@@ -316,6 +316,7 @@ impl<B: DisplayBackend> App<B> {
     /// Fully stop ewwii:
     /// close all windows, stop the script_var_handler, quit the gtk appliaction and send the exit instruction to the lifecycle manager
     fn stop_application(&mut self) {
+        iirhai::updates::kill_state_change_handler();
         for (_, window) in self.open_windows.drain() {
             window.close();
         }
