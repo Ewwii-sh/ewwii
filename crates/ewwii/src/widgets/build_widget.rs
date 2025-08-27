@@ -8,25 +8,27 @@ use iirhai::widgetnode::WidgetNode;
 /// Widget input allows us to pass either a widgetnode or a window_def
 /// this is important to make build_gtk_widget standalone without having to
 /// make build_gtk_widget_from_node public
-pub enum WidgetInput {
+pub enum WidgetInput<'a> {
     Node(WidgetNode),
+    BorrowedNode(&'a WidgetNode),
     Window(WindowDefinition),
 }
 
-pub fn build_gtk_widget(
-    input: WidgetInput,
+pub fn build_gtk_widget<'a>(
+    input: &'a WidgetInput<'a>,
     widget_reg: &mut WidgetRegistry,
 ) -> Result<gtk::Widget> {
-    let node = match input {
+    let node: &'a WidgetNode = match input {
         WidgetInput::Node(n) => n,
-        WidgetInput::Window(w) => w.root_widget,
+        WidgetInput::BorrowedNode(n) => n,
+        WidgetInput::Window(w) => w.root_widget.as_ref(),
     };
     build_gtk_widget_from_node(node, widget_reg)
 }
 
 // TODO: implement the commented lines
 fn build_gtk_widget_from_node(
-    root_node: WidgetNode,
+    root_node: &WidgetNode,
     widget_reg: &mut WidgetRegistry,
 ) -> Result<gtk::Widget> {
     /*

@@ -37,7 +37,7 @@ pub struct WindowDefinition {
     pub name: String,
     pub props: Map,
     pub backend_options: BackendWindowOptionsDef,
-    pub root_widget: WidgetNode,
+    pub root_widget: Arc<WidgetNode>,
 }
 
 impl EwwiiConfig {
@@ -72,7 +72,7 @@ impl EwwiiConfig {
                         name: name.clone(),
                         props: props.clone(),
                         backend_options: BackendWindowOptionsDef::from_map(&props)?,
-                        root_widget: *node.clone(),
+                        root_widget: Arc::new(*node.clone()),
                     };
                     window_definitions.insert(name.clone(), win_def);
                 }
