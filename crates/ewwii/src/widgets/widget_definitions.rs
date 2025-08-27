@@ -62,10 +62,10 @@ pub struct WidgetRegistry {
     stored_widget_node: Option<WidgetNode>,
 }
 
-pub enum PatchGtkWidget {
-    Create(WidgetNode, u64, u64), // node, widget_id, parent_id
-    Update(u64, Map),             // widget_id, props
-    Remove(u64, u64),             // widget_id, parent_id
+pub enum PatchGtkWidget<'a> {
+    Create(&'a WidgetNode, u64, u64), // node, widget_id, parent_id
+    Update(u64, Map),                 // widget_id, props
+    Remove(u64, u64),                 // widget_id, parent_id
 }
 
 impl WidgetRegistry {
@@ -96,7 +96,10 @@ impl WidgetRegistry {
         Ok(())
     }
 
-    pub fn diff_trees(old: Option<&WidgetNode>, new: &WidgetNode) -> Vec<PatchGtkWidget> {
+    pub fn diff_trees<'a>(
+        old: Option<&'a WidgetNode>,
+        new: &'a WidgetNode,
+    ) -> Vec<PatchGtkWidget<'a>> {
         let mut patch = Vec::new();
 
         let mut old_map = HashMap::new();
@@ -115,7 +118,7 @@ impl WidgetRegistry {
                 }
                 None => {
                     patch.push(PatchGtkWidget::Create(
-                        new_info.node.clone(),
+                        &new_info.node,
                         *id,
                         new_info.parent_id.expect(&format!(
                             "Parent ID must exist. Widget type: {}",
@@ -145,7 +148,7 @@ impl WidgetRegistry {
 
     pub fn create_widget(
         &mut self,
-        widget_node: WidgetNode,
+        widget_node: &WidgetNode,
         widget_id: u64,
         parent_id: u64,
     ) -> Result<()> {
@@ -167,7 +170,7 @@ impl WidgetRegistry {
 
                 // `build_gtk_widget` also inserts info into widgetentry
                 // self is passed for that reason.
-                let gtk_widget = build_gtk_widget(WidgetInput::Node(widget_node.clone()), self)?;
+                let gtk_widget = build_gtk_widget(&WidgetInput::BorrowedNode(widget_node), self)?;
 
                 // insert into container
                 if let Some(box_container) = container.clone().dynamic_cast::<gtk::Box>().ok() {
@@ -217,8 +220,8 @@ impl WidgetRegistry {
 }
 
 pub(super) fn build_gtk_box(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Box> {
     // Parse initial props to create the widget:
@@ -238,7 +241,7 @@ pub(super) fn build_gtk_box(
     gtk_widget.set_homogeneous(space_evenly);
 
     for child in children {
-        let child_widget = build_gtk_widget(WidgetInput::Node(child), widget_registry)?;
+        let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
         gtk_widget.add(&child_widget);
     }
 
@@ -281,8 +284,8 @@ pub(super) fn build_gtk_box(
 }
 
 pub(super) fn build_gtk_overlay(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Overlay> {
     let gtk_widget = gtk::Overlay::new();
@@ -295,7 +298,7 @@ pub(super) fn build_gtk_overlay(
 
     let mut children = children
         .into_iter()
-        .map(|child| build_gtk_widget(WidgetInput::Node(child), widget_registry));
+        .map(|child| build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry));
 
     // we have more than one child, we can unwrap
     let first = children.next().unwrap()?;
@@ -314,8 +317,8 @@ pub(super) fn build_gtk_overlay(
 }
 
 pub(super) fn build_tooltip(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Box> {
     let gtk_widget = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -333,12 +336,12 @@ pub(super) fn build_tooltip(
     let content_node = children.get(1).cloned().ok_or_else(|| anyhow!("missing content"))?;
 
     // The visible child immediately
-    let content_widget = build_gtk_widget(WidgetInput::Node(content_node), widget_registry)?;
+    let content_widget = build_gtk_widget(&WidgetInput::Node(content_node), widget_registry)?;
     gtk_widget.add(&content_widget);
 
     let tooltip_node = Rc::new(tooltip_node);
     let tooltip_widget = build_gtk_widget(
-        WidgetInput::Node(Rc::clone(&tooltip_node).as_ref().clone()),
+        &WidgetInput::BorrowedNode(Rc::clone(&tooltip_node).as_ref()),
         widget_registry,
     )
     .expect("Failed to build tooltip widget");
@@ -354,8 +357,8 @@ pub(super) fn build_tooltip(
 }
 
 pub(super) fn build_center_box(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Box> {
     let orientation = props
@@ -374,15 +377,15 @@ pub(super) fn build_center_box(
     }
 
     let first = build_gtk_widget(
-        WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?),
+        &WidgetInput::Node(children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?),
         widget_registry,
     )?;
     let center = build_gtk_widget(
-        WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?),
+        &WidgetInput::Node(children.get(1).cloned().ok_or_else(|| anyhow!("missing child 1"))?),
         widget_registry,
     )?;
     let end = build_gtk_widget(
-        WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?),
+        &WidgetInput::Node(children.get(2).cloned().ok_or_else(|| anyhow!("missing child 2"))?),
         widget_registry,
     )?;
 
@@ -433,8 +436,8 @@ pub(super) fn build_center_box(
 }
 
 pub(super) fn build_gtk_event_box(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::EventBox> {
     let gtk_widget = gtk::EventBox::new();
@@ -683,7 +686,7 @@ pub(super) fn build_gtk_event_box(
     }
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
-    let child_widget = build_gtk_widget(WidgetInput::Node(child), widget_registry)?;
+    let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
     gtk_widget.add(&child_widget);
     child_widget.show();
 
@@ -699,8 +702,8 @@ pub(super) fn build_gtk_event_box(
 }
 
 pub(super) fn build_gtk_stack(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Stack> {
     let gtk_widget = gtk::Stack::new();
@@ -711,7 +714,7 @@ pub(super) fn build_gtk_stack(
 
     let children = children
         .into_iter()
-        .map(|child| build_gtk_widget(WidgetInput::Node(child), widget_registry));
+        .map(|child| build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry));
 
     for (i, child) in children.enumerate() {
         let child = child?;
@@ -760,7 +763,7 @@ pub(super) fn build_gtk_stack(
 }
 
 pub(super) fn build_transform(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<Transform> {
     let widget = Transform::new();
@@ -828,7 +831,7 @@ pub(super) fn build_transform(
 }
 
 pub(super) fn build_circular_progress_bar(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<CircProg> {
     let widget = CircProg::new();
@@ -877,7 +880,7 @@ pub(super) fn build_circular_progress_bar(
 }
 
 pub(super) fn build_graph(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<super::graph::Graph> {
     let widget = super::graph::Graph::new();
@@ -965,7 +968,7 @@ pub(super) fn build_graph(
 }
 
 pub(super) fn build_gtk_progress(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::ProgressBar> {
     let gtk_widget = gtk::ProgressBar::new();
@@ -1017,7 +1020,7 @@ pub(super) fn build_gtk_progress(
 }
 
 pub(super) fn build_gtk_image(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Image> {
     let gtk_widget = gtk::Image::new();
@@ -1107,7 +1110,7 @@ pub(super) fn build_gtk_image(
 }
 
 pub(super) fn build_gtk_button(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Button> {
     let gtk_widget = gtk::Button::new();
@@ -1190,7 +1193,7 @@ pub(super) fn build_gtk_button(
 }
 
 pub(super) fn build_gtk_label(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Label> {
     let gtk_widget = gtk::Label::new(None);
@@ -1309,7 +1312,7 @@ pub(super) fn build_gtk_label(
 }
 
 pub(super) fn build_gtk_input(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Entry> {
     let gtk_widget = gtk::Entry::new();
@@ -1383,7 +1386,7 @@ pub(super) fn build_gtk_input(
 }
 
 pub(super) fn build_gtk_calendar(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Calendar> {
     let gtk_widget = gtk::Calendar::new();
@@ -1473,7 +1476,7 @@ pub(super) fn build_gtk_calendar(
 }
 
 pub(super) fn build_gtk_combo_box_text(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::ComboBoxText> {
     let gtk_widget = gtk::ComboBoxText::new();
@@ -1530,8 +1533,8 @@ pub(super) fn build_gtk_combo_box_text(
 }
 
 pub(super) fn build_gtk_expander(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Expander> {
     let gtk_widget = gtk::Expander::new(None);
@@ -1545,7 +1548,7 @@ pub(super) fn build_gtk_expander(
     }
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
-    let child_widget = build_gtk_widget(WidgetInput::Node(child), widget_registry)?;
+    let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
     gtk_widget.add(&child_widget);
     child_widget.show();
 
@@ -1587,8 +1590,8 @@ pub(super) fn build_gtk_expander(
 }
 
 pub(super) fn build_gtk_revealer(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Revealer> {
     let gtk_widget = gtk::Revealer::new();
@@ -1626,7 +1629,7 @@ pub(super) fn build_gtk_revealer(
         0 => { /* maybe warn? */ }
         1 => {
             let child_widget =
-                build_gtk_widget(WidgetInput::Node(children[0].clone()), widget_registry)?;
+                build_gtk_widget(&WidgetInput::Node(children[0].clone()), widget_registry)?;
             gtk_widget.set_child(Some(&child_widget));
         }
         n => {
@@ -1646,7 +1649,7 @@ pub(super) fn build_gtk_revealer(
 }
 
 pub(super) fn build_gtk_checkbox(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::CheckButton> {
     let gtk_widget = gtk::CheckButton::new();
@@ -1700,7 +1703,7 @@ pub(super) fn build_gtk_checkbox(
 }
 
 pub(super) fn build_gtk_color_button(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::ColorButton> {
     let gtk_widget = gtk::ColorButton::builder().build();
@@ -1753,7 +1756,7 @@ pub(super) fn build_gtk_color_button(
 }
 
 pub(super) fn build_gtk_color_chooser(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::ColorChooserWidget> {
     let gtk_widget = gtk::ColorChooserWidget::new();
@@ -1806,7 +1809,7 @@ pub(super) fn build_gtk_color_chooser(
 }
 
 pub(super) fn build_gtk_scale(
-    props: Map,
+    props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::Scale> {
     let gtk_widget = gtk::Scale::new(
@@ -1863,8 +1866,8 @@ pub(super) fn build_gtk_scale(
 }
 
 pub(super) fn build_gtk_scrolledwindow(
-    props: Map,
-    children: Vec<WidgetNode>,
+    props: &Map,
+    children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk::ScrolledWindow> {
     // I don't have single idea of what those two generics are supposed to be, but this works.
@@ -1909,7 +1912,7 @@ pub(super) fn build_gtk_scrolledwindow(
     }
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
-    let child_widget = build_gtk_widget(WidgetInput::Node(child), widget_registry)?;
+    let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
     gtk_widget.add(&child_widget);
     child_widget.show();
 
