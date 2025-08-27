@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Ewwii window not resizable by default.
 -   Ewwii not printing errors from external modules.
 -   Prevents early termination caused by kill_on_drop on `listen`.
+-   Slider updating value while dragging issue.
 
 ## [0.1.0-alpha] - 2025-08-18
 
