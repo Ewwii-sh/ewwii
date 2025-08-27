@@ -1817,34 +1817,39 @@ pub(super) fn build_gtk_scale(
         Some(&gtk::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
     );
 
+    // only allow changing the value via the value property if the user isn't currently dragging
+    let is_being_dragged = Rc::new(RefCell::new(false));
+
     // Reusable closure for applying props
-    let apply_props = |props: &Map, widget: &gtk::Scale| -> Result<()> {
-        widget.set_inverted(get_bool_prop(props, "flipped", Some(false))?);
+    let apply_props =
+        |props: &Map, widget: &gtk::Scale, is_being_dragged: Rc<RefCell<bool>>| -> Result<()> {
+            widget.set_inverted(get_bool_prop(props, "flipped", Some(false))?);
 
-        if let Ok(marks) = get_string_prop(props, "marks", None) {
-            widget.clear_marks();
-            for mark in marks.split(',') {
-                widget.add_mark(mark.trim().parse()?, gtk::PositionType::Bottom, None);
+            if let Ok(marks) = get_string_prop(props, "marks", None) {
+                widget.clear_marks();
+                for mark in marks.split(',') {
+                    widget.add_mark(mark.trim().parse()?, gtk::PositionType::Bottom, None);
+                }
             }
-        }
 
-        widget.set_draw_value(get_bool_prop(props, "draw_value", Some(false))?);
+            widget.set_draw_value(get_bool_prop(props, "draw_value", Some(false))?);
 
-        if let Ok(value_pos) = get_string_prop(props, "value_pos", None) {
-            widget.set_value_pos(parse_position_type(&value_pos)?);
-        }
+            if let Ok(value_pos) = get_string_prop(props, "value_pos", None) {
+                widget.set_value_pos(parse_position_type(&value_pos)?);
+            }
 
-        widget.set_round_digits(get_i32_prop(props, "round_digits", Some(0))?);
+            widget.set_round_digits(get_i32_prop(props, "round_digits", Some(0))?);
 
-        resolve_range_attrs(props, widget.upcast_ref::<gtk::Range>())?;
-        Ok(())
-    };
+            resolve_range_attrs(props, widget.upcast_ref::<gtk::Range>(), is_being_dragged)?;
+            Ok(())
+        };
 
-    apply_props(&props, &gtk_widget)?;
+    apply_props(&props, &gtk_widget, is_being_dragged.clone())?;
 
     let gtk_widget_clone = gtk_widget.clone();
+    let is_being_dragged_clone = is_being_dragged.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone, is_being_dragged_clone.clone());
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -2019,11 +2024,11 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk::Widget, props: &Map) -
 }
 
 /// Shared rage atribute
-pub(super) fn resolve_range_attrs(props: &Map, gtk_widget: &gtk::Range) -> Result<()> {
-    gtk_widget.set_sensitive(false);
-
-    // only allow changing the value via the value property if the user isn't currently dragging
-    let is_being_dragged = Rc::new(RefCell::new(false));
+pub(super) fn resolve_range_attrs(
+    props: &Map,
+    gtk_widget: &gtk::Range,
+    is_being_dragged: Rc<RefCell<bool>>,
+) -> Result<()> {
     gtk_widget.connect_button_press_event(glib::clone!(@strong is_being_dragged => move |_, _| {
         *is_being_dragged.borrow_mut() = true;
         glib::Propagation::Proceed
@@ -2058,7 +2063,6 @@ pub(super) fn resolve_range_attrs(props: &Map, gtk_widget: &gtk::Range) -> Resul
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
     if let Some(onchange) = onchange {
-        gtk_widget.set_sensitive(true);
         gtk_widget.add_events(gdk::EventMask::PROPERTY_CHANGE_MASK);
         let last_set_value = last_set_value_clone.clone();
         connect_signal_handler!(
@@ -2071,5 +2075,6 @@ pub(super) fn resolve_range_attrs(props: &Map, gtk_widget: &gtk::Range) -> Resul
             })
         );
     }
+
     Ok(())
 }
