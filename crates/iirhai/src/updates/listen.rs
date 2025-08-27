@@ -15,6 +15,10 @@
 
 use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
 use ewwii_shared_util::general_helper::*;
+use nix::{
+    sys::signal,
+    unistd::{setpgid, Pid},
+};
 use rhai::Map;
 use std::process::Stdio;
 use tokio::io::AsyncBufReadExt;
@@ -47,29 +51,34 @@ pub fn handle_listen(
     let store = store.clone();
     let tx = tx.clone();
 
-    let mut child = Command::new("/bin/sh")
-        .arg("-c")
-        .arg(&cmd)
-        .kill_on_drop(true)
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("failed to start listener process");
-
-    let stdout = BufReader::new(child.stdout.take().unwrap());
-
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
     tokio::spawn(async move {
-        // child should live as long as this task
-        // else kill_on_drop will kill it
-        let _ = &child;
+        let mut child = unsafe {
+            Command::new("/bin/sh")
+                .arg("-c")
+                .arg(&cmd)
+                // .kill_on_drop(true)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .stdin(Stdio::null())
+                .pre_exec(|| {
+                    let _ = setpgid(Pid::from_raw(0), Pid::from_raw(0));
+                    Ok(())
+                })
+                .spawn()
+                .expect("failed to start listener process")
+        };
+
+        let mut stdout_lines = BufReader::new(child.stdout.take().unwrap()).lines();
+        let mut stderr_lines = BufReader::new(child.stderr.take().unwrap()).lines();
+
         let mut last_value: Option<String> = None;
-        let mut lines = stdout.lines();
 
         loop {
             tokio::select! {
-                maybe_line = lines.next_line() => {
+                maybe_line = stdout_lines.next_line() => {
                     match maybe_line {
                         Ok(Some(line)) => {
                             let val = line.trim().to_string();
@@ -82,20 +91,42 @@ pub fn handle_listen(
                                 log::trace!("[{}] value unchanged, skipping tx", var_name);
                             }
                         }
-                        Ok(None) => break,
+                        Ok(None) => break, // EOF
                         Err(e) => {
                             log::error!("[{}] error reading line: {}", var_name, e);
                             break;
                         }
                     }
                 }
+                maybe_err_line = stderr_lines.next_line() => {
+                    if let Ok(Some(line)) = maybe_err_line {
+                        log::warn!("stderr of `{}`: {}", var_name, line);
+                    }
+                }
                 _ = shutdown_rx.changed() => {
                     if *shutdown_rx.borrow() {
-                        log::info!("[{}] stopping listener task", var_name);
                         break;
                     }
                 }
             }
         }
+
+        let _ = terminate_child(child).await;
     });
+
+}
+
+async fn terminate_child(mut child: tokio::process::Child) {
+    if let Some(id) = child.id() {
+        log::debug!("Killing process with id {}", id);
+        let _ = signal::killpg(Pid::from_raw(id as i32), signal::SIGTERM);
+        tokio::select! {
+            _ = child.wait() => { },
+            _ = tokio::time::sleep(std::time::Duration::from_secs(10)) => {
+                let _ = child.kill().await;
+            }
+        };
+    } else {
+        let _ = child.kill().await;
+    }
 }

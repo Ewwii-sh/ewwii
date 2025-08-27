@@ -84,7 +84,6 @@ pub fn handle_poll(
                 _ = sleep(interval) => { continue; }
                 _ = shutdown_rx.changed() => {
                     if *shutdown_rx.borrow() {
-                        log::debug!("[{}] stopping task", var_name);
                         break;
                     }
                 }
