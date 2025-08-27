@@ -61,6 +61,9 @@ pub fn handle_listen(
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
     tokio::spawn(async move {
+        // child should live as long as this task
+        // else kill_on_drop will kill it
+        let mut child = child;
         let mut last_value: Option<String> = None;
         let mut lines = stdout.lines();
 
