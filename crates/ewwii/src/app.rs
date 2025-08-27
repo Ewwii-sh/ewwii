@@ -595,7 +595,7 @@ impl<B: DisplayBackend> App<B> {
         }
 
         let new_root_widget =
-            reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast.as_deref(), true)?;
+            reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast.as_deref())?;
 
         match config::EwwiiConfig::get_windows_root_widget(new_root_widget) {
             Ok(new_widget) => {
@@ -745,7 +745,7 @@ async fn generate_new_widgetnode(
     }
 
     let new_root_widget =
-        reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast, true)?;
+        reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast)?;
 
     Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget)?)
 }
