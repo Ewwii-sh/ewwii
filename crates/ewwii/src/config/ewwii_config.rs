@@ -70,10 +70,10 @@ impl EwwiiConfig {
             for node in children {
                 if let WidgetNode::DefWindow { name, props, node } = node {
                     let backend_options = BackendWindowOptionsDef::from_map(&props)?;
-                    
+
                     let win_def = WindowDefinition {
-                        name: name,
-                        props: props,
+                        name,
+                        props,
                         backend_options,
                         root_widget: Arc::new(*node),
                     };
