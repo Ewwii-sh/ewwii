@@ -31,14 +31,14 @@ pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
 
 pub fn handle_state_changes(
-    enter_node: &WidgetNode,
+    root_node: &WidgetNode,
     tx: UnboundedSender<String>,
 ) -> ReactiveVarStore {
     // Enter node is the WidgetNode of Enter()
     // it is the very root of every config.
     let store: ReactiveVarStore = Arc::new(RwLock::new(HashMap::new()));
 
-    if let WidgetNode::Enter(children) = enter_node {
+    if let WidgetNode::Enter(children) = root_node {
         for child in children {
             match child {
                 WidgetNode::Poll { var, props } => {

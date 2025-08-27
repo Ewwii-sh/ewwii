@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Ewwii window not closing when user requests with `WM_DELETE_WINDOW` event.
 -   Ewwii window not resizable by default.
 -   Ewwii not printing errors from external modules.
+-   Prevents early termination caused by kill_on_drop on `listen`.
 
 ## [0.1.0-alpha] - 2025-08-18
 
