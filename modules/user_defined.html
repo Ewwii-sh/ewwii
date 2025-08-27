@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Starter Bar - Ewwii documentation</title>
+        <title>User Defined Modules - Ewwii documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -185,24 +185,61 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="starter-bar"><a class="header" href="#starter-bar">Starter Bar</a></h1>
-<p><img src="https://raw.githubusercontent.com/ewwii-sh/ewwii/main/examples/ewwii-bar/ewwii-bar.png" alt="Example 1" /></p>
-<p>A basic starter bar which will be very helpful to beginners, see <a href="https://github.com/Ewwii-sh/ewwii/tree/main/examples/ewwii-bar">examples/ewwii-bar</a>.</p>
-<h2 id="installing"><a class="header" href="#installing">Installing</a></h2>
-<p>This starter bar is installable via <a href="https://ewwii-sh.github.io/docs/package-manager/overview/">eiipm</a>: ewwii's package manager.</p>
-<p>Just run the following command and have the template ready in the current working directory in an instant!</p>
-<pre><code class="language-bash">eiipm i starter_template
+                        <h1 id="user-defined-modules"><a class="header" href="#user-defined-modules">User-Defined Modules</a></h1>
+<p>User-defined modules allow you to <strong>organize your code</strong> by splitting it into separate, reusable files. This makes large projects easier to maintain and understand.</p>
+<h2 id="exporting-items-from-a-module"><a class="header" href="#exporting-items-from-a-module">Exporting Items from a Module</a></h2>
+<p>In Rhai modules:</p>
+<ul>
+<li><strong>Functions are automatically exported</strong> by default. You do <strong>not</strong> need to use <code>export</code> for functions.</li>
+<li><strong>Variables, constants, and objects must be exported manually</strong> using the <code>export</code> keyword.</li>
+</ul>
+<pre><code class="language-js">// File: ./foo/baz.rhai
+
+/// A function that is automatically exported
+fn greet() {
+    return "Greetings!"
+}
+
+/// A private function, NOT exported automatically
+private fn foo() {
+    return "This function is hidden and not exported"
+}
+
+/// A variable
+let PI = 3.14159;
+
+// Export the variable explicitly
+export PI;
 </code></pre>
+<p><strong>Tip:</strong> Only variables, constants, and objects require the <code>export</code> keyword. Functions are always available unless marked <code>private</code>. <a href="https://rhai.rs/book/language/modules/export.html#export-functions">More info</a></p>
+<h2 id="importing-a-module"><a class="header" href="#importing-a-module">Importing a Module</a></h2>
+<p>You can import a module using the <code>import</code> keyword:</p>
+<pre><code class="language-js">// File: ./ewwii.rhai
+
+import "foo/baz" // just runs the script without importing it.
+import "foo/baz" as example; // runs the script and imports it into example.
+
+// Access exported items
+print(example::greet()); // Greetings!
+print(example::PI); // 3.14159
+</code></pre>
+<p><strong>Tip:</strong> Always use the <code>as</code> keyword to import a script as a module with the name you desire.</p>
+<h2 id="notes"><a class="header" href="#notes">Notes</a></h2>
+<ul>
+<li>Functions are automatically exported unless explicitly marked <code>private</code>.</li>
+<li>Variables, constants, and objects must be exported using the <code>export</code> keyword.</li>
+<li><code>as</code> keyword is important in an <code>import</code> statement if you want to import the variables and functions in a Rhai file.</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../examples/examples.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../modules/modules.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../examples/interactive.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../modules/stdlib.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -212,11 +249,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../examples/examples.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../modules/modules.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../examples/interactive.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../modules/stdlib.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

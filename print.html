@@ -1,65 +1,67 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js navy">
+<html lang="en" class="latte sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>Ewwii documentation</title>
-        
-        <meta name="robots" content="noindex" />
-        
-        
+        <meta name="robots" content="noindex">
 
 
         <!-- Custom HTML head -->
-        
 
-
-        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
-        
         <link rel="icon" href="favicon.svg">
-        
-        
         <link rel="shortcut icon" href="favicon.png">
-        
         <link rel="stylesheet" href="css/variables.css">
         <link rel="stylesheet" href="css/general.css">
         <link rel="stylesheet" href="css/chrome.css">
-        
         <link rel="stylesheet" href="css/print.css" media="print">
-        
 
         <!-- Fonts -->
         <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        
         <link rel="stylesheet" href="fonts/fonts.css">
-        
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
-        
+        <link rel="stylesheet" href="./theme/catppuccin.css">
+        <link rel="stylesheet" href="./theme/ewwii.css">
 
-        
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "latte";
+            const default_dark_theme = "ewwii";
+            window.path_to_searchindex_js = "searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
     </head>
     <body>
-        <!-- Provide site root to javascript -->
-        <script type="text/javascript">
-            var path_to_root = "";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
-        </script>
-
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script type="text/javascript">
+        <script>
             try {
-                var theme = localStorage.getItem('mdbook-theme');
-                var sidebar = localStorage.getItem('mdbook-sidebar');
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
 
                 if (theme.startsWith('"') && theme.endsWith('"')) {
                     localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
@@ -72,85 +74,99 @@
         </script>
 
         <!-- Set the theme before any content is loaded, prevents flash -->
-        <script type="text/javascript">
-            var theme;
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
-            html.classList.remove('no-js')
-            html.classList.remove('navy')
+            const html = document.documentElement;
+            html.classList.remove('latte')
             html.classList.add(theme);
-            html.classList.add('js');
+            html.classList.add("js");
         </script>
 
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
         <!-- Hide / unhide sidebar before it is displayed -->
-        <script type="text/javascript">
-            var html = document.querySelector('html');
-            var sidebar = 'hidden';
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
             }
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="getting_started.html"><strong aria-hidden="true">1.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="statictranspl.html"><strong aria-hidden="true">1.2.</strong> Optional: Statictranspl</a></li></ol></li><li class="chapter-item expanded "><a href="config/config_and_syntax.html"><strong aria-hidden="true">2.</strong> Configuration &amp; Syntax</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="config/configuration.html"><strong aria-hidden="true">2.1.</strong> Configuration</a></li><li class="chapter-item expanded "><a href="config/rendering_and_best_practices.html"><strong aria-hidden="true">2.2.</strong> Rendering and Best Practices</a></li><li class="chapter-item expanded "><a href="config/config_fundamentals.html"><strong aria-hidden="true">2.3.</strong> Fundamentals</a></li><li class="chapter-item expanded "><a href="config/variables.html"><strong aria-hidden="true">2.4.</strong> Variables</a></li><li class="chapter-item expanded "><a href="config/expression_language.html"><strong aria-hidden="true">2.5.</strong> Expression Language</a></li></ol></li><li class="chapter-item expanded "><a href="theming/theming_and_ui.html"><strong aria-hidden="true">3.</strong> Theming &amp; UI</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="theming/working_with_gtk.html"><strong aria-hidden="true">3.1.</strong> Working With GTK</a></li><li class="chapter-item expanded "><a href="theming/styling_widgets.html"><strong aria-hidden="true">3.2.</strong> Styling Widgets</a></li></ol></li><li class="chapter-item expanded "><a href="modules/modules.html"><strong aria-hidden="true">4.</strong> Modules</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="modules/stdlib.html"><strong aria-hidden="true">4.1.</strong> Std Library</a></li><li class="chapter-item expanded "><a href="modules/apilib.html"><strong aria-hidden="true">4.2.</strong> API Library</a></li></ol></li><li class="chapter-item expanded "><a href="widgets/widgets.html"><strong aria-hidden="true">5.</strong> Widgets</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="widgets/widgets_and_params.html"><strong aria-hidden="true">5.1.</strong> Widgets &amp; Parameters</a></li><li class="chapter-item expanded "><a href="widgets/props.html"><strong aria-hidden="true">5.2.</strong> Widget Properties</a></li></ol></li><li class="chapter-item expanded "><a href="examples/examples.html"><strong aria-hidden="true">6.</strong> Examples</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="examples/starter_bar.html"><strong aria-hidden="true">6.1.</strong> Starter Bar</a></li><li class="chapter-item expanded "><a href="examples/interactive.html"><strong aria-hidden="true">6.2.</strong> Interactive Widgets</a></li><li class="chapter-item expanded "><a href="examples/theming.html"><strong aria-hidden="true">6.3.</strong> Theming Tricks</a></li></ol></li><li class="chapter-item expanded "><a href="troubleshooting.html"><strong aria-hidden="true">7.</strong> Troubleshooting</a></li></ol>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                
                 <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
                         <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="latte">Latte</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="frappe">Frappé</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="macchiato">Macchiato</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mocha">Mocha</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ewwii">Ewwii</button></li>
                         </ul>
-                        
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
-                        
                     </div>
 
                     <h1 class="menu-title">Ewwii documentation</h1>
 
                     <div class="right-buttons">
-                        
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
-                        
-                        
                         <a href="https://github.com/Ewwii-sh/ewwii" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        
-                        
 
                     </div>
                 </div>
 
-                
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -158,10 +174,9 @@
                         </ul>
                     </div>
                 </div>
-                
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script type="text/javascript">
+                <script>
                     document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
                     document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
                     Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
@@ -193,9 +208,9 @@ and to give the user all the power that they need.</p>
 <p>Rhai is not just a basic markup language. It is a full embeddable scripting language!
 This makes ewwii's configuration even more flexible and powerful.</p>
 <p>Whether you're building a tiling-friendly status bar, a floating dashboard, or a themed control panel, Ewwii gives you the tools to design it, script it, and make it your own.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
 <p>Getting starting with Ewwii. This section will cover how you can install and use ewwii.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
 <p>The first step of using Ewwii is installing it. You would need to have the following prerequesties installed on your system to build/install ewwii.</p>
 <p><strong>Prerequesties:</strong></p>
 <ul>
@@ -254,7 +269,7 @@ When you're on Wayland, build with:</p>
 <p>You can run the following command to install ewwii from cargo:</p>
 <pre><code class="language-bash">cargo install --git https://github.com/Ewwii-sh/ewwii
 </code></pre>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="optional-staticscript"><a class="header" href="#optional-staticscript">Optional: StaticScript</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="optional-staticscript"><a class="header" href="#optional-staticscript">Optional: StaticScript</a></h1>
 <p>Before diving deeper into Ewwii and <strong>Rhai</strong> (Ewwii’s configuration language), check out <strong><a href="https://ewwii-sh.github.io/staticscript/">StaticScript</a></strong>.</p>
 <p>Rhai layouts are dynamic and can be verbose, which may feel overwhelming for users without experience in languages like Rust, C, or JavaScript. <strong>StaticScript</strong> simplifies Rhai by abstracting much of the complexity, adding stricter compilation, and providing clearer error messages. Many issues can be caught <strong>at compile time</strong>, making it more beginner-friendly.</p>
 <p><strong>How it works:</strong>
@@ -271,7 +286,7 @@ StaticScript is <strong>experimental</strong>. It currently does <strong>not</st
 </ul>
 <p>While excellent for static widgets, it cannot yet match the full flexibility of raw Rhai.</p>
 </blockquote>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="configuration--syntax"><a class="header" href="#configuration--syntax">Configuration &amp; Syntax</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration--syntax"><a class="header" href="#configuration--syntax">Configuration &amp; Syntax</a></h1>
 <p>This section introduces the foundational systems that define how you configure your UI, express logic, and work with dynamic data in Rahi (Ewwii's configuration language).</p>
 <p>The configuration model is imparative by nature but will be used in a declarative format that is made to make configuring ewwii easy as well as to provide a logical way of configuring. You'll also work with special built in functions and modules that expose live system state and other information.</p>
 <p>We'll cover:</p>
@@ -284,7 +299,7 @@ StaticScript is <strong>experimental</strong>. It currently does <strong>not</st
 <blockquote>
 <p>If you're coming from EWW's Yuck, expect similarities in structure but with much more flexibility and logical programming.</p>
 </blockquote>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="writing-your-ewwii-configuration"><a class="header" href="#writing-your-ewwii-configuration">Writing your ewwii configuration</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="writing-your-ewwii-configuration"><a class="header" href="#writing-your-ewwii-configuration">Writing your ewwii configuration</a></h1>
 <p>(For a list of all built-in widgets (i.e. <code>box</code>, <code>label</code>, <code>button</code>), see <a href="config/../widgets/widgets.html">Widget Documentation</a>.)<br />
 Ewwii is configured using its own language called <code>rhai</code>.
 Using rhai, you declare the structure and content of your widgets, the geometry, position, and behavior of any windows,
@@ -303,78 +318,85 @@ These files must be placed under <code>$XDG_CONFIG_HOME/ewwii</code> (this is mo
 <h2 id="creating-your-first-window"><a class="header" href="#creating-your-first-window">Creating your first window</a></h2>
 <p>Firstly, you will need to create a top-level window. Here, you configure things such as the name, position, geometry, and content of your window.</p>
 <p>Let's look at an example window definition:</p>
-<pre><code class="language-rust ignore">enter([ // Add all defwindow inside enter. Enter is the root of the config.
-  defwindow(&quot;example&quot;, #{
+<pre><code class="language-js">enter([ // Add all defwindow inside enter. Enter is the root of the config.
+  defwindow("example", #{
       monitor: 0,
-      windowtype: &quot;dock&quot;,
-      stacking: &quot;fg&quot;,
+      windowtype: "dock",
+      stacking: "fg",
       wm_ignore: false,
       geometry: #{
-        x: &quot;0%&quot;,
-        y: &quot;2px&quot;,
-        width: &quot;90%&quot;,
-        height: &quot;30px&quot;,
-        anchor: &quot;top center&quot;
+        x: "0%",
+        y: "2px",
+        width: "90%",
+        height: "30px",
+        anchor: "top center"
       },
-      reserve: #{ distance: &quot;40px&quot; side: &quot;top&quot; }
-  }, label(#{ text: &quot;example content&quot; }))
+      reserve: #{ distance: "40px" side: "top" }
+  }, label(#{ text: "example content" }))
 ])
 </code></pre>
-<p>Here, we are defining a window named <code>example</code>, which we then define a set of properties for. Additionally, we set the content of the window to be the text <code>&quot;example content&quot;</code>.</p>
+<p>Here, we are defining a window named <code>example</code>, which we then define a set of properties for. Additionally, we set the content of the window to be the text <code>"example content"</code>.</p>
 <p>You can now open your first window by running <code>ewwii open example</code>! Glorious!</p>
 <h3 id="defwindow-properties"><a class="header" href="#defwindow-properties"><code>defwindow</code>-properties</a></h3>
-<table><thead><tr><th align="right">Property</th><th>Description</th></tr></thead><tbody>
-<tr><td align="right"><code>monitor</code></td><td>Which monitor this window should be displayed on. See below for details.</td></tr>
-<tr><td align="right"><code>geometry</code></td><td>Geometry of the window.</td></tr>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: right">Property</th><th>Description</th></tr></thead><tbody>
+<tr><td style="text-align: right"><code>monitor</code></td><td>Which monitor this window should be displayed on. See below for details.</td></tr>
+<tr><td style="text-align: right"><code>geometry</code></td><td>Geometry of the window.</td></tr>
 </tbody></table>
+</div>
 <p><strong><code>monitor</code>-property</strong></p>
 <p>This field can be:</p>
 <ul>
 <li>the string <code>&lt;primary&gt;</code>, in which case ewwii tries to identify the primary display (which may fail, especially on wayland)</li>
 <li>an integer, declaring the monitor index</li>
 <li>the name of the monitor</li>
-<li>a string containing a JSON-array of monitor matchers, such as: <code>'[&quot;&lt;primary&gt;&quot;, &quot;HDMI-A-1&quot;, &quot;PHL 345B1C&quot;, 0]'</code>. Ewwii will try to find a match in order, allowing you to specify fallbacks.</li>
+<li>a string containing a JSON-array of monitor matchers, such as: <code>'["&lt;primary&gt;", "HDMI-A-1", "PHL 345B1C", 0]'</code>. Ewwii will try to find a match in order, allowing you to specify fallbacks.</li>
 </ul>
 <p><strong><code>geometry</code>-properties</strong></p>
-<table><thead><tr><th align="right">Property</th><th>Description</th></tr></thead><tbody>
-<tr><td align="right"><code>x</code>, <code>y</code></td><td>Position of the window. Values may be provided in <code>px</code> or <code>%</code>. Will be relative to <code>anchor</code>.</td></tr>
-<tr><td align="right"><code>width</code>, <code>height</code></td><td>Width and height of the window. Values may be provided in <code>px</code> or <code>%</code>.</td></tr>
-<tr><td align="right"><code>anchor</code></td><td>Anchor-point of the window. Either <code>center</code> or combinations of <code>top</code>, <code>center</code>, <code>bottom</code> and <code>left</code>, <code>center</code>, <code>right</code>.</td></tr>
-<tr><td align="right"><code>resizable</code></td><td>Whether to allow resizing the window or not. Eiither <code>true</code> or <code>false</code>.</td></tr>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: right">Property</th><th>Description</th></tr></thead><tbody>
+<tr><td style="text-align: right"><code>x</code>, <code>y</code></td><td>Position of the window. Values may be provided in <code>px</code> or <code>%</code>. Will be relative to <code>anchor</code>.</td></tr>
+<tr><td style="text-align: right"><code>width</code>, <code>height</code></td><td>Width and height of the window. Values may be provided in <code>px</code> or <code>%</code>.</td></tr>
+<tr><td style="text-align: right"><code>anchor</code></td><td>Anchor-point of the window. Either <code>center</code> or combinations of <code>top</code>, <code>center</code>, <code>bottom</code> and <code>left</code>, <code>center</code>, <code>right</code>.</td></tr>
+<tr><td style="text-align: right"><code>resizable</code></td><td>Whether to allow resizing the window or not. Eiither <code>true</code> or <code>false</code>.</td></tr>
 </tbody></table>
-<br/>
+</div><br/>
 Depending on if you are using X11 or Wayland, some additional properties exist:
 <h4 id="x11"><a class="header" href="#x11">X11</a></h4>
-<table><thead><tr><th align="right">Property</th><th>Description</th></tr></thead><tbody>
-<tr><td align="right"><code>stacking</code></td><td>Where the window should appear in the stack. Possible values: <code>fg</code>, <code>bg</code>.</td></tr>
-<tr><td align="right"><code>wm_ignore</code></td><td>Whether the window manager should ignore this window. This is useful for dashboard-style widgets that don't need to interact with other windows at all. Note that this makes some of the other properties not have any effect. Either <code>true</code> or <code>false</code>.</td></tr>
-<tr><td align="right"><code>reserve</code></td><td>Specify how the window manager should make space for your window. This is useful for bars, which should not overlap any other windows.</td></tr>
-<tr><td align="right"><code>windowtype</code></td><td>Specify what type of window this is. This will be used by your window manager to determine how it should handle your window. Possible values: <code>normal</code>, <code>dock</code>, <code>toolbar</code>, <code>dialog</code>, <code>desktop</code>. Default: <code>dock</code> if <code>reserve</code> is specified, <code>normal</code> otherwise.</td></tr>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: right">Property</th><th>Description</th></tr></thead><tbody>
+<tr><td style="text-align: right"><code>stacking</code></td><td>Where the window should appear in the stack. Possible values: <code>fg</code>, <code>bg</code>.</td></tr>
+<tr><td style="text-align: right"><code>wm_ignore</code></td><td>Whether the window manager should ignore this window. This is useful for dashboard-style widgets that don't need to interact with other windows at all. Note that this makes some of the other properties not have any effect. Either <code>true</code> or <code>false</code>.</td></tr>
+<tr><td style="text-align: right"><code>reserve</code></td><td>Specify how the window manager should make space for your window. This is useful for bars, which should not overlap any other windows.</td></tr>
+<tr><td style="text-align: right"><code>windowtype</code></td><td>Specify what type of window this is. This will be used by your window manager to determine how it should handle your window. Possible values: <code>normal</code>, <code>dock</code>, <code>toolbar</code>, <code>dialog</code>, <code>desktop</code>. Default: <code>dock</code> if <code>reserve</code> is specified, <code>normal</code> otherwise.</td></tr>
 </tbody></table>
+</div>
 <h4 id="wayland"><a class="header" href="#wayland">Wayland</a></h4>
-<table><thead><tr><th align="right">Property</th><th>Description</th></tr></thead><tbody>
-<tr><td align="right"><code>stacking</code></td><td>Where the window should appear in the stack. Possible values: <code>fg</code>, <code>bg</code>, <code>overlay</code>, <code>bottom</code>.</td></tr>
-<tr><td align="right"><code>exclusive</code></td><td>Whether the compositor should reserve space for the window automatically. Either <code>true</code> or <code>false</code>. If <code>true</code> <code>:anchor</code> has to include <code>center</code>.</td></tr>
-<tr><td align="right"><code>focusable</code></td><td>Whether the window should be able to be focused. This is necessary for any widgets that use the keyboard to work. Possible values: <code>none</code>, <code>exclusive</code> and <code>ondemand</code>.</td></tr>
-<tr><td align="right"><code>namespace</code></td><td>Set the wayland layersurface namespace ewwii uses. Accepts a <code>string</code> value.</td></tr>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: right">Property</th><th>Description</th></tr></thead><tbody>
+<tr><td style="text-align: right"><code>stacking</code></td><td>Where the window should appear in the stack. Possible values: <code>fg</code>, <code>bg</code>, <code>overlay</code>, <code>bottom</code>.</td></tr>
+<tr><td style="text-align: right"><code>exclusive</code></td><td>Whether the compositor should reserve space for the window automatically. Either <code>true</code> or <code>false</code>. If <code>true</code> <code>:anchor</code> has to include <code>center</code>.</td></tr>
+<tr><td style="text-align: right"><code>focusable</code></td><td>Whether the window should be able to be focused. This is necessary for any widgets that use the keyboard to work. Possible values: <code>none</code>, <code>exclusive</code> and <code>ondemand</code>.</td></tr>
+<tr><td style="text-align: right"><code>namespace</code></td><td>Set the wayland layersurface namespace ewwii uses. Accepts a <code>string</code> value.</td></tr>
 </tbody></table>
+</div>
 <h2 id="your-first-widget"><a class="header" href="#your-first-widget">Your first widget</a></h2>
 <p>While our bar is already looking great, it's a bit boring. Thus, let's add some actual content!</p>
-<pre><code class="language-rust ignore">fn greeter(name) {
+<pre><code class="language-js">fn greeter(name) {
   return box(#{
-    orientation: &quot;horizontal&quot;,
-    halign: &quot;center&quot;
+    orientation: "horizontal",
+    halign: "center"
   }, [
-    button(#{ onclick: `notify-send 'Hello' 'Hello, ${name}'`, label: &quot;Greet&quot; })
+    button(#{ onclick: `notify-send 'Hello' 'Hello, ${name}'`, label: "Greet" })
   ]);
 };
 </code></pre>
 <p>To show this, let's replace the text in our window definition with a call to this new widget:</p>
-<pre><code class="language-rust ignore">enter([
-  defwindow(&quot;example&quot;, #{
-    // ... properties omitted
-  }, greeter(&quot;Bob&quot;))
-])
+<pre><code class="language-js">enter([
+    defwindow(
+        "example",
+        #{
+            // ... properties omitted
+        },
+        greeter("Bob")
+    ),
+]);
 </code></pre>
 <p>There is a lot going on here, so let's step through this.</p>
 <p>We are creating a function named <code>greeter</code> and a function is equal to a component that returns a child (widget). So function has two uses: one to return a component, and the other to do a set of functions.
@@ -384,38 +406,35 @@ And this function takes one parameters, called <code>name</code>. The <code>name
 ewwii would not know if it should align them vertically or horizontally, how it should space them, and so on.
 Thus, we wrap multiple children in a <code>box</code>.
 This box then contains a button.
-In that button's <code>onclick</code> property, we refer to the provided <code>name</code> using string-interpolation syntax: <code>`${name}`</code>. It is not possible to use a variable within a <code>&quot;&quot;</code> or <code>''</code> just like javascript. You can learn more about it <a href="https://rhai.rs/book/ref/strings-chars.html?interpolation#string-interpolation">here</a>.</p>
+In that button's <code>onclick</code> property, we refer to the provided <code>name</code> using string-interpolation syntax: <code>`${name}`</code>. It is not possible to use a variable within a <code>""</code> or <code>''</code> just like javascript. You can learn more about it <a href="https://rhai.rs/book/ref/strings-chars.html?interpolation#string-interpolation">here</a>.</p>
 <!-- TODO -->
 <!-- In fact, there is a lot more you can do within `${...}` - more on that in the chapter about the [expression language](expression_language.md). -->
 <p>To then use our widget, we call the function that provides the widget with the necessary parameters passed.</p>
 <p>As you may have noticed, we are using a couple predefined widgets here. These are all listed and explained in the <a href="config/widgets.html">widgets chapter</a>.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="rendering-and-best-practices"><a class="header" href="#rendering-and-best-practices">Rendering and Best Practices</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="rendering-and-best-practices"><a class="header" href="#rendering-and-best-practices">Rendering and Best Practices</a></h1>
 <h2 id="rendering-children-in-your-widgets"><a class="header" href="#rendering-children-in-your-widgets">Rendering children in your widgets</a></h2>
 <p>As your configuration grows, you might want to improve its structure by factoring out pieces into reusable functions.</p>
 <p>In Ewwii’s Rhai-based configuration system, you can define wrapper functions that return widgets and accept a <code>children</code> parameter (or any parameter that you prefer), just like built-in widgets such as <code>box()</code> or <code>button()</code>.</p>
 <p>Here's an example of a custom container that adds a label before its children:</p>
-<pre><code class="language-rust ignore">fn labeled_container(name, children = []) {
-  return box(#{ class: &quot;container&quot; }, [label(#{text: name})] + children)
+<pre><code class="language-js">fn labeled_container(name, children = []) {
+  return box(#{ class: "container" }, [label(#{text: name})] + children)
 }
 </code></pre>
 <p>You can call it like this:</p>
-<pre><code class="language-rust ignore">labeled_container(&quot;foo&quot;, [
-  button(#{ onclick: &quot;notify-send hey ho&quot;, label: &quot;Click me&quot; })
+<pre><code class="language-js">labeled_container("foo", [
+    button(#{ onclick: "notify-send hey ho", label: "Click me" }),
 ]);
 </code></pre>
 <p>Because children are just a list of widgets, you can also write functions that structure them however you'd like. For example, here's a layout that places the first two children side by side:</p>
-<pre><code class="language-rust ignore">fn two_boxes(children = []) {
+<pre><code class="language-js">fn two_boxes(children = []) {
   return box(#{}, [
-    box(#{ class: &quot;first&quot; }, [children[0]]),
-    box(#{ class: &quot;second&quot; }, [children[1]])
+    box(#{ class: "first" }, [children[0]]),
+    box(#{ class: "second" }, [children[1]])
   ]);
 }
 </code></pre>
 <p>And call it like this:</p>
-<pre><code class="language-rust ignore">two_boxes([
-  label(#{ text: &quot;First&quot; }),
-  label(#{ text: &quot;Second&quot; })
-]);
+<pre><code class="language-js">two_boxes([label(#{ text: "First" }), label(#{ text: "Second" })]);
 </code></pre>
 <p>If a child is missing (e.g., children[1] doesn't exist), make sure to handle that gracefully or document the expected number of children.</p>
 <!-- TODO: add it once literal is implemented -->
@@ -429,7 +448,7 @@ or if you want to change the widget structure in some other, more complex way.
 
 For this, you can make use of one of ewwii's most powerful features: the `literal` widget.
 
-```rust,ignore
+```js
 let variable_containing_rhai = "(box (button 'foo') (button 'bar'))";
 
 // Then, inside your widget, use:
@@ -451,7 +470,7 @@ ewwii open my_bar --screen 1 --id secondary
 </code></pre>
 <h2 id="generating-a-list-of-widgets-from-array-using-for"><a class="header" href="#generating-a-list-of-widgets-from-array-using-for">Generating a list of widgets from array using <code>for</code></a></h2>
 <p>If you want to display a list of values, you can use the <code>for</code>-Element to fill a container with a list of elements generated from a JSON-array.</p>
-<pre><code class="language-rust ignore">let my_array = [1, 2, 3];
+<pre><code class="language-js">let my_array = [1, 2, 3];
 
 // Then, inside your widget, you can use
 box(#{}, [
@@ -467,13 +486,16 @@ In many cases, this can be used instead of <code>literal</code>, and should most
 <p>As time passes, your configuration might grow larger and larger. Luckily, you can easily split up your configuration into multiple files!</p>
 <p>There are two options to achieve this:</p>
 <h3 id="using-importexport"><a class="header" href="#using-importexport">Using <code>import/export</code></a></h3>
-<pre><code class="language-rust ignore">// in ./foo/baz.rhai
-fn greet() { return &quot;Greetings!&quot; }
-export greet;
+<pre><code class="language-js">// in ./foo/baz.rhai
+/// Note: all functions are automatically exported.
+fn greet() { return "Greetings!" }
+let PI = 3.14159
+export PI; // we need to export variables manually
 
 // in ./ewwii.rhai
-import &quot;foo/baz&quot; as example;
-print(example::greet()); // output: Greetings!
+import "foo/baz" as example;
+print(example::greet()); // Greetings!
+print(example::PI); // 3.14159
 </code></pre>
 <p>A rhai file may import the contents of any other rhai file that they export. For this, make use of the <code>import</code> directive. If you are exporting a variable/function, make use the <code>export</code> directive.</p>
 <h3 id="using-a-separate-ewwii-configuration-directory"><a class="header" href="#using-a-separate-ewwii-configuration-directory">Using a separate ewwii configuration directory</a></h3>
@@ -481,35 +503,35 @@ print(example::greet()); // output: Greetings!
 Then, you can tell ewwii to use that configuration directory by passing <em>every</em> command the <code>--config /path/to/your/config/dir</code> flag.
 Make sure to actually include this in all your <code>ewwii</code> calls, including <code>ewwii kill</code>, <code>eww logs</code>, etc.
 This launches a separate instance of the ewwii daemon that has separate logs and state from your main ewwii configuration.</p>
-<pre><code class="language-bash">ewwii --config &quot;/path/to/your/config/dir&quot;
+<pre><code class="language-bash">ewwii --config "/path/to/your/config/dir"
 </code></pre>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="fundamentals"><a class="header" href="#fundamentals">Fundamentals</a></h1>
-<p>Ewwii uses Rhai as its configuration language. But instead of just pure Rhai, ewwii has its own layout that users should follow to create widgets using Rhai. And you may be wondering why ewwii has a &quot;custom&quot; layout instead of allowing users to just use pure Rhai. It's good question and the reason why ewwii has a custom layout is because it tries to remove unnecessary complexity.</p>
-<p>The full reasons for this layout wont be explained much more because it goes way deeper than just &quot;decreasing complexity&quot;.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="fundamentals"><a class="header" href="#fundamentals">Fundamentals</a></h1>
+<p>Ewwii uses Rhai as its configuration language. But instead of just pure Rhai, ewwii has its own layout that users should follow to create widgets using Rhai. And you may be wondering why ewwii has a "custom" layout instead of allowing users to just use pure Rhai. It's good question and the reason why ewwii has a custom layout is because it tries to remove unnecessary complexity.</p>
+<p>The full reasons for this layout wont be explained much more because it goes way deeper than just "decreasing complexity".</p>
 <p>For more information about Rhai, you can read <a href="https://rhai.rs/book/">their documentation</a>.</p>
 <h2 id="widgets-and-their-parameters"><a class="header" href="#widgets-and-their-parameters">Widgets and their parameters</a></h2>
 <p>Each widget in ewwii is a function (e.g: <code>button(#{...})</code> is a function call to create a button). So each one requires its own parameters.</p>
 <p>For example, <code>defwindow</code> expects a <strong>String</strong>, <strong>Properties</strong>, and a function call that <strong>returns a widget.</strong></p>
 <p><strong>Example:</strong></p>
-<pre><code class="language-rust ignore">enter([
-  // the string here (the text in &quot;&quot;) is the name of the window
+<pre><code class="language-js">enter([
+  // the string here (the text in "") is the name of the window
   // the content in #{} is the properties
   // and the 3rd `root_widget()` call is the function that returns a child.
 
   // defwindow cant have children in [] directly, but it expects a function returning it for it.
-  defwindow(&quot;example&quot;, #{
+  defwindow("example", #{
       monitor: 0,
-      windowtype: &quot;dock&quot;,
-      stacking: &quot;fg&quot;,
+      windowtype: "dock",
+      stacking: "fg",
       wm_ignore: false,
       geometry: #{
-        x: &quot;0%&quot;,
-        y: &quot;2px&quot;,
-        width: &quot;90%&quot;,
-        height: &quot;30px&quot;,
-        anchor: &quot;top center&quot;
+        x: "0%",
+        y: "2px",
+        width: "90%",
+        height: "30px",
+        anchor: "top center"
       },
-      reserve: #{ distance: &quot;40px&quot; side: &quot;top&quot; }
+      reserve: #{ distance: "40px" side: "top" }
   }, root_widget())
 ])
 </code></pre>
@@ -518,20 +540,20 @@ This launches a separate instance of the ewwii daemon that has separate logs and
 <p>It is an important concept that users must know to go forward with this documentaiton. Ewwii's Rhai layout is made to be <strong>logical and powerful</strong>, so the user is given access the root of the entire widget system.</p>
 <p>The root is defined as <code>enter()</code> and it is where you should write <code>defwindow</code>.</p>
 <p>Here is an example:</p>
-<pre><code class="language-rust ignore">enter([
-  defwindow(&quot;example&quot;, #{
+<pre><code class="language-js">enter([
+  defwindow("example", #{
       monitor: 0,
-      windowtype: &quot;dock&quot;,
-      stacking: &quot;fg&quot;,
+      windowtype: "dock",
+      stacking: "fg",
       wm_ignore: false,
       geometry: #{
-        x: &quot;0%&quot;,
-        y: &quot;2px&quot;,
-        width: &quot;90%&quot;,
-        height: &quot;30px&quot;,
-        anchor: &quot;top center&quot;
+        x: "0%",
+        y: "2px",
+        width: "90%",
+        height: "30px",
+        anchor: "top center"
       },
-      reserve: #{ distance: &quot;40px&quot; side: &quot;top&quot; }
+      reserve: #{ distance: "40px" side: "top" }
   }, root_widget())
 ])
 </code></pre>
@@ -544,55 +566,58 @@ This launches a separate instance of the ewwii daemon that has separate logs and
 <p>The part where most people get confused is the use of <code>[]</code> and <code>#{}</code>. Let's get into what those are and how you can use them.</p>
 <p>The <code>[]</code> is used for adding <strong>children</strong> to a widget.</p>
 <p><strong>Example:</strong></p>
-<pre><code class="language-rust ignore">fn greeter(foo) {
+<pre><code class="language-js">fn greeter(foo) {
   return box(#{
-    orientation: &quot;horizontal&quot;,
-    halign: &quot;center&quot;
+    orientation: "horizontal",
+    halign: "center"
   }, [
     // the `[]` holds a button which is the child widget of the box widget
     // each element in a `[]` should end in a comma (,) instead of a semi-colon (;).
-    button(#{ onclick: `notify-send '${foo}'`, label: &quot;baz&quot; }),
-    label(#{ text: &quot;example&quot; }),
+    button(#{ onclick: `notify-send '${foo}'`, label: "baz" }),
+    label(#{ text: "example" }),
   ]);
 };
 </code></pre>
 <p>The <code>#{}</code> works similar to the <code>[]</code> but, it is used to add properties into the widget.</p>
 <p><strong>Example:</strong></p>
-<pre><code class="language-rust ignore">fn greeter(foo) {
+<pre><code class="language-js">fn greeter(foo) {
   // the `#{}` holds the properties of the box widget
   // each element in a `#{}` should end in a comma (,) instead of a semi-colon (;).
   return box(#{
-    orientation: &quot;horizontal&quot;,
-    halign: &quot;center&quot;
+    orientation: "horizontal",
+    halign: "center"
   }, [
     // properties are assigned to both button and label using the #{}.
-    button(#{ onclick: `notify-send '${foo}'`, label: &quot;baz&quot; }),
-    label(#{ text: &quot;example&quot; }),
+    button(#{ onclick: `notify-send '${foo}'`, label: "baz" }),
+    label(#{ text: "example" }),
   ]);
 };
 </code></pre>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="variables"><a class="header" href="#variables">Variables</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="variables"><a class="header" href="#variables">Variables</a></h1>
 <p>Now that you feel sufficiently greeted by your bar, you may realize that showing data like the time and date might be even more useful than having a button that greets you.</p>
 <p>To implement dynamic content in your widgets, you make use of <em>variables</em>.</p>
 <p>All variables are only locally available so you would need to pass it around using function parameters. And whenever the variable changes, the value in the widget will update!</p>
 <h2 id="static-variables"><a class="header" href="#static-variables">Static variables</a></h2>
 <p>In Rhai, all variables are dynamically typed bindings to values. You can define variables using let, pass them as function parameters.</p>
 <p><strong>Basic variables (<code>let</code>)</strong></p>
-<pre><code class="language-rust ignore">let foo = &quot;value&quot;;
+<pre><code class="language-js">let foo = "value";
 </code></pre>
 <p>This is the simplest type of variable.
 Basic variables don't ever change automatically, if you need a dynamic variable, you can use built in functions like <code>poll()</code> and <code>listen()</code> to register dynamic values which we will talk about in the following section.</p>
 <h2 id="dynamic-variables"><a class="header" href="#dynamic-variables">Dynamic variables</a></h2>
 <p>Just having static variables that wont update is pretty limiting. So, ewwii has two built in functions to register dynamic variables that can change according to the command.</p>
 <p><strong>Polling variables (<code>poll</code>)</strong></p>
-<pre><code class="language-rust ignore">poll(&quot;var_name&quot;, #{
-  // It is recommended to have initial property passed.
-  // If not provided, it will default to no value which may cause problems when used.
-  // You can pass something like &quot;&quot; if you want no initial value.
-  initial: &quot;inital value&quot;,
-  interval: &quot;2s&quot;,
-  cmd: &quot;date +%H:%M:%S&quot;, // command to execute
-})
+<pre><code class="language-js">poll(
+    "var_name",
+    #{
+        // It is recommended to have initial property passed.
+        // If not provided, it will default to no value which may cause problems when used.
+        // You can pass something like "" if you want no initial value.
+        initial: "inital value",
+        interval: "2s",
+        cmd: "date +%H:%M:%S", // command to execute
+    }
+);
 </code></pre>
 <p>A polling variable is a variable which runs a provided shell-script repeatedly, in a given interval.</p>
 <p>This may be the most commonly used type of variable.
@@ -603,15 +628,18 @@ But it is important to note that these variables are locally available only in e
 making the startup time faster. -->
 <p>To externally update a polling variable, <code>ewwii update</code> can be used like with basic variables to assign a value.</p>
 <p><strong>Listening variables (<code>listen</code>)</strong></p>
-<pre><code class="language-rust ignore">listen(&quot;foo&quot;, #{
-  initial: &quot;whatever&quot;,
-  cmd: &quot;tail -F /tmp/some_file&quot;,
-})
+<pre><code class="language-js">listen(
+    "foo",
+    #{
+        initial: "whatever",
+        cmd: "tail -F /tmp/some_file",
+    }
+);
 </code></pre>
 <p>Listening variables might be the most confusing of the bunch.
 A listening variable runs a script once, and reads its output continously.
 Whenever the script outputs a new line, the value will be updated to that new line.
-In the example given above, the value of <code>foo</code> will start out as <code>&quot;whatever&quot;</code>, and will change whenever a new line is appended to <code>/tmp/some_file</code>.</p>
+In the example given above, the value of <code>foo</code> will start out as <code>"whatever"</code>, and will change whenever a new line is appended to <code>/tmp/some_file</code>.</p>
 <p>These are particularly useful when you want to apply changes instantaneously when an operation happens if you have a script
 that can monitor some value on its own. Volume, brightness, workspaces that get added/removed at runtime,
 monitoring currently focused desktop/tag, etc. are the most common usecases of this type of variable.
@@ -628,15 +656,15 @@ All available magic variables are listed [here](magic-vars.md). -->
 <h2 id="passing-variables"><a class="header" href="#passing-variables">Passing variables</a></h2>
 <p>As we discussed earlier, all variables are only available locally. So, you would need to pass it around from the current scope.</p>
 <p>Here is an example of how it is done:</p>
-<pre><code class="language-rust ignore">let foo = &quot;example&quot;;
+<pre><code class="language-js">let foo = "example";
 
-poll(&quot;time&quot;, #{
-  initial: &quot;inital value&quot;,
-  interval: &quot;2s&quot;,
-  cmd: &quot;date +%H:%M:%S&quot;,
+poll("time", #{
+  initial: "inital value",
+  interval: "2s",
+  cmd: "date +%H:%M:%S",
 })
 
-// Here we have 2 variables named &quot;time&quot; (registered dynamically by poll) and foo (a static variable)
+// Here we have 2 variables named "time" (registered dynamically by poll) and foo (a static variable)
 
 // here is an example of something that wont
 fn wont_work() {
@@ -647,25 +675,25 @@ fn wont_work() {
 <p><code>dyn_id</code>'s are one of the most important properties of all. It is the property that decides if a widget should get updated dynamic or not.</p>
 <p><code>dyn_id</code> property is used to assign an id to a widget which the system will track to update if there is a change in property under the same id.</p>
 <p><strong>Example usage:</strong></p>
-<pre><code class="language-rust ignore">fn foo(foo_var) {
+<pre><code class="language-js">fn foo(foo_var) {
   return box(#{}, [
-    label(#{ text: foo_var, dyn_id: &quot;foo_var_user&quot; }); // dyn_id used to make label dynamic
+    label(#{ text: foo_var, dyn_id: "foo_var_user" }); // dyn_id used to make label dynamic
   ]);
 }
 
 enter([
-  defpoll(&quot;foo&quot;, #{
-    cmd: &quot;echo baz&quot;,
-    initial: &quot;&quot;,
-    interval: &quot;1s&quot;
+  defpoll("foo", #{
+    cmd: "echo baz",
+    initial: "",
+    interval: "1s"
   }),
-  defwindow(&quot;bar&quot;, #{
+  defwindow("bar", #{
     // .. properties omitted
   }, bar(foo)),
 ])
 </code></pre>
 <p>Here, when the variable foo changes, the text of label changes as well. If there is no <code>dyn_id</code> defined, then ewwii will ingore that change. But if it is defined with a unique value, then it will find the widget that is defined with the id that matches dyn_id and then update its text property which will result in a change in the UI.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="the-rhai-expression-engine"><a class="header" href="#the-rhai-expression-engine">The Rhai Expression Engine</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="the-rhai-expression-engine"><a class="header" href="#the-rhai-expression-engine">The Rhai Expression Engine</a></h1>
 <p>Ewwii uses <a href="https://rhai.rs/">Rhai</a> as its core expression and scripting engine. This means your configuration is more than just static values or simple substitutions—it’s <strong>real code</strong>, and you can use it anywhere dynamic behavior is needed.</p>
 <p>Rhai expressions can:</p>
 <ul>
@@ -677,15 +705,15 @@ enter([
 </ul>
 <p>Unlike Yuck, where expressions were embedded in <code>{ ... }</code> or <code>${ ... }</code>, Rhai treats expressions as <strong>native</strong>. They don’t need to be wrapped in special delimiters. If you can write it in Rhai, it just works.</p>
 <h2 id="example"><a class="header" href="#example">Example</a></h2>
-<pre><code class="language-rust ignore">let value = 12 + foo * 10;
+<pre><code class="language-js">let value = 12 + foo * 10;
 
 box(#{
-  class: &quot;baz&quot;
-  orientation: &quot;h&quot;,
+  class: "baz"
+  orientation: "h",
 }, [
   button(#{
-    class: button_active ? &quot;active&quot; : &quot;inactive&quot;,
-    on_click: &quot;toggle_thing&quot;,
+    class: button_active ? "active" : "inactive",
+    on_click: "toggle_thing",
     label: `Some math: ${value}`,
   }),
 ]);
@@ -699,7 +727,7 @@ box(#{
 <li><strong>Conditionals</strong>: <code>if/else</code>, ternary (<code>cond ? a : b</code>)</li>
 <li><strong>Regex matching</strong>: <code>=~</code> operator (Rust-style regex)</li>
 <li><strong>Optional access</strong>: <code>?.</code> and <code>?.[index]</code></li>
-<li><strong>Data structures</strong>: maps/arrays (<code>obj.field</code>, <code>arr[3]</code>, <code>map[&quot;key&quot;]</code>)</li>
+<li><strong>Data structures</strong>: maps/arrays (<code>obj.field</code>, <code>arr[3]</code>, <code>map["key"]</code>)</li>
 <li><strong>Function calls</strong>: standard and Ewwii-specific built-ins (see below)</li>
 <li><strong>String interpolation</strong>: <code>`Value is ${value}`</code> (standard Rhai feature)</li>
 </ul>
@@ -726,8 +754,8 @@ box(#{
 </ul>
 <h2 id="dynamic-usage"><a class="header" href="#dynamic-usage">Dynamic Usage</a></h2>
 <p>Because expressions are just Rhai, you can now write real logic inline or break it into reusable functions:</p>
-<pre><code class="language-rust ignore">fn status_text(active) {
-  return active ? &quot;enabled&quot; : &quot;disabled&quot;;
+<pre><code class="language-js">fn status_text(active) {
+  return active ? "enabled" : "disabled";
 }
 
 label({
@@ -739,7 +767,7 @@ label({
 <blockquote>
 <p>If you’ve used scripting languages like JavaScript or Lua, you’ll feel at home. Rhai gives you real control—not just interpolation tricks.</p>
 </blockquote>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="theming--ui"><a class="header" href="#theming--ui">Theming &amp; UI</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="theming--ui"><a class="header" href="#theming--ui">Theming &amp; UI</a></h1>
 <p>This section focuses on visual styling and user interface customization. The core visual layer is built atop GTK, allowing deep integration with system themes while also enabling custom overrides through SCSS-style syntax.</p>
 <p>We'll explore:</p>
 <ul>
@@ -748,7 +776,7 @@ label({
 <li>Layout implications of theme decisions (e.g., spacing, margins, z-order)</li>
 </ul>
 <p>Whether you're trying to match your system's look or building a highly customized UI, this section gives you the tools to style confidently.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="working-with-gtk"><a class="header" href="#working-with-gtk">Working with GTK</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="working-with-gtk"><a class="header" href="#working-with-gtk">Working with GTK</a></h1>
 <h2 id="gtk-theming"><a class="header" href="#gtk-theming">Gtk Theming</a></h2>
 <p>Ewwii is styled in GTK CSS.
 You can use <code>Vanilla CSS</code> or <code>SCSS</code> to make theming even easier. The latter is compiled into CSS for you.
@@ -764,119 +792,167 @@ or use the <a href="theming/working_with_gtk.html#gtk-debugger">GTK-Debugger</a>
 </code></pre>
 <p>If a style or something similar doesn't work, you can click on the icon in the top left to select the thing that isn't being styled correctly.</p>
 <p>Then you can click on the drop down menu in the top right corner and select CSS Nodes. Here you will see everything about styling it, CSS Properties, and how it's structured.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="styling-widgets"><a class="header" href="#styling-widgets">Styling Widgets</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="styling-widgets"><a class="header" href="#styling-widgets">Styling Widgets</a></h1>
 <p>Ewwii also allows writing inline styles to widgets using the <code>style</code> property. These styles are then applied at runtime using GTK's CSS system.</p>
 <p><strong>Example:</strong></p>
-<pre><code class="language-rust ignore">fn foo() {
+<pre><code class="language-js">fn foo() {
     return box(#{
-        style: &quot;color: black; background-color: #fff;&quot;,
-    }, [ label(#{ text: &quot;baz&quot; }) ]);
+        style: "color: black; background-color: #fff;",
+    }, [ label(#{ text: "baz" }) ]);
 }
 </code></pre>
 <blockquote>
 <p>This example makes the text color of all child widgets of box to black and sets the background color of the box to white (<code>#fff</code> is the hexadecimal for white).</p>
 </blockquote>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="modules"><a class="header" href="#modules">Modules</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="modules"><a class="header" href="#modules">Modules</a></h1>
 <p>Modules undoubtedly are one of the most powerful features in Rhai. They provide infinite extensibility to ewwii.</p>
 <p>Every module follows the syntax:</p>
-<pre><code class="language-rust ignore">import &quot;std::env&quot; as env;
+<pre><code class="language-js">import "std::env" as env;
 let home = env::get_home_dir(); // returns `$HOME` env var value
 </code></pre>
 <p>This allows you to write expressive, modular Rhai code with functions grouped logically under <code>std</code> or custom namespaces.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="standard-library"><a class="header" href="#standard-library">Standard Library</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="user-defined-modules"><a class="header" href="#user-defined-modules">User-Defined Modules</a></h1>
+<p>User-defined modules allow you to <strong>organize your code</strong> by splitting it into separate, reusable files. This makes large projects easier to maintain and understand.</p>
+<h2 id="exporting-items-from-a-module"><a class="header" href="#exporting-items-from-a-module">Exporting Items from a Module</a></h2>
+<p>In Rhai modules:</p>
+<ul>
+<li><strong>Functions are automatically exported</strong> by default. You do <strong>not</strong> need to use <code>export</code> for functions.</li>
+<li><strong>Variables, constants, and objects must be exported manually</strong> using the <code>export</code> keyword.</li>
+</ul>
+<pre><code class="language-js">// File: ./foo/baz.rhai
+
+/// A function that is automatically exported
+fn greet() {
+    return "Greetings!"
+}
+
+/// A private function, NOT exported automatically
+private fn foo() {
+    return "This function is hidden and not exported"
+}
+
+/// A variable
+let PI = 3.14159;
+
+// Export the variable explicitly
+export PI;
+</code></pre>
+<p><strong>Tip:</strong> Only variables, constants, and objects require the <code>export</code> keyword. Functions are always available unless marked <code>private</code>. <a href="https://rhai.rs/book/language/modules/export.html#export-functions">More info</a></p>
+<h2 id="importing-a-module"><a class="header" href="#importing-a-module">Importing a Module</a></h2>
+<p>You can import a module using the <code>import</code> keyword:</p>
+<pre><code class="language-js">// File: ./ewwii.rhai
+
+import "foo/baz" // just runs the script without importing it.
+import "foo/baz" as example; // runs the script and imports it into example.
+
+// Access exported items
+print(example::greet()); // Greetings!
+print(example::PI); // 3.14159
+</code></pre>
+<p><strong>Tip:</strong> Always use the <code>as</code> keyword to import a script as a module with the name you desire.</p>
+<h2 id="notes"><a class="header" href="#notes">Notes</a></h2>
+<ul>
+<li>Functions are automatically exported unless explicitly marked <code>private</code>.</li>
+<li>Variables, constants, and objects must be exported using the <code>export</code> keyword.</li>
+<li><code>as</code> keyword is important in an <code>import</code> statement if you want to import the variables and functions in a Rhai file.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="standard-library"><a class="header" href="#standard-library">Standard Library</a></h1>
 <h2 id="stdenv"><a class="header" href="#stdenv"><code>std::env</code></a></h2>
 <p>The <code>std::env</code> module provides access to common system-level environment queries. It is supported on Unix-based systems (Linux, macOS).</p>
 <h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
-<pre><code class="language-rust ignore">import &quot;std::env&quot; as env;
+<pre><code class="language-js">import "std::env" as env;
 
 // Get an environment variable, or fallback to a default
-let shell = env::get_env(&quot;SHELL&quot;) ?? &quot;unknown&quot;;
+let shell = env::get_env("SHELL") ?? "unknown";
 
 // Set an environment variable (current process only)
-env::set_env(&quot;DEBUG_MODE&quot;, &quot;true&quot;);
+env::set_env("DEBUG_MODE", "true");
 
 // Get the user's home directory
-let home = env::get_home_dir() ?? &quot;/home/user&quot;;
+let home = env::get_home_dir() ?? "/home/user";
 
 // Get the current working directory
-let cwd = env::get_current_dir() ?? &quot;/&quot;;
+let cwd = env::get_current_dir() ?? "/";
 
 // Get the current username
-let user = env::get_username() ?? &quot;nobody&quot;;
+let user = env::get_username() ?? "nobody";
 </code></pre>
 <h3 id="functions"><a class="header" href="#functions">Functions</a></h3>
-<table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>get_env</code></td><td>Gets an environment variable's value</td></tr>
 <tr><td><code>set_env</code></td><td>Sets an environment variable (current process only)</td></tr>
 <tr><td><code>get_home_dir</code></td><td>Returns the current user's home directory path if found</td></tr>
 <tr><td><code>get_current_dir</code></td><td>Returns the current working directory</td></tr>
 <tr><td><code>get_username</code></td><td>Gets the current user's username from <code>$USER</code></td></tr>
 </tbody></table>
+</div>
 <h2 id="stdtext"><a class="header" href="#stdtext"><code>std::text</code></a></h2>
 <p>The <code>std::text</code> module provides access to more string manipulation that Rhai lacks.</p>
 <h3 id="usage-1"><a class="header" href="#usage-1">Usage</a></h3>
-<pre><code class="language-rust ignore">import &quot;std::text&quot; as text;
+<pre><code class="language-js">import "std::text" as text;
 
 // Convert a string to a URL-friendly slug
-let slug = text::to_slug(&quot;Ewwii is cool!&quot;); // output: &quot;ewwii-is-cool&quot;
+let slug = text::to_slug("Ewwii is cool!"); // output: "ewwii-is-cool"
 
 // Convert a string to camelCase
-let camel = text::to_camel_case(&quot;my cool project&quot;); // output: &quot;myCoolProject&quot;
+let camel = text::to_camel_case("my cool project"); // output: "myCoolProject"
 
 // Truncate a string to N characters (without splitting in the middle of a character)
-let short = text::truncate_chars(&quot;hello world&quot;, 5); // output: &quot;hello&quot;
+let short = text::truncate_chars("hello world", 5); // output: "hello"
 
 // Convert a string to uppercase
-let upper = text::to_upper(&quot;hello&quot;); // output: &quot;HELLO&quot;
+let upper = text::to_upper("hello"); // output: "HELLO"
 
 // Convert a string to lowercase
-let lower = text::to_lower(&quot;HELLO&quot;); // output: &quot;hello&quot;
+let lower = text::to_lower("HELLO"); // output: "hello"
 </code></pre>
 <h3 id="functions-1"><a class="header" href="#functions-1">Functions</a></h3>
-<table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>to_slug</code></td><td>Converts a string into a lowercase, hyphen-separated slug</td></tr>
 <tr><td><code>to_camel_case</code></td><td>Converts a string into camelCase, removing non-alphanumeric characters</td></tr>
 <tr><td><code>truncate_chars</code></td><td>Truncates a string to a maximum number of characters (UTF-8 safe)</td></tr>
 <tr><td><code>to_upper</code></td><td>Converts a string to uppercase</td></tr>
 <tr><td><code>to_lower</code></td><td>Converts a string to lowercase</td></tr>
 </tbody></table>
+</div>
 <h2 id="stdmonitor"><a class="header" href="#stdmonitor"><code>std::monitor</code></a></h2>
 <p>The <code>std::monitor</code> module provides utilities for querying information about connected monitors, including their resolution, dimensions, and DPI.</p>
 <h3 id="usage-2"><a class="header" href="#usage-2">Usage</a></h3>
-<pre><code class="language-rust ignore">import &quot;std::monitor&quot; as monitor;
+<pre><code class="language-js">import "std::monitor" as monitor;
 
 // Get number of monitors
 let count = monitor::count(); // e.g., 2
 
 // Get resolution of the primary monitor
 let (w, h) = monitor::primary_resolution();
-let res_str = monitor::primary_resolution_str(); // e.g., &quot;1920x1080&quot;
+let res_str = monitor::primary_resolution_str(); // e.g., "1920x1080"
 
 // Get resolutions of all monitors
 let all_res = monitor::all_resolutions();
-let all_res_str = monitor::all_resolutions_str(); // e.g., &quot;1920x1080, 1280x1024&quot;
+let all_res_str = monitor::all_resolutions_str(); // e.g., "1920x1080, 1280x1024"
 
 // Get dimensions of a specific monitor
 let (x, y, w, h) = monitor::dimensions(0);
-let dim_str = monitor::dimensions_str(0); // e.g., &quot;1920x1080&quot;
+let dim_str = monitor::dimensions_str(0); // e.g., "1920x1080"
 
 // Get DPI of a monitor
 let dpi = monitor::dpi(0);
-let dpi_str = monitor::dpi_str(0); // e.g., &quot;96.0&quot;
+let dpi_str = monitor::dpi_str(0); // e.g., "96.0"
 </code></pre>
 <h3 id="functions-2"><a class="header" href="#functions-2">Functions</a></h3>
-<table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>count()</code></td><td>Returns the number of connected monitors.</td></tr>
 <tr><td><code>primary_resolution()</code></td><td>Returns the width and height of the primary monitor as a tuple <code>(width, height)</code>.</td></tr>
-<tr><td><code>primary_resolution_str()</code></td><td>Returns the primary monitor resolution as a string in the format <code>&quot;WIDTHxHEIGHT&quot;</code>.</td></tr>
+<tr><td><code>primary_resolution_str()</code></td><td>Returns the primary monitor resolution as a string in the format <code>"WIDTHxHEIGHT"</code>.</td></tr>
 <tr><td><code>all_resolutions()</code></td><td>Returns a vector of <code>(width, height)</code> tuples for all connected monitors.</td></tr>
-<tr><td><code>all_resolutions_str()</code></td><td>Returns a comma-separated string of all monitor resolutions in <code>&quot;WIDTHxHEIGHT&quot;</code> format.</td></tr>
+<tr><td><code>all_resolutions_str()</code></td><td>Returns a comma-separated string of all monitor resolutions in <code>"WIDTHxHEIGHT"</code> format.</td></tr>
 <tr><td><code>dimensions(index)</code></td><td>Returns <code>(x, y, width, height)</code> for the monitor at the given index.</td></tr>
-<tr><td><code>dimensions_str(index)</code></td><td>Returns the dimensions of the monitor at the given index as a formatted string <code>&quot;x,y - WxH&quot;</code>.</td></tr>
+<tr><td><code>dimensions_str(index)</code></td><td>Returns the dimensions of the monitor at the given index as a formatted string <code>"x,y - WxH"</code>.</td></tr>
 <tr><td><code>dpi(index)</code></td><td>Returns the DPI (dots per inch) of the monitor at the given index, accounting for scaling.</td></tr>
-<tr><td><code>dpi_str(index)</code></td><td>Returns the DPI as a formatted string with one decimal place, e.g., <code>&quot;96.0&quot;</code>.</td></tr>
+<tr><td><code>dpi_str(index)</code></td><td>Returns the DPI as a formatted string with one decimal place, e.g., <code>"96.0"</code>.</td></tr>
 </tbody></table>
-<h3 id="notes"><a class="header" href="#notes">Notes</a></h3>
+</div>
+<h3 id="notes-1"><a class="header" href="#notes-1">Notes</a></h3>
 <ul>
 <li>Monitor indices are zero-based: the primary monitor is index 0.</li>
 <li>DPI calculation assumes a base of 96 DPI multiplied by the monitor’s scale factor.</li>
@@ -885,28 +961,29 @@ let dpi_str = monitor::dpi_str(0); // e.g., &quot;96.0&quot;
 <h2 id="stdjson"><a class="header" href="#stdjson"><code>std::json</code></a></h2>
 <p>The <code>std::json</code> module provides utilities for working with JSON data within Rhai scripts. It allows parsing, serializing, and manipulating JSON objects dynamically.</p>
 <h3 id="usage-3"><a class="header" href="#usage-3">Usage</a></h3>
-<pre><code class="language-rust ignore">import &quot;std::json&quot; as json;
+<pre><code class="language-js">import "std::json" as json;
 
 // Parse a JSON string
-let json_val = json::parse_json(r#&quot;{&quot;name&quot;:&quot;Alice&quot;,&quot;age&quot;:30}&quot;#);
+let json_val = json::parse_json(r#"{"name":"Alice","age":30}"#);
 
 // Convert JSON back to string
 let json_str = json::to_string(json_val);
 
 // Get a value from a JSON object
-let name = json::get(json_val, &quot;name&quot;); // &quot;Alice&quot;
+let name = json::get(json_val, "name"); // "Alice"
 
 // Set a value in a JSON object
-json::set(json_val, &quot;age&quot;, 31);
+json::set(json_val, "age", 31);
 </code></pre>
 <h3 id="functions-3"><a class="header" href="#functions-3">Functions</a></h3>
-<table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>parse_json()</code></td><td>Parses a JSON string into a Rhai <code>Dynamic</code> representing a <code>serde_json::Value</code>. Returns an error if parsing fails.</td></tr>
 <tr><td><code>to_string()</code></td><td>Serializes a <code>Dynamic</code> JSON value back into a JSON string.</td></tr>
 <tr><td><code>get()</code></td><td>Retrieves a value by key from a JSON object. Returns <code>()</code> if the key does not exist.</td></tr>
 <tr><td><code>set()</code></td><td>Sets a key-value pair in a JSON object. Returns an error if the value is not a JSON object.</td></tr>
 </tbody></table>
-<h3 id="notes-1"><a class="header" href="#notes-1">Notes</a></h3>
+</div>
+<h3 id="notes-2"><a class="header" href="#notes-2">Notes</a></h3>
 <ul>
 <li>All JSON values are represented as Rhai <code>Dynamic</code> objects internally.</li>
 <li>Keys that do not exist in a JSON object return a <code>UNIT</code> value.</li>
@@ -917,7 +994,7 @@ json::set(json_val, &quot;age&quot;, 31);
 <p>The <code>std::math</code> module provides a collection of mathematical constants and functions.
 It includes basic arithmetic, trigonometry, exponentiation, logarithms, and utility functions.</p>
 <h3 id="usage-4"><a class="header" href="#usage-4">Usage</a></h3>
-<pre><code class="language-rust ignore">import &quot;std::math&quot; as math;
+<pre><code class="language-js">import "std::math" as math;
 
 // Constants
 print(math::PI); // 3.14159...
@@ -930,9 +1007,9 @@ let y = math::sqrt(9.0); // 3
 let z = math::pow(2.0, 10.0); // 1024
 
 // Trigonometry
-let s = math::sin(math::PI / 2); // 1
+let s = math::sin(math::PI / 2); // ~1
 let c = math::cos(0.0); // 1
-let t = math::tan(math::PI / 4); // 1
+let t = math::tan(math::PI / 4); // ~1
 
 // Exponentials &amp; logs
 let e = math::exp(1.0); // ~2.718
@@ -965,13 +1042,14 @@ let toi = math::to_int(3.14);   // truncates toward zero -&gt; 3
 // If you want nearest integer, use: to_int(math::round(3.14))
 </code></pre>
 <h3 id="constants"><a class="header" href="#constants">Constants</a></h3>
-<table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>PI</code></td><td>3.14159…</td><td>Circle ratio π</td></tr>
 <tr><td><code>E</code></td><td>2.71828…</td><td>Euler’s number</td></tr>
 <tr><td><code>TAU</code></td><td>6.28318…</td><td>Full circle (2π)</td></tr>
 </tbody></table>
+</div>
 <h3 id="functions-4"><a class="header" href="#functions-4">Functions</a></h3>
-<table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>abs(x)</code></td><td>Absolute value of <code>x</code></td></tr>
 <tr><td><code>sqrt(x)</code></td><td>Square root of <code>x</code></td></tr>
 <tr><td><code>pow(base, exp)</code></td><td>Base raised to power of exponent</td></tr>
@@ -1000,18 +1078,39 @@ let toi = math::to_int(3.14);   // truncates toward zero -&gt; 3
 <tr><td><code>to_float</code></td><td>Convert an integer or float into a floating-point</td></tr>
 <tr><td><code>to_int</code></td><td>Convert an integer or float into an integer</td></tr>
 </tbody></table>
+</div>
 <h3 id="note"><a class="header" href="#note">Note</a></h3>
 <p>All functions in this module work with floating-point numbers (f64).</p>
 <p>If you pass an integer (e.g. <code>0</code>), Rhai will report an error because there is no math::cos(i64). Use a floating-point literal instead (e.g. <code>0.0</code>).</p>
 <p>All math functions return <code>f64</code>. If you need an integer result, use <code>to_int</code> to convert.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="api-library"><a class="header" href="#api-library">API Library</a></h1>
+<h2 id="stdcommand"><a class="header" href="#stdcommand"><code>std::command</code></a></h2>
+<p>The <code>std::command</code> module provides functions which you can use to run shell commands on your system.</p>
+<h3 id="usage-5"><a class="header" href="#usage-5">Usage</a></h3>
+<pre><code class="language-js">import "std::command" as command;
+
+// run a command
+command::run("notify-send Hello!");
+
+// run a command and read output from stdout
+let output = command::run_and_read("pwd"); // example output: /home/foo/.config/ewwii/
+</code></pre>
+<h3 id="functions-5"><a class="header" href="#functions-5">Functions</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>run(x)</code></td><td>Run the shell command in <code>x</code></td></tr>
+<tr><td><code>run_and_read(x)</code></td><td>Run the shell command in <code>x</code> and return the stdout</td></tr>
+</tbody></table>
+</div>
+<h3 id="note-1"><a class="header" href="#note-1">Note</a></h3>
+<p>The functions in <code>std::command</code> execute arbitrary shell commands. Only run scripts you trust, as misuse can compromise your system.</p>
+<p>This, along with features like <code>poll</code>, <code>listen</code>, <code>onclick</code>, <code>onhover</code>, etc., which also run shell commands, can be abused by bad actors. Always verify and trust a package before installing it via <a href="https://github.com/Ewwii-sh/eiipm">eiipm</a>. Even if a package is registered in <a href="https://github.com/Ewwii-sh/eii-manifests">eii-manifests</a>, bad actors could change the code of their package without the awareness of maintainers.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="api-library"><a class="header" href="#api-library">API Library</a></h1>
 <h2 id="apiwifi"><a class="header" href="#apiwifi"><code>api::wifi</code></a></h2>
 <p>The <code>wifi</code> module provides cross-platform Wi-Fi management for Linux and macOS systems. Functions include scanning networks, querying the current connection, connecting/disconnecting, and enabling/disabling the Wi-Fi adapter.</p>
 <blockquote>
 <p><strong>Note:</strong> macOS support is largely untested and may behave differently depending on system configuration.</p>
 </blockquote>
-<h3 id="usage-5"><a class="header" href="#usage-5">Usage</a></h3>
-<pre><code class="language-rust ignore">import &quot;api::wifi&quot; as wifi;
+<h3 id="usage-6"><a class="header" href="#usage-6">Usage</a></h3>
+<pre><code class="language-js">import "api::wifi" as wifi;
 
 // Scan for available networks
 let networks = wifi::scan();
@@ -1019,8 +1118,11 @@ let networks = wifi::scan();
 // Get current Wi-Fi connection info
 let current = wifi::current_connection();
 
-// Connect to a network
-wifi::connect(&quot;MySSID&quot;, &quot;MyPassword&quot;);
+// Connect to a network with password
+wifi::connect("MySSID", "MyPassword");
+
+// Connect to a network without password (using saved profile)
+wifi::connect_without_password("MySSID");
 
 // Disconnect from the current network
 wifi::disconnect();
@@ -1032,23 +1134,25 @@ wifi::disable_adapter();
 // Get adapter connection
 wifi::get_adapter_connectivity();
 </code></pre>
-<h3 id="functions-5"><a class="header" href="#functions-5">Functions</a></h3>
-<table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
+<h3 id="functions-6"><a class="header" href="#functions-6">Functions</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>scan()</code></td><td>Returns a list of nearby Wi-Fi networks with <code>ssid</code>, <code>signal</code>, and <code>security</code> fields.</td></tr>
 <tr><td><code>scan_linux()</code></td><td><strong>Linux only</strong>. Returns a list of nearby Wi-Fi networks. Equivalent to <code>scan()</code>.</td></tr>
 <tr><td><code>scan_macos()</code></td><td><strong>macOS only (untested)</strong>. Returns a list of nearby Wi-Fi networks. Equivalent to <code>scan()</code>.</td></tr>
 <tr><td><code>current_connection()</code></td><td>Returns information about the current Wi-Fi connection as a map (<code>ssid</code>, <code>signal</code>, <code>security</code>).</td></tr>
-<tr><td><code>connect(ssid, password?)</code></td><td>Connects to a Wi-Fi network. <code>password</code> is optional for open networks.</td></tr>
+<tr><td><code>connect(ssid, password)</code></td><td>Connects to a Wi-Fi network.</td></tr>
+<tr><td><code>connect_without_password(ssid)</code></td><td>Connects to a Wi-Fi network without password by using the saved profile.</td></tr>
 <tr><td><code>disconnect()</code></td><td>Disconnects from the currently connected network (does not disable the adapter).</td></tr>
 <tr><td><code>enable_adapter()</code></td><td>Turns the Wi-Fi adapter on.</td></tr>
 <tr><td><code>get_adapter_connectivity()</code></td><td>Returns a normalized connectivity status of the Wi-Fi adapter.</td></tr>
 </tbody></table>
+</div>
 <h3 id="extra-notes"><a class="header" href="#extra-notes">Extra Notes</a></h3>
 <p><code>get_adapter_connectivity()</code> has different outcome possibilities in each OS.</p>
 <p><strong>All possible results:</strong></p>
 <ul>
-<li><strong>Linux</strong>: <code>&quot;full&quot;</code> (internet available), <code>&quot;limited&quot;</code> (network only, no internet), <code>&quot;portal&quot;</code> (captive portal), <code>&quot;none&quot;</code> (no connectivity)</li>
-<li><strong>macOS</strong>: <code>&quot;full&quot;</code> (connected to a Wi-Fi network) or <code>&quot;none&quot;</code> (not connected)</li>
+<li><strong>Linux</strong>: <code>"full"</code> (internet available), <code>"limited"</code> (network only, no internet), <code>"portal"</code> (captive portal), <code>"none"</code> (no connectivity)</li>
+<li><strong>macOS</strong>: <code>"full"</code> (connected to a Wi-Fi network) or <code>"none"</code> (not connected)</li>
 </ul>
 <h3 id="platform-notes"><a class="header" href="#platform-notes">Platform Notes</a></h3>
 <ul>
@@ -1060,17 +1164,17 @@ wifi::get_adapter_connectivity();
 <ul>
 <li><code>scan()</code> (or <code>scan_linux</code> / <code>scan_macos</code>) returns an <strong>array of maps</strong>:</li>
 </ul>
-<pre><code class="language-rust ignore">[
-    { &quot;ssid&quot;: &quot;HomeWiFi&quot;, &quot;signal&quot;: &quot;78&quot;, &quot;security&quot;: &quot;WPA2&quot; },
-    { &quot;ssid&quot;: &quot;CafeNet&quot;, &quot;signal&quot;: &quot;65&quot;, &quot;security&quot;: &quot;WPA&quot; }
-]
+<pre><code class="language-js">[
+    { ssid: "HomeWiFi", signal: "78", security: "WPA2" },
+    { ssid: "CafeNet", signal: "65", security: "WPA" },
+];
 </code></pre>
 <ul>
 <li><code>current_connection()</code> returns a <strong>map</strong>:</li>
 </ul>
-<pre><code class="language-rust ignore">{ &quot;ssid&quot;: &quot;HomeWiFi&quot;, &quot;signal&quot;: &quot;78&quot;, &quot;security&quot;: &quot;WPA2&quot; }
+<pre><code class="language-js">{ "ssid": "HomeWiFi", "signal": "78", "security": "WPA2" }
 </code></pre>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="widgets"><a class="header" href="#widgets">Widgets</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="widgets"><a class="header" href="#widgets">Widgets</a></h1>
 <p>Widgets are the building blocks of your interface. Each widget represents a visual element—text, images, containers, interactive components—that can be composed, styled, and updated dynamically.</p>
 <p>This section introduces:</p>
 <ul>
@@ -1080,7 +1184,7 @@ wifi::get_adapter_connectivity();
 <li>Patterns for building reusable or dynamic widget trees</li>
 </ul>
 <p>You’ll also learn how widget properties interact with the expression language and how reactivity is handled across updates.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="widgets--parameters"><a class="header" href="#widgets--parameters">Widgets &amp; Parameters</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="widgets--parameters"><a class="header" href="#widgets--parameters">Widgets &amp; Parameters</a></h1>
 <p>Below is a list of available widgets and the parameters each accepts.</p>
 <h2 id="widget-functions"><a class="header" href="#widget-functions">Widget Functions</a></h2>
 <p>These functions correspond to actual GTK widgets and render visible UI elements.</p>
@@ -1125,14 +1229,14 @@ wifi::get_adapter_connectivity();
 <p>Both of these are discussed in <a href="widgets/../config/config_fundamentals.html">chapter 2.2</a></p>
 </blockquote>
 </blockquote>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="widget-properties"><a class="header" href="#widget-properties">Widget Properties</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="widget-properties"><a class="header" href="#widget-properties">Widget Properties</a></h1>
 <h2 id="widget"><a class="header" href="#widget">widget</a></h2>
 <p>These properties apply to all widgets, and can be used anywhere!</p>
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>class</code>: <code>string</code> css class name</li>
-<li><code>valign</code>: <code>string</code> how to align this vertically. possible values: &quot;fill&quot;, &quot;baseline&quot;, &quot;center&quot;, &quot;start&quot;, &quot;end&quot;</li>
-<li><code>halign</code>: <code>string</code> how to align this horizontally. possible values: &quot;fill&quot;, &quot;baseline&quot;, &quot;center&quot;, &quot;start&quot;, &quot;end&quot;</li>
+<li><code>valign</code>: <code>string</code> how to align this vertically. possible values: "fill", "baseline", "center", "start", "end"</li>
+<li><code>halign</code>: <code>string</code> how to align this horizontally. possible values: "fill", "baseline", "center", "start", "end"</li>
 <li><code>vexpand</code>: <code>bool</code> should this container expand vertically. Default: false</li>
 <li><code>hexpand</code>: <code>bool</code> should this widget expand horizontally. Default: false</li>
 <li><code>width</code>: <code>int</code> width of this element</li>
@@ -1147,7 +1251,7 @@ wifi::get_adapter_connectivity();
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>items</code>: <code>vec</code> Items displayed in the combo box</li>
-<li><code>timeout</code>: <code>duration</code> timeout of the command. Default: &quot;200ms&quot;</li>
+<li><code>timeout</code>: <code>duration</code> timeout of the command. Default: "200ms"</li>
 <li><code>onchange</code>: <code>string</code> runs when an item is selected, replacing <code>{}</code> with the item</li>
 </ul>
 <h2 id="expander"><a class="header" href="#expander">expander</a></h2>
@@ -1159,15 +1263,15 @@ wifi::get_adapter_connectivity();
 <h2 id="revealer"><a class="header" href="#revealer">revealer</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
-<li><code>transition</code>: <code>string</code> animation name (&quot;slideright&quot;, &quot;slideleft&quot;, etc.)</li>
+<li><code>transition</code>: <code>string</code> animation name ("slideright", "slideleft", etc.)</li>
 <li><code>reveal</code>: <code>bool</code> whether the child is revealed</li>
-<li><code>duration</code>: <code>duration</code> how long the transition lasts. Default: &quot;500ms&quot;</li>
+<li><code>duration</code>: <code>duration</code> how long the transition lasts. Default: "500ms"</li>
 </ul>
 <h2 id="checkbox"><a class="header" href="#checkbox">checkbox</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>checked</code>: <code>bool</code> initial checked state</li>
-<li><code>timeout</code>: <code>duration</code> command timeout. Default: &quot;200ms&quot;</li>
+<li><code>timeout</code>: <code>duration</code> command timeout. Default: "200ms"</li>
 <li><code>onchecked</code>: <code>string</code> command when checked</li>
 <li><code>onunchecked</code>: <code>string</code> command when unchecked</li>
 </ul>
@@ -1176,14 +1280,14 @@ wifi::get_adapter_connectivity();
 <ul>
 <li><code>use_alpha</code>: <code>bool</code> use alpha channel</li>
 <li><code>onchange</code>: <code>string</code> command on color select</li>
-<li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
+<li><code>timeout</code>: <code>duration</code> Default: "200ms"</li>
 </ul>
 <h2 id="color-chooser"><a class="header" href="#color-chooser">color-chooser</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>use_alpha</code>: <code>bool</code> use alpha channel</li>
 <li><code>onchange</code>: <code>string</code> command on color select</li>
-<li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
+<li><code>timeout</code>: <code>duration</code> Default: "200ms"</li>
 </ul>
 <h2 id="slider"><a class="header" href="#slider">slider</a></h2>
 <p><strong>Properties</strong></p>
@@ -1191,12 +1295,12 @@ wifi::get_adapter_connectivity();
 <li><code>flipped</code>: <code>bool</code> reverse direction</li>
 <li><code>marks</code>: <code>string</code> draw marks</li>
 <li><code>draw_value</code>: <code>bool</code> show value</li>
-<li><code>value_pos</code>: <code>string</code> where to show value (&quot;left&quot;, &quot;right&quot;, etc.)</li>
+<li><code>value_pos</code>: <code>string</code> where to show value ("left", "right", etc.)</li>
 <li><code>round_digits</code>: <code>int</code> number of decimal places</li>
 <li><code>value</code>: <code>float</code> current value</li>
 <li><code>min</code>: <code>float</code> minimum value</li>
 <li><code>max</code>: <code>float</code> maximum value</li>
-<li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
+<li><code>timeout</code>: <code>duration</code> Default: "200ms"</li>
 <li><code>onchange</code>: <code>string</code> command on change (use <code>{}</code> for value)</li>
 <li><code>orientation</code>: <code>string</code> layout direction</li>
 </ul>
@@ -1208,18 +1312,19 @@ wifi::get_adapter_connectivity();
 <li><code>orientation</code>: <code>string</code> layout direction</li>
 </ul>
 <h2 id="input"><a class="header" href="#input">input</a></h2>
+<p><strong>NOTE:</strong> This widget exposes a special environment variable <code>INPUT_VAL</code> to the commands specified in <code>onchange</code> and <code>onaccept</code>.</p>
 <p><strong>Properties</strong></p>
 <ul>
 <li><code>value</code>: <code>string</code> current text</li>
-<li><code>onchange</code>: <code>string</code> command on change</li>
-<li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
-<li><code>onaccept</code>: <code>string</code> command on Enter</li>
+<li><code>onchange</code>: <code>string</code> command on change; <code>INPUT_VAL</code> contains the new value</li>
+<li><code>timeout</code>: <code>duration</code> Default: "200ms"</li>
+<li><code>onaccept</code>: <code>string</code> command on Enter; <code>INPUT_VAL</code> contains the new value</li>
 <li><code>password</code>: <code>bool</code> obscure input</li>
 </ul>
 <h2 id="button"><a class="header" href="#button">button</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
-<li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
+<li><code>timeout</code>: <code>duration</code> Default: "200ms"</li>
 <li><code>onclick</code>: <code>string</code> command on activation</li>
 <li><code>onmiddleclick</code>: <code>string</code> command on middle click</li>
 <li><code>onrightclick</code>: <code>string</code> command on right click</li>
@@ -1263,14 +1368,14 @@ wifi::get_adapter_connectivity();
 <h2 id="eventbox"><a class="header" href="#eventbox">eventbox</a></h2>
 <p><strong>Properties</strong></p>
 <ul>
-<li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
+<li><code>timeout</code>: <code>duration</code> Default: "200ms"</li>
 <li><code>onscroll</code>: <code>string</code> command on scroll (<code>{}</code> becomes direction)</li>
 <li><code>onhover</code>: <code>string</code> command on hover</li>
 <li><code>onhoverlost</code>: <code>string</code> command on hover exit</li>
 <li><code>cursor</code>: <code>string</code> cursor type</li>
 <li><code>ondropped</code>: <code>string</code> command on drop (<code>{}</code> is URI)</li>
 <li><code>dragvalue</code>: <code>string</code> URI to drag from this widget</li>
-<li><code>dragtype</code>: <code>string</code> type to drag (&quot;file&quot;, &quot;text&quot;)</li>
+<li><code>dragtype</code>: <code>string</code> type to drag ("file", "text")</li>
 <li><code>onclick</code>: <code>string</code> command on click</li>
 <li><code>onmiddleclick</code>: <code>string</code> command on middle click</li>
 <li><code>onrightclick</code>: <code>string</code> command on right click</li>
@@ -1291,7 +1396,7 @@ wifi::get_adapter_connectivity();
 <li><code>xalign</code>: <code>float</code> horizontal alignment</li>
 <li><code>yalign</code>: <code>float</code> vertical alignment</li>
 <li><code>justify</code>: <code>string</code> text justification</li>
-<li><code>wrap_mode</code>: <code>string</code> wrap mode (&quot;word&quot;, &quot;char&quot;, etc.)</li>
+<li><code>wrap_mode</code>: <code>string</code> wrap mode ("word", "char", etc.)</li>
 <li><code>lines</code>: <code>int</code> max lines (−1 = unlimited)</li>
 </ul>
 <h2 id="literal"><a class="header" href="#literal">literal</a></h2>
@@ -1310,7 +1415,7 @@ wifi::get_adapter_connectivity();
 <li><code>show_day_names</code>: <code>bool</code> show day names</li>
 <li><code>show_week_numbers</code>: <code>bool</code> show week numbers</li>
 <li><code>onclick</code>: <code>string</code> command with <code>{0}</code>, <code>{1}</code>, <code>{2}</code> for day/month/year</li>
-<li><code>timeout</code>: <code>duration</code> Default: &quot;200ms&quot;</li>
+<li><code>timeout</code>: <code>duration</code> Default: "200ms"</li>
 </ul>
 <h2 id="stack"><a class="header" href="#stack">stack</a></h2>
 <p><strong>Properties</strong></p>
@@ -1347,7 +1452,7 @@ wifi::get_adapter_connectivity();
 <li><code>min</code>: <code>float</code> minimum value</li>
 <li><code>max</code>: <code>float</code> maximum value</li>
 </ul>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
 <p>This section provides hands-on, practical demonstrations of everything covered so far. Real layouts, interactive components, and theming techniques will be used in these examples.</p>
 <p>Each example is minimal but complete, focusing on a particular design pattern or technique. You can copy-paste them into your own config to experiment.</p>
 <p>Included:</p>
@@ -1357,7 +1462,7 @@ wifi::get_adapter_connectivity();
 <li>Theming techniques and tricks to override or enhance GTK styles</li>
 </ul>
 <p>If you're stuck or just looking for inspiration, this is your go-to reference.</p>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="starter-bar"><a class="header" href="#starter-bar">Starter Bar</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="starter-bar"><a class="header" href="#starter-bar">Starter Bar</a></h1>
 <p><img src="https://raw.githubusercontent.com/ewwii-sh/ewwii/main/examples/ewwii-bar/ewwii-bar.png" alt="Example 1" /></p>
 <p>A basic starter bar which will be very helpful to beginners, see <a href="https://github.com/Ewwii-sh/ewwii/tree/main/examples/ewwii-bar">examples/ewwii-bar</a>.</p>
 <h2 id="installing"><a class="header" href="#installing">Installing</a></h2>
@@ -1365,9 +1470,9 @@ wifi::get_adapter_connectivity();
 <p>Just run the following command and have the template ready in the current working directory in an instant!</p>
 <pre><code class="language-bash">eiipm i starter_template
 </code></pre>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="interactive-widgets"><a class="header" href="#interactive-widgets">Interactive Widgets</a></h1>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="theming-tricks"><a class="header" href="#theming-tricks">Theming Tricks</a></h1>
-<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="interactive-widgets"><a class="header" href="#interactive-widgets">Interactive Widgets</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="theming-tricks"><a class="header" href="#theming-tricks">Theming Tricks</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
 <p>Here you will find help if something doesn't work. If the issue isn't listed here, please <a href="https://github.com/Ewwii-sh/ewwii/issues">open an issue on the GitHub repo.</a></p>
 <h2 id="ewwii-does-not-compile"><a class="header" href="#ewwii-does-not-compile">Ewwii does not compile</a></h2>
 <ol>
@@ -1402,9 +1507,7 @@ wifi::get_adapter_connectivity();
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                        
 
-                        
 
                         <div style="clear: both"></div>
                     </nav>
@@ -1412,51 +1515,37 @@ wifi::get_adapter_connectivity();
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                
 
-                
             </nav>
 
         </div>
 
-        
 
-        
 
-        
 
-        
-        <script type="text/javascript">
+        <script>
             window.playground_copyable = true;
         </script>
-        
 
-        
 
-        
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
-        
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
 
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
-        
-        <script type="text/javascript" src="js/home_button.js"></script>
-        
+        <script src="js/home_button.js"></script>
 
-        
-        
-        <script type="text/javascript">
+        <script>
         window.addEventListener('load', function() {
             window.setTimeout(window.print, 100);
         });
         </script>
-        
-        
 
+
+    </div>
     </body>
 </html>
