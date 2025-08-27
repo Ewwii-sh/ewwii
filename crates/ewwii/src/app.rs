@@ -386,7 +386,7 @@ impl<B: DisplayBackend> App<B> {
 
             let root_widget = {
                 let mut store = widget_reg_store.lock().unwrap();
-                build_gtk_widget(WidgetInput::Window(window_def), &mut *store)?
+                build_gtk_widget(&WidgetInput::Window(window_def), &mut *store)?
             };
 
             root_widget.style_context().add_class(window_name);
@@ -744,8 +744,7 @@ async fn generate_new_widgetnode(
         bail!("The configuration file `{}` does not exist", code_path.display());
     }
 
-    let new_root_widget =
-        reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast)?;
+    let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast)?;
 
     Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget)?)
 }
