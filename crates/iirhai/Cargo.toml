@@ -26,3 +26,4 @@ chrono.workspace = true
 textwrap.workspace =true
 termsize.workspace = true
 ahash.workspace = true
+nix = { workspace = true, features = ["process", "fs", "signal"] }
