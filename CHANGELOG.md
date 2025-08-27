@@ -24,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   `std::command` module for running shell commands.
 -   `INPUT_VAL` environment variable for Input widget commands (`onchange` and `onaccept`), containing the current text of the input field.
 -   Parse error handling for external module code.
--   Full optimization for compiled code.
 
 ### Changed
 
