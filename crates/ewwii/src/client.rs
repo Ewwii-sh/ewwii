@@ -42,9 +42,13 @@ pub fn do_server_call(
     stream.write_all(&message_bytes).context("Failed to write command to IPC stream")?;
 
     let mut buf = Vec::new();
-    stream
-        .set_read_timeout(Some(std::time::Duration::from_millis(100)))
-        .context("Failed to set read timeout")?;
+    // NO TIMEOUT!!!!!!
+    // Why is timeout even needed here?
+    // it just breaks stuff if didnt read anything in 100 ms
+    // thats crazy.... I ain't gonna add it.
+    // stream
+    //     .set_read_timeout(Some(std::time::Duration::from_millis(100)))
+    //     .context("Failed to set read timeout")?;
     stream.read_to_end(&mut buf).context("Error reading response from server")?;
 
     Ok(if buf.is_empty() {
