@@ -410,10 +410,19 @@ impl<B: DisplayBackend> App<B> {
             let widget_reg_store = widget_reg_store.clone();
 
             glib::MainContext::default().spawn_local(async move {
-                while let Some(var_name) = rx.recv().await {
-                    log::debug!("Received update for var: {}", var_name);
-                    let vars = store.read().unwrap().clone();
+                let mut pending_updates = HashSet::new();
 
+                while let Some(var_name) = rx.recv().await {
+                    pending_updates.insert(var_name);
+
+                    // short batching interval (1 frame)
+                    glib::timeout_future(Duration::from_millis(16)).await;
+
+                    while let Ok(next_var) = rx.try_recv() {
+                        pending_updates.insert(next_var);
+                    }
+
+                    let vars = store.read().unwrap().clone();
                     match generate_new_widgetnode(
                         &vars,
                         &config_path,
@@ -429,7 +438,10 @@ impl<B: DisplayBackend> App<B> {
                             log::error!("Failed to generate new widgetnode: {:#}", e);
                         }
                     }
+
+                    pending_updates.clear();
                 }
+
                 log::debug!("Receiver loop exited");
             });
 
