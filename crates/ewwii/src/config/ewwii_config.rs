@@ -1,9 +1,6 @@
-// WHY THE HECK IS YUCK SO HARD TO REPLACE?
-// I am losing my sanity replacing it!
-// I wonder how honorificabilitudinitatibus will I feel after replacing yuck...
 use anyhow::{bail, Context, Result};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::{
     // ipc_server,
@@ -28,8 +25,8 @@ pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwiiConfig> {
 #[derive(Debug, Clone, Default)]
 pub struct EwwiiConfig {
     windows: HashMap<String, WindowDefinition>,
-    root_node: Option<Arc<WidgetNode>>,
-    compiled_ast: Option<Arc<AST>>,
+    root_node: Option<Rc<WidgetNode>>,
+    compiled_ast: Option<Rc<AST>>,
 }
 
 #[derive(Debug, Clone)]
@@ -37,7 +34,7 @@ pub struct WindowDefinition {
     pub name: String,
     pub props: Map,
     pub backend_options: BackendWindowOptionsDef,
-    pub root_widget: Arc<WidgetNode>,
+    pub root_widget: Rc<WidgetNode>,
 }
 
 impl EwwiiConfig {
@@ -75,7 +72,7 @@ impl EwwiiConfig {
                         name,
                         props,
                         backend_options,
-                        root_widget: Arc::new(*node),
+                        root_widget: Rc::new(*node),
                     };
                     window_definitions.insert(win_def.name.clone(), win_def);
                 }
@@ -86,8 +83,8 @@ impl EwwiiConfig {
 
         Ok(EwwiiConfig {
             windows: window_definitions,
-            root_node: Some(Arc::new(config_tree)),
-            compiled_ast: Some(Arc::new(compiled_ast)),
+            root_node: Some(Rc::new(config_tree)),
+            compiled_ast: Some(Rc::new(compiled_ast)),
         })
     }
 
@@ -105,7 +102,7 @@ impl EwwiiConfig {
         })
     }
 
-    pub fn get_root_node(&self) -> Result<Arc<WidgetNode>> {
+    pub fn get_root_node(&self) -> Result<Rc<WidgetNode>> {
         self.root_node.clone().ok_or_else(|| anyhow::anyhow!("root_node is missing"))
     }
 
@@ -135,7 +132,7 @@ impl EwwiiConfig {
         }
     }
 
-    pub fn get_owned_compiled_ast(&self) -> Option<Arc<AST>> {
+    pub fn get_owned_compiled_ast(&self) -> Option<Rc<AST>> {
         self.compiled_ast.clone()
     }
 }
