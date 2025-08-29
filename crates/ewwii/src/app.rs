@@ -37,7 +37,7 @@ use std::{
     collections::{HashMap, HashSet},
     marker::PhantomData,
     rc::Rc,
-    sync::{Arc, Mutex},
+    sync::Mutex,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -90,7 +90,7 @@ pub enum DaemonCommand {
 pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
-    pub widget_reg_store: Arc<Mutex<WidgetRegistry>>,
+    pub widget_reg_store: Rc<Mutex<WidgetRegistry>>,
     pub delete_event_handler_id: Option<glib::SignalHandlerId>,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
@@ -379,7 +379,7 @@ impl<B: DisplayBackend> App<B> {
 
             // Should hold the id and the props of a widget
             // It is critical for supporting dynamic updates
-            let widget_reg_store = Arc::new(Mutex::new(WidgetRegistry::new(Some(
+            let widget_reg_store = Rc::new(Mutex::new(WidgetRegistry::new(Some(
                 config::EwwiiConfig::get_borrowed_windows_root_widget(
                     self.ewwii_config.get_root_node()?.as_ref(),
                 )?,
@@ -641,7 +641,7 @@ impl<B: DisplayBackend> App<B> {
 
         let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
 
-        // unwrap Arc<AST>
+        // unwrap Rc<AST>
         let ast_ref: &rhai::AST =
             compiled_ast.as_ref().ok_or_else(|| anyhow!("AST not compiled yet"))?.as_ref();
 
@@ -657,7 +657,7 @@ fn initialize_window<B: DisplayBackend>(
     window_init: &WindowInitiator,
     monitor: Monitor,
     root_widget: gtk::Widget,
-    widget_reg_store: Arc<Mutex<WidgetRegistry>>,
+    widget_reg_store: Rc<Mutex<WidgetRegistry>>,
 ) -> Result<EwwiiWindow> {
     let monitor_geometry = monitor.geometry();
     let (actual_window_rect, x, y) = match window_init.geometry {
