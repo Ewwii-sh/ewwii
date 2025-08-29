@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 -   Ewwii creating zombie process on opening window.
+-   Ewwii shutting down all poll/listen handlers when any window closes.
 
 ## [0.1.0-beta] - 2025-08-27
 

@@ -324,7 +324,7 @@ impl<B: DisplayBackend> App<B> {
         let _ = crate::application_lifecycle::send_exit();
     }
 
-    /// Close a window and do all the required cleanups in the scope_graph and script_var_handler
+    /// Close a window
     fn close_window(&mut self, instance_id: &str, auto_reopen: bool) -> Result<()> {
         if let Some(old_abort_send) = self.window_close_timer_abort_senders.remove(instance_id) {
             _ = old_abort_send.send(());
@@ -335,9 +335,6 @@ impl<B: DisplayBackend> App<B> {
 
         // let scope_index = ewwii_window.scope_index;
         ewwii_window.close();
-
-        // kill all poll/listen instances
-        iirhai::updates::kill_state_change_handler();
 
         if auto_reopen {
             self.failed_windows.insert(instance_id.to_string());
