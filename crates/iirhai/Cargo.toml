@@ -9,7 +9,7 @@ repository = "https://github.com/byson94/ewwii"
 homepage = "https://github.com/byson94/ewwii"
 
 [dependencies]
-rhai = { version = "1.22.2", features = ["internals"] }
+rhai = { workspace = true, features = ["internals"] }
 ewwii_shared_util.workspace = true
 anyhow.workspace = true
 gtk.workspace = true
