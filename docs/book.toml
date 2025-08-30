@@ -10,5 +10,5 @@ default-theme = "latte"
 preferred-dark-theme = "ewwii"
 site-url = "/ewwii/"
 git-repository-url = "https://github.com/Ewwii-sh/ewwii"
-additional-js = ["js/home_button.js"]
-additional-css = ["./theme/catppuccin.css", "./theme/ewwii.css"]
+additional-js = ["./js/home_button.js", "./theme/rhai-autodocs/tabs.js"]
+additional-css = ["./theme/catppuccin.css", "./theme/ewwii.css", "./theme/rhai-autodocs/default.css"]
