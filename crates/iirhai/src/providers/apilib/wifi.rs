@@ -1,4 +1,4 @@
-//! MacOS wifi api is Untested
+//! MacOS Wi-Fi API is untested.
 
 use rhai::{plugin::*, Array, Dynamic, EvalAltResult, Map};
 use std::process::Command;
@@ -7,9 +7,28 @@ use std::process::Command;
 pub mod wifi {
     use super::*;
 
+    /// Scans for all available Wi-Fi connections on Linux.
+    ///
+    /// # Arguments
+    ///
+    /// This function does not require any arguments.
+    ///
+    /// # Returns
+    ///
+    /// An `Array` containing information about each Wi-Fi connection, where each entry is a `Map`
+    /// with keys "ssid", "signal", and "security" representing the Wi-Fi network's SSID, signal strength,
+    /// and security type.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// let networks = wifi::scan();
+    /// ```
     #[cfg(target_os = "linux")]
     #[rhai_fn(return_raw)]
-    fn scan_linux() -> Result<Array, Box<EvalAltResult>> {
+    pub fn scan_linux() -> Result<Array, Box<EvalAltResult>> {
         let output = Command::new("nmcli")
             .args(&["-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi"])
             .output()
@@ -33,9 +52,28 @@ pub mod wifi {
         Ok(result)
     }
 
+    /// Scans for all available Wi-Fi connections on macOS.
+    ///
+    /// # Arguments
+    ///
+    /// This function does not require any arguments.
+    ///
+    /// # Returns
+    ///
+    /// An `Array` containing information about each Wi-Fi connection, where each entry is a `Map`
+    /// with keys "ssid", "signal", and "security" representing the Wi-Fi network's SSID, signal strength,
+    /// and security type.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// let networks = wifi::scan();
+    /// ```
     #[cfg(target_os = "macos")]
     #[rhai_fn(return_raw)]
-    fn scan_macos() -> Result<Array, Box<EvalAltResult>> {
+    pub fn scan_macos() -> Result<Array, Box<EvalAltResult>> {
         let output = Command::new("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport")
             .arg("-s")
             .output()
@@ -59,6 +97,25 @@ pub mod wifi {
         Ok(result)
     }
 
+    /// Scans for all available Wi-Fi connections, platform-dependent (Linux or macOS).
+    ///
+    /// # Arguments
+    ///
+    /// This function does not require any arguments.
+    ///
+    /// # Returns
+    ///
+    /// An `Array` containing information about each Wi-Fi connection, where each entry is a `Map`
+    /// with keys "ssid", "signal", and "security" representing the Wi-Fi network's SSID, signal strength,
+    /// and security type.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// let networks = wifi::scan();
+    /// ```
     #[rhai_fn(return_raw)]
     pub fn scan() -> Result<Array, Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
@@ -77,6 +134,23 @@ pub mod wifi {
         }
     }
 
+    /// Retrieves the current active Wi-Fi connection's details (SSID, signal, and security).
+    ///
+    /// # Arguments
+    ///
+    /// This function does not require any arguments.
+    ///
+    /// # Returns
+    ///
+    /// A `Map` containing the current connection's SSID, signal strength, and security type.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// let connection = wifi::current_connection();
+    /// ```
     #[rhai_fn(return_raw)]
     pub fn current_connection() -> Result<Map, Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
@@ -138,6 +212,24 @@ pub mod wifi {
         Ok(map)
     }
 
+    /// Connects to a Wi-Fi network with the specified SSID and password.
+    ///
+    /// # Arguments
+    ///
+    /// * `ssid` - The SSID of the Wi-Fi network.
+    /// * `password` - The password of the Wi-Fi network (optional for open networks).
+    ///
+    /// # Returns
+    ///
+    /// Returns nothing if the connection is successful, or an error message if it fails.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// wifi::connect("MySecretNetwork", "password123");
+    /// ```
     #[rhai_fn(return_raw)]
     pub fn connect(ssid: &str, password: &str) -> Result<(), Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
@@ -156,27 +248,14 @@ pub mod wifi {
 
         #[cfg(target_os = "macos")]
         {
-            if let Some(pw) = password {
-                let status = Command::new("networksetup")
-                    .args(&["-setairportnetwork", "en0", ssid, password])
-                    .status()
-                    .map_err(|e| format!("Failed to run networksetup: {e}"))?;
-                if status.success() {
-                    Ok(())
-                } else {
-                    Err(format!("Failed to connect to {}", ssid).into())
-                }
+            let status = Command::new("networksetup")
+                .args(&["-setairportnetwork", "en0", ssid, password])
+                .status()
+                .map_err(|e| format!("Failed to run networksetup: {e}"))?;
+            if status.success() {
+                Ok(())
             } else {
-                // No password
-                let status = Command::new("networksetup")
-                    .args(&["-setairportnetwork", "en0", ssid])
-                    .status()
-                    .map_err(|e| format!("Failed to run networksetup: {e}"))?;
-                if status.success() {
-                    Ok(())
-                } else {
-                    Err(format!("Failed to connect to {}", ssid).into())
-                }
+                Err(format!("Failed to connect to {}", ssid).into())
             }
         }
 
@@ -186,6 +265,23 @@ pub mod wifi {
         }
     }
 
+    /// Connects to a Wi-Fi network with the specified SSID using saved profile (no password required).
+    ///
+    /// # Arguments
+    ///
+    /// * `ssid` - The SSID of the Wi-Fi network.
+    ///
+    /// # Returns
+    ///
+    /// Returns nothing if the connection is successful, or an error message if it fails.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// wifi::connect_without_password("MySecretNetwork", "password123");
+    /// ```
     #[rhai_fn(return_raw)]
     pub fn connect_without_password(ssid: &str) -> Result<(), Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
@@ -221,6 +317,23 @@ pub mod wifi {
         }
     }
 
+    /// Disconnects from the current Wi-Fi network.
+    ///
+    /// # Arguments
+    ///
+    /// This function does not require any arguments.
+    ///
+    /// # Returns
+    ///
+    /// Returns nothing if the connection is successful, or an error message if it fails.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// wifi::disconnect();
+    /// ```
     #[rhai_fn(return_raw)]
     pub fn disconnect() -> Result<(), Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
@@ -276,7 +389,24 @@ pub mod wifi {
             Err("wifi::disconnect not supported on this OS".into())
         }
     }
-
+    
+    /// Disables the Wi-Fi adapter.
+    ///
+    /// # Arguments
+    ///
+    /// This function does not require any arguments.
+    ///
+    /// # Returns
+    ///
+    /// Returns nothing if the connection is successful, or an error message if it fails.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// wifi::disable_adapter();
+    /// ```
     #[rhai_fn(return_raw)]
     pub fn disable_adapter() -> Result<(), Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
@@ -288,7 +418,7 @@ pub mod wifi {
             if status.success() {
                 Ok(())
             } else {
-                Err("Failed to disconnect".into())
+                Err("Failed to disable adapter".into())
             }
         }
 
@@ -301,7 +431,7 @@ pub mod wifi {
             if status.success() {
                 Ok(())
             } else {
-                Err("Failed to disconnect".into())
+                Err("Failed to disable adapter".into())
             }
         }
 
@@ -311,6 +441,23 @@ pub mod wifi {
         }
     }
 
+    /// Enables the Wi-Fi adapter.
+    ///
+    /// # Arguments
+    ///
+    /// This function does not require any arguments.
+    ///
+    /// # Returns
+    ///
+    /// Returns nothing if the connection is successful, or an error message if it fails.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// wifi::enable_adapter();
+    /// ```
     #[rhai_fn(return_raw)]
     pub fn enable_adapter() -> Result<(), Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
@@ -345,6 +492,35 @@ pub mod wifi {
         }
     }
 
+    /// Get the currenet state of adapter.
+    ///
+    /// # Arguments
+    ///
+    /// This function does not require any arguments.
+    ///
+    /// # Returns
+    ///
+    /// Returns the state of the adapter as a `string` and returns an error if getting the state failed.
+    ///
+    /// **Possible returns in Linux:** 
+    ///
+    /// - `"full"` (internet available)
+    /// - `"limited"` (network only, no internet)
+    /// - `"portal"` (captive portal)
+    /// - `"none"` (no connectivity)
+    ///
+    /// **Possible returns in macOS:** 
+    /// 
+    /// - `"full"` (connected to a Wi-Fi network)
+    /// - `"none"` (not connected)
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "api::wifi" as wifi;
+    ///
+    /// wifi::enable_adapter();
+    /// ```
     #[rhai_fn(return_raw)]
     pub fn get_adapter_connectivity() -> Result<String, Box<EvalAltResult>> {
         #[cfg(target_os = "linux")]
@@ -389,3 +565,4 @@ pub mod wifi {
         }
     }
 }
+
