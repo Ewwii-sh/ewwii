@@ -19,11 +19,11 @@ jobs:
         steps:
             # Checkout code
             - name: Checkout repository
-              uses: actions/checkout@v2
+              uses: actions/checkout@v4
 
             # Cache Rust toolchain
             - name: Cache Rust toolchain
-              uses: actions/cache@v2
+              uses: actions/cache@v4
               with:
                   path: ~/.cargo
                   key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
@@ -38,7 +38,7 @@ jobs:
 
             # Cache Cargo registry and git directory
             - name: Cache Cargo registry and git
-              uses: actions/cache@v2
+              uses: actions/cache@v4
               with:
                   path: |
                       ~/.cargo/registry
