@@ -38,7 +38,7 @@ jobs:
 
             # Cache Cargo registry and git directory
             - name: Cache Cargo registry and git
-              uses: actions/cache@v2
+              uses: actions/cache@v4
               with:
                   path: |
                       ~/.cargo/registry
