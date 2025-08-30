@@ -24,6 +24,7 @@
 -   [Modules](modules/modules.md)
 
     -   [User Defined Modules](modules/user_defined.md)
+    -   [Global Builtin Rhai Functions](modules/global.md)
     -   [Std Library](modules/stdlib.md)
     -   [API Library](modules/apilib.md)
 

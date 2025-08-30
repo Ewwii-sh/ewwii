@@ -4,24 +4,97 @@ use rhai::plugin::*;
 
 #[export_module]
 pub mod monitor {
+    /// Get the number of connected monitors.
+    ///
+    /// # Returns
+    ///
+    /// Returns the total number of connected monitors as an `i64`.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let count = monitor::count();
+    /// print(count); // Output: Number of connected monitors
+    /// ```
     pub fn count() -> i64 {
         get_monitor_count()
     }
 
-    pub fn primary_resolution() -> Vec<i64> {
+    /// Get the resolution of the primary monitor.
+    ///
+    /// # Returns
+    ///
+    /// Returns an array containing the width and height of the primary monitor as two `i64` values.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let resolution = monitor::primary_resolution();
+    /// print(resolution); // Output: [width, height]
+    /// ```
+    pub fn primary_resolution() -> [i64; 2] {
         let (w, h) = get_primary_monitor_resolution();
-        vec![w, h]
+        [w, h]
     }
 
+    /// Get the resolution of the primary monitor as a string.
+    ///
+    /// # Returns
+    ///
+    /// Returns the resolution of the primary monitor as a string in the format "width x height".
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let resolution_str = monitor::primary_resolution_str();
+    /// print(resolution_str); // Output: "1920x1080"
+    /// ```
     pub fn primary_resolution_str() -> String {
         let (w, h) = get_primary_monitor_resolution();
         format!("{w}x{h}")
     }
 
-    pub fn all_resolutions() -> Vec<Vec<i64>> {
-        get_all_monitor_resolutions().into_iter().map(|(w, h)| vec![w, h]).collect()
+    /// Get the resolutions of all connected monitors.
+    ///
+    /// # Returns
+    ///
+    /// Returns an array of arrays, where each inner array contains the width and height of a monitor.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let resolutions = monitor::all_resolutions();
+    /// print(resolutions); // Output: [[width1, height1], [width2, height2], ...]
+    /// ```
+    pub fn all_resolutions() -> Vec<[i64; 2]> {
+        get_all_monitor_resolutions()
+            .into_iter()
+            .map(|(w, h)| [w, h])
+            .collect()
     }
 
+    /// Get the resolutions of all connected monitors as a string.
+    ///
+    /// # Returns
+    ///
+    /// Returns a string where each monitor's resolution is formatted as "width x height", separated by commas.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let resolutions_str = monitor::all_resolutions_str();
+    /// print(resolutions_str); // Output: "1920x1080, 1280x720"
+    /// ```
     pub fn all_resolutions_str() -> String {
         get_all_monitor_resolutions()
             .into_iter()
@@ -30,20 +103,92 @@ pub mod monitor {
             .join(", ")
     }
 
-    pub fn dimensions(index: i64) -> Vec<i64> {
+    /// Get the dimensions (x, y, width, height) of a specific monitor.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index of the monitor (0-based).
+    ///
+    /// # Returns
+    ///
+    /// Returns an array with the monitor's position (x, y) and size (width, height).
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let dimensions = monitor::dimensions(0);
+    /// print(dimensions); // Output: [x, y, width, height]
+    /// ```
+    pub fn dimensions(index: i64) -> [i64; 4] {
         let (x, y, w, h) = get_monitor_dimensions(index as usize);
-        vec![x, y, w, h]
+        [x, y, w, h]
     }
 
+    /// Get the dimensions of a specific monitor as a string.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index of the monitor (0-based).
+    ///
+    /// # Returns
+    ///
+    /// Returns the monitor's dimensions as a string in the format "x,y - width x height".
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let dimensions_str = monitor::dimensions_str(0);
+    /// print(dimensions_str); // Output: "0,0 - 1920x1080"
+    /// ```
     pub fn dimensions_str(index: i64) -> String {
         let (x, y, w, h) = get_monitor_dimensions(index as usize);
         format!("{x},{y} - {w}x{h}")
     }
 
+    /// Get the DPI (dots per inch) of a specific monitor.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index of the monitor (0-based).
+    ///
+    /// # Returns
+    ///
+    /// Returns the DPI (scale factor * base DPI) of the monitor as a `f64`.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let dpi = monitor::dpi(0);
+    /// print(dpi); // Output: DPI of the monitor
+    /// ```
     pub fn dpi(index: i64) -> f64 {
         get_monitor_dpi(index as usize)
     }
 
+    /// Get the DPI of a specific monitor as a string.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index of the monitor (0-based).
+    ///
+    /// # Returns
+    ///
+    /// Returns the DPI of the monitor as a string formatted to 1 decimal place.
+    ///
+    /// # Example
+    ///
+    /// ```js
+    /// import "std::monitor" as monitor;
+    ///
+    /// let dpi_str = monitor::dpi_str(0);
+    /// print(dpi_str); // Output: "96.0"
+    /// ```
     pub fn dpi_str(index: i64) -> String {
         format!("{:.1}", get_monitor_dpi(index as usize))
     }
