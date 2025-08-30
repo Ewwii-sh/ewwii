@@ -1462,6 +1462,7 @@ dependencies = [
  "colored",
  "ewwii_shared_util",
  "gtk",
+ "libc",
  "log",
  "nix 0.29.0",
  "once_cell",

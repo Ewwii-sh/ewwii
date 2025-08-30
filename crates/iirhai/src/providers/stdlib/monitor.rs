@@ -8,8 +8,9 @@ pub mod monitor {
         get_monitor_count()
     }
 
-    pub fn primary_resolution() -> (i64, i64) {
-        get_primary_monitor_resolution()
+    pub fn primary_resolution() -> Vec<i64> {
+        let (w, h) = get_primary_monitor_resolution();
+        vec![w, h]
     }
 
     pub fn primary_resolution_str() -> String {
@@ -17,8 +18,8 @@ pub mod monitor {
         format!("{w}x{h}")
     }
 
-    pub fn all_resolutions() -> Vec<(i64, i64)> {
-        get_all_monitor_resolutions()
+    pub fn all_resolutions() -> Vec<Vec<i64>> {
+        get_all_monitor_resolutions().into_iter().map(|(w, h)| vec![w, h]).collect()
     }
 
     pub fn all_resolutions_str() -> String {
@@ -29,8 +30,9 @@ pub mod monitor {
             .join(", ")
     }
 
-    pub fn dimensions(index: i64) -> (i64, i64, i64, i64) {
-        get_monitor_dimensions(index as usize)
+    pub fn dimensions(index: i64) -> Vec<i64> {
+        let (x, y, w, h) = get_monitor_dimensions(index as usize);
+        vec![x, y, w, h]
     }
 
     pub fn dimensions_str(index: i64) -> String {
