@@ -24,6 +24,7 @@ use std::process::Stdio;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;
 use tokio::process::Command;
+use tokio::signal as tokio_signal;
 use tokio::sync::watch;
 
 pub fn handle_listen(
@@ -54,6 +55,25 @@ pub fn handle_listen(
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
+    // Task to catch SIGINT and SIGTERM
+    tokio::spawn({
+        let shutdown_tx = shutdown_tx.clone();
+        async move {
+            let mut sigterm_stream =
+                tokio_signal::unix::signal(tokio_signal::unix::SignalKind::terminate()).unwrap();
+
+            tokio::select! {
+                _ = tokio_signal::ctrl_c() => {
+                    log::trace!("Received SIGINT");
+                }
+                _ = sigterm_stream.recv() => {
+                    log::trace!("Received SIGTERM");
+                }
+            }
+            let _ = shutdown_tx.send(true);
+        }
+    });
+
     tokio::spawn(async move {
         let mut child = unsafe {
             Command::new("/bin/sh")
@@ -65,6 +85,11 @@ pub fn handle_listen(
                 .stdin(Stdio::null())
                 .pre_exec(|| {
                     let _ = setpgid(Pid::from_raw(0), Pid::from_raw(0));
+
+                    // chatgpt gave me this thing saying that it will kill all
+                    // children when my program dies. I dont think this will work...
+                    libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM);
+
                     Ok(())
                 })
                 .spawn()

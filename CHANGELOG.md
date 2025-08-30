@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.1.0] - [UNRELEASED]
 
+### Added
+
+-   SIGINT and SIGTERM catching to KILL AND OBLITERATE children cleanly.
+
+### Changed
+
+-   Changed `std::monitor` return values so that it will work fine with Rhai.
+
 ### Fixed
 
 -   Ewwii creating zombie process on opening window.
 -   Ewwii shutting down all poll/listen handlers when any window closes.
+
+### Removed
+
+-   Deprecated attribute warning which cluttered the logs.
 
 ## [0.1.0-beta] - 2025-08-27
 

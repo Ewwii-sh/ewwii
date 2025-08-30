@@ -9,7 +9,6 @@ use gtk::prelude::LabelExt;
 use gtk::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{gdk, glib, pango};
 use iirhai::widgetnode::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
-use once_cell::sync::Lazy;
 use rhai::Map;
 
 use super::widget_definitions_helper::*;
@@ -18,7 +17,6 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     // cmp::Ordering,
-    collections::HashSet,
     rc::Rc,
     time::Duration,
 };
@@ -1932,20 +1930,20 @@ pub(super) fn build_gtk_scrolledwindow(
     Ok(gtk_widget)
 }
 
-// * CSS/SCSS
-/// Deprecated attributes from top of widget hierarchy
-static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
-    Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
+// commented out because i dont think its needed...
+// /// Deprecated attributes from top of widget hierarchy
+// static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
+//     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
 
 /// Code that applies css/scss to widgets.
 pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk::Widget, props: &Map) -> Result<()> {
-    // checking deprecated keys
-    // see eww issue #251 (https://github.com/elkowar/eww/issues/251)
-    for deprecated in DEPRECATED_ATTRS.iter() {
-        if props.contains_key(*deprecated) {
-            eprintln!("Warning: attribute `{}` is deprecated and ignored", deprecated);
-        }
-    }
+    // // checking deprecated keys
+    // // see eww issue #251 (https://github.com/elkowar/eww/issues/251)
+    // for deprecated in DEPRECATED_ATTRS.iter() {
+    //     if props.contains_key(*deprecated) {
+    //         eprintln!("Warning: attribute `{}` is deprecated and ignored", deprecated);
+    //     }
+    // }
 
     // Handle visibility
     let visible = get_bool_prop(&props, "visible", Some(true))?;
