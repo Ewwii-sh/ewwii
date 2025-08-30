@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Examples - Ewwii documentation</title>
+        <title>Update - Ewwii documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -185,26 +185,44 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
-<p>This section provides hands-on, practical demonstrations of everything covered so far. Real layouts, interactive components, and theming techniques will be used in these examples.</p>
-<p>Each example is minimal but complete, focusing on a particular design pattern or technique. You can copy-paste them into your own config to experiment.</p>
-<p>Included:</p>
+                        <h1 id="ewwii-update"><a class="header" href="#ewwii-update"><code>ewwii update</code></a></h1>
+<p>The <code>update</code> command refreshes the widgets rendered in a specified window. It allows you to immediately reflect changes in your widget configuration.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash"># Update a single window
+ewwii update --window "my_awesome_widget"
+
+# Short form
+ewwii update -w "my_awesome_widget"
+</code></pre>
+<h2 id="limitation-poll-and-listen-handlers"><a class="header" href="#limitation-poll-and-listen-handlers">Limitation: <code>poll</code> and <code>listen</code> handlers</a></h2>
+<p>A known limitation of <code>ewwii update</code> is that it does <strong>not</strong> preserve variables created by <code>poll</code> or <code>listen</code> handlers. When you run <code>ewwii update</code>, these variables are reset to their initial values.</p>
+<h2 id="solution-injecting-variables-with---inject-vars"><a class="header" href="#solution-injecting-variables-with---inject-vars">Solution: Injecting variables with <code>--inject-vars</code></a></h2>
+<p>To prevent certain variables from being reset, you can manually inject values into the configuration using the <code>--inject-vars</code> argument. This allows you to explicitly set variable values during an update.</p>
+<pre><code class="language-bash"># Long form
+ewwii update --window "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
+
+# Short form
+ewwii update -w "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
+</code></pre>
+<blockquote>
+<p>Note: <code>--inject-vars</code> does <strong>not</strong> automatically capture the current state of <code>poll</code> or <code>listen</code> variables. You must explicitly provide the values you want.</p>
+</blockquote>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <ul>
-<li>Common layout patterns (e.g., bars, panels, dashboards)</li>
-<li>Interactive elements like buttons, sliders, toggles</li>
-<li>Theming techniques and tricks to override or enhance GTK styles</li>
+<li>Consider using <code>--inject-vars</code> when your widgets rely on <code>poll</code> or <code>listen</code> to avoid default resets.</li>
+<li>Update multiple widgets by running <code>ewwii update</code> for each window separately.</li>
+<li>Be explicit and consistent with variable values to avoid unexpected behavior.</li>
 </ul>
-<p>If you're stuck or just looking for inspiration, this is your go-to reference.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../commands/call_fns.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../commands/advanced_commands_intro.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../examples/starter_bar.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../commands/call_fns.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -214,11 +232,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../commands/call_fns.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../commands/advanced_commands_intro.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../examples/starter_bar.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../commands/call_fns.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

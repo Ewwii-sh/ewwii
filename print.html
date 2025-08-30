@@ -788,7 +788,7 @@ or use the <a href="theming/working_with_gtk.html#gtk-debugger">GTK-Debugger</a>
 <h2 id="gtk-debugger"><a class="header" href="#gtk-debugger">GTK Debugger</a></h2>
 <p>The debugger can be used for <strong>a lot</strong> of things, especially if something doesn't work or isn't styled right.</p>
 <p>To open the GTK debugger, simply run</p>
-<pre><code class="language-bash">eww inspector
+<pre><code class="language-bash">ewwii inspector
 </code></pre>
 <p>If a style or something similar doesn't work, you can click on the icon in the top left to select the thing that isn't being styled correctly.</p>
 <p>Then you can click on the drop down menu in the top right corner and select CSS Nodes. Here you will see everything about styling it, CSS Properties, and how it's structured.</p>
@@ -1452,6 +1452,72 @@ wifi::get_adapter_connectivity();
 <li><code>min</code>: <code>float</code> minimum value</li>
 <li><code>max</code>: <code>float</code> maximum value</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="advanced-commands"><a class="header" href="#advanced-commands">Advanced Commands</a></h1>
+<p>Now that you all are familiar with ewwii and may be making awesome widgets, lets get to know about some advanced commands in ewwii, that makes it even more flexible and powerful.</p>
+<p>In this section, we will cover:</p>
+<ul>
+<li>How to use advanced commands</li>
+<li>Limitations of these advanced commands</li>
+<li>And finally, solutions to these limitations</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ewwii-update"><a class="header" href="#ewwii-update"><code>ewwii update</code></a></h1>
+<p>The <code>update</code> command refreshes the widgets rendered in a specified window. It allows you to immediately reflect changes in your widget configuration.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash"># Update a single window
+ewwii update --window "my_awesome_widget"
+
+# Short form
+ewwii update -w "my_awesome_widget"
+</code></pre>
+<h2 id="limitation-poll-and-listen-handlers"><a class="header" href="#limitation-poll-and-listen-handlers">Limitation: <code>poll</code> and <code>listen</code> handlers</a></h2>
+<p>A known limitation of <code>ewwii update</code> is that it does <strong>not</strong> preserve variables created by <code>poll</code> or <code>listen</code> handlers. When you run <code>ewwii update</code>, these variables are reset to their initial values.</p>
+<h2 id="solution-injecting-variables-with---inject-vars"><a class="header" href="#solution-injecting-variables-with---inject-vars">Solution: Injecting variables with <code>--inject-vars</code></a></h2>
+<p>To prevent certain variables from being reset, you can manually inject values into the configuration using the <code>--inject-vars</code> argument. This allows you to explicitly set variable values during an update.</p>
+<pre><code class="language-bash"># Long form
+ewwii update --window "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
+
+# Short form
+ewwii update -w "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
+</code></pre>
+<blockquote>
+<p>Note: <code>--inject-vars</code> does <strong>not</strong> automatically capture the current state of <code>poll</code> or <code>listen</code> variables. You must explicitly provide the values you want.</p>
+</blockquote>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<ul>
+<li>Consider using <code>--inject-vars</code> when your widgets rely on <code>poll</code> or <code>listen</code> to avoid default resets.</li>
+<li>Update multiple widgets by running <code>ewwii update</code> for each window separately.</li>
+<li>Be explicit and consistent with variable values to avoid unexpected behavior.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ewwii-call-fns"><a class="header" href="#ewwii-call-fns"><code>ewwii call-fns</code></a></h1>
+<p>The <code>call-fns</code> command allows you to call <strong>Rhai functions</strong> directly from the command line. This can be useful for triggering specific functionality in your widget configuration without updating or interacting with the GUI.</p>
+<blockquote>
+<p><strong>Note:</strong> All variables created by <code>poll</code> or <code>listen</code> handlers will default to their initial values when calling functions. They <strong>cannot be preserved</strong>.</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash"># Call a single Rhai function
+ewwii call-fns "my_function(32, 21)"
+
+# Call multiple functions
+ewwii call-fns "first_function('string')" "second_function()"
+</code></pre>
+<p>This will execute the specified functions in the context of your current configuration.</p>
+<h2 id="limitation-main-configuration"><a class="header" href="#limitation-main-configuration">Limitation: Main configuration</a></h2>
+<p>However, there is one limitation in <code>call-fns</code>. It can only see and call functions defined within your main configuration (i.e <code>main.rhai</code> file).</p>
+<h2 id="solution-creating-wrappers"><a class="header" href="#solution-creating-wrappers">Solution: Creating wrappers</a></h2>
+<p>But, there is one solution though! You can call external functions from functions defined in main.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-js">// in external.rhai
+fn awesome_fn() {
+    print("Awesome fn triggered!");
+}
+</code></pre>
+<pre><code class="language-js">// in main.rhai
+fn call_awesome_fn() {
+    import "external" as external;
+    external::awesome_fn();
+}
+</code></pre>
+<p>Now you can run <code>ewwii call-fns "call-awesome_fn()"</code> and get "Awesome fn triggered!".</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
 <p>This section provides hands-on, practical demonstrations of everything covered so far. Real layouts, interactive components, and theming techniques will be used in these examples.</p>
 <p>Each example is minimal but complete, focusing on a particular design pattern or technique. You can copy-paste them into your own config to experiment.</p>

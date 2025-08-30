@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Examples - Ewwii documentation</title>
+        <title>Call Functions - Ewwii documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -185,26 +185,46 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
-<p>This section provides hands-on, practical demonstrations of everything covered so far. Real layouts, interactive components, and theming techniques will be used in these examples.</p>
-<p>Each example is minimal but complete, focusing on a particular design pattern or technique. You can copy-paste them into your own config to experiment.</p>
-<p>Included:</p>
-<ul>
-<li>Common layout patterns (e.g., bars, panels, dashboards)</li>
-<li>Interactive elements like buttons, sliders, toggles</li>
-<li>Theming techniques and tricks to override or enhance GTK styles</li>
-</ul>
-<p>If you're stuck or just looking for inspiration, this is your go-to reference.</p>
+                        <h1 id="ewwii-call-fns"><a class="header" href="#ewwii-call-fns"><code>ewwii call-fns</code></a></h1>
+<p>The <code>call-fns</code> command allows you to call <strong>Rhai functions</strong> directly from the command line. This can be useful for triggering specific functionality in your widget configuration without updating or interacting with the GUI.</p>
+<blockquote>
+<p><strong>Note:</strong> All variables created by <code>poll</code> or <code>listen</code> handlers will default to their initial values when calling functions. They <strong>cannot be preserved</strong>.</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-bash"># Call a single Rhai function
+ewwii call-fns "my_function(32, 21)"
+
+# Call multiple functions
+ewwii call-fns "first_function('string')" "second_function()"
+</code></pre>
+<p>This will execute the specified functions in the context of your current configuration.</p>
+<h2 id="limitation-main-configuration"><a class="header" href="#limitation-main-configuration">Limitation: Main configuration</a></h2>
+<p>However, there is one limitation in <code>call-fns</code>. It can only see and call functions defined within your main configuration (i.e <code>main.rhai</code> file).</p>
+<h2 id="solution-creating-wrappers"><a class="header" href="#solution-creating-wrappers">Solution: Creating wrappers</a></h2>
+<p>But, there is one solution though! You can call external functions from functions defined in main.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-js">// in external.rhai
+fn awesome_fn() {
+    print("Awesome fn triggered!");
+}
+</code></pre>
+<pre><code class="language-js">// in main.rhai
+fn call_awesome_fn() {
+    import "external" as external;
+    external::awesome_fn();
+}
+</code></pre>
+<p>Now you can run <code>ewwii call-fns "call-awesome_fn()"</code> and get "Awesome fn triggered!".</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../commands/call_fns.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../commands/update.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../examples/starter_bar.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../examples/examples.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -214,11 +234,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../commands/call_fns.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../commands/update.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../examples/starter_bar.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../examples/examples.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
