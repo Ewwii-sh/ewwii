@@ -19,7 +19,7 @@ The debugger can be used for **a lot** of things, especially if something doesn'
 To open the GTK debugger, simply run
 
 ```bash
-eww inspector
+ewwii inspector
 ```
 
 If a style or something similar doesn't work, you can click on the icon in the top left to select the thing that isn't being styled correctly.
