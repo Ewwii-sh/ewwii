@@ -186,14 +186,519 @@
 
                 <div id="content" class="content">
                     <main>
-                        <pre><code>    # Std Library Module
+                        <h1 id="std-library-module"><a class="header" href="#std-library-module">Std Library Module</a></h1>
+<p>These are all the standard modules in ewwii.</p>
+<p>Each library in this module is under <code>std::&lt;m&gt;</code>, where <code>&lt;m&gt;</code> is the name of the specific module.
+These modules provide essential functionalities that are will be useful for making widgets.
+They cover tasks like string manipulation, environmental variable manipuation, running shell commands, and more.</p>
+<h1 id="command"><a class="header" href="#command">command</a></h1>
+<p><code>Namespace: global/std/command</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-run" class="func-name"><a class="header" href="#fn-run"> <code>fn</code> run </a></h2>
+<pre><code class="language-rust ignore">fn run(cmd: String)</code></pre>
+<div>
+<div class="tab">
+<button group="run" id="link-run-Description"  class="tablinks active" 
+    onclick="openTab(event, 'run', 'Description')">
+Description
+</button>
+<button group="run" id="link-run-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Arguments')">
+Arguments
+</button>
+<button group="run" id="link-run-Returns"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Returns')">
+Returns
+</button>
+<button group="run" id="link-run-Example"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Example')">
+Example
+</button>
+</div>
+<div group="run" id="run-Description" class="tabcontent"  style="display: block;" >
+Executes a shell command without capturing the output.
+</div>
+<div group="run" id="run-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>cmd</code> - The shell command to execute as a string.</li>
+</ul>
+</div>
+<div group="run" id="run-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns nothing if the command executes successfully. If there is an error
+running the command, it returns the error.</p>
+</div>
+<div group="run" id="run-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::command" as cmd;
 
-    These are all the standard modules in ewwii.
-
-    Each library in this module is under `std::&lt;m&gt;`, where `&lt;m&gt;` is the name of the specific module.
-    These modules provide essential functionalities that are will be useful for making widgets.
-    They cover tasks like string manipulation, environmental variable manipuation, running shell commands, and more.
+// Run a shell command (e.g., list directory contents)
+cmd::run("ls -l");
 </code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-run_and_read" class="func-name"><a class="header" href="#fn-run_and_read"> <code>fn</code> run_and_read </a></h2>
+<pre><code class="language-rust ignore">fn run_and_read(cmd: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="run_and_read" id="link-run_and_read-Description"  class="tablinks active" 
+    onclick="openTab(event, 'run_and_read', 'Description')">
+Description
+</button>
+<button group="run_and_read" id="link-run_and_read-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Arguments')">
+Arguments
+</button>
+<button group="run_and_read" id="link-run_and_read-Returns"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Returns')">
+Returns
+</button>
+<button group="run_and_read" id="link-run_and_read-Example"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Example')">
+Example
+</button>
+</div>
+<div group="run_and_read" id="run_and_read-Description" class="tabcontent"  style="display: block;" >
+Executes a shell command and captures its output.
+</div>
+<div group="run_and_read" id="run_and_read-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>cmd</code> - The shell command to execute as a string.</li>
+</ul>
+</div>
+<div group="run_and_read" id="run_and_read-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the standard output of the command as a <code>string</code>. If the command fails,
+it returns the error.</p>
+</div>
+<div group="run_and_read" id="run_and_read-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::command" as cmd;
+
+// Run a shell command and capture its output
+let output = cmd::run_and_read("echo 'Hello, world!'");
+print(output); // output: Hello, world!
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<h1 id="text"><a class="header" href="#text">text</a></h1>
+<p><code>Namespace: global/std/text</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_camel_case" class="func-name"><a class="header" href="#fn-to_camel_case"> <code>fn</code> to_camel_case </a></h2>
+<pre><code class="language-rust ignore">fn to_camel_case(text: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_camel_case" id="link-to_camel_case-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_camel_case', 'Description')">
+Description
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Arguments')">
+Arguments
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Returns')">
+Returns
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Example')">
+Example
+</button>
+</div>
+<div group="to_camel_case" id="to_camel_case-Description" class="tabcontent"  style="display: block;" >
+Converts a string to camel case.
+</div>
+<div group="to_camel_case" id="to_camel_case-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>text</code> - A string to be converted to camel case.</li>
+</ul>
+</div>
+<div group="to_camel_case" id="to_camel_case-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the <code>text</code> in camel case format.</p>
+</div>
+<div group="to_camel_case" id="to_camel_case-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_camel_case("hello world example");
+print(result); // output: "helloWorldExample"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_lower" class="func-name"><a class="header" href="#fn-to_lower"> <code>fn</code> to_lower </a></h2>
+<pre><code class="language-rust ignore">fn to_lower(s: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_lower" id="link-to_lower-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_lower', 'Description')">
+Description
+</button>
+<button group="to_lower" id="link-to_lower-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Arguments')">
+Arguments
+</button>
+<button group="to_lower" id="link-to_lower-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Returns')">
+Returns
+</button>
+<button group="to_lower" id="link-to_lower-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Example')">
+Example
+</button>
+</div>
+<div group="to_lower" id="to_lower-Description" class="tabcontent"  style="display: block;" >
+Converts a string to lowercase.
+</div>
+<div group="to_lower" id="to_lower-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>s</code> - A string to be converted to lowercase.</li>
+</ul>
+</div>
+<div group="to_lower" id="to_lower-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the string in lowercase.</p>
+</div>
+<div group="to_lower" id="to_lower-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_lower("HELLO");
+print(result); // output: "hello"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_slug" class="func-name"><a class="header" href="#fn-to_slug"> <code>fn</code> to_slug </a></h2>
+<pre><code class="language-rust ignore">fn to_slug(text: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_slug" id="link-to_slug-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_slug', 'Description')">
+Description
+</button>
+<button group="to_slug" id="link-to_slug-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Arguments')">
+Arguments
+</button>
+<button group="to_slug" id="link-to_slug-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Returns')">
+Returns
+</button>
+<button group="to_slug" id="link-to_slug-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Example')">
+Example
+</button>
+</div>
+<div group="to_slug" id="to_slug-Description" class="tabcontent"  style="display: block;" >
+Converts a string to a slug (lowercase words joined by hyphens).
+</div>
+<div group="to_slug" id="to_slug-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>text</code> - A string to be converted to a slug.</li>
+</ul>
+</div>
+<div group="to_slug" id="to_slug-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the <code>text</code> as a slug.</p>
+</div>
+<div group="to_slug" id="to_slug-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_slug("Hello World!");
+print(result); // output: "hello-world"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_upper" class="func-name"><a class="header" href="#fn-to_upper"> <code>fn</code> to_upper </a></h2>
+<pre><code class="language-rust ignore">fn to_upper(s: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_upper" id="link-to_upper-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_upper', 'Description')">
+Description
+</button>
+<button group="to_upper" id="link-to_upper-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Arguments')">
+Arguments
+</button>
+<button group="to_upper" id="link-to_upper-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Returns')">
+Returns
+</button>
+<button group="to_upper" id="link-to_upper-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Example')">
+Example
+</button>
+</div>
+<div group="to_upper" id="to_upper-Description" class="tabcontent"  style="display: block;" >
+Converts a string to uppercase.
+</div>
+<div group="to_upper" id="to_upper-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>s</code> - A string to be converted to uppercase.</li>
+</ul>
+</div>
+<div group="to_upper" id="to_upper-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the string in uppercase.</p>
+</div>
+<div group="to_upper" id="to_upper-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_upper("hello");
+print(result); // output: "HELLO"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-truncate_chars" class="func-name"><a class="header" href="#fn-truncate_chars"> <code>fn</code> truncate_chars </a></h2>
+<pre><code class="language-rust ignore">fn truncate_chars(text: String, max_chars: int) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="truncate_chars" id="link-truncate_chars-Description"  class="tablinks active" 
+    onclick="openTab(event, 'truncate_chars', 'Description')">
+Description
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Arguments')">
+Arguments
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Returns"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Returns')">
+Returns
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Example"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Example')">
+Example
+</button>
+</div>
+<div group="truncate_chars" id="truncate_chars-Description" class="tabcontent"  style="display: block;" >
+Truncates a string to the specified number of characters.
+</div>
+<div group="truncate_chars" id="truncate_chars-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>text</code> - A string to be truncated.</li>
+<li><code>max_chars</code> - The maximum number of characters to keep in the string.</li>
+</ul>
+</div>
+<div group="truncate_chars" id="truncate_chars-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns a truncated string.</p>
+</div>
+<div group="truncate_chars" id="truncate_chars-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::truncate_chars("Hello World!", 5);
+print(result); // output: "Hello"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<h1 id="env"><a class="header" href="#env">env</a></h1>
+<p><code>Namespace: global/std/env</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_current_dir" class="func-name"><a class="header" href="#fn-get_current_dir"> <code>fn</code> get_current_dir </a></h2>
+<pre><code class="language-rust ignore">fn get_current_dir() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_current_dir" id="link-get_current_dir-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_current_dir', 'Description')">
+Description
+</button>
+<button group="get_current_dir" id="link-get_current_dir-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_current_dir', 'Returns')">
+Returns
+</button>
+<button group="get_current_dir" id="link-get_current_dir-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_current_dir', 'Example')">
+Example
+</button>
+</div>
+<div group="get_current_dir" id="get_current_dir-Description" class="tabcontent"  style="display: block;" >
+Get the current working directory.
+</div>
+<div group="get_current_dir" id="get_current_dir-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the current working directory as a <code>String</code>. If there is an error
+(e.g., if the path cannot be retrieved), it returns a <code>Result::Err</code> with the error message.</p>
+</div>
+<div group="get_current_dir" id="get_current_dir-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env;
+
+// Get the current working directory
+let current_dir = env::get_current_dir();
+print(current_dir); // output: /home/username/project
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_env" class="func-name"><a class="header" href="#fn-get_env"> <code>fn</code> get_env </a></h2>
+<pre><code class="language-rust ignore">fn get_env(var: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_env" id="link-get_env-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_env', 'Description')">
+Description
+</button>
+<button group="get_env" id="link-get_env-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_env', 'Arguments')">
+Arguments
+</button>
+<button group="get_env" id="link-get_env-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_env', 'Returns')">
+Returns
+</button>
+<button group="get_env" id="link-get_env-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_env', 'Example')">
+Example
+</button>
+</div>
+<div group="get_env" id="get_env-Description" class="tabcontent"  style="display: block;" >
+Get the value of an environment variable.
+</div>
+<div group="get_env" id="get_env-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>var</code> - The name of the environment variable to retrieve.</li>
+</ul>
+</div>
+<div group="get_env" id="get_env-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the value of the environment variable as a <code>String</code>.
+If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
+</div>
+<div group="get_env" id="get_env-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env;
+
+// Get the value of the "HOME" environment variable
+let home_dir = env::get_env("HOME");
+print(home_dir); // output: /home/username
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_home_dir" class="func-name"><a class="header" href="#fn-get_home_dir"> <code>fn</code> get_home_dir </a></h2>
+<pre><code class="language-rust ignore">fn get_home_dir() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_home_dir" id="link-get_home_dir-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_home_dir', 'Description')">
+Description
+</button>
+<button group="get_home_dir" id="link-get_home_dir-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_home_dir', 'Returns')">
+Returns
+</button>
+<button group="get_home_dir" id="link-get_home_dir-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_home_dir', 'Example')">
+Example
+</button>
+</div>
+<div group="get_home_dir" id="get_home_dir-Description" class="tabcontent"  style="display: block;" >
+Get the path to the home directory.
+</div>
+<div group="get_home_dir" id="get_home_dir-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the value of the "HOME" environment variable as a <code>String</code>.
+If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
+</div>
+<div group="get_home_dir" id="get_home_dir-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env;
+
+// Get the home directory
+let home_dir = env::get_home_dir();
+print(home_dir); // output: /home/username
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_username" class="func-name"><a class="header" href="#fn-get_username"> <code>fn</code> get_username </a></h2>
+<pre><code class="language-rust ignore">fn get_username() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_username" id="link-get_username-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_username', 'Description')">
+Description
+</button>
+<button group="get_username" id="link-get_username-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_username', 'Returns')">
+Returns
+</button>
+<button group="get_username" id="link-get_username-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_username', 'Example')">
+Example
+</button>
+</div>
+<div group="get_username" id="get_username-Description" class="tabcontent"  style="display: block;" >
+Get the current username.
+</div>
+<div group="get_username" id="get_username-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the value of the "USER" environment variable as a <code>String</code>.
+If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
+</div>
+<div group="get_username" id="get_username-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env;
+
+// Get the username of the current user
+let username = env::get_username();
+print(username); // output: username
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-set_env" class="func-name"><a class="header" href="#fn-set_env"> <code>fn</code> set_env </a></h2>
+<pre><code class="language-rust ignore">fn set_env(var: String, value: String)</code></pre>
+<div>
+<div class="tab">
+<button group="set_env" id="link-set_env-Description"  class="tablinks active" 
+    onclick="openTab(event, 'set_env', 'Description')">
+Description
+</button>
+<button group="set_env" id="link-set_env-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'set_env', 'Arguments')">
+Arguments
+</button>
+<button group="set_env" id="link-set_env-Returns"  class="tablinks" 
+    onclick="openTab(event, 'set_env', 'Returns')">
+Returns
+</button>
+<button group="set_env" id="link-set_env-Example"  class="tablinks" 
+    onclick="openTab(event, 'set_env', 'Example')">
+Example
+</button>
+</div>
+<div group="set_env" id="set_env-Description" class="tabcontent"  style="display: block;" >
+Set the value of an environment variable.
+</div>
+<div group="set_env" id="set_env-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>var</code> - The name of the environment variable to set.</li>
+<li><code>value</code> - The value to assign to the environment variable.</li>
+</ul>
+</div>
+<div group="set_env" id="set_env-Returns" class="tabcontent"  style="display: none;" >
+<p>This function does not return a value.</p>
+</div>
+<div group="set_env" id="set_env-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env;
+
+// Set the value of the "MY_VAR" environment variable
+env::set_env("MY_VAR", "SomeValue");
+</code></pre>
+</div>
+</div>
+</div>
+</br>
 <h1 id="monitor"><a class="header" href="#monitor">monitor</a></h1>
 <p><code>Namespace: global/std/monitor</code></p>
 <div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
@@ -533,514 +1038,6 @@ Get the resolution of the primary monitor as a string.
 
 let resolution_str = monitor::primary_resolution_str();
 print(resolution_str); // Output: "1920x1080"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<h1 id="text"><a class="header" href="#text">text</a></h1>
-<p><code>Namespace: global/std/text</code></p>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-to_camel_case" class="func-name"><a class="header" href="#fn-to_camel_case"> <code>fn</code> to_camel_case </a></h2>
-<pre><code class="language-rust ignore">fn to_camel_case(text: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="to_camel_case" id="link-to_camel_case-Description"  class="tablinks active" 
-    onclick="openTab(event, 'to_camel_case', 'Description')">
-Description
-</button>
-<button group="to_camel_case" id="link-to_camel_case-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'to_camel_case', 'Arguments')">
-Arguments
-</button>
-<button group="to_camel_case" id="link-to_camel_case-Returns"  class="tablinks" 
-    onclick="openTab(event, 'to_camel_case', 'Returns')">
-Returns
-</button>
-<button group="to_camel_case" id="link-to_camel_case-Example"  class="tablinks" 
-    onclick="openTab(event, 'to_camel_case', 'Example')">
-Example
-</button>
-</div>
-<div group="to_camel_case" id="to_camel_case-Description" class="tabcontent"  style="display: block;" >
-Converts a string to camel case.
-</div>
-<div group="to_camel_case" id="to_camel_case-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>text</code> - A string to be converted to camel case.</li>
-</ul>
-</div>
-<div group="to_camel_case" id="to_camel_case-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the <code>text</code> in camel case format.</p>
-</div>
-<div group="to_camel_case" id="to_camel_case-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::to_camel_case("hello world example");
-print(result); // output: "helloWorldExample"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-to_lower" class="func-name"><a class="header" href="#fn-to_lower"> <code>fn</code> to_lower </a></h2>
-<pre><code class="language-rust ignore">fn to_lower(s: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="to_lower" id="link-to_lower-Description"  class="tablinks active" 
-    onclick="openTab(event, 'to_lower', 'Description')">
-Description
-</button>
-<button group="to_lower" id="link-to_lower-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'to_lower', 'Arguments')">
-Arguments
-</button>
-<button group="to_lower" id="link-to_lower-Returns"  class="tablinks" 
-    onclick="openTab(event, 'to_lower', 'Returns')">
-Returns
-</button>
-<button group="to_lower" id="link-to_lower-Example"  class="tablinks" 
-    onclick="openTab(event, 'to_lower', 'Example')">
-Example
-</button>
-</div>
-<div group="to_lower" id="to_lower-Description" class="tabcontent"  style="display: block;" >
-Converts a string to lowercase.
-</div>
-<div group="to_lower" id="to_lower-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>s</code> - A string to be converted to lowercase.</li>
-</ul>
-</div>
-<div group="to_lower" id="to_lower-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the string in lowercase.</p>
-</div>
-<div group="to_lower" id="to_lower-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::to_lower("HELLO");
-print(result); // output: "hello"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-to_slug" class="func-name"><a class="header" href="#fn-to_slug"> <code>fn</code> to_slug </a></h2>
-<pre><code class="language-rust ignore">fn to_slug(text: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="to_slug" id="link-to_slug-Description"  class="tablinks active" 
-    onclick="openTab(event, 'to_slug', 'Description')">
-Description
-</button>
-<button group="to_slug" id="link-to_slug-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'to_slug', 'Arguments')">
-Arguments
-</button>
-<button group="to_slug" id="link-to_slug-Returns"  class="tablinks" 
-    onclick="openTab(event, 'to_slug', 'Returns')">
-Returns
-</button>
-<button group="to_slug" id="link-to_slug-Example"  class="tablinks" 
-    onclick="openTab(event, 'to_slug', 'Example')">
-Example
-</button>
-</div>
-<div group="to_slug" id="to_slug-Description" class="tabcontent"  style="display: block;" >
-Converts a string to a slug (lowercase words joined by hyphens).
-</div>
-<div group="to_slug" id="to_slug-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>text</code> - A string to be converted to a slug.</li>
-</ul>
-</div>
-<div group="to_slug" id="to_slug-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the <code>text</code> as a slug.</p>
-</div>
-<div group="to_slug" id="to_slug-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::to_slug("Hello World!");
-print(result); // output: "hello-world"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-to_upper" class="func-name"><a class="header" href="#fn-to_upper"> <code>fn</code> to_upper </a></h2>
-<pre><code class="language-rust ignore">fn to_upper(s: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="to_upper" id="link-to_upper-Description"  class="tablinks active" 
-    onclick="openTab(event, 'to_upper', 'Description')">
-Description
-</button>
-<button group="to_upper" id="link-to_upper-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'to_upper', 'Arguments')">
-Arguments
-</button>
-<button group="to_upper" id="link-to_upper-Returns"  class="tablinks" 
-    onclick="openTab(event, 'to_upper', 'Returns')">
-Returns
-</button>
-<button group="to_upper" id="link-to_upper-Example"  class="tablinks" 
-    onclick="openTab(event, 'to_upper', 'Example')">
-Example
-</button>
-</div>
-<div group="to_upper" id="to_upper-Description" class="tabcontent"  style="display: block;" >
-Converts a string to uppercase.
-</div>
-<div group="to_upper" id="to_upper-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>s</code> - A string to be converted to uppercase.</li>
-</ul>
-</div>
-<div group="to_upper" id="to_upper-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the string in uppercase.</p>
-</div>
-<div group="to_upper" id="to_upper-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::to_upper("hello");
-print(result); // output: "HELLO"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-truncate_chars" class="func-name"><a class="header" href="#fn-truncate_chars"> <code>fn</code> truncate_chars </a></h2>
-<pre><code class="language-rust ignore">fn truncate_chars(text: String, max_chars: int) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="truncate_chars" id="link-truncate_chars-Description"  class="tablinks active" 
-    onclick="openTab(event, 'truncate_chars', 'Description')">
-Description
-</button>
-<button group="truncate_chars" id="link-truncate_chars-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'truncate_chars', 'Arguments')">
-Arguments
-</button>
-<button group="truncate_chars" id="link-truncate_chars-Returns"  class="tablinks" 
-    onclick="openTab(event, 'truncate_chars', 'Returns')">
-Returns
-</button>
-<button group="truncate_chars" id="link-truncate_chars-Example"  class="tablinks" 
-    onclick="openTab(event, 'truncate_chars', 'Example')">
-Example
-</button>
-</div>
-<div group="truncate_chars" id="truncate_chars-Description" class="tabcontent"  style="display: block;" >
-Truncates a string to the specified number of characters.
-</div>
-<div group="truncate_chars" id="truncate_chars-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>text</code> - A string to be truncated.</li>
-<li><code>max_chars</code> - The maximum number of characters to keep in the string.</li>
-</ul>
-</div>
-<div group="truncate_chars" id="truncate_chars-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns a truncated string.</p>
-</div>
-<div group="truncate_chars" id="truncate_chars-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::truncate_chars("Hello World!", 5);
-print(result); // output: "Hello"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<h1 id="command"><a class="header" href="#command">command</a></h1>
-<p><code>Namespace: global/std/command</code></p>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-run" class="func-name"><a class="header" href="#fn-run"> <code>fn</code> run </a></h2>
-<pre><code class="language-rust ignore">fn run(cmd: String)</code></pre>
-<div>
-<div class="tab">
-<button group="run" id="link-run-Description"  class="tablinks active" 
-    onclick="openTab(event, 'run', 'Description')">
-Description
-</button>
-<button group="run" id="link-run-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Arguments')">
-Arguments
-</button>
-<button group="run" id="link-run-Returns"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Returns')">
-Returns
-</button>
-<button group="run" id="link-run-Example"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Example')">
-Example
-</button>
-</div>
-<div group="run" id="run-Description" class="tabcontent"  style="display: block;" >
-Executes a shell command without capturing the output.
-</div>
-<div group="run" id="run-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>cmd</code> - The shell command to execute as a string.</li>
-</ul>
-</div>
-<div group="run" id="run-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns nothing if the command executes successfully. If there is an error
-running the command, it returns the error.</p>
-</div>
-<div group="run" id="run-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::command" as cmd;
-
-// Run a shell command (e.g., list directory contents)
-cmd::run("ls -l");
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-run_and_read" class="func-name"><a class="header" href="#fn-run_and_read"> <code>fn</code> run_and_read </a></h2>
-<pre><code class="language-rust ignore">fn run_and_read(cmd: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="run_and_read" id="link-run_and_read-Description"  class="tablinks active" 
-    onclick="openTab(event, 'run_and_read', 'Description')">
-Description
-</button>
-<button group="run_and_read" id="link-run_and_read-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Arguments')">
-Arguments
-</button>
-<button group="run_and_read" id="link-run_and_read-Returns"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Returns')">
-Returns
-</button>
-<button group="run_and_read" id="link-run_and_read-Example"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Example')">
-Example
-</button>
-</div>
-<div group="run_and_read" id="run_and_read-Description" class="tabcontent"  style="display: block;" >
-Executes a shell command and captures its output.
-</div>
-<div group="run_and_read" id="run_and_read-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>cmd</code> - The shell command to execute as a string.</li>
-</ul>
-</div>
-<div group="run_and_read" id="run_and_read-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns the standard output of the command as a <code>string</code>. If the command fails,
-it returns the error.</p>
-</div>
-<div group="run_and_read" id="run_and_read-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::command" as cmd;
-
-// Run a shell command and capture its output
-let output = cmd::run_and_read("echo 'Hello, world!'");
-print(output); // output: Hello, world!
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<h1 id="env"><a class="header" href="#env">env</a></h1>
-<p><code>Namespace: global/std/env</code></p>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-get_current_dir" class="func-name"><a class="header" href="#fn-get_current_dir"> <code>fn</code> get_current_dir </a></h2>
-<pre><code class="language-rust ignore">fn get_current_dir() -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="get_current_dir" id="link-get_current_dir-Description"  class="tablinks active" 
-    onclick="openTab(event, 'get_current_dir', 'Description')">
-Description
-</button>
-<button group="get_current_dir" id="link-get_current_dir-Returns"  class="tablinks" 
-    onclick="openTab(event, 'get_current_dir', 'Returns')">
-Returns
-</button>
-<button group="get_current_dir" id="link-get_current_dir-Example"  class="tablinks" 
-    onclick="openTab(event, 'get_current_dir', 'Example')">
-Example
-</button>
-</div>
-<div group="get_current_dir" id="get_current_dir-Description" class="tabcontent"  style="display: block;" >
-Get the current working directory.
-</div>
-<div group="get_current_dir" id="get_current_dir-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns the current working directory as a <code>String</code>. If there is an error
-(e.g., if the path cannot be retrieved), it returns a <code>Result::Err</code> with the error message.</p>
-</div>
-<div group="get_current_dir" id="get_current_dir-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::env" as env;
-
-// Get the current working directory
-let current_dir = env::get_current_dir();
-print(current_dir); // output: /home/username/project
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-get_env" class="func-name"><a class="header" href="#fn-get_env"> <code>fn</code> get_env </a></h2>
-<pre><code class="language-rust ignore">fn get_env(var: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="get_env" id="link-get_env-Description"  class="tablinks active" 
-    onclick="openTab(event, 'get_env', 'Description')">
-Description
-</button>
-<button group="get_env" id="link-get_env-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'get_env', 'Arguments')">
-Arguments
-</button>
-<button group="get_env" id="link-get_env-Returns"  class="tablinks" 
-    onclick="openTab(event, 'get_env', 'Returns')">
-Returns
-</button>
-<button group="get_env" id="link-get_env-Example"  class="tablinks" 
-    onclick="openTab(event, 'get_env', 'Example')">
-Example
-</button>
-</div>
-<div group="get_env" id="get_env-Description" class="tabcontent"  style="display: block;" >
-Get the value of an environment variable.
-</div>
-<div group="get_env" id="get_env-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>var</code> - The name of the environment variable to retrieve.</li>
-</ul>
-</div>
-<div group="get_env" id="get_env-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns the value of the environment variable as a <code>String</code>.
-If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
-</div>
-<div group="get_env" id="get_env-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::env" as env;
-
-// Get the value of the "HOME" environment variable
-let home_dir = env::get_env("HOME");
-print(home_dir); // output: /home/username
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-get_home_dir" class="func-name"><a class="header" href="#fn-get_home_dir"> <code>fn</code> get_home_dir </a></h2>
-<pre><code class="language-rust ignore">fn get_home_dir() -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="get_home_dir" id="link-get_home_dir-Description"  class="tablinks active" 
-    onclick="openTab(event, 'get_home_dir', 'Description')">
-Description
-</button>
-<button group="get_home_dir" id="link-get_home_dir-Returns"  class="tablinks" 
-    onclick="openTab(event, 'get_home_dir', 'Returns')">
-Returns
-</button>
-<button group="get_home_dir" id="link-get_home_dir-Example"  class="tablinks" 
-    onclick="openTab(event, 'get_home_dir', 'Example')">
-Example
-</button>
-</div>
-<div group="get_home_dir" id="get_home_dir-Description" class="tabcontent"  style="display: block;" >
-Get the path to the home directory.
-</div>
-<div group="get_home_dir" id="get_home_dir-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns the value of the "HOME" environment variable as a <code>String</code>.
-If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
-</div>
-<div group="get_home_dir" id="get_home_dir-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::env" as env;
-
-// Get the home directory
-let home_dir = env::get_home_dir();
-print(home_dir); // output: /home/username
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-get_username" class="func-name"><a class="header" href="#fn-get_username"> <code>fn</code> get_username </a></h2>
-<pre><code class="language-rust ignore">fn get_username() -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="get_username" id="link-get_username-Description"  class="tablinks active" 
-    onclick="openTab(event, 'get_username', 'Description')">
-Description
-</button>
-<button group="get_username" id="link-get_username-Returns"  class="tablinks" 
-    onclick="openTab(event, 'get_username', 'Returns')">
-Returns
-</button>
-<button group="get_username" id="link-get_username-Example"  class="tablinks" 
-    onclick="openTab(event, 'get_username', 'Example')">
-Example
-</button>
-</div>
-<div group="get_username" id="get_username-Description" class="tabcontent"  style="display: block;" >
-Get the current username.
-</div>
-<div group="get_username" id="get_username-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns the value of the "USER" environment variable as a <code>String</code>.
-If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
-</div>
-<div group="get_username" id="get_username-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::env" as env;
-
-// Get the username of the current user
-let username = env::get_username();
-print(username); // output: username
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-set_env" class="func-name"><a class="header" href="#fn-set_env"> <code>fn</code> set_env </a></h2>
-<pre><code class="language-rust ignore">fn set_env(var: String, value: String)</code></pre>
-<div>
-<div class="tab">
-<button group="set_env" id="link-set_env-Description"  class="tablinks active" 
-    onclick="openTab(event, 'set_env', 'Description')">
-Description
-</button>
-<button group="set_env" id="link-set_env-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'set_env', 'Arguments')">
-Arguments
-</button>
-<button group="set_env" id="link-set_env-Returns"  class="tablinks" 
-    onclick="openTab(event, 'set_env', 'Returns')">
-Returns
-</button>
-<button group="set_env" id="link-set_env-Example"  class="tablinks" 
-    onclick="openTab(event, 'set_env', 'Example')">
-Example
-</button>
-</div>
-<div group="set_env" id="set_env-Description" class="tabcontent"  style="display: block;" >
-Set the value of an environment variable.
-</div>
-<div group="set_env" id="set_env-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>var</code> - The name of the environment variable to set.</li>
-<li><code>value</code> - The value to assign to the environment variable.</li>
-</ul>
-</div>
-<div group="set_env" id="set_env-Returns" class="tabcontent"  style="display: none;" >
-<p>This function does not return a value.</p>
-</div>
-<div group="set_env" id="set_env-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::env" as env;
-
-// Set the value of the "MY_VAR" environment variable
-env::set_env("MY_VAR", "SomeValue");
 </code></pre>
 </div>
 </div>
