@@ -31,6 +31,7 @@
         <!-- Custom theme stylesheets -->
         <link rel="stylesheet" href=".././theme/catppuccin.css">
         <link rel="stylesheet" href=".././theme/ewwii.css">
+        <link rel="stylesheet" href=".././theme/rhai-autodocs/default.css">
 
 
         <!-- Provide site root and default themes to javascript -->
@@ -185,259 +186,864 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="standard-library"><a class="header" href="#standard-library">Standard Library</a></h1>
-<h2 id="stdenv"><a class="header" href="#stdenv"><code>std::env</code></a></h2>
-<p>The <code>std::env</code> module provides access to common system-level environment queries. It is supported on Unix-based systems (Linux, macOS).</p>
-<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
-<pre><code class="language-js">import "std::env" as env;
-
-// Get an environment variable, or fallback to a default
-let shell = env::get_env("SHELL") ?? "unknown";
-
-// Set an environment variable (current process only)
-env::set_env("DEBUG_MODE", "true");
-
-// Get the user's home directory
-let home = env::get_home_dir() ?? "/home/user";
-
-// Get the current working directory
-let cwd = env::get_current_dir() ?? "/";
-
-// Get the current username
-let user = env::get_username() ?? "nobody";
-</code></pre>
-<h3 id="functions"><a class="header" href="#functions">Functions</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>get_env</code></td><td>Gets an environment variable's value</td></tr>
-<tr><td><code>set_env</code></td><td>Sets an environment variable (current process only)</td></tr>
-<tr><td><code>get_home_dir</code></td><td>Returns the current user's home directory path if found</td></tr>
-<tr><td><code>get_current_dir</code></td><td>Returns the current working directory</td></tr>
-<tr><td><code>get_username</code></td><td>Gets the current user's username from <code>$USER</code></td></tr>
-</tbody></table>
+                        <h1 id="monitor"><a class="header" href="#monitor">monitor</a></h1>
+<p><code>Namespace: global/std/monitor</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-all_resolutions" class="func-name"><a class="header" href="#fn-all_resolutions"> <code>fn</code> all_resolutions </a></h2>
+<pre><code class="language-rust ignore">fn all_resolutions() -&gt; Vec&lt;[int;2]&gt;</code></pre>
+<div>
+<div class="tab">
+<button group="all_resolutions" id="link-all_resolutions-Description"  class="tablinks active" 
+    onclick="openTab(event, 'all_resolutions', 'Description')">
+Description
+</button>
+<button group="all_resolutions" id="link-all_resolutions-Returns"  class="tablinks" 
+    onclick="openTab(event, 'all_resolutions', 'Returns')">
+Returns
+</button>
+<button group="all_resolutions" id="link-all_resolutions-Example"  class="tablinks" 
+    onclick="openTab(event, 'all_resolutions', 'Example')">
+Example
+</button>
 </div>
-<h2 id="stdtext"><a class="header" href="#stdtext"><code>std::text</code></a></h2>
-<p>The <code>std::text</code> module provides access to more string manipulation that Rhai lacks.</p>
-<h3 id="usage-1"><a class="header" href="#usage-1">Usage</a></h3>
-<pre><code class="language-js">import "std::text" as text;
-
-// Convert a string to a URL-friendly slug
-let slug = text::to_slug("Ewwii is cool!"); // output: "ewwii-is-cool"
-
-// Convert a string to camelCase
-let camel = text::to_camel_case("my cool project"); // output: "myCoolProject"
-
-// Truncate a string to N characters (without splitting in the middle of a character)
-let short = text::truncate_chars("hello world", 5); // output: "hello"
-
-// Convert a string to uppercase
-let upper = text::to_upper("hello"); // output: "HELLO"
-
-// Convert a string to lowercase
-let lower = text::to_lower("HELLO"); // output: "hello"
-</code></pre>
-<h3 id="functions-1"><a class="header" href="#functions-1">Functions</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>to_slug</code></td><td>Converts a string into a lowercase, hyphen-separated slug</td></tr>
-<tr><td><code>to_camel_case</code></td><td>Converts a string into camelCase, removing non-alphanumeric characters</td></tr>
-<tr><td><code>truncate_chars</code></td><td>Truncates a string to a maximum number of characters (UTF-8 safe)</td></tr>
-<tr><td><code>to_upper</code></td><td>Converts a string to uppercase</td></tr>
-<tr><td><code>to_lower</code></td><td>Converts a string to lowercase</td></tr>
-</tbody></table>
+<div group="all_resolutions" id="all_resolutions-Description" class="tabcontent"  style="display: block;" >
+Get the resolutions of all connected monitors.
 </div>
-<h2 id="stdmonitor"><a class="header" href="#stdmonitor"><code>std::monitor</code></a></h2>
-<p>The <code>std::monitor</code> module provides utilities for querying information about connected monitors, including their resolution, dimensions, and DPI.</p>
-<h3 id="usage-2"><a class="header" href="#usage-2">Usage</a></h3>
+<div group="all_resolutions" id="all_resolutions-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns an array of arrays, where each inner array contains the width and height of a monitor.</p>
+</div>
+<div group="all_resolutions" id="all_resolutions-Example" class="tabcontent"  style="display: none;" >
 <pre><code class="language-js">import "std::monitor" as monitor;
 
-// Get number of monitors
-let count = monitor::count(); // e.g., 2
+let resolutions = monitor::all_resolutions();
+print(resolutions); // Output: [[width1, height1], [width2, height2], ...]
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-all_resolutions_str" class="func-name"><a class="header" href="#fn-all_resolutions_str"> <code>fn</code> all_resolutions_str </a></h2>
+<pre><code class="language-rust ignore">fn all_resolutions_str() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="all_resolutions_str" id="link-all_resolutions_str-Description"  class="tablinks active" 
+    onclick="openTab(event, 'all_resolutions_str', 'Description')">
+Description
+</button>
+<button group="all_resolutions_str" id="link-all_resolutions_str-Returns"  class="tablinks" 
+    onclick="openTab(event, 'all_resolutions_str', 'Returns')">
+Returns
+</button>
+<button group="all_resolutions_str" id="link-all_resolutions_str-Example"  class="tablinks" 
+    onclick="openTab(event, 'all_resolutions_str', 'Example')">
+Example
+</button>
+</div>
+<div group="all_resolutions_str" id="all_resolutions_str-Description" class="tabcontent"  style="display: block;" >
+Get the resolutions of all connected monitors as a string.
+</div>
+<div group="all_resolutions_str" id="all_resolutions_str-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns a string where each monitor's resolution is formatted as "width x height", separated by commas.</p>
+</div>
+<div group="all_resolutions_str" id="all_resolutions_str-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
 
-// Get resolution of the primary monitor
-let (w, h) = monitor::primary_resolution();
-let res_str = monitor::primary_resolution_str(); // e.g., "1920x1080"
+let resolutions_str = monitor::all_resolutions_str();
+print(resolutions_str); // Output: "1920x1080, 1280x720"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-count" class="func-name"><a class="header" href="#fn-count"> <code>fn</code> count </a></h2>
+<pre><code class="language-rust ignore">fn count() -&gt; int</code></pre>
+<div>
+<div class="tab">
+<button group="count" id="link-count-Description"  class="tablinks active" 
+    onclick="openTab(event, 'count', 'Description')">
+Description
+</button>
+<button group="count" id="link-count-Returns"  class="tablinks" 
+    onclick="openTab(event, 'count', 'Returns')">
+Returns
+</button>
+<button group="count" id="link-count-Example"  class="tablinks" 
+    onclick="openTab(event, 'count', 'Example')">
+Example
+</button>
+</div>
+<div group="count" id="count-Description" class="tabcontent"  style="display: block;" >
+Get the number of connected monitors.
+</div>
+<div group="count" id="count-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the total number of connected monitors as an <code>i64</code>.</p>
+</div>
+<div group="count" id="count-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
 
-// Get resolutions of all monitors
-let all_res = monitor::all_resolutions();
-let all_res_str = monitor::all_resolutions_str(); // e.g., "1920x1080, 1280x1024"
+let count = monitor::count();
+print(count); // Output: Number of connected monitors
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-dimensions" class="func-name"><a class="header" href="#fn-dimensions"> <code>fn</code> dimensions </a></h2>
+<pre><code class="language-rust ignore">fn dimensions(index: int) -&gt; [int;4]</code></pre>
+<div>
+<div class="tab">
+<button group="dimensions" id="link-dimensions-Description"  class="tablinks active" 
+    onclick="openTab(event, 'dimensions', 'Description')">
+Description
+</button>
+<button group="dimensions" id="link-dimensions-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'dimensions', 'Arguments')">
+Arguments
+</button>
+<button group="dimensions" id="link-dimensions-Returns"  class="tablinks" 
+    onclick="openTab(event, 'dimensions', 'Returns')">
+Returns
+</button>
+<button group="dimensions" id="link-dimensions-Example"  class="tablinks" 
+    onclick="openTab(event, 'dimensions', 'Example')">
+Example
+</button>
+</div>
+<div group="dimensions" id="dimensions-Description" class="tabcontent"  style="display: block;" >
+Get the dimensions (x, y, width, height) of a specific monitor.
+</div>
+<div group="dimensions" id="dimensions-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>index</code> - The index of the monitor (0-based).</li>
+</ul>
+</div>
+<div group="dimensions" id="dimensions-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns an array with the monitor's position (x, y) and size (width, height).</p>
+</div>
+<div group="dimensions" id="dimensions-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
 
-// Get dimensions of a specific monitor
-let (x, y, w, h) = monitor::dimensions(0);
-let dim_str = monitor::dimensions_str(0); // e.g., "1920x1080"
+let dimensions = monitor::dimensions(0);
+print(dimensions); // Output: [x, y, width, height]
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-dimensions_str" class="func-name"><a class="header" href="#fn-dimensions_str"> <code>fn</code> dimensions_str </a></h2>
+<pre><code class="language-rust ignore">fn dimensions_str(index: int) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="dimensions_str" id="link-dimensions_str-Description"  class="tablinks active" 
+    onclick="openTab(event, 'dimensions_str', 'Description')">
+Description
+</button>
+<button group="dimensions_str" id="link-dimensions_str-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'dimensions_str', 'Arguments')">
+Arguments
+</button>
+<button group="dimensions_str" id="link-dimensions_str-Returns"  class="tablinks" 
+    onclick="openTab(event, 'dimensions_str', 'Returns')">
+Returns
+</button>
+<button group="dimensions_str" id="link-dimensions_str-Example"  class="tablinks" 
+    onclick="openTab(event, 'dimensions_str', 'Example')">
+Example
+</button>
+</div>
+<div group="dimensions_str" id="dimensions_str-Description" class="tabcontent"  style="display: block;" >
+Get the dimensions of a specific monitor as a string.
+</div>
+<div group="dimensions_str" id="dimensions_str-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>index</code> - The index of the monitor (0-based).</li>
+</ul>
+</div>
+<div group="dimensions_str" id="dimensions_str-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the monitor's dimensions as a string in the format "x,y - width x height".</p>
+</div>
+<div group="dimensions_str" id="dimensions_str-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
 
-// Get DPI of a monitor
+let dimensions_str = monitor::dimensions_str(0);
+print(dimensions_str); // Output: "0,0 - 1920x1080"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-dpi" class="func-name"><a class="header" href="#fn-dpi"> <code>fn</code> dpi </a></h2>
+<pre><code class="language-rust ignore">fn dpi(index: int) -&gt; float</code></pre>
+<div>
+<div class="tab">
+<button group="dpi" id="link-dpi-Description"  class="tablinks active" 
+    onclick="openTab(event, 'dpi', 'Description')">
+Description
+</button>
+<button group="dpi" id="link-dpi-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'dpi', 'Arguments')">
+Arguments
+</button>
+<button group="dpi" id="link-dpi-Returns"  class="tablinks" 
+    onclick="openTab(event, 'dpi', 'Returns')">
+Returns
+</button>
+<button group="dpi" id="link-dpi-Example"  class="tablinks" 
+    onclick="openTab(event, 'dpi', 'Example')">
+Example
+</button>
+</div>
+<div group="dpi" id="dpi-Description" class="tabcontent"  style="display: block;" >
+Get the DPI (dots per inch) of a specific monitor.
+</div>
+<div group="dpi" id="dpi-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>index</code> - The index of the monitor (0-based).</li>
+</ul>
+</div>
+<div group="dpi" id="dpi-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the DPI (scale factor * base DPI) of the monitor as a <code>f64</code>.</p>
+</div>
+<div group="dpi" id="dpi-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
 let dpi = monitor::dpi(0);
-let dpi_str = monitor::dpi_str(0); // e.g., "96.0"
+print(dpi); // Output: DPI of the monitor
 </code></pre>
-<h3 id="functions-2"><a class="header" href="#functions-2">Functions</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>count()</code></td><td>Returns the number of connected monitors.</td></tr>
-<tr><td><code>primary_resolution()</code></td><td>Returns the width and height of the primary monitor as a tuple <code>(width, height)</code>.</td></tr>
-<tr><td><code>primary_resolution_str()</code></td><td>Returns the primary monitor resolution as a string in the format <code>"WIDTHxHEIGHT"</code>.</td></tr>
-<tr><td><code>all_resolutions()</code></td><td>Returns a vector of <code>(width, height)</code> tuples for all connected monitors.</td></tr>
-<tr><td><code>all_resolutions_str()</code></td><td>Returns a comma-separated string of all monitor resolutions in <code>"WIDTHxHEIGHT"</code> format.</td></tr>
-<tr><td><code>dimensions(index)</code></td><td>Returns <code>(x, y, width, height)</code> for the monitor at the given index.</td></tr>
-<tr><td><code>dimensions_str(index)</code></td><td>Returns the dimensions of the monitor at the given index as a formatted string <code>"x,y - WxH"</code>.</td></tr>
-<tr><td><code>dpi(index)</code></td><td>Returns the DPI (dots per inch) of the monitor at the given index, accounting for scaling.</td></tr>
-<tr><td><code>dpi_str(index)</code></td><td>Returns the DPI as a formatted string with one decimal place, e.g., <code>"96.0"</code>.</td></tr>
-</tbody></table>
 </div>
-<h3 id="notes"><a class="header" href="#notes">Notes</a></h3>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-dpi_str" class="func-name"><a class="header" href="#fn-dpi_str"> <code>fn</code> dpi_str </a></h2>
+<pre><code class="language-rust ignore">fn dpi_str(index: int) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="dpi_str" id="link-dpi_str-Description"  class="tablinks active" 
+    onclick="openTab(event, 'dpi_str', 'Description')">
+Description
+</button>
+<button group="dpi_str" id="link-dpi_str-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'dpi_str', 'Arguments')">
+Arguments
+</button>
+<button group="dpi_str" id="link-dpi_str-Returns"  class="tablinks" 
+    onclick="openTab(event, 'dpi_str', 'Returns')">
+Returns
+</button>
+<button group="dpi_str" id="link-dpi_str-Example"  class="tablinks" 
+    onclick="openTab(event, 'dpi_str', 'Example')">
+Example
+</button>
+</div>
+<div group="dpi_str" id="dpi_str-Description" class="tabcontent"  style="display: block;" >
+Get the DPI of a specific monitor as a string.
+</div>
+<div group="dpi_str" id="dpi_str-Arguments" class="tabcontent"  style="display: none;" >
 <ul>
-<li>Monitor indices are zero-based: the primary monitor is index 0.</li>
-<li>DPI calculation assumes a base of 96 DPI multiplied by the monitor’s scale factor.</li>
-<li>The module automatically initializes GTK if it hasn’t been initialized on the main thread.</li>
+<li><code>index</code> - The index of the monitor (0-based).</li>
 </ul>
-<h2 id="stdjson"><a class="header" href="#stdjson"><code>std::json</code></a></h2>
-<p>The <code>std::json</code> module provides utilities for working with JSON data within Rhai scripts. It allows parsing, serializing, and manipulating JSON objects dynamically.</p>
-<h3 id="usage-3"><a class="header" href="#usage-3">Usage</a></h3>
-<pre><code class="language-js">import "std::json" as json;
-
-// Parse a JSON string
-let json_val = json::parse_json(r#"{"name":"Alice","age":30}"#);
-
-// Convert JSON back to string
-let json_str = json::to_string(json_val);
-
-// Get a value from a JSON object
-let name = json::get(json_val, "name"); // "Alice"
-
-// Set a value in a JSON object
-json::set(json_val, "age", 31);
-</code></pre>
-<h3 id="functions-3"><a class="header" href="#functions-3">Functions</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>parse_json()</code></td><td>Parses a JSON string into a Rhai <code>Dynamic</code> representing a <code>serde_json::Value</code>. Returns an error if parsing fails.</td></tr>
-<tr><td><code>to_string()</code></td><td>Serializes a <code>Dynamic</code> JSON value back into a JSON string.</td></tr>
-<tr><td><code>get()</code></td><td>Retrieves a value by key from a JSON object. Returns <code>()</code> if the key does not exist.</td></tr>
-<tr><td><code>set()</code></td><td>Sets a key-value pair in a JSON object. Returns an error if the value is not a JSON object.</td></tr>
-</tbody></table>
 </div>
-<h3 id="notes-1"><a class="header" href="#notes-1">Notes</a></h3>
+<div group="dpi_str" id="dpi_str-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the DPI of the monitor as a string formatted to 1 decimal place.</p>
+</div>
+<div group="dpi_str" id="dpi_str-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let dpi_str = monitor::dpi_str(0);
+print(dpi_str); // Output: "96.0"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-primary_resolution" class="func-name"><a class="header" href="#fn-primary_resolution"> <code>fn</code> primary_resolution </a></h2>
+<pre><code class="language-rust ignore">fn primary_resolution() -&gt; [int;2]</code></pre>
+<div>
+<div class="tab">
+<button group="primary_resolution" id="link-primary_resolution-Description"  class="tablinks active" 
+    onclick="openTab(event, 'primary_resolution', 'Description')">
+Description
+</button>
+<button group="primary_resolution" id="link-primary_resolution-Returns"  class="tablinks" 
+    onclick="openTab(event, 'primary_resolution', 'Returns')">
+Returns
+</button>
+<button group="primary_resolution" id="link-primary_resolution-Example"  class="tablinks" 
+    onclick="openTab(event, 'primary_resolution', 'Example')">
+Example
+</button>
+</div>
+<div group="primary_resolution" id="primary_resolution-Description" class="tabcontent"  style="display: block;" >
+Get the resolution of the primary monitor.
+</div>
+<div group="primary_resolution" id="primary_resolution-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns an array containing the width and height of the primary monitor as two <code>i64</code> values.</p>
+</div>
+<div group="primary_resolution" id="primary_resolution-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let resolution = monitor::primary_resolution();
+print(resolution); // Output: [width, height]
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-primary_resolution_str" class="func-name"><a class="header" href="#fn-primary_resolution_str"> <code>fn</code> primary_resolution_str </a></h2>
+<pre><code class="language-rust ignore">fn primary_resolution_str() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="primary_resolution_str" id="link-primary_resolution_str-Description"  class="tablinks active" 
+    onclick="openTab(event, 'primary_resolution_str', 'Description')">
+Description
+</button>
+<button group="primary_resolution_str" id="link-primary_resolution_str-Returns"  class="tablinks" 
+    onclick="openTab(event, 'primary_resolution_str', 'Returns')">
+Returns
+</button>
+<button group="primary_resolution_str" id="link-primary_resolution_str-Example"  class="tablinks" 
+    onclick="openTab(event, 'primary_resolution_str', 'Example')">
+Example
+</button>
+</div>
+<div group="primary_resolution_str" id="primary_resolution_str-Description" class="tabcontent"  style="display: block;" >
+Get the resolution of the primary monitor as a string.
+</div>
+<div group="primary_resolution_str" id="primary_resolution_str-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the resolution of the primary monitor as a string in the format "width x height".</p>
+</div>
+<div group="primary_resolution_str" id="primary_resolution_str-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let resolution_str = monitor::primary_resolution_str();
+print(resolution_str); // Output: "1920x1080"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<h1 id="text"><a class="header" href="#text">text</a></h1>
+<p><code>Namespace: global/std/text</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_camel_case" class="func-name"><a class="header" href="#fn-to_camel_case"> <code>fn</code> to_camel_case </a></h2>
+<pre><code class="language-rust ignore">fn to_camel_case(text: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_camel_case" id="link-to_camel_case-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_camel_case', 'Description')">
+Description
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Arguments')">
+Arguments
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Returns')">
+Returns
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Example')">
+Example
+</button>
+</div>
+<div group="to_camel_case" id="to_camel_case-Description" class="tabcontent"  style="display: block;" >
+Converts a string to camel case.
+</div>
+<div group="to_camel_case" id="to_camel_case-Arguments" class="tabcontent"  style="display: none;" >
 <ul>
-<li>All JSON values are represented as Rhai <code>Dynamic</code> objects internally.</li>
-<li>Keys that do not exist in a JSON object return a <code>UNIT</code> value.</li>
-<li><code>set()</code> only works on JSON objects; trying to set a key on a non-object JSON value will produce an error.</li>
-<li>Parsing and serialization errors are returned as Rhai <code>EvalAltResult</code> errors.</li>
+<li><code>text</code> - A string to be converted to camel case.</li>
 </ul>
-<h2 id="stdmath"><a class="header" href="#stdmath"><code>std::math</code></a></h2>
-<p>The <code>std::math</code> module provides a collection of mathematical constants and functions.
-It includes basic arithmetic, trigonometry, exponentiation, logarithms, and utility functions.</p>
-<h3 id="usage-4"><a class="header" href="#usage-4">Usage</a></h3>
-<pre><code class="language-js">import "std::math" as math;
+</div>
+<div group="to_camel_case" id="to_camel_case-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the <code>text</code> in camel case format.</p>
+</div>
+<div group="to_camel_case" id="to_camel_case-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
 
-// Constants
-print(math::PI); // 3.14159...
-print(math::E); // 2.71828...
-print(math::TAU); // 6.28318...
-
-// Basic math
-let x = math::abs(-42.0); // 42
-let y = math::sqrt(9.0); // 3
-let z = math::pow(2.0, 10.0); // 1024
-
-// Trigonometry
-let s = math::sin(math::PI / 2); // ~1
-let c = math::cos(0.0); // 1
-let t = math::tan(math::PI / 4); // ~1
-
-// Exponentials &amp; logs
-let e = math::exp(1.0); // ~2.718
-let l = math::ln(math::E); // 1
-let l10 = math::log10(100.0); // 2
-let l2 = math::log(2.0, 8.0); // 3
-
-// Inverse trig
-let a = math::asin(1.0); // PI/2
-let b = math::acos(0.0); // PI/2
-let c = math::atan(1.0); // PI/4
-let d = math::atan2(1.0, 1.0); // PI/4
-
-// Hyperbolic
-let sh = math::sinh(1.0);
-let ch = math::cosh(1.0);
-let th = math::tanh(1.0);
-
-// Utilities
-let f = math::floor(3.7); // 3
-let r = math::round(3.5); // 4
-let m = math::min(10.0, 20.0); // 10
-let M = math::max(10.0, 20.0); // 20
-let cl = math::clamp(15.0, 0.0, 10.0); // 10
-
-// Other Utilities
-let tof = math::to_float(42);   // 42 -&gt; 42.0
-let toi = math::to_int(3.14);   // truncates toward zero -&gt; 3
-// NOTE: to_int does NOT round!
-// If you want nearest integer, use: to_int(math::round(3.14))
+let result = text::to_camel_case("hello world example");
+print(result); // output: "helloWorldExample"
 </code></pre>
-<h3 id="constants"><a class="header" href="#constants">Constants</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>PI</code></td><td>3.14159…</td><td>Circle ratio π</td></tr>
-<tr><td><code>E</code></td><td>2.71828…</td><td>Euler’s number</td></tr>
-<tr><td><code>TAU</code></td><td>6.28318…</td><td>Full circle (2π)</td></tr>
-</tbody></table>
 </div>
-<h3 id="functions-4"><a class="header" href="#functions-4">Functions</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>abs(x)</code></td><td>Absolute value of <code>x</code></td></tr>
-<tr><td><code>sqrt(x)</code></td><td>Square root of <code>x</code></td></tr>
-<tr><td><code>pow(base, exp)</code></td><td>Base raised to power of exponent</td></tr>
-<tr><td><code>sin(x)</code></td><td>Sine of <code>x</code> (radians)</td></tr>
-<tr><td><code>cos(x)</code></td><td>Cosine of <code>x</code> (radians)</td></tr>
-<tr><td><code>tan(x)</code></td><td>Tangent of <code>x</code> (radians)</td></tr>
-<tr><td><code>exp(x)</code></td><td>e raised to the power <code>x</code></td></tr>
-<tr><td><code>ln(x)</code></td><td>Natural log of <code>x</code></td></tr>
-<tr><td><code>log10(x)</code></td><td>Base-10 log of <code>x</code></td></tr>
-<tr><td><code>log(base, x)</code></td><td>Log of <code>x</code> in <code>base</code></td></tr>
-<tr><td><code>asin(x)</code></td><td>Inverse sine</td></tr>
-<tr><td><code>acos(x)</code></td><td>Inverse cosine</td></tr>
-<tr><td><code>atan(x)</code></td><td>Inverse tangent</td></tr>
-<tr><td><code>atan2(y, x)</code></td><td>Arctangent of <code>y/x</code> considering quadrant</td></tr>
-<tr><td><code>sinh(x)</code></td><td>Hyperbolic sine</td></tr>
-<tr><td><code>cosh(x)</code></td><td>Hyperbolic cosine</td></tr>
-<tr><td><code>tanh(x)</code></td><td>Hyperbolic tangent</td></tr>
-<tr><td><code>floor(x)</code></td><td>Round down</td></tr>
-<tr><td><code>ceil(x)</code></td><td>Round up</td></tr>
-<tr><td><code>round(x)</code></td><td>Round to nearest</td></tr>
-<tr><td><code>trunc(x)</code></td><td>Round toward zero</td></tr>
-<tr><td><code>fract(x)</code></td><td>Fractional part</td></tr>
-<tr><td><code>min(a, b)</code></td><td>Smaller of two values</td></tr>
-<tr><td><code>max(a, b)</code></td><td>Larger of two values</td></tr>
-<tr><td><code>clamp(x, min, max)</code></td><td>Clamp <code>x</code> into <code>[min, max]</code></td></tr>
-<tr><td><code>to_float</code></td><td>Convert an integer or float into a floating-point</td></tr>
-<tr><td><code>to_int</code></td><td>Convert an integer or float into an integer</td></tr>
-</tbody></table>
 </div>
-<h3 id="note"><a class="header" href="#note">Note</a></h3>
-<p>All functions in this module work with floating-point numbers (f64).</p>
-<p>If you pass an integer (e.g. <code>0</code>), Rhai will report an error because there is no math::cos(i64). Use a floating-point literal instead (e.g. <code>0.0</code>).</p>
-<p>All math functions return <code>f64</code>. If you need an integer result, use <code>to_int</code> to convert.</p>
-<h2 id="stdcommand"><a class="header" href="#stdcommand"><code>std::command</code></a></h2>
-<p>The <code>std::command</code> module provides functions which you can use to run shell commands on your system.</p>
-<h3 id="usage-5"><a class="header" href="#usage-5">Usage</a></h3>
-<pre><code class="language-js">import "std::command" as command;
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_lower" class="func-name"><a class="header" href="#fn-to_lower"> <code>fn</code> to_lower </a></h2>
+<pre><code class="language-rust ignore">fn to_lower(s: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_lower" id="link-to_lower-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_lower', 'Description')">
+Description
+</button>
+<button group="to_lower" id="link-to_lower-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Arguments')">
+Arguments
+</button>
+<button group="to_lower" id="link-to_lower-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Returns')">
+Returns
+</button>
+<button group="to_lower" id="link-to_lower-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Example')">
+Example
+</button>
+</div>
+<div group="to_lower" id="to_lower-Description" class="tabcontent"  style="display: block;" >
+Converts a string to lowercase.
+</div>
+<div group="to_lower" id="to_lower-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>s</code> - A string to be converted to lowercase.</li>
+</ul>
+</div>
+<div group="to_lower" id="to_lower-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the string in lowercase.</p>
+</div>
+<div group="to_lower" id="to_lower-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
 
-// run a command
-command::run("notify-send Hello!");
-
-// run a command and read output from stdout
-let output = command::run_and_read("pwd"); // example output: /home/foo/.config/ewwii/
+let result = text::to_lower("HELLO");
+print(result); // output: "hello"
 </code></pre>
-<h3 id="functions-5"><a class="header" href="#functions-5">Functions</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>run(x)</code></td><td>Run the shell command in <code>x</code></td></tr>
-<tr><td><code>run_and_read(x)</code></td><td>Run the shell command in <code>x</code> and return the stdout</td></tr>
-</tbody></table>
 </div>
-<h3 id="note-1"><a class="header" href="#note-1">Note</a></h3>
-<p>The functions in <code>std::command</code> execute arbitrary shell commands. Only run scripts you trust, as misuse can compromise your system.</p>
-<p>This, along with features like <code>poll</code>, <code>listen</code>, <code>onclick</code>, <code>onhover</code>, etc., which also run shell commands, can be abused by bad actors. Always verify and trust a package before installing it via <a href="https://github.com/Ewwii-sh/eiipm">eiipm</a>. Even if a package is registered in <a href="https://github.com/Ewwii-sh/eii-manifests">eii-manifests</a>, bad actors could change the code of their package without the awareness of maintainers.</p>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_slug" class="func-name"><a class="header" href="#fn-to_slug"> <code>fn</code> to_slug </a></h2>
+<pre><code class="language-rust ignore">fn to_slug(text: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_slug" id="link-to_slug-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_slug', 'Description')">
+Description
+</button>
+<button group="to_slug" id="link-to_slug-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Arguments')">
+Arguments
+</button>
+<button group="to_slug" id="link-to_slug-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Returns')">
+Returns
+</button>
+<button group="to_slug" id="link-to_slug-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Example')">
+Example
+</button>
+</div>
+<div group="to_slug" id="to_slug-Description" class="tabcontent"  style="display: block;" >
+Converts a string to a slug (lowercase words joined by hyphens).
+</div>
+<div group="to_slug" id="to_slug-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>text</code> - A string to be converted to a slug.</li>
+</ul>
+</div>
+<div group="to_slug" id="to_slug-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the <code>text</code> as a slug.</p>
+</div>
+<div group="to_slug" id="to_slug-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_slug("Hello World!");
+print(result); // output: "hello-world"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_upper" class="func-name"><a class="header" href="#fn-to_upper"> <code>fn</code> to_upper </a></h2>
+<pre><code class="language-rust ignore">fn to_upper(s: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_upper" id="link-to_upper-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_upper', 'Description')">
+Description
+</button>
+<button group="to_upper" id="link-to_upper-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Arguments')">
+Arguments
+</button>
+<button group="to_upper" id="link-to_upper-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Returns')">
+Returns
+</button>
+<button group="to_upper" id="link-to_upper-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Example')">
+Example
+</button>
+</div>
+<div group="to_upper" id="to_upper-Description" class="tabcontent"  style="display: block;" >
+Converts a string to uppercase.
+</div>
+<div group="to_upper" id="to_upper-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>s</code> - A string to be converted to uppercase.</li>
+</ul>
+</div>
+<div group="to_upper" id="to_upper-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the string in uppercase.</p>
+</div>
+<div group="to_upper" id="to_upper-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_upper("hello");
+print(result); // output: "HELLO"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-truncate_chars" class="func-name"><a class="header" href="#fn-truncate_chars"> <code>fn</code> truncate_chars </a></h2>
+<pre><code class="language-rust ignore">fn truncate_chars(text: String, max_chars: int) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="truncate_chars" id="link-truncate_chars-Description"  class="tablinks active" 
+    onclick="openTab(event, 'truncate_chars', 'Description')">
+Description
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Arguments')">
+Arguments
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Returns"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Returns')">
+Returns
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Example"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Example')">
+Example
+</button>
+</div>
+<div group="truncate_chars" id="truncate_chars-Description" class="tabcontent"  style="display: block;" >
+Truncates a string to the specified number of characters.
+</div>
+<div group="truncate_chars" id="truncate_chars-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>text</code> - A string to be truncated.</li>
+<li><code>max_chars</code> - The maximum number of characters to keep in the string.</li>
+</ul>
+</div>
+<div group="truncate_chars" id="truncate_chars-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns a truncated string.</p>
+</div>
+<div group="truncate_chars" id="truncate_chars-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::truncate_chars("Hello World!", 5);
+print(result); // output: "Hello"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<h1 id="command"><a class="header" href="#command">command</a></h1>
+<p><code>Namespace: global/std/command</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-run" class="func-name"><a class="header" href="#fn-run"> <code>fn</code> run </a></h2>
+<pre><code class="language-rust ignore">fn run(cmd: String)</code></pre>
+<div>
+<div class="tab">
+<button group="run" id="link-run-Description"  class="tablinks active" 
+    onclick="openTab(event, 'run', 'Description')">
+Description
+</button>
+<button group="run" id="link-run-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Arguments')">
+Arguments
+</button>
+<button group="run" id="link-run-Returns"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Returns')">
+Returns
+</button>
+<button group="run" id="link-run-Example"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Example')">
+Example
+</button>
+</div>
+<div group="run" id="run-Description" class="tabcontent"  style="display: block;" >
+Executes a shell command without capturing the output.
+</div>
+<div group="run" id="run-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>cmd</code> - The shell command to execute as a string.</li>
+</ul>
+</div>
+<div group="run" id="run-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns nothing if the command executes successfully. If there is an error
+running the command, it returns the error.</p>
+</div>
+<div group="run" id="run-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::command" as cmd;
+
+// Run a shell command (e.g., list directory contents)
+cmd::run("ls -l");
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-run_and_read" class="func-name"><a class="header" href="#fn-run_and_read"> <code>fn</code> run_and_read </a></h2>
+<pre><code class="language-rust ignore">fn run_and_read(cmd: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="run_and_read" id="link-run_and_read-Description"  class="tablinks active" 
+    onclick="openTab(event, 'run_and_read', 'Description')">
+Description
+</button>
+<button group="run_and_read" id="link-run_and_read-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Arguments')">
+Arguments
+</button>
+<button group="run_and_read" id="link-run_and_read-Returns"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Returns')">
+Returns
+</button>
+<button group="run_and_read" id="link-run_and_read-Example"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Example')">
+Example
+</button>
+</div>
+<div group="run_and_read" id="run_and_read-Description" class="tabcontent"  style="display: block;" >
+Executes a shell command and captures its output.
+</div>
+<div group="run_and_read" id="run_and_read-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>cmd</code> - The shell command to execute as a string.</li>
+</ul>
+</div>
+<div group="run_and_read" id="run_and_read-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the standard output of the command as a <code>string</code>. If the command fails,
+it returns the error.</p>
+</div>
+<div group="run_and_read" id="run_and_read-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::command" as cmd;
+
+// Run a shell command and capture its output
+let output = cmd::run_and_read("echo 'Hello, world!'");
+print(output); // output: Hello, world!
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<h1 id="env"><a class="header" href="#env">env</a></h1>
+<p><code>Namespace: global/std/env</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_current_dir" class="func-name"><a class="header" href="#fn-get_current_dir"> <code>fn</code> get_current_dir </a></h2>
+<pre><code class="language-rust ignore">fn get_current_dir() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_current_dir" id="link-get_current_dir-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_current_dir', 'Description')">
+Description
+</button>
+<button group="get_current_dir" id="link-get_current_dir-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_current_dir', 'Returns')">
+Returns
+</button>
+<button group="get_current_dir" id="link-get_current_dir-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_current_dir', 'Example')">
+Example
+</button>
+</div>
+<div group="get_current_dir" id="get_current_dir-Description" class="tabcontent"  style="display: block;" >
+Get the current working directory.
+</div>
+<div group="get_current_dir" id="get_current_dir-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the current working directory as a <code>String</code>. If there is an error
+(e.g., if the path cannot be retrieved), it returns a <code>Result::Err</code> with the error message.</p>
+</div>
+<div group="get_current_dir" id="get_current_dir-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env;
+
+// Get the current working directory
+let current_dir = env::get_current_dir();
+print(current_dir); // output: /home/username/project
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_env" class="func-name"><a class="header" href="#fn-get_env"> <code>fn</code> get_env </a></h2>
+<pre><code class="language-rust ignore">fn get_env(var: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_env" id="link-get_env-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_env', 'Description')">
+Description
+</button>
+<button group="get_env" id="link-get_env-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_env', 'Arguments')">
+Arguments
+</button>
+<button group="get_env" id="link-get_env-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_env', 'Returns')">
+Returns
+</button>
+<button group="get_env" id="link-get_env-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_env', 'Example')">
+Example
+</button>
+</div>
+<div group="get_env" id="get_env-Description" class="tabcontent"  style="display: block;" >
+Get the value of an environment variable.
+</div>
+<div group="get_env" id="get_env-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>var</code> - The name of the environment variable to retrieve.</li>
+</ul>
+</div>
+<div group="get_env" id="get_env-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the value of the environment variable as a <code>String</code>.
+If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
+</div>
+<div group="get_env" id="get_env-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env; 
+
+// Get the value of the "HOME" environment variable
+let home_dir = env::get_env("HOME");
+print(home_dir); // output: /home/username
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_home_dir" class="func-name"><a class="header" href="#fn-get_home_dir"> <code>fn</code> get_home_dir </a></h2>
+<pre><code class="language-rust ignore">fn get_home_dir() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_home_dir" id="link-get_home_dir-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_home_dir', 'Description')">
+Description
+</button>
+<button group="get_home_dir" id="link-get_home_dir-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_home_dir', 'Returns')">
+Returns
+</button>
+<button group="get_home_dir" id="link-get_home_dir-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_home_dir', 'Example')">
+Example
+</button>
+</div>
+<div group="get_home_dir" id="get_home_dir-Description" class="tabcontent"  style="display: block;" >
+Get the path to the home directory.
+</div>
+<div group="get_home_dir" id="get_home_dir-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the value of the "HOME" environment variable as a <code>String</code>.
+If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
+</div>
+<div group="get_home_dir" id="get_home_dir-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env;
+
+// Get the home directory
+let home_dir = env::get_home_dir();
+print(home_dir); // output: /home/username
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_username" class="func-name"><a class="header" href="#fn-get_username"> <code>fn</code> get_username </a></h2>
+<pre><code class="language-rust ignore">fn get_username() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_username" id="link-get_username-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_username', 'Description')">
+Description
+</button>
+<button group="get_username" id="link-get_username-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_username', 'Returns')">
+Returns
+</button>
+<button group="get_username" id="link-get_username-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_username', 'Example')">
+Example
+</button>
+</div>
+<div group="get_username" id="get_username-Description" class="tabcontent"  style="display: block;" >
+Get the current username.
+</div>
+<div group="get_username" id="get_username-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the value of the "USER" environment variable as a <code>String</code>.
+If the variable is not found or there is an error, it returns a <code>Result::Err</code> with the error message.</p>
+</div>
+<div group="get_username" id="get_username-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env;
+
+// Get the username of the current user
+let username = env::get_username();
+print(username); // output: username
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-set_env" class="func-name"><a class="header" href="#fn-set_env"> <code>fn</code> set_env </a></h2>
+<pre><code class="language-rust ignore">fn set_env(var: String, value: String)</code></pre>
+<div>
+<div class="tab">
+<button group="set_env" id="link-set_env-Description"  class="tablinks active" 
+    onclick="openTab(event, 'set_env', 'Description')">
+Description
+</button>
+<button group="set_env" id="link-set_env-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'set_env', 'Arguments')">
+Arguments
+</button>
+<button group="set_env" id="link-set_env-Returns"  class="tablinks" 
+    onclick="openTab(event, 'set_env', 'Returns')">
+Returns
+</button>
+<button group="set_env" id="link-set_env-Example"  class="tablinks" 
+    onclick="openTab(event, 'set_env', 'Example')">
+Example
+</button>
+</div>
+<div group="set_env" id="set_env-Description" class="tabcontent"  style="display: block;" >
+Set the value of an environment variable.
+</div>
+<div group="set_env" id="set_env-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>var</code> - The name of the environment variable to set.</li>
+<li><code>value</code> - The value to assign to the environment variable.</li>
+</ul>
+</div>
+<div group="set_env" id="set_env-Returns" class="tabcontent"  style="display: none;" >
+<p>This function does not return a value.</p>
+</div>
+<div group="set_env" id="set_env-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::env" as env; 
+
+// Set the value of the "MY_VAR" environment variable
+env::set_env("MY_VAR", "SomeValue");
+</code></pre>
+</div>
+</div>
+</div>
+</br>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../modules/user_defined.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../modules/global.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -451,7 +1057,7 @@ let output = command::run_and_read("pwd"); // example output: /home/foo/.config/
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../modules/user_defined.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../modules/global.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
@@ -479,7 +1085,8 @@ let output = command::run_and_read("pwd"); // example output: /home/foo/.config/
         <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../js/home_button.js"></script>
+        <script src=".././js/home_button.js"></script>
+        <script src=".././theme/rhai-autodocs/tabs.js"></script>
 
 
 

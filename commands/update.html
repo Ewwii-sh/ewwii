@@ -31,6 +31,7 @@
         <!-- Custom theme stylesheets -->
         <link rel="stylesheet" href=".././theme/catppuccin.css">
         <link rel="stylesheet" href=".././theme/ewwii.css">
+        <link rel="stylesheet" href=".././theme/rhai-autodocs/default.css">
 
 
         <!-- Provide site root and default themes to javascript -->
@@ -199,10 +200,10 @@ ewwii update -w "my_awesome_widget"
 <h2 id="solution-injecting-variables-with---inject-vars"><a class="header" href="#solution-injecting-variables-with---inject-vars">Solution: Injecting variables with <code>--inject-vars</code></a></h2>
 <p>To prevent certain variables from being reset, you can manually inject values into the configuration using the <code>--inject-vars</code> argument. This allows you to explicitly set variable values during an update.</p>
 <pre><code class="language-bash"># Long form
-ewwii update --window "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
+ewwii update --window "my_awesome_widget" --inject-vars "VAR1=bar,VAR2=foo2"
 
 # Short form
-ewwii update -w "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
+ewwii update -w "my_awesome_widget" --inject-vars "VAR1=ewwii,VAR2=baz1"
 </code></pre>
 <blockquote>
 <p>Note: <code>--inject-vars</code> does <strong>not</strong> automatically capture the current state of <code>poll</code> or <code>listen</code> variables. You must explicitly provide the values you want.</p>
@@ -260,7 +261,8 @@ ewwii update -w "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
         <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../js/home_button.js"></script>
+        <script src=".././js/home_button.js"></script>
+        <script src=".././theme/rhai-autodocs/tabs.js"></script>
 
 
 

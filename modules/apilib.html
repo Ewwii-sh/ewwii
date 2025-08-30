@@ -31,6 +31,7 @@
         <!-- Custom theme stylesheets -->
         <link rel="stylesheet" href=".././theme/catppuccin.css">
         <link rel="stylesheet" href=".././theme/ewwii.css">
+        <link rel="stylesheet" href=".././theme/rhai-autodocs/default.css">
 
 
         <!-- Provide site root and default themes to javascript -->
@@ -185,77 +186,389 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="api-library"><a class="header" href="#api-library">API Library</a></h1>
-<h2 id="apiwifi"><a class="header" href="#apiwifi"><code>api::wifi</code></a></h2>
-<p>The <code>wifi</code> module provides cross-platform Wi-Fi management for Linux and macOS systems. Functions include scanning networks, querying the current connection, connecting/disconnecting, and enabling/disabling the Wi-Fi adapter.</p>
-<blockquote>
-<p><strong>Note:</strong> macOS support is largely untested and may behave differently depending on system configuration.</p>
-</blockquote>
-<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
+                        <h1 id="wifi"><a class="header" href="#wifi">wifi</a></h1>
+<p><code>Namespace: global/api/wifi</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-connect" class="func-name"><a class="header" href="#fn-connect"> <code>fn</code> connect </a></h2>
+<pre><code class="language-rust ignore">fn connect(ssid: String, password: String)</code></pre>
+<div>
+<div class="tab">
+<button group="connect" id="link-connect-Description"  class="tablinks active" 
+    onclick="openTab(event, 'connect', 'Description')">
+Description
+</button>
+<button group="connect" id="link-connect-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'connect', 'Arguments')">
+Arguments
+</button>
+<button group="connect" id="link-connect-Returns"  class="tablinks" 
+    onclick="openTab(event, 'connect', 'Returns')">
+Returns
+</button>
+<button group="connect" id="link-connect-Example"  class="tablinks" 
+    onclick="openTab(event, 'connect', 'Example')">
+Example
+</button>
+</div>
+<div group="connect" id="connect-Description" class="tabcontent"  style="display: block;" >
+Connects to a Wi-Fi network with the specified SSID and password.
+</div>
+<div group="connect" id="connect-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>ssid</code> - The SSID of the Wi-Fi network.</li>
+<li><code>password</code> - The password of the Wi-Fi network (optional for open networks).</li>
+</ul>
+</div>
+<div group="connect" id="connect-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns nothing if the connection is successful, or an error message if it fails.</p>
+</div>
+<div group="connect" id="connect-Example" class="tabcontent"  style="display: none;" >
 <pre><code class="language-js">import "api::wifi" as wifi;
 
-// Scan for available networks
-let networks = wifi::scan();
-
-// Get current Wi-Fi connection info
-let current = wifi::current_connection();
-
-// Connect to a network with password
-wifi::connect("MySSID", "MyPassword");
-
-// Connect to a network without password (using saved profile)
-wifi::connect_without_password("MySSID");
-
-// Disconnect from the current network
-wifi::disconnect();
-
-// Enable/disable the Wi-Fi adapter
-wifi::enable_adapter();
-wifi::disable_adapter();
-
-// Get adapter connection
-wifi::get_adapter_connectivity();
+wifi::connect("MySecretNetwork", "password123");
 </code></pre>
-<h3 id="functions"><a class="header" href="#functions">Functions</a></h3>
-<div class="table-wrapper"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>scan()</code></td><td>Returns a list of nearby Wi-Fi networks with <code>ssid</code>, <code>signal</code>, and <code>security</code> fields.</td></tr>
-<tr><td><code>scan_linux()</code></td><td><strong>Linux only</strong>. Returns a list of nearby Wi-Fi networks. Equivalent to <code>scan()</code>.</td></tr>
-<tr><td><code>scan_macos()</code></td><td><strong>macOS only (untested)</strong>. Returns a list of nearby Wi-Fi networks. Equivalent to <code>scan()</code>.</td></tr>
-<tr><td><code>current_connection()</code></td><td>Returns information about the current Wi-Fi connection as a map (<code>ssid</code>, <code>signal</code>, <code>security</code>).</td></tr>
-<tr><td><code>connect(ssid, password)</code></td><td>Connects to a Wi-Fi network.</td></tr>
-<tr><td><code>connect_without_password(ssid)</code></td><td>Connects to a Wi-Fi network without password by using the saved profile.</td></tr>
-<tr><td><code>disconnect()</code></td><td>Disconnects from the currently connected network (does not disable the adapter).</td></tr>
-<tr><td><code>enable_adapter()</code></td><td>Turns the Wi-Fi adapter on.</td></tr>
-<tr><td><code>get_adapter_connectivity()</code></td><td>Returns a normalized connectivity status of the Wi-Fi adapter.</td></tr>
-</tbody></table>
 </div>
-<h3 id="extra-notes"><a class="header" href="#extra-notes">Extra Notes</a></h3>
-<p><code>get_adapter_connectivity()</code> has different outcome possibilities in each OS.</p>
-<p><strong>All possible results:</strong></p>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-connect_without_password" class="func-name"><a class="header" href="#fn-connect_without_password"> <code>fn</code> connect_without_password </a></h2>
+<pre><code class="language-rust ignore">fn connect_without_password(ssid: String)</code></pre>
+<div>
+<div class="tab">
+<button group="connect_without_password" id="link-connect_without_password-Description"  class="tablinks active" 
+    onclick="openTab(event, 'connect_without_password', 'Description')">
+Description
+</button>
+<button group="connect_without_password" id="link-connect_without_password-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'connect_without_password', 'Arguments')">
+Arguments
+</button>
+<button group="connect_without_password" id="link-connect_without_password-Returns"  class="tablinks" 
+    onclick="openTab(event, 'connect_without_password', 'Returns')">
+Returns
+</button>
+<button group="connect_without_password" id="link-connect_without_password-Example"  class="tablinks" 
+    onclick="openTab(event, 'connect_without_password', 'Example')">
+Example
+</button>
+</div>
+<div group="connect_without_password" id="connect_without_password-Description" class="tabcontent"  style="display: block;" >
+Connects to a Wi-Fi network with the specified SSID using saved profile (no password required).
+</div>
+<div group="connect_without_password" id="connect_without_password-Arguments" class="tabcontent"  style="display: none;" >
 <ul>
-<li><strong>Linux</strong>: <code>"full"</code> (internet available), <code>"limited"</code> (network only, no internet), <code>"portal"</code> (captive portal), <code>"none"</code> (no connectivity)</li>
-<li><strong>macOS</strong>: <code>"full"</code> (connected to a Wi-Fi network) or <code>"none"</code> (not connected)</li>
+<li><code>ssid</code> - The SSID of the Wi-Fi network.</li>
 </ul>
-<h3 id="platform-notes"><a class="header" href="#platform-notes">Platform Notes</a></h3>
-<ul>
-<li><strong>Linux</strong>: Uses <code>nmcli</code> for all operations. The module assumes <code>nmcli</code> is installed and accessible in <code>$PATH</code>.</li>
-<li><strong>macOS</strong>: Uses <code>/System/Library/PrivateFrameworks/Apple80211.framework/.../airport</code> for scanning and disconnecting, and <code>networksetup</code> for connecting and enabling/disabling the adapter.</li>
-<li><strong>Unsupported OS</strong>: All functions return an error if the platform is neither Linux nor macOS.</li>
-</ul>
-<h3 id="returned-data-formats"><a class="header" href="#returned-data-formats">Returned Data Formats</a></h3>
-<ul>
-<li><code>scan()</code> (or <code>scan_linux</code> / <code>scan_macos</code>) returns an <strong>array of maps</strong>:</li>
-</ul>
-<pre><code class="language-js">[
-    { ssid: "HomeWiFi", signal: "78", security: "WPA2" },
-    { ssid: "CafeNet", signal: "65", security: "WPA" },
-];
+</div>
+<div group="connect_without_password" id="connect_without_password-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns nothing if the connection is successful, or an error message if it fails.</p>
+</div>
+<div group="connect_without_password" id="connect_without_password-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::wifi" as wifi;
+
+wifi::connect_without_password("MySecretNetwork", "password123");
 </code></pre>
-<ul>
-<li><code>current_connection()</code> returns a <strong>map</strong>:</li>
-</ul>
-<pre><code class="language-js">{ "ssid": "HomeWiFi", "signal": "78", "security": "WPA2" }
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-current_connection" class="func-name"><a class="header" href="#fn-current_connection"> <code>fn</code> current_connection </a></h2>
+<pre><code class="language-rust ignore">fn current_connection() -&gt; Map</code></pre>
+<div>
+<div class="tab">
+<button group="current_connection" id="link-current_connection-Description"  class="tablinks active" 
+    onclick="openTab(event, 'current_connection', 'Description')">
+Description
+</button>
+<button group="current_connection" id="link-current_connection-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'current_connection', 'Arguments')">
+Arguments
+</button>
+<button group="current_connection" id="link-current_connection-Returns"  class="tablinks" 
+    onclick="openTab(event, 'current_connection', 'Returns')">
+Returns
+</button>
+<button group="current_connection" id="link-current_connection-Example"  class="tablinks" 
+    onclick="openTab(event, 'current_connection', 'Example')">
+Example
+</button>
+</div>
+<div group="current_connection" id="current_connection-Description" class="tabcontent"  style="display: block;" >
+Retrieves the current active Wi-Fi connection's details (SSID, signal, and security).
+</div>
+<div group="current_connection" id="current_connection-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="current_connection" id="current_connection-Returns" class="tabcontent"  style="display: none;" >
+<p>A <code>Map</code> containing the current connection's SSID, signal strength, and security type.</p>
+</div>
+<div group="current_connection" id="current_connection-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::wifi" as wifi;
+
+let connection = wifi::current_connection();
 </code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-disable_adapter" class="func-name"><a class="header" href="#fn-disable_adapter"> <code>fn</code> disable_adapter </a></h2>
+<pre><code class="language-rust ignore">fn disable_adapter()</code></pre>
+<div>
+<div class="tab">
+<button group="disable_adapter" id="link-disable_adapter-Description"  class="tablinks active" 
+    onclick="openTab(event, 'disable_adapter', 'Description')">
+Description
+</button>
+<button group="disable_adapter" id="link-disable_adapter-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'disable_adapter', 'Arguments')">
+Arguments
+</button>
+<button group="disable_adapter" id="link-disable_adapter-Returns"  class="tablinks" 
+    onclick="openTab(event, 'disable_adapter', 'Returns')">
+Returns
+</button>
+<button group="disable_adapter" id="link-disable_adapter-Example"  class="tablinks" 
+    onclick="openTab(event, 'disable_adapter', 'Example')">
+Example
+</button>
+</div>
+<div group="disable_adapter" id="disable_adapter-Description" class="tabcontent"  style="display: block;" >
+Disables the Wi-Fi adapter.
+</div>
+<div group="disable_adapter" id="disable_adapter-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="disable_adapter" id="disable_adapter-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns nothing if the connection is successful, or an error message if it fails.</p>
+</div>
+<div group="disable_adapter" id="disable_adapter-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::wifi" as wifi;
+
+wifi::disable_adapter();
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-disconnect" class="func-name"><a class="header" href="#fn-disconnect"> <code>fn</code> disconnect </a></h2>
+<pre><code class="language-rust ignore">fn disconnect()</code></pre>
+<div>
+<div class="tab">
+<button group="disconnect" id="link-disconnect-Description"  class="tablinks active" 
+    onclick="openTab(event, 'disconnect', 'Description')">
+Description
+</button>
+<button group="disconnect" id="link-disconnect-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'disconnect', 'Arguments')">
+Arguments
+</button>
+<button group="disconnect" id="link-disconnect-Returns"  class="tablinks" 
+    onclick="openTab(event, 'disconnect', 'Returns')">
+Returns
+</button>
+<button group="disconnect" id="link-disconnect-Example"  class="tablinks" 
+    onclick="openTab(event, 'disconnect', 'Example')">
+Example
+</button>
+</div>
+<div group="disconnect" id="disconnect-Description" class="tabcontent"  style="display: block;" >
+Disconnects from the current Wi-Fi network.
+</div>
+<div group="disconnect" id="disconnect-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="disconnect" id="disconnect-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns nothing if the connection is successful, or an error message if it fails.</p>
+</div>
+<div group="disconnect" id="disconnect-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::wifi" as wifi;
+
+wifi::disconnect();
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-enable_adapter" class="func-name"><a class="header" href="#fn-enable_adapter"> <code>fn</code> enable_adapter </a></h2>
+<pre><code class="language-rust ignore">fn enable_adapter()</code></pre>
+<div>
+<div class="tab">
+<button group="enable_adapter" id="link-enable_adapter-Description"  class="tablinks active" 
+    onclick="openTab(event, 'enable_adapter', 'Description')">
+Description
+</button>
+<button group="enable_adapter" id="link-enable_adapter-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'enable_adapter', 'Arguments')">
+Arguments
+</button>
+<button group="enable_adapter" id="link-enable_adapter-Returns"  class="tablinks" 
+    onclick="openTab(event, 'enable_adapter', 'Returns')">
+Returns
+</button>
+<button group="enable_adapter" id="link-enable_adapter-Example"  class="tablinks" 
+    onclick="openTab(event, 'enable_adapter', 'Example')">
+Example
+</button>
+</div>
+<div group="enable_adapter" id="enable_adapter-Description" class="tabcontent"  style="display: block;" >
+Enables the Wi-Fi adapter.
+</div>
+<div group="enable_adapter" id="enable_adapter-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="enable_adapter" id="enable_adapter-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns nothing if the connection is successful, or an error message if it fails.</p>
+</div>
+<div group="enable_adapter" id="enable_adapter-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::wifi" as wifi;
+
+wifi::enable_adapter();
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_adapter_connectivity" class="func-name"><a class="header" href="#fn-get_adapter_connectivity"> <code>fn</code> get_adapter_connectivity </a></h2>
+<pre><code class="language-rust ignore">fn get_adapter_connectivity() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_adapter_connectivity" id="link-get_adapter_connectivity-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_adapter_connectivity', 'Description')">
+Description
+</button>
+<button group="get_adapter_connectivity" id="link-get_adapter_connectivity-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_adapter_connectivity', 'Arguments')">
+Arguments
+</button>
+<button group="get_adapter_connectivity" id="link-get_adapter_connectivity-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_adapter_connectivity', 'Returns')">
+Returns
+</button>
+<button group="get_adapter_connectivity" id="link-get_adapter_connectivity-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_adapter_connectivity', 'Example')">
+Example
+</button>
+</div>
+<div group="get_adapter_connectivity" id="get_adapter_connectivity-Description" class="tabcontent"  style="display: block;" >
+Get the currenet state of adapter.
+</div>
+<div group="get_adapter_connectivity" id="get_adapter_connectivity-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="get_adapter_connectivity" id="get_adapter_connectivity-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the state of the adapter as a <code>string</code> and returns an error if getting the state failed.</p>
+<p><strong>Possible returns in Linux:</strong></p>
+<ul>
+<li><code>"full"</code> (internet available)</li>
+<li><code>"limited"</code> (network only, no internet)</li>
+<li><code>"portal"</code> (captive portal)</li>
+<li><code>"none"</code> (no connectivity)</li>
+</ul>
+<p><strong>Possible returns in macOS:</strong></p>
+<ul>
+<li><code>"full"</code> (connected to a Wi-Fi network)</li>
+<li><code>"none"</code> (not connected)</li>
+</ul>
+</div>
+<div group="get_adapter_connectivity" id="get_adapter_connectivity-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::wifi" as wifi;
+
+wifi::enable_adapter();
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-scan" class="func-name"><a class="header" href="#fn-scan"> <code>fn</code> scan </a></h2>
+<pre><code class="language-rust ignore">fn scan() -&gt; Array</code></pre>
+<div>
+<div class="tab">
+<button group="scan" id="link-scan-Description"  class="tablinks active" 
+    onclick="openTab(event, 'scan', 'Description')">
+Description
+</button>
+<button group="scan" id="link-scan-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'scan', 'Arguments')">
+Arguments
+</button>
+<button group="scan" id="link-scan-Returns"  class="tablinks" 
+    onclick="openTab(event, 'scan', 'Returns')">
+Returns
+</button>
+<button group="scan" id="link-scan-Example"  class="tablinks" 
+    onclick="openTab(event, 'scan', 'Example')">
+Example
+</button>
+</div>
+<div group="scan" id="scan-Description" class="tabcontent"  style="display: block;" >
+Scans for all available Wi-Fi connections, platform-dependent (Linux or macOS).
+</div>
+<div group="scan" id="scan-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="scan" id="scan-Returns" class="tabcontent"  style="display: none;" >
+<p>An <code>Array</code> containing information about each Wi-Fi connection, where each entry is a <code>Map</code>
+with keys "ssid", "signal", and "security" representing the Wi-Fi network's SSID, signal strength,
+and security type.</p>
+</div>
+<div group="scan" id="scan-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::wifi" as wifi;
+
+let networks = wifi::scan();
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-scan_linux" class="func-name"><a class="header" href="#fn-scan_linux"> <code>fn</code> scan_linux </a></h2>
+<pre><code class="language-rust ignore">fn scan_linux() -&gt; Array</code></pre>
+<div>
+<div class="tab">
+<button group="scan_linux" id="link-scan_linux-Description"  class="tablinks active" 
+    onclick="openTab(event, 'scan_linux', 'Description')">
+Description
+</button>
+<button group="scan_linux" id="link-scan_linux-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'scan_linux', 'Arguments')">
+Arguments
+</button>
+<button group="scan_linux" id="link-scan_linux-Returns"  class="tablinks" 
+    onclick="openTab(event, 'scan_linux', 'Returns')">
+Returns
+</button>
+<button group="scan_linux" id="link-scan_linux-Example"  class="tablinks" 
+    onclick="openTab(event, 'scan_linux', 'Example')">
+Example
+</button>
+</div>
+<div group="scan_linux" id="scan_linux-Description" class="tabcontent"  style="display: block;" >
+Scans for all available Wi-Fi connections on Linux.
+</div>
+<div group="scan_linux" id="scan_linux-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="scan_linux" id="scan_linux-Returns" class="tabcontent"  style="display: none;" >
+<p>An <code>Array</code> containing information about each Wi-Fi connection, where each entry is a <code>Map</code>
+with keys "ssid", "signal", and "security" representing the Wi-Fi network's SSID, signal strength,
+and security type.</p>
+</div>
+<div group="scan_linux" id="scan_linux-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::wifi" as wifi;
+
+let networks = wifi::scan();
+</code></pre>
+</div>
+</div>
+</div>
+</br>
 
                     </main>
 
@@ -303,7 +616,8 @@ wifi::get_adapter_connectivity();
         <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="../js/home_button.js"></script>
+        <script src=".././js/home_button.js"></script>
+        <script src=".././theme/rhai-autodocs/tabs.js"></script>
 
 
 
