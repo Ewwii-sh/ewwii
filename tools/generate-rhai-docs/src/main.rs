@@ -3,7 +3,13 @@ use rhai::{Engine, module_resolvers::StaticModuleResolver};
 use rhai_autodocs::{export::options, generate::mdbook};
 use std::{env, fs, path::Path};
 
-fn generate_docs(engine: &Engine, path: &str, filename: &str, include_std: bool, pre_description: &str) {
+fn generate_docs(
+    engine: &Engine,
+    path: &str,
+    filename: &str,
+    include_std: bool,
+    pre_description: &str,
+) {
     let docs = options()
         .include_standard_packages(include_std)
         .export(engine)
@@ -39,7 +45,12 @@ fn main() {
     let mut resolver = StaticModuleResolver::new();
 
     // Generate global.md (full docs)
-    generate_docs(&engine, path, "global", true, r#"
+    generate_docs(
+        &engine,
+        path,
+        "global",
+        true,
+        r#"
         # Global Builtin Rhai Functions
 
         These functions are built-in and available globally, meaning they can be used directly without any import.
@@ -51,7 +62,8 @@ fn main() {
         ```
 
         This section covers all the core functions provided by Rhai that are ready to use out of the box.
-    "#);
+    "#,
+    );
 
     // Generate stdlib.md docs (custom stdlib)
     resolver.clear();
@@ -60,7 +72,12 @@ fn main() {
     for (module_name, module) in resolver.iter() {
         engine.register_static_module(module_name, module.clone());
     }
-    generate_docs(&engine, path, "stdlib", false, r#"
+    generate_docs(
+        &engine,
+        path,
+        "stdlib",
+        false,
+        r#"
         # Std Library Module
 
         These are all the standard modules in ewwii.
@@ -68,7 +85,8 @@ fn main() {
         Each library in this module is under `std::<m>`, where `<m>` is the name of the specific module.
         These modules provide essential functionalities that are will be useful for making widgets.
         They cover tasks like string manipulation, environmental variable manipuation, running shell commands, and more.
-    "#);
+    "#,
+    );
 
     // Generate apilib.md docs
     resolver.clear();
@@ -77,7 +95,12 @@ fn main() {
     for (module_name, module) in resolver.iter() {
         engine.register_static_module(module_name, module.clone());
     }
-    generate_docs(&engine, path, "apilib", false, r#"
+    generate_docs(
+        &engine,
+        path,
+        "apilib",
+        false,
+        r#"
         # API Library Module
 
         These are all the API modules available in ewwii.
@@ -85,7 +108,8 @@ fn main() {
         Each library in this module is under `api::<m>`, where `<m>` is the name of the specific module.
         
         The API library provides system-level functionality, allowing you to interact with external resources and perform advanced operations. Examples include interacting with Wi-Fi, networking, and more.
-    "#);
+    "#,
+    );
 
     println!("Docs generation completed.");
 }
