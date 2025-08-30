@@ -389,7 +389,7 @@ pub mod wifi {
             Err("wifi::disconnect not supported on this OS".into())
         }
     }
-    
+
     /// Disables the Wi-Fi adapter.
     ///
     /// # Arguments
@@ -502,15 +502,15 @@ pub mod wifi {
     ///
     /// Returns the state of the adapter as a `string` and returns an error if getting the state failed.
     ///
-    /// **Possible returns in Linux:** 
+    /// **Possible returns in Linux:**
     ///
     /// - `"full"` (internet available)
     /// - `"limited"` (network only, no internet)
     /// - `"portal"` (captive portal)
     /// - `"none"` (no connectivity)
     ///
-    /// **Possible returns in macOS:** 
-    /// 
+    /// **Possible returns in macOS:**
+    ///
     /// - `"full"` (connected to a Wi-Fi network)
     /// - `"none"` (not connected)
     ///
@@ -565,4 +565,3 @@ pub mod wifi {
         }
     }
 }
-
