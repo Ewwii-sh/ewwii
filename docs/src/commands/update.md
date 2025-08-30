@@ -22,10 +22,10 @@ To prevent certain variables from being reset, you can manually inject values in
 
 ```bash
 # Long form
-ewwii update --window "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
+ewwii update --window "my_awesome_widget" --inject-vars "VAR1=bar,VAR2=foo2"
 
 # Short form
-ewwii update -w "my_awesome_widget" --inject-vars VAR1="value1",VAR2="value2"
+ewwii update -w "my_awesome_widget" --inject-vars "VAR1=ewwii,VAR2=baz1"
 ```
 
 > Note: `--inject-vars` does **not** automatically capture the current state of `poll` or `listen` variables. You must explicitly provide the values you want.
