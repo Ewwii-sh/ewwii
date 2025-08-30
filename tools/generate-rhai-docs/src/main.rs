@@ -1,7 +1,7 @@
-use rhai::{Engine, module_resolvers::StaticModuleResolver};
-use std::{env, fs, path::Path};
 use iirhai::providers;
+use rhai::{Engine, module_resolvers::StaticModuleResolver};
 use rhai_autodocs::{export::options, generate::mdbook};
+use std::{env, fs, path::Path};
 
 fn generate_docs(engine: &Engine, path: &str, filename: &str, include_std: bool) {
     let docs = options()
@@ -18,7 +18,8 @@ fn generate_docs(engine: &Engine, path: &str, filename: &str, include_std: bool)
     }
 
     // Combine all module docs into one
-    let full_docs = docs_content.into_iter().map(|(_, doc)| doc).collect::<Vec<String>>().join("\n");
+    let full_docs =
+        docs_content.into_iter().map(|(_, doc)| doc).collect::<Vec<String>>().join("\n");
 
     // Write documentation to markdown file
     let file_path = Path::new(path).join(format!("{}.md", filename));
@@ -28,11 +29,7 @@ fn generate_docs(engine: &Engine, path: &str, filename: &str, include_std: bool)
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let path = if args.len() > 1 {
-        &args[1]
-    } else {
-        "./docs/src/modules"
-    };
+    let path = if args.len() > 1 { &args[1] } else { "./docs/src/modules" };
 
     // engine/resolver
     let engine = Engine::new();
