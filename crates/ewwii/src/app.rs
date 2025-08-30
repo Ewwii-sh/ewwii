@@ -348,6 +348,11 @@ impl<B: DisplayBackend> App<B> {
             self.instance_id_to_args.remove(instance_id);
         }
 
+        // stop poll/listen handlers if no windows are open
+        if self.open_windows.is_empty() {
+            iirhai::updates::kill_state_change_handler();
+        }
+
         Ok(())
     }
 
@@ -399,48 +404,61 @@ impl<B: DisplayBackend> App<B> {
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
             let mut stored_parser = iirhai::parser::ParseConfig::new();
-            let store = iirhai::updates::handle_state_changes(
-                self.ewwii_config.get_root_node()?.as_ref(),
-                tx,
-            );
 
             let widget_reg_store = widget_reg_store.clone();
 
-            glib::MainContext::default().spawn_local(async move {
-                let mut pending_updates = HashSet::new();
+            // Start the poll/listen only once per startup
+            // at the start, the open_windows will be empty because
+            // it is only later down in open_window(..) that we register
+            // the current `instance_id` in the open_windows variable.
+            //
+            // But since we are doing this hacky method, I wonder
+            // if we can move this piece of code somewhere else.
+            // I just cant find the perfect place where it can live
+            // so I guess that I will just let it stay right here.
+            if self.open_windows.is_empty() {
+                let store = iirhai::updates::handle_state_changes(
+                    self.ewwii_config.get_root_node()?.as_ref(),
+                    tx,
+                );
 
-                while let Some(var_name) = rx.recv().await {
-                    pending_updates.insert(var_name);
+                glib::MainContext::default().spawn_local(async move {
+                    let mut pending_updates = HashSet::new();
 
-                    // short batching interval (1 frame)
-                    glib::timeout_future(Duration::from_millis(16)).await;
+                    while let Some(var_name) = rx.recv().await {
+                        pending_updates.insert(var_name);
 
-                    while let Ok(next_var) = rx.try_recv() {
-                        pending_updates.insert(next_var);
+                        // short batching interval (1 frame)
+                        glib::timeout_future(Duration::from_millis(16)).await;
+
+                        while let Ok(next_var) = rx.try_recv() {
+                            pending_updates.insert(next_var);
+                        }
+
+                        let vars = store.read().unwrap().clone();
+                        match generate_new_widgetnode(
+                            &vars,
+                            &config_path,
+                            compiled_ast.as_deref(),
+                            Some(&mut stored_parser),
+                        )
+                        .await
+                        {
+                            Ok(new_widget) => {
+                                let _ =
+                                    widget_reg_store.lock().unwrap().update_widget_tree(new_widget);
+                            }
+                            Err(e) => {
+                                log::error!("Failed to generate new widgetnode: {:#}", e);
+                            }
+                        }
+
+                        pending_updates.clear();
                     }
 
-                    let vars = store.read().unwrap().clone();
-                    match generate_new_widgetnode(
-                        &vars,
-                        &config_path,
-                        compiled_ast.as_deref(),
-                        Some(&mut stored_parser),
-                    )
-                    .await
-                    {
-                        Ok(new_widget) => {
-                            let _ = widget_reg_store.lock().unwrap().update_widget_tree(new_widget);
-                        }
-                        Err(e) => {
-                            log::error!("Failed to generate new widgetnode: {:#}", e);
-                        }
-                    }
-
-                    pending_updates.clear();
-                }
-
-                log::debug!("Receiver loop exited");
-            });
+                    log::debug!("Receiver loop exited");
+                });
+            }
 
             let gtk_close_handler = {
                 let app_evt_sender = self.app_evt_send.clone();
