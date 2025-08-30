@@ -83,19 +83,19 @@ import "std::monitor" as monitor;
 let count = monitor::count(); // e.g., 2
 
 // Get resolution of the primary monitor
-let (w, h) = monitor::primary_resolution();
+let res = monitor::primary_resolution(); // e.g. ["1920", "1080"]
 let res_str = monitor::primary_resolution_str(); // e.g., "1920x1080"
 
 // Get resolutions of all monitors
-let all_res = monitor::all_resolutions();
+let all_res = monitor::all_resolutions(); // e.g., [["1920", "1080"], ["1280", "1024"]]
 let all_res_str = monitor::all_resolutions_str(); // e.g., "1920x1080, 1280x1024"
 
-// Get dimensions of a specific monitor
-let (x, y, w, h) = monitor::dimensions(0);
-let dim_str = monitor::dimensions_str(0); // e.g., "1920x1080"
+// Get dimensions of a specific monitor (x, y, width, height)
+let dim = monitor::dimensions(0); // e.g. ["0", "0", "1920", "1080"]
+let dim_str = monitor::dimensions_str(0); // e.g., "0,0 - 1920x1080"
 
 // Get DPI of a monitor
-let dpi = monitor::dpi(0);
+let dpi = monitor::dpi(0); // e.g. 96.0 (floating number)
 let dpi_str = monitor::dpi_str(0); // e.g., "96.0"
 ```
 
@@ -104,11 +104,11 @@ let dpi_str = monitor::dpi_str(0); // e.g., "96.0"
 | Function                   | Description                                                                                   |
 | -------------------------- | --------------------------------------------------------------------------------------------- |
 | `count()`                  | Returns the number of connected monitors.                                                     |
-| `primary_resolution()`     | Returns the width and height of the primary monitor as a tuple `(width, height)`.             |
+| `primary_resolution()`     | Returns the width and height of the primary monitor as an array `[width, height]`.            |
 | `primary_resolution_str()` | Returns the primary monitor resolution as a string in the format `"WIDTHxHEIGHT"`.            |
-| `all_resolutions()`        | Returns a vector of `(width, height)` tuples for all connected monitors.                      |
+| `all_resolutions()`        | Returns an array of `[width, height]` arrays for all connected monitors.                      |
 | `all_resolutions_str()`    | Returns a comma-separated string of all monitor resolutions in `"WIDTHxHEIGHT"` format.       |
-| `dimensions(index)`        | Returns `(x, y, width, height)` for the monitor at the given index.                           |
+| `dimensions(index)`        | Returns `[x, y, width, height]` for the monitor at the given index.                           |
 | `dimensions_str(index)`    | Returns the dimensions of the monitor at the given index as a formatted string `"x,y - WxH"`. |
 | `dpi(index)`               | Returns the DPI (dots per inch) of the monitor at the given index, accounting for scaling.    |
 | `dpi_str(index)`           | Returns the DPI as a formatted string with one decimal place, e.g., `"96.0"`.                 |
