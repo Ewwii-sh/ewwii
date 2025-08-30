@@ -1,4 +1,5 @@
 name: Build and deploy Github pages
+
 on:
     push:
         branches:
@@ -14,18 +15,53 @@ jobs:
     build:
         name: Build mdBook
         runs-on: ubuntu-latest
-        steps:
-            # Checkout
-            - uses: actions/checkout@master
 
-            # Build & deploy
-            - name: build mdBook page
+        steps:
+            # Checkout code
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            # Cache Rust toolchain
+            - name: Cache Rust toolchain
+              uses: actions/cache@v2
+              with:
+                  path: ~/.cargo
+                  key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-rust-
+
+            # Install Rust
+            - name: Install Rust
+              run: |
+                  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+                  source $HOME/.cargo/env
+
+            # Cache Cargo registry and git directory
+            - name: Cache Cargo registry and git
+              uses: actions/cache@v2
+              with:
+                  path: |
+                      ~/.cargo/registry
+                      ~/.cargo/git
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-cargo-
+
+            # Generate module docs
+            - name: Generate module docs
+              run: cargo run --release -p generate-rhai-docs
+
+            # Build mdBook
+            - name: Build mdBook page
               uses: peaceiris/actions-mdbook@v1
               with:
                   mdbook-version: "0.4.52"
-            - run: mdbook build docs
 
-            - name: Deploy
+            - name: Run mdBook build
+              run: mdbook build docs
+
+            # Deploy to GitHub Pages
+            - name: Deploy to GitHub Pages
               uses: peaceiris/actions-gh-pages@v3
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
