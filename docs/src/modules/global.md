@@ -6,21 +6,21 @@
     <h2 class="func-name"> <code>op</code> !&#x3D; </h2>
 
 ```rust,ignore
-op u128 != u128 -> bool
-op int != f32 -> bool
 op Map != Map -> bool
-op u64 != u64 -> bool
-op f32 != f32 -> bool
-op i8 != i8 -> bool
 op i32 != i32 -> bool
-op Instant != Instant -> bool
 op u8 != u8 -> bool
+op u128 != u128 -> bool
 op i128 != i128 -> bool
+op u64 != u64 -> bool
+op Instant != Instant -> bool
+op Array != Array -> bool
+op int != f32 -> bool
+op i8 != i8 -> bool
+op u16 != u16 -> bool
+op u32 != u32 -> bool
+op f32 != f32 -> bool
 op f32 != int -> bool
 op i16 != i16 -> bool
-op u32 != u32 -> bool
-op Array != Array -> bool
-op u16 != u16 -> bool
 ```
 
 <div>
@@ -61,38 +61,38 @@ print(m1 != m3);        // prints true
     <h2 class="func-name"> <code>fn</code> + </h2>
 
 ```rust,ignore
-fn +(x: int) -> int
-fn +(x: i32) -> i32
-fn +(x: i8) -> i8
-fn +(x: i128) -> i128
 fn +(x: f32) -> f32
 fn +(x: float) -> float
 fn +(x: i16) -> i16
-fn +(x: u32, y: u32) -> u32
-fn +(array1: Array, array2: Array) -> Array
-fn +(string: String, character: char) -> String
-fn +(x: u16, y: u16) -> u16
+fn +(x: int) -> int
+fn +(x: i8) -> i8
+fn +(x: i128) -> i128
+fn +(x: i32) -> i32
 fn +(x: i16, y: i16) -> i16
-fn +(string: String, mut item: ?) -> String
+fn +(x: f32, y: f32) -> f32
 fn +(x: f32, y: int) -> f32
-fn +(string: String, item: ?) -> String
-fn +(utf8: Blob, string: String) -> String
+fn +(timestamp: Instant, seconds: int) -> Instant
+fn +(x: u32, y: u32) -> u32
+fn +(item: ?, string: String) -> String
 fn +(character: char, string: String) -> String
-fn +(string1: String, string2: String) -> String
+fn +(x: u16, y: u16) -> u16
+fn +(string: String, character: char) -> String
+fn +(utf8: Blob, string: String) -> String
+fn +(timestamp: Instant, seconds: float) -> Instant
+fn +(x: i8, y: i8) -> i8
+fn +(array1: Array, array2: Array) -> Array
+fn +(x: int, y: f32) -> f32
+fn +(item: ?, string: String) -> String
+fn +(x: u64, y: u64) -> u64
+fn +(string: String, item: ?) -> String
+fn +(string: String, mut item: ?) -> String
+fn +(x: u128, y: u128) -> u128
 fn +(x: i128, y: i128) -> i128
 fn +(x: u8, y: u8) -> u8
-fn +(timestamp: Instant, seconds: int) -> Instant
-fn +(x: i32, y: i32) -> i32
-fn +(item: ?, string: String) -> String
-fn +(x: f32, y: f32) -> f32
-fn +(x: i8, y: i8) -> i8
-fn +(x: u64, y: u64) -> u64
-fn +(x: int, y: f32) -> f32
 fn +(map1: Map, map2: Map) -> Map
-fn +(item: ?, string: String) -> String
-fn +(timestamp: Instant, seconds: float) -> Instant
-fn +(x: u128, y: u128) -> u128
+fn +(x: i32, y: i32) -> i32
 fn +(string: String, utf8: Blob) -> String
+fn +(string1: String, string2: String) -> String
 ```
 
 <div>
@@ -101,25 +101,10 @@ fn +(string: String, utf8: Blob) -> String
     onclick="openTab(event, '+', 'Description')">
 Description
 </button>
-<button group="+" id="link-+-Example"  class="tablinks" 
-    onclick="openTab(event, '+', 'Example')">
-Example
-</button>
 </div>
 
 <div group="+" id="+-Description" class="tabcontent"  style="display: block;" >
-Combine two arrays into a new array and return it.
-</div>
-<div group="+" id="+-Example" class="tabcontent"  style="display: none;" >
-
-```rhai
-let x = [1, 2, 3];
-let y = [true, 'x'];
-
-print(x + y);   // prints "[1, 2, 3, true, 'x']"
-
-print(x);       // prints "[1, 2, 3"
-```
+Add the specified number of `seconds` to the timestamp and return it as a new timestamp.
 </div>
 
 </div>
@@ -129,14 +114,14 @@ print(x);       // prints "[1, 2, 3"
     <h2 class="func-name"> <code>fn</code> +&#x3D; </h2>
 
 ```rust,ignore
+fn +=(map: Map, map2: Map)
 fn +=(string1: String, string2: String)
-fn +=(timestamp: Instant, seconds: int)
-fn +=(string: String, character: char)
+fn +=(string: String, utf8: Blob)
 fn +=(string: String, item: ?)
 fn +=(string: String, mut item: ?)
+fn +=(string: String, character: char)
 fn +=(timestamp: Instant, seconds: float)
-fn +=(string: String, utf8: Blob)
-fn +=(map: Map, map2: Map)
+fn +=(timestamp: Instant, seconds: int)
 ```
 
 <div>
@@ -145,10 +130,26 @@ fn +=(map: Map, map2: Map)
     onclick="openTab(event, '+&#x3D;', 'Description')">
 Description
 </button>
+<button group="+&#x3D;" id="link-+&#x3D;-Example"  class="tablinks" 
+    onclick="openTab(event, '+&#x3D;', 'Example')">
+Example
+</button>
 </div>
 
 <div group="+&#x3D;" id="+&#x3D;-Description" class="tabcontent"  style="display: block;" >
-Add the specified number of `seconds` to the timestamp.
+Add all property values of another object map into the object map.
+Existing property values of the same names are replaced.
+</div>
+<div group="+&#x3D;" id="+&#x3D;-Example" class="tabcontent"  style="display: none;" >
+
+```rhai
+let m = #{a:1, b:2, c:3};
+let n = #{a: 42, d:0};
+
+m.mixin(n);
+
+print(m);       // prints "#{a:42, b:2, c:3, d:0}"
+```
 </div>
 
 </div>
@@ -161,25 +162,25 @@ Add the specified number of `seconds` to the timestamp.
 fn -(x: i16) -> i16
 fn -(x: float) -> float
 fn -(x: f32) -> f32
-fn -(x: i128) -> i128
 fn -(x: i32) -> i32
+fn -(x: i128) -> i128
 fn -(x: i8) -> i8
 fn -(x: int) -> int
-fn -(timestamp: Instant, seconds: int) -> Instant
-fn -(x: i32, y: i32) -> i32
-fn -(timestamp1: Instant, timestamp2: Instant) -> ?
-fn -(x: u8, y: u8) -> u8
-fn -(x: i128, y: i128) -> i128
-fn -(x: f32, y: int) -> f32
-fn -(x: i16, y: i16) -> i16
-fn -(x: u16, y: u16) -> u16
 fn -(x: u32, y: u32) -> u32
-fn -(x: u128, y: u128) -> u128
+fn -(x: u16, y: u16) -> u16
 fn -(timestamp: Instant, seconds: float) -> Instant
-fn -(x: int, y: f32) -> f32
-fn -(x: u64, y: u64) -> u64
 fn -(x: i8, y: i8) -> i8
+fn -(x: i16, y: i16) -> i16
+fn -(timestamp: Instant, seconds: int) -> Instant
 fn -(x: f32, y: f32) -> f32
+fn -(x: f32, y: int) -> f32
+fn -(x: i128, y: i128) -> i128
+fn -(x: u128, y: u128) -> u128
+fn -(x: u8, y: u8) -> u8
+fn -(x: i32, y: i32) -> i32
+fn -(x: int, y: f32) -> f32
+fn -(timestamp1: Instant, timestamp2: Instant) -> ?
+fn -(x: u64, y: u64) -> u64
 ```
 
 <div>
@@ -201,8 +202,8 @@ Subtract the specified number of `seconds` from the timestamp and return it as a
     <h2 class="func-name"> <code>fn</code> -&#x3D; </h2>
 
 ```rust,ignore
-fn -=(timestamp: Instant, seconds: float)
 fn -=(timestamp: Instant, seconds: int)
+fn -=(timestamp: Instant, seconds: float)
 ```
 
 <div>
@@ -224,19 +225,19 @@ Subtract the specified number of `seconds` from the timestamp.
     <h2 class="func-name"> <code>op</code> &lt; </h2>
 
 ```rust,ignore
-op f32 < int -> bool
-op u16 < u16 -> bool
-op u32 < u32 -> bool
-op i16 < i16 -> bool
-op Instant < Instant -> bool
-op i32 < i32 -> bool
+op u128 < u128 -> bool
 op i128 < i128 -> bool
 op u8 < u8 -> bool
+op i32 < i32 -> bool
 op int < f32 -> bool
-op i8 < i8 -> bool
-op f32 < f32 -> bool
+op Instant < Instant -> bool
 op u64 < u64 -> bool
-op u128 < u128 -> bool
+op u32 < u32 -> bool
+op u16 < u16 -> bool
+op i8 < i8 -> bool
+op i16 < i16 -> bool
+op f32 < f32 -> bool
+op f32 < int -> bool
 ```
 
 <div>
@@ -258,19 +259,19 @@ Return `true` if the first timestamp is earlier than the second.
     <h2 class="func-name"> <code>op</code> &lt;&#x3D; </h2>
 
 ```rust,ignore
-op int <= f32 -> bool
-op u64 <= u64 -> bool
-op i8 <= i8 -> bool
-op f32 <= f32 -> bool
-op u128 <= u128 -> bool
-op f32 <= int -> bool
-op i16 <= i16 -> bool
 op u16 <= u16 -> bool
+op i8 <= i8 -> bool
 op u32 <= u32 -> bool
+op f32 <= int -> bool
+op f32 <= f32 -> bool
+op i16 <= i16 -> bool
 op i32 <= i32 -> bool
-op Instant <= Instant -> bool
-op u8 <= u8 -> bool
+op u128 <= u128 -> bool
 op i128 <= i128 -> bool
+op u8 <= u8 -> bool
+op u64 <= u64 -> bool
+op int <= f32 -> bool
+op Instant <= Instant -> bool
 ```
 
 <div>
@@ -292,20 +293,20 @@ Return `true` if the first timestamp is earlier than or equals to the second.
     <h2 class="func-name"> <code>op</code> &#x3D;&#x3D; </h2>
 
 ```rust,ignore
-op i32 == i32 -> bool
-op Instant == Instant -> bool
-op u8 == u8 -> bool
 op i128 == i128 -> bool
-op f32 == int -> bool
-op i16 == i16 -> bool
-op u32 == u32 -> bool
-op Array == Array -> bool
-op u16 == u16 -> bool
 op u128 == u128 -> bool
+op u8 == u8 -> bool
+op i32 == i32 -> bool
 op Map == Map -> bool
 op int == f32 -> bool
+op Array == Array -> bool
+op Instant == Instant -> bool
 op u64 == u64 -> bool
+op u32 == u32 -> bool
+op u16 == u16 -> bool
 op i8 == i8 -> bool
+op i16 == i16 -> bool
+op f32 == int -> bool
 op f32 == f32 -> bool
 ```
 
@@ -315,10 +316,29 @@ op f32 == f32 -> bool
     onclick="openTab(event, '&#x3D;&#x3D;', 'Description')">
 Description
 </button>
+<button group="&#x3D;&#x3D;" id="link-&#x3D;&#x3D;-Example"  class="tablinks" 
+    onclick="openTab(event, '&#x3D;&#x3D;', 'Example')">
+Example
+</button>
 </div>
 
 <div group="&#x3D;&#x3D;" id="&#x3D;&#x3D;-Description" class="tabcontent"  style="display: block;" >
-Return `true` if two timestamps are equal.
+Return `true` if two object maps are equal (i.e. all property values are equal).
+
+The operator `==` is used to compare property values and must be defined,
+otherwise `false` is assumed.
+</div>
+<div group="&#x3D;&#x3D;" id="&#x3D;&#x3D;-Example" class="tabcontent"  style="display: none;" >
+
+```rhai
+let m1 = #{a:1, b:2, c:3};
+let m2 = #{a:1, b:2, c:3};
+let m3 = #{a:1, c:3};
+
+print(m1 == m2);        // prints true
+
+print(m1 == m3);        // prints false
+```
 </div>
 
 </div>
@@ -328,19 +348,19 @@ Return `true` if two timestamps are equal.
     <h2 class="func-name"> <code>op</code> &gt; </h2>
 
 ```rust,ignore
-op f32 > int -> bool
-op i16 > i16 -> bool
-op u16 > u16 -> bool
-op u32 > u32 -> bool
-op i32 > i32 -> bool
-op Instant > Instant -> bool
-op u8 > u8 -> bool
 op i128 > i128 -> bool
-op int > f32 -> bool
-op u64 > u64 -> bool
-op i8 > i8 -> bool
-op f32 > f32 -> bool
 op u128 > u128 -> bool
+op u8 > u8 -> bool
+op i32 > i32 -> bool
+op int > f32 -> bool
+op Instant > Instant -> bool
+op u64 > u64 -> bool
+op u32 > u32 -> bool
+op u16 > u16 -> bool
+op i8 > i8 -> bool
+op i16 > i16 -> bool
+op f32 > int -> bool
+op f32 > f32 -> bool
 ```
 
 <div>
@@ -363,18 +383,18 @@ Return `true` if the first timestamp is later than the second.
 
 ```rust,ignore
 op f32 >= int -> bool
-op u16 >= u16 -> bool
-op u32 >= u32 -> bool
+op f32 >= f32 -> bool
 op i16 >= i16 -> bool
+op u16 >= u16 -> bool
+op i8 >= i8 -> bool
+op u32 >= u32 -> bool
+op u64 >= u64 -> bool
+op int >= f32 -> bool
 op Instant >= Instant -> bool
 op i32 >= i32 -> bool
+op u128 >= u128 -> bool
 op i128 >= i128 -> bool
 op u8 >= u8 -> bool
-op int >= f32 -> bool
-op f32 >= f32 -> bool
-op i8 >= i8 -> bool
-op u64 >= u64 -> bool
-op u128 >= u128 -> bool
 ```
 
 <div>
@@ -1030,12 +1050,12 @@ print(text.len);        // prints 17
 
 ```rust,ignore
 fn abs(x: f32) -> f32
-fn abs(x: float) -> float
 fn abs(x: i16) -> i16
-fn abs(x: int) -> int
-fn abs(x: i32) -> i32
-fn abs(x: i8) -> i8
+fn abs(x: float) -> float
 fn abs(x: i128) -> i128
+fn abs(x: i32) -> i32
+fn abs(x: int) -> int
+fn abs(x: i8) -> i8
 ```
 
 <div>
@@ -1160,13 +1180,13 @@ print(x.all(|v, i| i > v));     // prints false
     <h2 class="func-name"> <code>fn</code> append </h2>
 
 ```rust,ignore
-fn append(blob: Blob, character: char)
-fn append(string: String, utf8: Blob)
 fn append(blob1: Blob, blob2: Blob)
-fn append(blob: Blob, value: int)
+fn append(string: String, utf8: Blob)
 fn append(array: Array, new_array: Array)
-fn append(blob: Blob, string: String)
 fn append(string: String, mut item: ?)
+fn append(blob: Blob, value: int)
+fn append(blob: Blob, string: String)
+fn append(blob: Blob, character: char)
 ```
 
 <div>
@@ -1182,16 +1202,17 @@ Example
 </div>
 
 <div group="append" id="append-Description" class="tabcontent"  style="display: block;" >
-Add a character (as UTF-8 encoded byte-stream) to the end of the BLOB
+Add another BLOB to the end of the BLOB.
 </div>
 <div group="append" id="append-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let b = blob(5, 0x42);
+let b1 = blob(5, 0x42);
+let b2 = blob(3, 0x11);
 
-b.append('!');
+b1.push(b2);
 
-print(b);       // prints "[424242424221]"
+print(b1);      // prints "[4242424242111111]"
 ```
 </div>
 
@@ -1330,8 +1351,8 @@ Return the arc-hyperbolic-tangent of the floating-point number, in radians.
 
 ```rust,ignore
 fn bits(value: int) -> BitRange
-fn bits(value: int, from: int) -> BitRange
 fn bits(value: int, range: Range<int>) -> BitRange
+fn bits(value: int, from: int) -> BitRange
 fn bits(value: int, range: RangeInclusive<int>) -> BitRange
 fn bits(value: int, from: int, len: int) -> BitRange
 ```
@@ -1450,9 +1471,9 @@ Return the smallest whole number larger than or equals to the floating-point num
 
 ```rust,ignore
 fn chars(string: String) -> CharsStream
+fn chars(string: String, start: int) -> CharsStream
 fn chars(string: String, range: RangeInclusive<int>) -> CharsStream
 fn chars(string: String, range: Range<int>) -> CharsStream
-fn chars(string: String, start: int) -> CharsStream
 fn chars(string: String, start: int, len: int) -> CharsStream
 ```
 
@@ -1531,10 +1552,10 @@ print(x);       // prints "[3, 4, 5]"
     <h2 class="func-name"> <code>fn</code> clear </h2>
 
 ```rust,ignore
-fn clear(string: String)
 fn clear(map: Map)
-fn clear(blob: Blob)
 fn clear(array: Array)
+fn clear(blob: Blob)
+fn clear(string: String)
 ```
 
 <div>
@@ -1546,7 +1567,7 @@ Description
 </div>
 
 <div group="clear" id="clear-Description" class="tabcontent"  style="display: block;" >
-Clear the string, making it empty.
+Clear the object map.
 </div>
 
 </div>
@@ -1556,13 +1577,13 @@ Clear the string, making it empty.
     <h2 class="func-name"> <code>fn</code> contains </h2>
 
 ```rust,ignore
-fn contains(range: RangeInclusive<int>, value: int) -> bool
-fn contains(array: Array, value: ?) -> bool
-fn contains(string: String, character: char) -> bool
-fn contains(map: Map, property: String) -> bool
-fn contains(string: String, match_string: String) -> bool
-fn contains(range: Range<int>, value: int) -> bool
 fn contains(blob: Blob, value: int) -> bool
+fn contains(range: Range<int>, value: int) -> bool
+fn contains(string: String, character: char) -> bool
+fn contains(array: Array, value: ?) -> bool
+fn contains(range: RangeInclusive<int>, value: int) -> bool
+fn contains(string: String, match_string: String) -> bool
+fn contains(map: Map, property: String) -> bool
 ```
 
 <div>
@@ -1571,10 +1592,24 @@ fn contains(blob: Blob, value: int) -> bool
     onclick="openTab(event, 'contains', 'Description')">
 Description
 </button>
+<button group="contains" id="link-contains-Example"  class="tablinks" 
+    onclick="openTab(event, 'contains', 'Example')">
+Example
+</button>
 </div>
 
 <div group="contains" id="contains-Description" class="tabcontent"  style="display: block;" >
-Return `true` if the range contains a specified value.
+Return `true` if the BLOB contains a specified byte value.
+</div>
+<div group="contains" id="contains-Example" class="tabcontent"  style="display: none;" >
+
+```rhai
+let text = "hello, world!";
+
+print(text.contains('h'));      // prints true
+
+print(text.contains('x'));      // prints false
+```
 </div>
 
 </div>
@@ -1628,9 +1663,9 @@ Return the hyperbolic cosine of the floating-point number in radians.
     <h2 class="func-name"> <code>fn</code> crop </h2>
 
 ```rust,ignore
+fn crop(string: String, start: int)
 fn crop(string: String, range: RangeInclusive<int>)
 fn crop(string: String, range: Range<int>)
-fn crop(string: String, start: int)
 fn crop(string: String, start: int, len: int)
 ```
 
@@ -1647,16 +1682,24 @@ Example
 </div>
 
 <div group="crop" id="crop-Description" class="tabcontent"  style="display: block;" >
-Remove all characters from the string except those within an inclusive `range`.
+Remove all characters from the string up to the `start` position.
+
+* If `start` < 0, position counts from the end of the string (`-1` is the last character).
+* If `start` < -length of string, the string is not modified.
+* If `start` ≥ length of string, the entire string is cleared.
 </div>
 <div group="crop" id="crop-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
 let text = "hello, world!";
 
-text.crop(2..=8);
+text.crop(5);
 
-print(text);        // prints "llo, wo"
+print(text);            // prints ", world!"
+
+text.crop(-3);
+
+print(text);            // prints "ld!"
 ```
 </div>
 
@@ -1668,16 +1711,16 @@ print(text);        // prints "llo, wo"
 
 ```rust,ignore
 fn debug() -> String
-fn debug(number: float) -> String
-fn debug(number: f32) -> String
-fn debug(unit: ?) -> String
-fn debug(character: char) -> String
-fn debug(string: String) -> String
 fn debug(value: bool) -> String
-fn debug(array: Array) -> String
 fn debug(f: FnPtr) -> String
-fn debug(map: Map) -> String
+fn debug(character: char) -> String
+fn debug(array: Array) -> String
+fn debug(unit: ?) -> String
+fn debug(string: String) -> String
 fn debug(item: ?) -> String
+fn debug(map: Map) -> String
+fn debug(number: f32) -> String
+fn debug(number: float) -> String
 ```
 
 <div>
@@ -1740,15 +1783,15 @@ print(x);       // prints "[1, 2, 3, 4, 3, 2, 1]"
     <h2 class="func-name"> <code>fn</code> drain </h2>
 
 ```rust,ignore
-fn drain(blob: Blob, range: RangeInclusive<int>) -> Blob
 fn drain(array: Array, range: Range<int>) -> Array
-fn drain(blob: Blob, range: Range<int>) -> Blob
+fn drain(blob: Blob, range: RangeInclusive<int>) -> Blob
 fn drain(array: Array, filter: FnPtr) -> Array
+fn drain(blob: Blob, range: Range<int>) -> Blob
+fn drain(array: Array, range: RangeInclusive<int>) -> Array
 fn drain(map: Map, filter: FnPtr) -> Map
 fn drain(array: Array, filter: String) -> Array
-fn drain(array: Array, range: RangeInclusive<int>) -> Array
-fn drain(blob: Blob, start: int, len: int) -> Blob
 fn drain(array: Array, start: int, len: int) -> Array
+fn drain(blob: Blob, start: int, len: int) -> Blob
 ```
 
 <div>
@@ -1764,26 +1807,24 @@ Example
 </div>
 
 <div group="drain" id="drain-Description" class="tabcontent"  style="display: block;" >
-Remove all bytes in the BLOB within an inclusive `range` and return them as a new BLOB.
+Remove all elements in the array within an exclusive `range` and return them as a new array.
 </div>
 <div group="drain" id="drain-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let b1 = blob();
+let x = [1, 2, 3, 4, 5];
 
-b1 += 1; b1 += 2; b1 += 3; b1 += 4; b1 += 5;
+let y = x.drain(1..3);
 
-let b2 = b1.drain(1..=2);
+print(x);       // prints "[1, 4, 5]"
 
-print(b1);      // prints "[010405]"
+print(y);       // prints "[2, 3]"
 
-print(b2);      // prints "[0203]"
+let z = x.drain(2..3);
 
-let b3 = b1.drain(2..=2);
+print(x);       // prints "[1, 4]"
 
-print(b1);      // prints "[0104]"
-
-print(b3);      // prints "[05]"
+print(z);       // prints "[5]"
 ```
 </div>
 
@@ -1943,14 +1984,14 @@ Return the exponential of the floating-point number.
     <h2 class="func-name"> <code>fn</code> extract </h2>
 
 ```rust,ignore
-fn extract(blob: Blob, start: int) -> Blob
-fn extract(array: Array, start: int) -> Array
 fn extract(array: Array, range: RangeInclusive<int>) -> Array
 fn extract(blob: Blob, range: Range<int>) -> Blob
 fn extract(array: Array, range: Range<int>) -> Array
+fn extract(array: Array, start: int) -> Array
+fn extract(blob: Blob, start: int) -> Blob
 fn extract(blob: Blob, range: RangeInclusive<int>) -> Blob
-fn extract(blob: Blob, start: int, len: int) -> Blob
 fn extract(array: Array, start: int, len: int) -> Array
+fn extract(blob: Blob, start: int, len: int) -> Blob
 ```
 
 <div>
@@ -1966,25 +2007,16 @@ Example
 </div>
 
 <div group="extract" id="extract-Description" class="tabcontent"  style="display: block;" >
-Copy a portion of the BLOB beginning at the `start` position till the end and return it as
-a new BLOB.
-
-* If `start` < 0, position counts from the end of the BLOB (`-1` is the last byte).
-* If `start` < -length of BLOB, the entire BLOB is copied and returned.
-* If `start` ≥ length of BLOB, an empty BLOB is returned.
+Copy an inclusive range of the array and return it as a new array.
 </div>
 <div group="extract" id="extract-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let b = blob();
+let x = [1, 2, 3, 4, 5];
 
-b += 1; b += 2; b += 3; b += 4; b += 5;
+print(x.extract(1..=3));    // prints "[2, 3, 4]"
 
-print(b.extract(2));        // prints "[030405]"
-
-print(b.extract(-3));       // prints "[030405]"
-
-print(b);                   // prints "[0102030405]"
+print(x);                   // prints "[1, 2, 3, 4, 5]"
 ```
 </div>
 
@@ -2056,8 +2088,8 @@ print(m);       // prints "#{a:1, b:2, c:3, d:0}"
 
 ```rust,ignore
 fn filter(array: Array, filter: FnPtr) -> Array
-fn filter(array: Array, filter_func: String) -> Array
 fn filter(map: Map, filter: FnPtr) -> Map
+fn filter(array: Array, filter_func: String) -> Array
 ```
 
 <div>
@@ -2528,9 +2560,9 @@ Return the fractional part of the floating-point number.
 
 ```rust,ignore
 fn get(blob: Blob, index: int) -> int
-fn get(map: Map, property: String) -> ?
 fn get(array: Array, index: int) -> ?
 fn get(string: String, index: int) -> ?
+fn get(map: Map, property: String) -> ?
 ```
 
 <div>
@@ -2960,16 +2992,16 @@ Return true if the number is zero.
     <h2 class="func-name"> <code>fn</code> index_of </h2>
 
 ```rust,ignore
-fn index_of(array: Array, filter: String) -> int
-fn index_of(string: String, character: char) -> int
-fn index_of(string: String, find_string: String) -> int
 fn index_of(array: Array, value: ?) -> int
+fn index_of(string: String, character: char) -> int
 fn index_of(array: Array, filter: FnPtr) -> int
-fn index_of(string: String, find_string: String, start: int) -> int
+fn index_of(string: String, find_string: String) -> int
+fn index_of(array: Array, filter: String) -> int
 fn index_of(array: Array, filter: String, start: int) -> int
-fn index_of(array: Array, filter: FnPtr, start: int) -> int
+fn index_of(string: String, find_string: String, start: int) -> int
 fn index_of(string: String, character: char, start: int) -> int
 fn index_of(array: Array, value: ?, start: int) -> int
+fn index_of(array: Array, filter: FnPtr, start: int) -> int
 ```
 
 <div>
@@ -2978,14 +3010,6 @@ fn index_of(array: Array, value: ?, start: int) -> int
     onclick="openTab(event, 'index_of', 'Description')">
 Description
 </button>
-<button group="index_of" id="link-index_of-Deprecated API"  class="tablinks" 
-    onclick="openTab(event, 'index_of', 'Deprecated API')">
-Deprecated API
-</button>
-<button group="index_of" id="link-index_of-Function Parameters"  class="tablinks" 
-    onclick="openTab(event, 'index_of', 'Function Parameters')">
-Function Parameters
-</button>
 <button group="index_of" id="link-index_of-Example"  class="tablinks" 
     onclick="openTab(event, 'index_of', 'Example')">
 Example
@@ -2993,34 +3017,22 @@ Example
 </div>
 
 <div group="index_of" id="index_of-Description" class="tabcontent"  style="display: block;" >
-Iterate through all the elements in the array, applying a function named by `filter` to each
-element in turn, and return the index of the first element that returns `true`.
-If no element returns `true`, `-1` is returned.
-</div>
-<div group="index_of" id="index_of-Deprecated API" class="tabcontent"  style="display: none;" >
+Find the first element in the array that equals a particular `value` and return its index.
+If no element equals `value`, `-1` is returned.
 
-This method is deprecated and will be removed from the next major version.
-Use `array.index_of(Fn("fn_name"))` instead.
-</div>
-<div group="index_of" id="index_of-Function Parameters" class="tabcontent"  style="display: none;" >
-
-A function with the same name as the value of `filter` must exist taking these parameters:
-
-* `element`: copy of array element
-* `index` _(optional)_: current index in the array
+The operator `==` is used to compare elements with `value` and must be defined,
+otherwise `false` is assumed.
 </div>
 <div group="index_of" id="index_of-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-fn is_special(x) { x > 3 }
-
-fn is_dumb(x) { x > 8 }
-
 let x = [1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 5];
 
-print(x.index_of("is_special"));    // prints 3
+print(x.index_of(4));       // prints 3 (first index)
 
-print(x.index_of("is_dumb"));       // prints -1
+print(x.index_of(9));       // prints -1
+
+print(x.index_of("foo"));   // prints -1: strings do not equal numbers
 ```
 </div>
 
@@ -3031,8 +3043,8 @@ print(x.index_of("is_dumb"));       // prints -1
     <h2 class="func-name"> <code>fn</code> insert </h2>
 
 ```rust,ignore
-fn insert(blob: Blob, index: int, value: int)
 fn insert(array: Array, index: int, item: ?)
+fn insert(blob: Blob, index: int, value: int)
 ```
 
 <div>
@@ -3048,22 +3060,24 @@ Example
 </div>
 
 <div group="insert" id="insert-Description" class="tabcontent"  style="display: block;" >
-Add a byte `value` to the BLOB at a particular `index` position.
+Add a new element into the array at a particular `index` position.
 
-* If `index` < 0, position counts from the end of the BLOB (`-1` is the last byte).
-* If `index` < -length of BLOB, the byte value is added to the beginning of the BLOB.
-* If `index` ≥ length of BLOB, the byte value is appended to the end of the BLOB.
-
-Only the lower 8 bits of the `value` are used; all other bits are ignored.
+* If `index` < 0, position counts from the end of the array (`-1` is the last element).
+* If `index` < -length of array, the element is added to the beginning of the array.
+* If `index` ≥ length of array, the element is appended to the end of the array.
 </div>
 <div group="insert" id="insert-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let b = blob(5, 0x42);
+let x = [1, 2, 3];
 
-b.insert(2, 0x18);
+x.insert(0, "hello");
 
-print(b);       // prints "[4242184242]"
+x.insert(2, true);
+
+x.insert(-2, 42);
+
+print(x);       // prints ["hello", 1, true, 2, 42, 3]
 ```
 </div>
 
@@ -3232,11 +3246,11 @@ print(f.is_anonymous);      // prints true
     <h2 class="func-name"> <code>fn</code> is_empty </h2>
 
 ```rust,ignore
-fn is_empty(blob: Blob) -> bool
-fn is_empty(array: Array) -> bool
 fn is_empty(map: Map) -> bool
 fn is_empty(range: Range<int>) -> bool
 fn is_empty(string: String) -> bool
+fn is_empty(blob: Blob) -> bool
+fn is_empty(array: Array) -> bool
 fn is_empty(range: RangeInclusive<int>) -> bool
 ```
 
@@ -3249,7 +3263,7 @@ Description
 </div>
 
 <div group="is_empty" id="is_empty-Description" class="tabcontent"  style="display: block;" >
-Return true if the BLOB is empty.
+Return true if the map is empty.
 </div>
 
 </div>
@@ -3259,16 +3273,16 @@ Return true if the BLOB is empty.
     <h2 class="func-name"> <code>fn</code> is_even </h2>
 
 ```rust,ignore
-fn is_even(x: u128) -> bool
-fn is_even(x: u16) -> bool
-fn is_even(x: u64) -> bool
-fn is_even(x: i16) -> bool
-fn is_even(x: int) -> bool
-fn is_even(x: u32) -> bool
-fn is_even(x: u8) -> bool
-fn is_even(x: i128) -> bool
-fn is_even(x: i32) -> bool
 fn is_even(x: i8) -> bool
+fn is_even(x: int) -> bool
+fn is_even(x: u8) -> bool
+fn is_even(x: u16) -> bool
+fn is_even(x: i32) -> bool
+fn is_even(x: i128) -> bool
+fn is_even(x: u64) -> bool
+fn is_even(x: u128) -> bool
+fn is_even(x: i16) -> bool
+fn is_even(x: u32) -> bool
 ```
 
 <div>
@@ -3402,16 +3416,16 @@ Return `true` if the floating-point number is `NaN` (Not A Number).
     <h2 class="func-name"> <code>fn</code> is_odd </h2>
 
 ```rust,ignore
-fn is_odd(x: u64) -> bool
-fn is_odd(x: i16) -> bool
-fn is_odd(x: u16) -> bool
-fn is_odd(x: u128) -> bool
-fn is_odd(x: i32) -> bool
-fn is_odd(x: i8) -> bool
-fn is_odd(x: i128) -> bool
-fn is_odd(x: u32) -> bool
-fn is_odd(x: u8) -> bool
 fn is_odd(x: int) -> bool
+fn is_odd(x: i8) -> bool
+fn is_odd(x: u64) -> bool
+fn is_odd(x: i128) -> bool
+fn is_odd(x: i32) -> bool
+fn is_odd(x: u8) -> bool
+fn is_odd(x: u16) -> bool
+fn is_odd(x: i16) -> bool
+fn is_odd(x: u128) -> bool
+fn is_odd(x: u32) -> bool
 ```
 
 <div>
@@ -3433,18 +3447,18 @@ Return true if the number is odd.
     <h2 class="func-name"> <code>fn</code> is_zero </h2>
 
 ```rust,ignore
-fn is_zero(x: i32) -> bool
 fn is_zero(x: i8) -> bool
-fn is_zero(x: i128) -> bool
 fn is_zero(x: int) -> bool
 fn is_zero(x: u8) -> bool
-fn is_zero(x: u32) -> bool
-fn is_zero(x: i16) -> bool
-fn is_zero(x: u64) -> bool
 fn is_zero(x: u16) -> bool
-fn is_zero(x: f32) -> bool
-fn is_zero(x: float) -> bool
+fn is_zero(x: i32) -> bool
+fn is_zero(x: i128) -> bool
+fn is_zero(x: u64) -> bool
 fn is_zero(x: u128) -> bool
+fn is_zero(x: i16) -> bool
+fn is_zero(x: float) -> bool
+fn is_zero(x: f32) -> bool
+fn is_zero(x: u32) -> bool
 ```
 
 <div>
@@ -3500,10 +3514,10 @@ print(m.keys());        // prints ["a", "b", "c"]
     <h2 class="func-name"> <code>fn</code> len </h2>
 
 ```rust,ignore
-fn len(blob: Blob) -> int
 fn len(array: Array) -> int
-fn len(map: Map) -> int
+fn len(blob: Blob) -> int
 fn len(string: String) -> int
+fn len(map: Map) -> int
 ```
 
 <div>
@@ -3512,24 +3526,10 @@ fn len(string: String) -> int
     onclick="openTab(event, 'len', 'Description')">
 Description
 </button>
-<button group="len" id="link-len-Example"  class="tablinks" 
-    onclick="openTab(event, 'len', 'Example')">
-Example
-</button>
 </div>
 
 <div group="len" id="len-Description" class="tabcontent"  style="display: block;" >
-Return the length of the BLOB.
-</div>
-<div group="len" id="len-Example" class="tabcontent"  style="display: none;" >
-
-```rhai
-let b = blob(10, 0x42);
-
-print(b);           // prints "[4242424242424242 4242]"
-
-print(b.len());     // prints 10
-```
+Number of elements in the array.
 </div>
 
 </div>
@@ -3724,26 +3724,26 @@ print(y);       // prints "[0, 2, 6, 12, 20]"
     <h2 class="func-name"> <code>fn</code> max </h2>
 
 ```rust,ignore
-fn max(x: i8, y: i8) -> i8
-fn max(x: f32, y: f32) -> f32
-fn max(x: u64, y: u64) -> u64
-fn max(x: int, y: f32) -> f32
-fn max(x: int, y: float) -> float
-fn max(x: f32, y: float) -> float
-fn max(x: u128, y: u128) -> u128
-fn max(x: float, y: int) -> float
-fn max(x: u16, y: u16) -> u16
-fn max(char1: char, char2: char) -> char
 fn max(x: u32, y: u32) -> u32
-fn max(x: i16, y: i16) -> i16
-fn max(x: f32, y: int) -> f32
-fn max(x: i128, y: i128) -> i128
-fn max(x: float, y: float) -> float
-fn max(string1: String, string2: String) -> String
-fn max(x: u8, y: u8) -> u8
 fn max(x: int, y: int) -> int
+fn max(x: i8, y: i8) -> i8
+fn max(x: u16, y: u16) -> u16
+fn max(x: i16, y: i16) -> i16
+fn max(x: int, y: float) -> float
+fn max(x: float, y: int) -> float
+fn max(x: f32, y: float) -> float
+fn max(x: f32, y: f32) -> f32
+fn max(x: f32, y: int) -> f32
+fn max(x: u8, y: u8) -> u8
+fn max(x: i128, y: i128) -> i128
 fn max(x: float, y: f32) -> float
+fn max(x: u128, y: u128) -> u128
+fn max(string1: String, string2: String) -> String
 fn max(x: i32, y: i32) -> i32
+fn max(x: int, y: f32) -> f32
+fn max(x: float, y: float) -> float
+fn max(char1: char, char2: char) -> char
+fn max(x: u64, y: u64) -> u64
 ```
 
 <div>
@@ -3759,12 +3759,12 @@ Example
 </div>
 
 <div group="max" id="max-Description" class="tabcontent"  style="display: block;" >
-Return the character that is lexically greater than the other character.
+Return the number that is larger than the other number.
 </div>
 <div group="max" id="max-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-max('h', 'w');      // returns 'w'
+max(42, 123);   // returns 132
 ```
 </div>
 
@@ -3775,26 +3775,26 @@ max('h', 'w');      // returns 'w'
     <h2 class="func-name"> <code>fn</code> min </h2>
 
 ```rust,ignore
-fn min(x: u64, y: u64) -> u64
-fn min(x: i8, y: i8) -> i8
-fn min(x: f32, y: f32) -> f32
-fn min(x: int, y: float) -> float
-fn min(x: f32, y: float) -> float
-fn min(x: int, y: f32) -> f32
-fn min(x: float, y: int) -> float
-fn min(x: u128, y: u128) -> u128
-fn min(x: i16, y: i16) -> i16
-fn min(char1: char, char2: char) -> char
+fn min(x: int, y: int) -> int
 fn min(x: u32, y: u32) -> u32
 fn min(x: u16, y: u16) -> u16
+fn min(x: i8, y: i8) -> i8
+fn min(x: float, y: int) -> float
+fn min(x: f32, y: float) -> float
+fn min(x: int, y: float) -> float
+fn min(x: i16, y: i16) -> i16
 fn min(x: f32, y: int) -> f32
-fn min(x: u8, y: u8) -> u8
+fn min(x: f32, y: f32) -> f32
 fn min(x: i128, y: i128) -> i128
-fn min(x: float, y: float) -> float
-fn min(string1: String, string2: String) -> String
-fn min(x: i32, y: i32) -> i32
 fn min(x: float, y: f32) -> float
-fn min(x: int, y: int) -> int
+fn min(x: u128, y: u128) -> u128
+fn min(x: u8, y: u8) -> u8
+fn min(x: i32, y: i32) -> i32
+fn min(string1: String, string2: String) -> String
+fn min(x: int, y: f32) -> f32
+fn min(char1: char, char2: char) -> char
+fn min(x: u64, y: u64) -> u64
+fn min(x: float, y: float) -> float
 ```
 
 <div>
@@ -3810,12 +3810,12 @@ Example
 </div>
 
 <div group="min" id="min-Description" class="tabcontent"  style="display: block;" >
-Return the character that is lexically smaller than the other character.
+Return the number that is smaller than the other number.
 </div>
 <div group="min" id="min-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-max('h', 'w');      // returns 'h'
+min(42, 123);   // returns 42
 ```
 </div>
 
@@ -3900,10 +3900,10 @@ print(f.name);      // prints "double"
     <h2 class="func-name"> <code>fn</code> pad </h2>
 
 ```rust,ignore
-fn pad(array: Array, len: int, item: ?)
-fn pad(string: String, len: int, padding: String)
-fn pad(blob: Blob, len: int, value: int)
 fn pad(string: String, len: int, character: char)
+fn pad(array: Array, len: int, item: ?)
+fn pad(blob: Blob, len: int, value: int)
+fn pad(string: String, len: int, padding: String)
 ```
 
 <div>
@@ -3919,22 +3919,22 @@ Example
 </div>
 
 <div group="pad" id="pad-Description" class="tabcontent"  style="display: block;" >
-Pad the array to at least the specified length with copies of a specified element.
+Pad the string to at least the specified number of characters with the specified `character`.
 
-If `len` ≤ length of array, no padding is done.
+If `len` ≤ length of string, no padding is done.
 </div>
 <div group="pad" id="pad-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let x = [1, 2, 3];
+let text = "hello";
 
-x.pad(5, 42);
+text.pad(8, '!');
 
-print(x);       // prints "[1, 2, 3, 42, 42]"
+print(text);        // prints "hello!!!"
 
-x.pad(3, 123);
+text.pad(5, '*');
 
-print(x);       // prints "[1, 2, 3, 42, 42]"
+print(text);        // prints "hello!!!"
 ```
 </div>
 
@@ -3945,8 +3945,8 @@ print(x);       // prints "[1, 2, 3, 42, 42]"
     <h2 class="func-name"> <code>fn</code> parse_be_float </h2>
 
 ```rust,ignore
-fn parse_be_float(blob: Blob, range: RangeInclusive<int>) -> float
 fn parse_be_float(blob: Blob, range: Range<int>) -> float
+fn parse_be_float(blob: Blob, range: RangeInclusive<int>) -> float
 fn parse_be_float(blob: Blob, start: int, len: int) -> float
 ```
 
@@ -3959,7 +3959,7 @@ Description
 </div>
 
 <div group="parse_be_float" id="parse_be_float-Description" class="tabcontent"  style="display: block;" >
-Parse the bytes within an inclusive `range` in the BLOB as a `FLOAT`
+Parse the bytes within an exclusive `range` in the BLOB as a `FLOAT`
 in big-endian byte order.
 
 * If number of bytes in `range` < number of bytes for `FLOAT`, zeros are padded.
@@ -4142,8 +4142,8 @@ in little-endian byte order.
     <h2 class="func-name"> <code>fn</code> parse_le_int </h2>
 
 ```rust,ignore
-fn parse_le_int(blob: Blob, range: Range<int>) -> int
 fn parse_le_int(blob: Blob, range: RangeInclusive<int>) -> int
+fn parse_le_int(blob: Blob, range: Range<int>) -> int
 fn parse_le_int(blob: Blob, start: int, len: int) -> int
 ```
 
@@ -4156,7 +4156,7 @@ Description
 </div>
 
 <div group="parse_le_int" id="parse_le_int-Description" class="tabcontent"  style="display: block;" >
-Parse the bytes within an exclusive `range` in the BLOB as an `INT`
+Parse the bytes within an inclusive `range` in the BLOB as an `INT`
 in little-endian byte order.
 
 * If number of bytes in `range` < number of bytes for `INT`, zeros are padded.
@@ -4167,9 +4167,9 @@ let b = blob();
 
 b += 1; b += 2; b += 3; b += 4; b += 5;
 
-let x = b.parse_le_int(1..3);   // parse two bytes
+let x = b.parse_le_int(1..=3);  // parse three bytes
 
-print(x.to_hex());              // prints "0302"
+print(x.to_hex());              // prints "040302"
 ```
 </div>
 
@@ -4180,9 +4180,9 @@ print(x.to_hex());              // prints "0302"
     <h2 class="func-name"> <code>fn</code> pop </h2>
 
 ```rust,ignore
-fn pop(string: String) -> ?
-fn pop(blob: Blob) -> int
 fn pop(array: Array) -> ?
+fn pop(blob: Blob) -> int
+fn pop(string: String) -> ?
 fn pop(string: String, len: int) -> String
 ```
 
@@ -4199,18 +4199,18 @@ Example
 </div>
 
 <div group="pop" id="pop-Description" class="tabcontent"  style="display: block;" >
-Remove the last character from the string and return it.
+Remove the last element from the array and return it.
 
-If the string is empty, `()` is returned.
+If the array is empty, `()` is returned.
 </div>
 <div group="pop" id="pop-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let text = "hello, world!";
+let x = [1, 2, 3];
 
-print(text.pop());      // prints '!'
+print(x.pop());     // prints 3
 
-print(text);            // prints "hello, world"
+print(x);           // prints "[1, 2]"
 ```
 </div>
 
@@ -4223,14 +4223,14 @@ print(text);            // prints "hello, world"
 ```rust,ignore
 fn print() -> String
 fn print(array: Array) -> String
-fn print(value: bool) -> String
-fn print(item: ?) -> String
-fn print(map: Map) -> String
-fn print(number: float) -> String
-fn print(number: f32) -> String
 fn print(character: char) -> String
-fn print(unit: ?) -> String
+fn print(value: bool) -> String
 fn print(string: String) -> String
+fn print(unit: ?) -> String
+fn print(map: Map) -> String
+fn print(number: f32) -> String
+fn print(number: float) -> String
+fn print(item: ?) -> String
 ```
 
 <div>
@@ -4291,38 +4291,38 @@ print(x);       // prints [1, 2, 3, "hello"]
     <h2 class="func-name"> <code>fn</code> range </h2>
 
 ```rust,ignore
-fn range(from: u128, to: u128) -> Range<u128>
-fn range(range: Range<i16>, step: i16) -> StepRange<i16>
-fn range(range: Range<u16>, step: u16) -> StepRange<u16>
 fn range(range: Range<float>, step: float) -> StepRange<float>
-fn range(range: Range<u64>, step: u64) -> StepRange<u64>
-fn range(range: Range<u128>, step: u128) -> StepRange<u128>
 fn range(from: u64, to: u64) -> Range<u64>
-fn range(range: Range<i32>, step: i32) -> StepRange<i32>
-fn range(from: i8, to: i8) -> Range<i8>
+fn range(range: Range<u8>, step: u8) -> StepRange<u8>
+fn range(range: Range<u128>, step: u128) -> StepRange<u128>
+fn range(from: u8, to: u8) -> Range<u8>
+fn range(from: i128, to: i128) -> Range<i128>
+fn range(from: u128, to: u128) -> Range<u128>
 fn range(from: i32, to: i32) -> Range<i32>
+fn range(range: Range<i128>, step: i128) -> StepRange<i128>
+fn range(from: i16, to: i16) -> Range<i16>
+fn range(range: Range<i32>, step: i32) -> StepRange<i32>
+fn range(range: Range<i16>, step: i16) -> StepRange<i16>
+fn range(range: Range<u64>, step: u64) -> StepRange<u64>
+fn range(from: u32, to: u32) -> Range<u32>
 fn range(from: int, to: int) -> Range<int>
 fn range(range: Range<i8>, step: i8) -> StepRange<i8>
-fn range(from: u8, to: u8) -> Range<u8>
-fn range(range: Range<i128>, step: i128) -> StepRange<i128>
-fn range(range: Range<int>, step: int) -> StepRange<int>
-fn range(from: i128, to: i128) -> Range<i128>
-fn range(range: Range<u8>, step: u8) -> StepRange<u8>
-fn range(from: i16, to: i16) -> Range<i16>
-fn range(range: Range<u32>, step: u32) -> StepRange<u32>
-fn range(from: u32, to: u32) -> Range<u32>
+fn range(from: i8, to: i8) -> Range<i8>
 fn range(from: u16, to: u16) -> Range<u16>
+fn range(range: Range<u32>, step: u32) -> StepRange<u32>
+fn range(range: Range<u16>, step: u16) -> StepRange<u16>
+fn range(range: Range<int>, step: int) -> StepRange<int>
+fn range(from: u32, to: u32, step: u32) -> StepRange<u32>
 fn range(from: u64, to: u64, step: u64) -> StepRange<u64>
-fn range(from: i32, to: i32, step: i32) -> StepRange<i32>
-fn range(from: float, to: float, step: float) -> StepRange<float>
 fn range(from: i8, to: i8, step: i8) -> StepRange<i8>
 fn range(from: u16, to: u16, step: u16) -> StepRange<u16>
-fn range(from: u128, to: u128, step: u128) -> StepRange<u128>
-fn range(from: i16, to: i16, step: i16) -> StepRange<i16>
 fn range(from: u8, to: u8, step: u8) -> StepRange<u8>
-fn range(from: i128, to: i128, step: i128) -> StepRange<i128>
+fn range(from: u128, to: u128, step: u128) -> StepRange<u128>
+fn range(from: float, to: float, step: float) -> StepRange<float>
+fn range(from: i32, to: i32, step: i32) -> StepRange<i32>
 fn range(from: int, to: int, step: int) -> StepRange<int>
-fn range(from: u32, to: u32, step: u32) -> StepRange<u32>
+fn range(from: i16, to: i16, step: i16) -> StepRange<i16>
+fn range(from: i128, to: i128, step: i128) -> StepRange<i128>
 ```
 
 <div>
@@ -4338,14 +4338,22 @@ Example
 </div>
 
 <div group="range" id="range-Description" class="tabcontent"  style="display: block;" >
-Return an iterator over the exclusive range of `from..to`.
-The value `to` is never included.
+Return an iterator over an exclusive range, each iteration increasing by `step`.
+
+If `range` is reversed and `step` < 0, iteration goes backwards.
+
+Otherwise, if `range` is empty, an empty iterator is returned.
 </div>
 <div group="range" id="range-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-// prints all values from 8 to 17
-for n in range(8, 18) {
+// prints all values from 8 to 17 in steps of 3
+for n in range(8..18, 3) {
+    print(n);
+}
+
+// prints all values down from 18 to 9 in steps of -3
+for n in range(18..8, -3) {
     print(n);
 }
 ```
@@ -4358,8 +4366,8 @@ for n in range(8, 18) {
     <h2 class="func-name"> <code>fn</code> reduce </h2>
 
 ```rust,ignore
-fn reduce(array: Array, reducer: FnPtr) -> ?
 fn reduce(array: Array, reducer: String) -> ?
+fn reduce(array: Array, reducer: FnPtr) -> ?
 fn reduce(array: Array, reducer: FnPtr, initial: ?) -> ?
 fn reduce(array: Array, reducer: String, initial: ?) -> ?
 ```
@@ -4369,6 +4377,10 @@ fn reduce(array: Array, reducer: String, initial: ?) -> ?
 <button group="reduce" id="link-reduce-Description"  class="tablinks active" 
     onclick="openTab(event, 'reduce', 'Description')">
 Description
+</button>
+<button group="reduce" id="link-reduce-Deprecated API"  class="tablinks" 
+    onclick="openTab(event, 'reduce', 'Deprecated API')">
+Deprecated API
 </button>
 <button group="reduce" id="link-reduce-Function Parameters"  class="tablinks" 
     onclick="openTab(event, 'reduce', 'Function Parameters')">
@@ -4381,26 +4393,38 @@ Example
 </div>
 
 <div group="reduce" id="reduce-Description" class="tabcontent"  style="display: block;" >
-Reduce an array by iterating through all elements while applying the `reducer` function.
+Reduce an array by iterating through all elements while applying a function named by `reducer`.
+</div>
+<div group="reduce" id="reduce-Deprecated API" class="tabcontent"  style="display: none;" >
+
+This method is deprecated and will be removed from the next major version.
+Use `array.reduce(Fn("fn_name"))` instead.
 </div>
 <div group="reduce" id="reduce-Function Parameters" class="tabcontent"  style="display: none;" >
 
-* `result`: accumulated result, initially `()`
-* `element`: copy of array element, or bound to `this` if omitted
-* `index` _(optional)_: current index in the array
+A function with the same name as the value of `reducer` must exist taking these parameters:
 
-This method is marked _pure_; the `reducer` function should not mutate array elements.
+* `result`: accumulated result, initially `()`
+* `element`: copy of array element
+* `index` _(optional)_: current index in the array
 </div>
 <div group="reduce" id="reduce-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
+fn process(r, x) {
+    x + (r ?? 0)
+}
+fn process_extra(r, x, i) {
+    x + i + (r ?? 0)
+}
+
 let x = [1, 2, 3, 4, 5];
 
-let y = x.reduce(|r, v| v + (r ?? 0));
+let y = x.reduce("process");
 
 print(y);       // prints 15
 
-let y = x.reduce(|r, v, i| v + i + (r ?? 0));
+let y = x.reduce("process_extra");
 
 print(y);       // prints 25
 ```
@@ -4415,8 +4439,8 @@ print(y);       // prints 25
 ```rust,ignore
 fn reduce_rev(array: Array, reducer: String) -> ?
 fn reduce_rev(array: Array, reducer: FnPtr) -> ?
-fn reduce_rev(array: Array, reducer: String, initial: ?) -> ?
 fn reduce_rev(array: Array, reducer: FnPtr, initial: ?) -> ?
+fn reduce_rev(array: Array, reducer: String, initial: ?) -> ?
 ```
 
 <div>
@@ -4485,11 +4509,11 @@ print(y);       // prints 25
     <h2 class="func-name"> <code>fn</code> remove </h2>
 
 ```rust,ignore
-fn remove(string: String, sub_string: String)
 fn remove(blob: Blob, index: int) -> int
-fn remove(map: Map, property: String) -> ?
 fn remove(array: Array, index: int) -> ?
 fn remove(string: String, character: char)
+fn remove(map: Map, property: String) -> ?
+fn remove(string: String, sub_string: String)
 ```
 
 <div>
@@ -4505,16 +4529,26 @@ Example
 </div>
 
 <div group="remove" id="remove-Description" class="tabcontent"  style="display: block;" >
-Remove all occurrences of a sub-string from the string.
+Remove the byte at the specified `index` from the BLOB and return it.
+
+* If `index` < 0, position counts from the end of the BLOB (`-1` is the last byte).
+* If `index` < -length of BLOB, zero is returned.
+* If `index` ≥ length of BLOB, zero is returned.
 </div>
 <div group="remove" id="remove-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let text = "hello, world! hello, foobar!";
+let b = blob();
 
-text.remove("hello");
+b += 1; b += 2; b += 3; b += 4; b += 5;
 
-print(text);        // prints ", world! , foobar!"
+print(x.remove(1));     // prints 2
+
+print(x);               // prints "[01030405]"
+
+print(x.remove(-2));    // prints 4
+
+print(x);               // prints "[010305]"
 ```
 </div>
 
@@ -4525,10 +4559,10 @@ print(text);        // prints ", world! , foobar!"
     <h2 class="func-name"> <code>fn</code> replace </h2>
 
 ```rust,ignore
-fn replace(string: String, find_string: String, substitute_string: String)
-fn replace(string: String, find_character: char, substitute_string: String)
 fn replace(string: String, find_character: char, substitute_character: char)
 fn replace(string: String, find_string: String, substitute_character: char)
+fn replace(string: String, find_character: char, substitute_string: String)
+fn replace(string: String, find_string: String, substitute_string: String)
 ```
 
 <div>
@@ -4544,16 +4578,16 @@ Example
 </div>
 
 <div group="replace" id="replace-Description" class="tabcontent"  style="display: block;" >
-Replace all occurrences of the specified sub-string in the string with another string.
+Replace all occurrences of the specified character in the string with another character.
 </div>
 <div group="replace" id="replace-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
 let text = "hello, world! hello, foobar!";
 
-text.replace("hello", "hey");
+text.replace("l", '*');
 
-print(text);        // prints "hey, world! hey, foobar!"
+print(text);        // prints "he**o, wor*d! he**o, foobar!"
 ```
 </div>
 
@@ -4564,13 +4598,13 @@ print(text);        // prints "hey, world! hey, foobar!"
     <h2 class="func-name"> <code>fn</code> retain </h2>
 
 ```rust,ignore
-fn retain(array: Array, range: RangeInclusive<int>) -> Array
-fn retain(array: Array, filter: String) -> Array
-fn retain(map: Map, filter: FnPtr) -> Map
-fn retain(blob: Blob, range: Range<int>) -> Blob
-fn retain(array: Array, filter: FnPtr) -> Array
 fn retain(array: Array, range: Range<int>) -> Array
 fn retain(blob: Blob, range: RangeInclusive<int>) -> Blob
+fn retain(array: Array, filter: FnPtr) -> Array
+fn retain(map: Map, filter: FnPtr) -> Map
+fn retain(blob: Blob, range: Range<int>) -> Blob
+fn retain(array: Array, range: RangeInclusive<int>) -> Array
+fn retain(array: Array, filter: String) -> Array
 fn retain(blob: Blob, start: int, len: int) -> Blob
 fn retain(array: Array, start: int, len: int) -> Array
 ```
@@ -4588,20 +4622,20 @@ Example
 </div>
 
 <div group="retain" id="retain-Description" class="tabcontent"  style="display: block;" >
-Remove all elements in the array not within an inclusive `range` and return them as a new array.
+Remove all elements in the array not within an exclusive `range` and return them as a new array.
 </div>
 <div group="retain" id="retain-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
 let x = [1, 2, 3, 4, 5];
 
-let y = x.retain(1..=3);
+let y = x.retain(1..4);
 
 print(x);       // prints "[2, 3, 4]"
 
 print(y);       // prints "[1, 5]"
 
-let z = x.retain(1..=2);
+let z = x.retain(1..3);
 
 print(x);       // prints "[3, 4]"
 
@@ -4680,9 +4714,9 @@ Rounds away from zero.
     <h2 class="func-name"> <code>fn</code> set </h2>
 
 ```rust,ignore
-fn set(string: String, index: int, character: char)
 fn set(blob: Blob, index: int, value: int)
 fn set(array: Array, index: int, value: ?)
+fn set(string: String, index: int, character: char)
 fn set(map: Map, property: String, value: ?)
 ```
 
@@ -4699,28 +4733,30 @@ Example
 </div>
 
 <div group="set" id="set-Description" class="tabcontent"  style="display: block;" >
-Set the `index` position in the string to a new `character`.
+Set the particular `index` position in the BLOB to a new byte `value`.
 
-* If `index` < 0, position counts from the end of the string (`-1` is the last character).
-* If `index` < -length of string, the string is not modified.
-* If `index` ≥ length of string, the string is not modified.
+* If `index` < 0, position counts from the end of the BLOB (`-1` is the last byte).
+* If `index` < -length of BLOB, the BLOB is not modified.
+* If `index` ≥ length of BLOB, the BLOB is not modified.
 </div>
 <div group="set" id="set-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let text = "hello, world!";
+let b = blob();
 
-text.set(3, 'x');
+b += 1; b += 2; b += 3; b += 4; b += 5;
 
-print(text);     // prints "helxo, world!"
+b.set(0, 0x42);
 
-text.set(-3, 'x');
+print(b);           // prints "[4202030405]"
 
-print(text);    // prints "hello, worxd!"
+b.set(-3, 0);
 
-text.set(99, 'x');
+print(b);           // prints "[4202000405]"
 
-print(text);    // prints "hello, worxd!"
+b.set(99, 123);
+
+print(b);           // prints "[4202000405]"
 ```
 </div>
 
@@ -4778,8 +4814,8 @@ print(x);               // prints 57888 on 64-bit
     <h2 class="func-name"> <code>fn</code> set_bits </h2>
 
 ```rust,ignore
-fn set_bits(value: int, range: RangeInclusive<int>, new_value: int)
 fn set_bits(value: int, range: Range<int>, new_value: int)
+fn set_bits(value: int, range: RangeInclusive<int>, new_value: int)
 fn set_bits(value: int, bit: int, bits: int, new_value: int)
 ```
 
@@ -4796,14 +4832,14 @@ Example
 </div>
 
 <div group="set_bits" id="set_bits-Description" class="tabcontent"  style="display: block;" >
-Replace an inclusive range of bits in the number with a new value.
+Replace an exclusive range of bits in the number with a new value.
 </div>
 <div group="set_bits" id="set_bits-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
 let x = 123456;
 
-x.set_bits(5..=9, 42);
+x.set_bits(5..10, 42);
 
 print(x);           // print 123200
 ```
@@ -4852,8 +4888,8 @@ print(x.tag);           // prints 42
     <h2 class="func-name"> <code>fn</code> shift </h2>
 
 ```rust,ignore
-fn shift(array: Array) -> ?
 fn shift(blob: Blob) -> int
+fn shift(array: Array) -> ?
 ```
 
 <div>
@@ -4869,18 +4905,20 @@ Example
 </div>
 
 <div group="shift" id="shift-Description" class="tabcontent"  style="display: block;" >
-Remove the first element from the array and return it.
+Remove the first byte from the BLOB and return it.
 
-If the array is empty, `()` is returned.
+If the BLOB is empty, zero is returned.
 </div>
 <div group="shift" id="shift-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let x = [1, 2, 3];
+let b = blob();
 
-print(x.shift());   // prints 1
+b += 1; b += 2; b += 3; b += 4; b += 5;
 
-print(x);           // prints "[2, 3]"
+print(b.shift());       // prints 1
+
+print(b);               // prints "[02030405]"
 ```
 </div>
 
@@ -4892,12 +4930,12 @@ print(x);           // prints "[2, 3]"
 
 ```rust,ignore
 fn sign(x: f32) -> int
-fn sign(x: float) -> int
 fn sign(x: i16) -> int
-fn sign(x: int) -> int
+fn sign(x: float) -> int
 fn sign(x: i32) -> int
-fn sign(x: i8) -> int
 fn sign(x: i128) -> int
+fn sign(x: i8) -> int
+fn sign(x: int) -> int
 ```
 
 <div>
@@ -5113,10 +5151,10 @@ print(x);       // prints "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
     <h2 class="func-name"> <code>fn</code> splice </h2>
 
 ```rust,ignore
-fn splice(blob: Blob, range: RangeInclusive<int>, replace: Blob)
-fn splice(array: Array, range: Range<int>, replace: Array)
 fn splice(array: Array, range: RangeInclusive<int>, replace: Array)
 fn splice(blob: Blob, range: Range<int>, replace: Blob)
+fn splice(array: Array, range: Range<int>, replace: Array)
+fn splice(blob: Blob, range: RangeInclusive<int>, replace: Blob)
 fn splice(blob: Blob, start: int, len: int, replace: Blob)
 fn splice(array: Array, start: int, len: int, replace: Array)
 ```
@@ -5134,17 +5172,17 @@ Example
 </div>
 
 <div group="splice" id="splice-Description" class="tabcontent"  style="display: block;" >
-Replace an inclusive `range` of the BLOB with another BLOB.
+Replace an inclusive range of the array with another array.
 </div>
 <div group="splice" id="splice-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let b1 = blob(10, 0x42);
-let b2 = blob(5, 0x18);
+let x = [1, 2, 3, 4, 5];
+let y = [7, 8, 9, 10];
 
-b1.splice(1..=4, b2);
+x.splice(1..=3, y);
 
-print(b1);      // prints "[4218181818184242 424242]"
+print(x);       // prints "[1, 7, 8, 9, 10, 5]"
 ```
 </div>
 
@@ -5156,13 +5194,13 @@ print(b1);      // prints "[4218181818184242 424242]"
 
 ```rust,ignore
 fn split(string: String) -> Array
-fn split(string: String, index: int) -> Array
-fn split(blob: Blob, index: int) -> Blob
-fn split(string: String, delimiter: String) -> Array
-fn split(array: Array, index: int) -> Array
 fn split(string: String, delimiter: char) -> Array
-fn split(string: String, delimiter: char, segments: int) -> Array
+fn split(array: Array, index: int) -> Array
+fn split(blob: Blob, index: int) -> Blob
+fn split(string: String, index: int) -> Array
+fn split(string: String, delimiter: String) -> Array
 fn split(string: String, delimiter: String, segments: int) -> Array
+fn split(string: String, delimiter: char, segments: int) -> Array
 ```
 
 <div>
@@ -5196,10 +5234,10 @@ print(text.split());        // prints ["hello,", "world!", "hello,", "foo!"]
     <h2 class="func-name"> <code>fn</code> split_rev </h2>
 
 ```rust,ignore
-fn split_rev(string: String, delimiter: char) -> Array
 fn split_rev(string: String, delimiter: String) -> Array
-fn split_rev(string: String, delimiter: char, segments: int) -> Array
+fn split_rev(string: String, delimiter: char) -> Array
 fn split_rev(string: String, delimiter: String, segments: int) -> Array
+fn split_rev(string: String, delimiter: char, segments: int) -> Array
 ```
 
 <div>
@@ -5215,15 +5253,15 @@ Example
 </div>
 
 <div group="split_rev" id="split_rev-Description" class="tabcontent"  style="display: block;" >
-Split the string into segments based on a `delimiter` character, returning an array of
-the segments in _reverse_ order.
+Split the string into segments based on a `delimiter` string, returning an array of the
+segments in _reverse_ order.
 </div>
 <div group="split_rev" id="split_rev-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
 let text = "hello, world! hello, foo!";
 
-print(text.split_rev('l'));     // prints ["o, foo!", "", "d! he", "o, wor", "", "he"]
+print(text.split_rev("ll"));    // prints ["o, foo!", "o, world! he", "he"]
 ```
 </div>
 
@@ -5315,9 +5353,9 @@ print(text.starts_with("world"));   // prints false
     <h2 class="func-name"> <code>fn</code> sub_string </h2>
 
 ```rust,ignore
+fn sub_string(string: String, range: Range<int>) -> String
 fn sub_string(string: String, range: RangeInclusive<int>) -> String
 fn sub_string(string: String, start: int) -> String
-fn sub_string(string: String, range: Range<int>) -> String
 fn sub_string(string: String, start: int, len: int) -> String
 ```
 
@@ -5334,14 +5372,14 @@ Example
 </div>
 
 <div group="sub_string" id="sub_string-Description" class="tabcontent"  style="display: block;" >
-Copy an inclusive range of characters from the string and return it as a new string.
+Copy an exclusive range of characters from the string and return it as a new string.
 </div>
 <div group="sub_string" id="sub_string-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
 let text = "hello, world!";
 
-print(text.sub_string(3..=7));  // prints "lo, w"
+print(text.sub_string(3..7));   // prints "lo, "
 ```
 </div>
 
@@ -5543,15 +5581,15 @@ print(x);       // prints "[66, 66, 66, 66, 66]"
     <h2 class="func-name"> <code>fn</code> to_binary </h2>
 
 ```rust,ignore
-fn to_binary(value: u64) -> String
-fn to_binary(value: i16) -> String
-fn to_binary(value: u128) -> String
-fn to_binary(value: u16) -> String
-fn to_binary(value: i128) -> String
 fn to_binary(value: i8) -> String
-fn to_binary(value: i32) -> String
 fn to_binary(value: int) -> String
+fn to_binary(value: u16) -> String
 fn to_binary(value: u8) -> String
+fn to_binary(value: i32) -> String
+fn to_binary(value: i128) -> String
+fn to_binary(value: u64) -> String
+fn to_binary(value: u128) -> String
+fn to_binary(value: i16) -> String
 fn to_binary(value: u32) -> String
 ```
 
@@ -5644,16 +5682,16 @@ print(text.to_chars());     // prints "['h', 'e', 'l', 'l', 'o']"
     <h2 class="func-name"> <code>fn</code> to_debug </h2>
 
 ```rust,ignore
-fn to_debug(value: bool) -> String
-fn to_debug(array: Array) -> String
-fn to_debug(f: FnPtr) -> String
-fn to_debug(map: Map) -> String
 fn to_debug(item: ?) -> String
 fn to_debug(number: float) -> String
 fn to_debug(number: f32) -> String
-fn to_debug(character: char) -> String
+fn to_debug(map: Map) -> String
 fn to_debug(unit: ?) -> String
 fn to_debug(string: String) -> String
+fn to_debug(character: char) -> String
+fn to_debug(f: FnPtr) -> String
+fn to_debug(value: bool) -> String
+fn to_debug(array: Array) -> String
 ```
 
 <div>
@@ -5665,7 +5703,7 @@ Description
 </div>
 
 <div group="to_debug" id="to_debug-Description" class="tabcontent"  style="display: block;" >
-Convert the boolean value into a string in debug format.
+Convert the value of the `item` into a string in debug format.
 </div>
 
 </div>
@@ -5698,8 +5736,8 @@ Convert radians to degrees.
 
 ```rust,ignore
 fn to_float()
-fn to_float()
 fn to_float(x: f32) -> float
+fn to_float()
 fn to_float()
 fn to_float()
 fn to_float()
@@ -5730,16 +5768,16 @@ Convert the 32-bit floating-point number to 64-bit.
     <h2 class="func-name"> <code>fn</code> to_hex </h2>
 
 ```rust,ignore
-fn to_hex(value: u64) -> String
 fn to_hex(value: i16) -> String
-fn to_hex(value: u16) -> String
 fn to_hex(value: u128) -> String
-fn to_hex(value: i32) -> String
+fn to_hex(value: u32) -> String
+fn to_hex(value: int) -> String
 fn to_hex(value: i8) -> String
 fn to_hex(value: i128) -> String
-fn to_hex(value: u32) -> String
+fn to_hex(value: u64) -> String
 fn to_hex(value: u8) -> String
-fn to_hex(value: int) -> String
+fn to_hex(value: u16) -> String
+fn to_hex(value: i32) -> String
 ```
 
 <div>
@@ -5762,17 +5800,17 @@ Convert the `value` into a string in hex format.
 
 ```rust,ignore
 fn to_int()
-fn to_int(x: f32) -> int
+fn to_int()
+fn to_int()
+fn to_int()
+fn to_int()
+fn to_int()
+fn to_int()
+fn to_int()
+fn to_int()
+fn to_int()
 fn to_int(x: float) -> int
-fn to_int()
-fn to_int()
-fn to_int()
-fn to_int()
-fn to_int()
-fn to_int()
-fn to_int()
-fn to_int()
-fn to_int()
+fn to_int(x: f32) -> int
 fn to_int()
 ```
 
@@ -5884,16 +5922,16 @@ print(text);                // prints "HELLO, WORLD!"
     <h2 class="func-name"> <code>fn</code> to_octal </h2>
 
 ```rust,ignore
-fn to_octal(value: i32) -> String
+fn to_octal(value: i16) -> String
+fn to_octal(value: u128) -> String
+fn to_octal(value: u32) -> String
+fn to_octal(value: int) -> String
 fn to_octal(value: i8) -> String
 fn to_octal(value: i128) -> String
-fn to_octal(value: u32) -> String
-fn to_octal(value: u8) -> String
-fn to_octal(value: int) -> String
 fn to_octal(value: u64) -> String
-fn to_octal(value: i16) -> String
 fn to_octal(value: u16) -> String
-fn to_octal(value: u128) -> String
+fn to_octal(value: u8) -> String
+fn to_octal(value: i32) -> String
 ```
 
 <div>
@@ -5937,15 +5975,15 @@ Convert degrees to radians.
     <h2 class="func-name"> <code>fn</code> to_string </h2>
 
 ```rust,ignore
+fn to_string(unit: ?) -> String
+fn to_string(string: String) -> String
 fn to_string(value: bool) -> String
+fn to_string(character: char) -> String
 fn to_string(array: Array) -> String
-fn to_string(map: Map) -> String
 fn to_string(item: ?) -> String
+fn to_string(map: Map) -> String
 fn to_string(number: f32) -> String
 fn to_string(number: float) -> String
-fn to_string(string: String) -> String
-fn to_string(character: char) -> String
-fn to_string(unit: ?) -> String
 ```
 
 <div>
@@ -5957,7 +5995,7 @@ Description
 </div>
 
 <div group="to_string" id="to_string-Description" class="tabcontent"  style="display: block;" >
-Return the boolean value into a string.
+Return the empty string.
 </div>
 
 </div>
@@ -6040,8 +6078,8 @@ print(text);    // prints "hello"
     <h2 class="func-name"> <code>fn</code> truncate </h2>
 
 ```rust,ignore
-fn truncate(array: Array, len: int)
 fn truncate(blob: Blob, len: int)
+fn truncate(array: Array, len: int)
 fn truncate(string: String, len: int)
 ```
 
@@ -6058,23 +6096,25 @@ Example
 </div>
 
 <div group="truncate" id="truncate-Description" class="tabcontent"  style="display: block;" >
-Cut off the array at the specified length.
+Cut off the BLOB at the specified length.
 
-* If `len` ≤ 0, the array is cleared.
-* If `len` ≥ length of array, the array is not truncated.
+* If `len` ≤ 0, the BLOB is cleared.
+* If `len` ≥ length of BLOB, the BLOB is not truncated.
 </div>
 <div group="truncate" id="truncate-Example" class="tabcontent"  style="display: none;" >
 
 ```rhai
-let x = [1, 2, 3, 4, 5];
+let b = blob();
 
-x.truncate(3);
+b += 1; b += 2; b += 3; b += 4; b += 5;
 
-print(x);       // prints "[1, 2, 3]"
+b.truncate(3);
 
-x.truncate(10);
+print(b);           // prints "[010203]"
 
-print(x);       // prints "[1, 2, 3]"
+b.truncate(10);
+
+print(b);           // prints "[010203]"
 ```
 </div>
 
@@ -6487,9 +6527,9 @@ print(b);       // prints "[0068656c6c000000]"
     <h2 class="func-name"> <code>fn</code> write_be </h2>
 
 ```rust,ignore
+fn write_be(blob: Blob, range: Range<int>, value: float)
 fn write_be(blob: Blob, range: RangeInclusive<int>, value: int)
 fn write_be(blob: Blob, range: Range<int>, value: int)
-fn write_be(blob: Blob, range: Range<int>, value: float)
 fn write_be(blob: Blob, range: RangeInclusive<int>, value: float)
 fn write_be(blob: Blob, start: int, len: int, value: float)
 fn write_be(blob: Blob, start: int, len: int, value: int)
@@ -6504,19 +6544,11 @@ Description
 </div>
 
 <div group="write_be" id="write_be-Description" class="tabcontent"  style="display: block;" >
-Write an `INT` value to the bytes within an inclusive `range` in the BLOB
+Write a `FLOAT` value to the bytes within an exclusive `range` in the BLOB
 in big-endian byte order.
 
-* If number of bytes in `range` < number of bytes for `INT`, extra bytes in `INT` are not written.
-* If number of bytes in `range` > number of bytes for `INT`, extra bytes in `range` are not modified.
-
-```rhai
-let b = blob(8, 0x42);
-
-b.write_be_int(1..=3, 0x99);
-
-print(b);       // prints "[4200000042424242]"
-```
+* If number of bytes in `range` < number of bytes for `FLOAT`, extra bytes in `FLOAT` are not written.
+* If number of bytes in `range` > number of bytes for `FLOAT`, extra bytes in `range` are not modified.
 </div>
 
 </div>
@@ -6526,12 +6558,12 @@ print(b);       // prints "[4200000042424242]"
     <h2 class="func-name"> <code>fn</code> write_le </h2>
 
 ```rust,ignore
-fn write_le(blob: Blob, range: Range<int>, value: float)
 fn write_le(blob: Blob, range: RangeInclusive<int>, value: int)
-fn write_le(blob: Blob, range: Range<int>, value: int)
+fn write_le(blob: Blob, range: Range<int>, value: float)
 fn write_le(blob: Blob, range: RangeInclusive<int>, value: float)
-fn write_le(blob: Blob, start: int, len: int, value: float)
+fn write_le(blob: Blob, range: Range<int>, value: int)
 fn write_le(blob: Blob, start: int, len: int, value: int)
+fn write_le(blob: Blob, start: int, len: int, value: float)
 ```
 
 <div>
@@ -6543,11 +6575,19 @@ Description
 </div>
 
 <div group="write_le" id="write_le-Description" class="tabcontent"  style="display: block;" >
-Write a `FLOAT` value to the bytes within an exclusive `range` in the BLOB
+Write an `INT` value to the bytes within an inclusive `range` in the BLOB
 in little-endian byte order.
 
-* If number of bytes in `range` < number of bytes for `FLOAT`, extra bytes in `FLOAT` are not written.
-* If number of bytes in `range` > number of bytes for `FLOAT`, extra bytes in `range` are not modified.
+* If number of bytes in `range` < number of bytes for `INT`, extra bytes in `INT` are not written.
+* If number of bytes in `range` > number of bytes for `INT`, extra bytes in `range` are not modified.
+
+```rhai
+let b = blob(8);
+
+b.write_le_int(1..=3, 0x12345678);
+
+print(b);       // prints "[0078563400000000]"
+```
 </div>
 
 </div>
