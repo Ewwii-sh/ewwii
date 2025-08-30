@@ -32,15 +32,15 @@
     -   [Widgets & Parameters](widgets/widgets_and_params.md)
     -   [Widget Properties](widgets/props.md)
 
--   [Advanced Commands](commands/advanced_commands_intro.md)
-
-    -   [Update](commands/update.md)
-    -   [Call Functions](commands/call_fns.md)
-
 -   [Examples](examples/examples.md)
 
     -   [Starter Bar](examples/starter_bar.md)
     -   [Interactive Widgets](examples/interactive.md)
     -   [Theming Tricks](examples/theming.md)
+
+-   [Advanced Commands](commands/advanced_commands_intro.md)
+
+    -   [Update](commands/update.md)
+    -   [Call Functions](commands/call_fns.md)
 
 -   [Troubleshooting](troubleshooting.md)
