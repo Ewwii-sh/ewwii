@@ -11,13 +11,13 @@ pub mod env {
     ///
     /// # Returns
     ///
-    /// This function returns the value of the environment variable as a `String`. 
+    /// This function returns the value of the environment variable as a `String`.
     /// If the variable is not found or there is an error, it returns a `Result::Err` with the error message.
     ///
     /// # Example
     ///
     /// ```js
-    /// import "std::env" as env; 
+    /// import "std::env" as env;
     ///
     /// // Get the value of the "HOME" environment variable
     /// let home_dir = env::get_env("HOME");
@@ -42,7 +42,7 @@ pub mod env {
     /// # Example
     ///
     /// ```js
-    /// import "std::env" as env; 
+    /// import "std::env" as env;
     ///
     /// // Set the value of the "MY_VAR" environment variable
     /// env::set_env("MY_VAR", "SomeValue");
