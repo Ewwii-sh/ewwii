@@ -75,10 +75,7 @@ pub mod monitor {
     /// print(resolutions); // Output: [[width1, height1], [width2, height2], ...]
     /// ```
     pub fn all_resolutions() -> Vec<[i64; 2]> {
-        get_all_monitor_resolutions()
-            .into_iter()
-            .map(|(w, h)| [w, h])
-            .collect()
+        get_all_monitor_resolutions().into_iter().map(|(w, h)| [w, h]).collect()
     }
 
     /// Get the resolutions of all connected monitors as a string.
