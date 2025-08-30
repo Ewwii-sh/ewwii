@@ -26,17 +26,16 @@ Just having static variables that wont update is pretty limiting. So, ewwii has 
 **Polling variables (`poll`)**
 
 ```js
-poll(
-    "var_name",
-    #{
-        // It is recommended to have initial property passed.
-        // If not provided, it will default to no value which may cause problems when used.
-        // You can pass something like "" if you want no initial value.
-        initial: "inital value",
-        interval: "2s",
-        cmd: "date +%H:%M:%S", // command to execute
-    }
-);
+enter([
+  poll("var_name", #{
+      // It is recommended to have initial property passed.
+      // If not provided, it will default to no value which may cause problems when used.
+      // You can pass something like "" if you want no initial value.
+      initial: "inital value",
+      interval: "2s",
+      cmd: "date +%H:%M:%S", // command to execute
+  });
+])
 ```
 
 A polling variable is a variable which runs a provided shell-script repeatedly, in a given interval.
@@ -49,18 +48,17 @@ But it is important to note that these variables are locally available only in e
 <!-- You can also specify an initial-value. This should prevent ewwii from waiting for the result of a given command during startup, thus
 making the startup time faster. -->
 
-To externally update a polling variable, `ewwii update` can be used like with basic variables to assign a value.
+To externally update a polling variable, `ewwii update` can be used like with basic variables to assign a value. [Learn more about ewwii update](../commands/update.md).
 
 **Listening variables (`listen`)**
 
 ```js
-listen(
-    "foo",
-    #{
-        initial: "whatever",
-        cmd: "tail -F /tmp/some_file",
-    }
-);
+enter([
+  listen("foo", #{
+    initial: "whatever",
+    cmd: "tail -F /tmp/some_file",
+  });
+])
 ```
 
 Listening variables might be the most confusing of the bunch.
@@ -84,6 +82,12 @@ These include values such as your CPU and RAM usage.
 These mostly contain their data as JSON, which you can then get using the [json access syntax](expression_language.md).
 All available magic variables are listed [here](magic-vars.md). -->
 
+<div class="warning">
+<strong>Warning:</strong> Dynamic variables created by `poll` or `listen` handlers
+should always be defined inside an <code>enter([])</code> block. 
+If `poll` or `listen` is defined outside the <code>enter([])</code> block, then they simply will be ignored.
+</div>
+
 ## Passing variables
 
 As we discussed earlier, all variables are only available locally. So, you would need to pass it around from the current scope.
@@ -93,16 +97,26 @@ Here is an example of how it is done:
 ```js
 let foo = "example";
 
-poll("time", #{
-  initial: "inital value",
-  interval: "2s",
-  cmd: "date +%H:%M:%S",
-})
+enter([
+  poll("time", #{
+    initial: "inital value",
+    interval: "2s",
+    cmd: "date +%H:%M:%S",
+  }),
+
+  defwindow("1", #{}, wont_work()), // wont work
+  defwindow("2", #{}, will_work(time, foo)) // will work
+])
 
 // Here we have 2 variables named "time" (registered dynamically by poll) and foo (a static variable)
 
 // here is an example of something that wont
 fn wont_work() {
+  return box(#{}, [ label(#{ text: time }), label(#{ text: foo }) ]);
+}
+
+// here is an example of something that will work
+fn will_work(time, foo) { // time and foo is passed from `enter([])`
   return box(#{}, [ label(#{ text: time }), label(#{ text: foo }) ]);
 }
 ```
@@ -123,11 +137,12 @@ fn foo(foo_var) {
 }
 
 enter([
-  defpoll("foo", #{
+  poll("foo", #{
     cmd: "echo baz",
     initial: "",
     interval: "1s"
   }),
+
   defwindow("bar", #{
     // .. properties omitted
   }, bar(foo)),
@@ -135,3 +150,5 @@ enter([
 ```
 
 Here, when the variable foo changes, the text of label changes as well. If there is no `dyn_id` defined, then ewwii will ingore that change. But if it is defined with a unique value, then it will find the widget that is defined with the id that matches dyn_id and then update its text property which will result in a change in the UI.
+
+> **Tip:** Always add a `dyn_id` to every single widget that you create if you are working with a dynamic system, as this method will avoid many surprises.
