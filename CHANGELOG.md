@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Removed
 
 -   Deprecated attribute warning which cluttered the logs.
+-   `std::json` (Rhai has built in json support).
+-   `std::math` (Rhai already convers everything that it has).
 
 ## [0.1.0-beta] - 2025-08-27
 

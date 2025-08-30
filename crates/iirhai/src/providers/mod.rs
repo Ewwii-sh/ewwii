@@ -7,17 +7,18 @@
     for providing data or doing certain actions.
 */
 
-mod apilib;
 mod builtin_signals;
 mod helper;
 mod stdlib;
+mod apilib;
 
 use crate::module_resolver::{ChainedResolver, SimpleFileResolver};
 use rhai::module_resolvers::StaticModuleResolver;
 
-use apilib::register_apilib;
 use builtin_signals::register_all_signals;
-use stdlib::register_stdlib;
+// expose the api's publically
+pub use stdlib::register_stdlib;
+pub use apilib::register_apilib;
 
 pub fn register_all_providers(engine: &mut rhai::Engine) {
     let mut resolver = StaticModuleResolver::new();
