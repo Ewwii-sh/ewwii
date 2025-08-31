@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-// use ewwii_shared_util::{AttrName, VarName};
+// use shared_utils::{AttrName, VarName};
 // use std::collections::HashMap;
 // use rhai::Map;
 

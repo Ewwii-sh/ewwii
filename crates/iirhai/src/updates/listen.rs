@@ -14,7 +14,7 @@
 */
 
 use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
-use ewwii_shared_util::general_helper::*;
+use shared_utils::extract_props::*;
 use nix::{
     sys::signal,
     unistd::{setpgid, Pid},

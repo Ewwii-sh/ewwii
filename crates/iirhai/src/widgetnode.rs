@@ -208,7 +208,7 @@ pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
 
     props.len().hash(&mut hasher);
 
-    let get_string_fn = ewwii_shared_util::general_helper::get_string_prop;
+    let get_string_fn = shared_utils::extract_props::get_string_prop;
     let dyn_id = get_string_fn(&props, "dyn_id", Some("")).unwrap_or("".to_string());
 
     dyn_id.hash(&mut hasher);

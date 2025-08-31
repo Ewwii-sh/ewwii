@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-// use ewwii_shared_util::VarName;
+// use shared_utils::VarName;
 use serde::{Deserialize, Serialize};
 
 use crate::{
