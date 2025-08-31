@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use codespan_reporting::files::Files;
-// use ewwii_shared_util::Span;
+// use shared_utils::Span;
 use crate::diag_error::DiagError;
 
 #[derive(Debug, Clone, Default)]

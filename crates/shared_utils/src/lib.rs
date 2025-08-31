@@ -1,4 +1,4 @@
-pub mod general_helper;
+pub mod extract_props;
 pub mod locale;
 pub mod span;
 pub mod wrappers;

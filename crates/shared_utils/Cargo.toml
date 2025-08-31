@@ -1,5 +1,5 @@
 [package]
-name = "ewwii_shared_util"
+name = "shared_utils"
 version = "0.1.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"

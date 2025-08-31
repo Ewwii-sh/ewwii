@@ -12,7 +12,7 @@ use iirhai::widgetnode::{get_id_to_widget_info, hash_props_and_type, WidgetNode}
 use rhai::Map;
 
 use super::widget_definitions_helper::*;
-use ewwii_shared_util::general_helper::*;
+use shared_utils::extract_props::*;
 use std::{
     cell::RefCell,
     collections::HashMap,

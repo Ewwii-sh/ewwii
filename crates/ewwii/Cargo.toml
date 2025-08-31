@@ -15,22 +15,18 @@ x11 = ["gdkx11", "x11rb"]
 wayland = ["gtk-layer-shell"]
 
 [dependencies]
-ewwii_shared_util.workspace = true
+shared_utils.workspace = true
 iirhai.workspace = true
-notifier_host.workspace = true
 
 gtk-layer-shell = { version = "0.8.1", optional = true, features=["v0_6"] }
 gdkx11 = { version = "0.18", optional = true }
 x11rb = { version = "0.13.1", features = ["randr"], optional = true }
 gdk-sys = "0.18.0"
 
-ordered-stream = "0.2.0"
-
 grass.workspace = true
 thiserror.workspace = true
 anyhow.workspace = true
 bincode.workspace = true
-chrono.workspace = true
 static_assertions.workspace = true
 clap = { workspace = true, features = ["derive"] }
 clap_complete.workspace = true
@@ -41,9 +37,7 @@ futures.workspace = true
 smart-default.workspace = true
 gtk.workspace = true
 itertools.workspace = true
-libc.workspace = true
 log.workspace = true
-maplit.workspace = true
 nix = { workspace = true, features = ["process", "fs", "signal"] }
 notify.workspace = true
 once_cell.workspace = true
@@ -52,12 +46,9 @@ regex.workspace = true
 serde_json.workspace = true
 serde = { workspace = true, features = ["derive"] }
 simple-signal.workspace = true
-sysinfo = { workspace = true }
-tokio-util.workspace = true
 tokio = { workspace = true, features = ["full"] }
 unescape.workspace = true
 wait-timeout.workspace = true
-zbus = { workspace = true, default-features = false, features = ["tokio"] }
 rhai.workspace = true
 
 [dev-dependencies]

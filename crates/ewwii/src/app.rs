@@ -24,7 +24,7 @@ use crate::{
 };
 use anyhow::{anyhow, bail};
 use codespan_reporting::files::Files;
-use ewwii_shared_util::Span;
+use shared_utils::Span;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
