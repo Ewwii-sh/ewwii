@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 -   Ewwii creating zombie process on opening window.
 -   Ewwii shutting down all poll/listen handlers when any window closes.
+-   Broken `%` based width/height in window definition.
 
 ### Removed
 
