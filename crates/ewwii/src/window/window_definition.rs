@@ -1,4 +1,4 @@
-use crate::cstm_enum_parse;
+use crate::enum_parse;
 use std::fmt::Display;
 
 #[derive(Debug, thiserror::Error)]
@@ -34,7 +34,7 @@ impl std::str::FromStr for WindowStacking {
     type Err = EnumParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        cstm_enum_parse! { "WindowStacking", s,
+        enum_parse! { "WindowStacking", s,
             "foreground" | "fg" => WindowStacking::Foreground,
             "background" | "bg" => WindowStacking::Background,
             "bottom" | "bt" => WindowStacking::Bottom,
