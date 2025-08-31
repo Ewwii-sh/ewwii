@@ -8,20 +8,7 @@ use std::{fmt, str::FromStr};
 
 use super::window_definition::EnumParseError;
 use crate::window::coords::{Error, NumWithUnit};
-
-#[macro_export]
-macro_rules! cstm_enum_parse {
-    ($name:literal, $input:expr, $($($s:literal)|* => $val:expr),* $(,)?) => {
-        let input = $input.to_lowercase();
-        match input.as_str() {
-            $( $( $s )|* => Ok($val) ),*,
-            _ => Err(EnumParseError {
-                input,
-                expected: vec![$($($s),*),*],
-            })
-        }
-    };
-}
+use crate::enum_parse;
 
 /// A pair of [NumWithUnit] values for x and y
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Display, Debug, Default)]
@@ -81,14 +68,14 @@ pub enum AnchorAlignment {
 
 impl AnchorAlignment {
     pub fn from_x_alignment(s: &str) -> Result<Self, EnumParseError> {
-        cstm_enum_parse! { "x-alignment", s,
+        enum_parse! { "x-alignment", s,
             "l" | "left" => AnchorAlignment::START,
             "c" | "center" => AnchorAlignment::CENTER,
             "r" | "right" => AnchorAlignment::END,
         }
     }
     pub fn from_y_alignment(s: &str) -> Result<Self, EnumParseError> {
-        cstm_enum_parse! { "y-alignment", s,
+        enum_parse! { "y-alignment", s,
             "t" | "top" => AnchorAlignment::START,
             "c" | "center" => AnchorAlignment::CENTER,
             "b" | "bottom" => AnchorAlignment::END,
