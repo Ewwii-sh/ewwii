@@ -46,7 +46,10 @@ macro_rules! enum_parse {
         let input = $input.to_lowercase();
         match input.as_str() {
             $( $( $s )|* => Ok($val) ),*,
-            _ => Err(anyhow!(concat!("Couldn't parse ", $name, ": '{}'. Possible values are ", $($($s, " "),*),*), input))
+            _ => Err(EnumParseError {
+                input,
+                expected: vec![$($($s),*),*],
+            })
         }
     };
 }
