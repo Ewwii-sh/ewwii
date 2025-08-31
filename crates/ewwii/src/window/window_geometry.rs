@@ -59,10 +59,10 @@ impl Coords {
 }
 
 impl NumWithUnit {
-    pub fn to_pixels(&self, container_size: i32) -> i32 {
-        match self {
-            NumWithUnit::Pixels(px) => *px,
-            NumWithUnit::Percent(p) => ((*p as f64) * container_size as f64).round() as i32,
+    pub fn to_pixels(&self, max: i32) -> i32 {
+        match *self {
+            NumWithUnit::Percent(n) => ((max as f64 / 100.0) * n as f64).round() as i32,
+            NumWithUnit::Pixels(n) => n,
         }
     }
 }
@@ -148,8 +148,6 @@ impl WindowGeometry {
         &self,
         anchor_point: Option<AnchorPoint>,
         offset: Option<Coords>,
-        // if you are wondering why this is coords, ig that its because they watned to
-        // reuse coords? I dont know. It works so I am keeping it.
         size: Option<Coords>,
     ) -> Self {
         WindowGeometry {
