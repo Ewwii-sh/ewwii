@@ -1,7 +1,7 @@
 //! Linux API crate
 
 use libc::{c_char, statvfs};
-use rhai::{plugin::*, EvalAltResult, Dynamic, Map, Array};
+use rhai::{plugin::*, Array, Dynamic, EvalAltResult, Map};
 use std::ffi::CString;
 use std::fs;
 use std::path::Path;
@@ -98,7 +98,7 @@ pub mod linux {
     pub fn get_cpu_info() -> Result<Array, Box<EvalAltResult>> {
         let content = fs::read_to_string("/proc/cpuinfo")
             .map_err(|e| format!("Failed to read /proc/cpuinfo: {}", e))?;
-        
+
         let mut cpus = Array::new();
         let mut core_id = 0;
 
@@ -225,7 +225,7 @@ pub mod linux {
                     let device_path = e.path().join("device");
                     let mut gpu = Map::new();
 
-                    // vendor ID 
+                    // vendor ID
                     let vendor = fs::read_to_string(device_path.join("vendor"))
                         .unwrap_or_else(|_| "unknown".to_string())
                         .trim()
@@ -255,7 +255,6 @@ pub mod linux {
 
         Ok(gpus)
     }
-
 
     /// Get the device disk information.
     ///
@@ -296,8 +295,7 @@ pub mod linux {
             }
         }
 
-        let c_path = CString::new(mountpoint)
-            .map_err(|e| format!("Invalid mountpoint: {}", e))?;
+        let c_path = CString::new(mountpoint).map_err(|e| format!("Invalid mountpoint: {}", e))?;
         let mut stat: statvfs = unsafe { std::mem::zeroed() };
         let res = unsafe { statvfs(c_path.as_ptr() as *const c_char, &mut stat) };
         if res != 0 {
