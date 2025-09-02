@@ -10,8 +10,8 @@ use codespan_reporting::{
     diagnostic::Diagnostic,
     term::{self, Chars},
 };
-use shared_utils::Span;
 use once_cell::sync::Lazy;
+use shared_utils::Span;
 
 pub static FILE_DATABASE: Lazy<Arc<RwLock<FileDatabase>>> =
     Lazy::new(|| Arc::new(RwLock::new(FileDatabase::new())));

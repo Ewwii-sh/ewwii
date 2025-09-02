@@ -1,6 +1,6 @@
-use shared_utils::{Span, Spanned};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use shared_utils::{Span, Spanned};
 use std::{convert::TryFrom, fmt, iter::FromIterator};
 
 pub type Result<T> = std::result::Result<T, ConversionError>;
