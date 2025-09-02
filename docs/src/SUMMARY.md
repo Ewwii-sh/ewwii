@@ -5,7 +5,6 @@
 -   [Getting Started](getting_started.md)
 
     -   [Installation](installation.md)
-    -   [Optional: Statictranspl](statictranspl.md)
 
 -   [Configuration & Syntax](config/config_and_syntax.md)
 
