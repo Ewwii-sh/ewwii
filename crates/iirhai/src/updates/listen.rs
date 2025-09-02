@@ -14,12 +14,12 @@
 */
 
 use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
-use shared_utils::extract_props::*;
 use nix::{
     sys::signal,
     unistd::{setpgid, Pid},
 };
 use rhai::Map;
+use shared_utils::extract_props::*;
 use std::process::Stdio;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;

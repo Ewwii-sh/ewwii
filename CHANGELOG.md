@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   SIGINT and SIGTERM catching to KILL AND OBLITERATE children cleanly.
 -   Proper poll/listen handler setup in `open_window(...)`.
 -   Cleaner poll/listen handler shutdown on `ewwii close`.
+-   `api::linux` for getting system information like `cpu`, `gpu`, `ram`, `disk`, `kernel version` etc.
 
 ### Changed
 
