@@ -15,8 +15,8 @@
 */
 
 use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
-use shared_utils::extract_props::*;
 use rhai::Map;
+use shared_utils::extract_props::*;
 use std::time::Duration;
 use tokio::process::Command;
 use tokio::sync::watch;

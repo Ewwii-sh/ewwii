@@ -7,8 +7,8 @@ use smart_default::SmartDefault;
 use std::{fmt, str::FromStr};
 
 use super::window_definition::EnumParseError;
-use crate::window::coords::{Error, NumWithUnit};
 use crate::enum_parse;
+use crate::window::coords::{Error, NumWithUnit};
 
 /// A pair of [NumWithUnit] values for x and y
 #[derive(Clone, Copy, PartialEq, Deserialize, Serialize, Display, Debug, Default)]
