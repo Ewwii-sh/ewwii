@@ -24,7 +24,6 @@ use crate::{
 };
 use anyhow::{anyhow, bail};
 use codespan_reporting::files::Files;
-use shared_utils::Span;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
@@ -32,6 +31,7 @@ use iirhai::widgetnode::WidgetNode;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::Dynamic;
+use shared_utils::Span;
 use std::{
     cell::{Cell, RefCell},
     collections::{HashMap, HashSet},
