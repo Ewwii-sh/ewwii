@@ -120,35 +120,3 @@ fn will_work(time, foo) { // time and foo is passed from `enter([])`
   return box(#{}, [ label(#{ text: time }), label(#{ text: foo }) ]);
 }
 ```
-
-## dyn_id
-
-`dyn_id`'s are one of the most important properties of all. It is the property that decides if a widget should get updated dynamic or not.
-
-`dyn_id` property is used to assign an id to a widget which the system will track to update if there is a change in property under the same id.
-
-**Example usage:**
-
-```js
-fn foo(foo_var) {
-  return box(#{}, [
-    label(#{ text: foo_var, dyn_id: "foo_var_user" }); // dyn_id used to make label dynamic
-  ]);
-}
-
-enter([
-  poll("foo", #{
-    cmd: "echo baz",
-    initial: "",
-    interval: "1s"
-  }),
-
-  defwindow("bar", #{
-    // .. properties omitted
-  }, bar(foo)),
-])
-```
-
-Here, when the variable foo changes, the text of label changes as well. If there is no `dyn_id` defined, then ewwii will ingore that change. But if it is defined with a unique value, then it will find the widget that is defined with the id that matches dyn_id and then update its text property which will result in a change in the UI.
-
-> **Tip:** Always add a `dyn_id` to every single widget that you create if you are working with a dynamic system, as this method will avoid many surprises.

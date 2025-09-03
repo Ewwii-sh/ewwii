@@ -27,9 +27,8 @@ fn animalButton(emoji, selected) {
             class: class,
             cursor: "pointer",
             onclick: "echo " + emoji + " >> /tmp/selected_emoji.txt",
-            dyn_id: "dyn_eventbox_" + emoji,  // unique per emoji
         }, [
-            label(#{ text: emoji, dyn_id: "dyn_label_" + emoji })  // unique per emoji
+            label(#{ text: emoji })  // unique per emoji
         ])
     ]);
 }

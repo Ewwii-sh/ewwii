@@ -4,6 +4,7 @@
 
 pub mod ast;
 pub mod builtins;
+mod dyn_id;
 pub mod error;
 pub mod helper;
 pub mod module_resolver;
