@@ -1,4 +1,4 @@
-use crate::widgetnode::WidgetNode;
+use crate::ast::WidgetNode;
 use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
 
 /// Converts a Dynamic array into a Vec<WidgetNode>, returning proper errors with position.
