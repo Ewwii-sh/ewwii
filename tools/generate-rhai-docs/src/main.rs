@@ -1,4 +1,4 @@
-use iirhai::providers;
+use rhai_impl::providers;
 use rhai::{Engine, module_resolvers::StaticModuleResolver};
 use rhai_autodocs::{export::options, generate::mdbook};
 use std::{env, fs, path::Path};

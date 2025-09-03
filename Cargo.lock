@@ -590,7 +590,6 @@ dependencies = [
  "grass",
  "gtk",
  "gtk-layer-shell",
- "iirhai",
  "itertools",
  "log",
  "nix",
@@ -600,6 +599,7 @@ dependencies = [
  "pretty_env_logger",
  "regex",
  "rhai",
+ "rhai_impl",
  "serde",
  "serde_json",
  "shared_utils",
@@ -839,9 +839,9 @@ dependencies = [
 name = "generate-rhai-docs"
 version = "0.1.0"
 dependencies = [
- "iirhai",
  "rhai",
  "rhai-autodocs",
+ "rhai_impl",
 ]
 
 [[package]]
@@ -1174,26 +1174,6 @@ name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
-
-[[package]]
-name = "iirhai"
-version = "0.1.0"
-dependencies = [
- "ahash",
- "anyhow",
- "colored",
- "gtk",
- "libc",
- "log",
- "nix",
- "once_cell",
- "rhai",
- "serde",
- "shared_utils",
- "termsize",
- "textwrap",
- "tokio",
-]
 
 [[package]]
 name = "indexmap"
@@ -1858,6 +1838,26 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.87",
+]
+
+[[package]]
+name = "rhai_impl"
+version = "0.1.0"
+dependencies = [
+ "ahash",
+ "anyhow",
+ "colored",
+ "gtk",
+ "libc",
+ "log",
+ "nix",
+ "once_cell",
+ "rhai",
+ "serde",
+ "shared_utils",
+ "termsize",
+ "textwrap",
+ "tokio",
 ]
 
 [[package]]
