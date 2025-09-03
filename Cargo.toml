@@ -5,7 +5,7 @@ resolver = "2"
 [workspace.dependencies]
 
 shared_utils = { version = "0.1.0", path = "crates/shared_utils" }
-iirhai = { version = "0.1.0", path = "crates/iirhai" }
+rhai_impl = { version = "0.1.0", path = "crates/rhai_impl" }
 
 anyhow = "1.0.86"
 ahash = "0.8.12"

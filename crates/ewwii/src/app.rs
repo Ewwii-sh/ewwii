@@ -27,7 +27,7 @@ use codespan_reporting::files::Files;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
-use iirhai::ast::WidgetNode;
+use rhai_impl::ast::WidgetNode;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::Dynamic;
@@ -316,7 +316,7 @@ impl<B: DisplayBackend> App<B> {
     /// Fully stop ewwii:
     /// close all windows, stop the script_var_handler, quit the gtk appliaction and send the exit instruction to the lifecycle manager
     fn stop_application(&mut self) {
-        iirhai::updates::kill_state_change_handler();
+        rhai_impl::updates::kill_state_change_handler();
         for (_, window) in self.open_windows.drain() {
             window.close();
         }
@@ -350,7 +350,7 @@ impl<B: DisplayBackend> App<B> {
 
         // stop poll/listen handlers if no windows are open
         if self.open_windows.is_empty() {
-            iirhai::updates::kill_state_change_handler();
+            rhai_impl::updates::kill_state_change_handler();
         }
 
         Ok(())
@@ -403,7 +403,7 @@ impl<B: DisplayBackend> App<B> {
             let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-            let mut stored_parser = iirhai::parser::ParseConfig::new();
+            let mut stored_parser = rhai_impl::parser::ParseConfig::new();
 
             let widget_reg_store = widget_reg_store.clone();
 
@@ -417,7 +417,7 @@ impl<B: DisplayBackend> App<B> {
             // I just cant find the perfect place where it can live
             // so I guess that I will just let it stay right here.
             if self.open_windows.is_empty() {
-                let store = iirhai::updates::handle_state_changes(
+                let store = rhai_impl::updates::handle_state_changes(
                     self.ewwii_config.get_root_node()?.as_ref(),
                     tx,
                 );
@@ -745,7 +745,7 @@ fn initialize_window<B: DisplayBackend>(
     })
 }
 
-use iirhai::parser::ParseConfig;
+use rhai_impl::parser::ParseConfig;
 
 async fn generate_new_widgetnode(
     all_vars: &HashMap<String, String>,
