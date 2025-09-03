@@ -1,7 +1,6 @@
 use anyhow::{bail, Context, Result};
 use std::collections::HashMap;
 use std::rc::Rc;
-
 use crate::{
     // ipc_server,
     // error_handling_ctx,
@@ -9,8 +8,7 @@ use crate::{
     window::backend_window_options::BackendWindowOptionsDef,
 };
 
-use iirhai::{parser::ParseConfig, widgetnode::WidgetNode};
-
+use iirhai::{parser::ParseConfig, ast::WidgetNode};
 use rhai::{Map, AST};
 
 // use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
