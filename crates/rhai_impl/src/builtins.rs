@@ -23,7 +23,7 @@ fn children_to_vec(
 pub fn register_all_widgets(engine: &mut Engine) {
     engine.register_type::<WidgetNode>();
 
-    // --- Primitive widgets ---
+    // == Primitive widgets ==
     macro_rules! register_primitive {
         ($name:expr, $variant:ident) => {
             engine.register_fn($name, |props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
@@ -47,7 +47,7 @@ pub fn register_all_widgets(engine: &mut Engine) {
     register_primitive!("color_button", ColorButton);
     register_primitive!("color_chooser", ColorChooser);
 
-    // --- Widgets with children ---
+    // == Widgets with children ==
     macro_rules! register_with_children {
         ($name:expr, $variant:ident) => {
             engine.register_fn(
@@ -73,7 +73,7 @@ pub fn register_all_widgets(engine: &mut Engine) {
     register_with_children!("eventbox", EventBox);
     register_with_children!("tooltip", ToolTip);
 
-    // --- Top-level macros ---
+    // == Top-level macros ==
     engine.register_fn(
         "defwindow",
         |name: &str, props: Map, node: WidgetNode| -> Result<WidgetNode, Box<EvalAltResult>> {

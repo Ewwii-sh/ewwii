@@ -27,10 +27,10 @@ use codespan_reporting::files::Files;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
-use rhai_impl::ast::WidgetNode;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::Dynamic;
+use rhai_impl::ast::WidgetNode;
 use shared_utils::Span;
 use std::{
     cell::{Cell, RefCell},
