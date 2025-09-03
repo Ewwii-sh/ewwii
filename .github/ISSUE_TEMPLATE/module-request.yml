@@ -1,0 +1,23 @@
+name: Module request
+description: Suggest an new Rhai Module
+title: "[Module] "
+labels: [module-request]
+body:
+    - type: textarea
+      attributes:
+          label: "Description of the module"
+          description: "Provide an explanation of the module."
+      validations:
+          required: true
+    - type: textarea
+      attributes:
+          label: "Example usage"
+          description: "Provide an example snippet of configuration showcasing how the module could be used, including the functions the module should support. For anything non-obvious, include an explanation of how the functions should behave."
+      validations:
+          required: false
+    - type: textarea
+      attributes:
+          label: "Additional context"
+          description: "Provide any additional context if applicable."
+      validations:
+          required: false
