@@ -8,8 +8,8 @@ use gtk::glib::translate::FromGlib;
 use gtk::prelude::LabelExt;
 use gtk::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{gdk, glib, pango};
-use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 use rhai::Map;
+use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
 use super::widget_definitions_helper::*;
 use shared_utils::extract_props::*;

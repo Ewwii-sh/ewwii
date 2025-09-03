@@ -1,10 +1,10 @@
 use crate::{
+    ast::WidgetNode,
     builtins::register_all_widgets,
     error::{format_eval_error, format_parse_error},
     helper::extract_poll_and_listen_vars,
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
-    ast::WidgetNode,
 };
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, Scope, AST};
@@ -32,9 +32,12 @@ impl ParseConfig {
 
     pub fn eval_code(&mut self, code: &str) -> Result<WidgetNode> {
         let mut scope = Scope::new();
-        self.engine
+        let node = self
+            .engine
             .eval_with_scope::<WidgetNode>(&mut scope, code)
-            .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))
+            .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?;
+
+        Ok(node.setup_for_rt("root"))
     }
 
     pub fn compile_code(&mut self, code: &str) -> Result<AST> {
@@ -52,16 +55,18 @@ impl ParseConfig {
             None => Scope::new(),
         };
 
-        match compiled_ast {
+        let node = match compiled_ast {
             Some(ast) => self
                 .engine
                 .eval_ast_with_scope::<WidgetNode>(&mut scope, &ast)
-                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine))),
+                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?,
             None => self
                 .engine
                 .eval_with_scope::<WidgetNode>(&mut scope, code)
-                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine))),
-        }
+                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?,
+        };
+
+        Ok(node.setup_for_rt("root"))
     }
 
     pub fn code_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<String> {

@@ -12,9 +12,8 @@ fn sidestuff(volume, time) {
       label: "🔊",
       value: volume,
       onchange: "pamixer --set-volume {}",
-      dyn_id: "volume_metric"
     }),
-    label(#{ text: time, dyn_id: "current_time" })
+    label(#{ text: time })
   ]);
 }
 
@@ -52,7 +51,7 @@ fn music(music_var) {
     space_evenly: false,
     halign: "center"
   }, [
-    label(#{ text: label_text, dyn_id: "music_bar" }),
+    label(#{ text: label_text }),
   ]);
 }
 
@@ -60,8 +59,6 @@ fn metric(props) {
   let label_prop = props.label;
   let value_prop = props.value;
   let onchange_prop = props.onchange;
-  let dyn_id_prop = props.dyn_id;
-
 
   return box(#{
     orientation: "h",
@@ -75,7 +72,6 @@ fn metric(props) {
       active: onchange_prop != "",
       value: value_prop,
       onchange: onchange_prop,
-      dyn_id: dyn_id_prop
     }),
   ]);
 }

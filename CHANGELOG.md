@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Deprecated attribute warning which cluttered the logs.
 -   `std::json` (Rhai has built in json support).
 -   `std::math` (Rhai already convers everything that it has).
+-   The need for `dyn_id` for dynamic system.
 
 ## [0.1.0-beta] - 2025-08-27
 
