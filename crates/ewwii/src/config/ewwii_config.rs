@@ -8,7 +8,7 @@ use crate::{
     window::backend_window_options::BackendWindowOptionsDef,
 };
 
-use iirhai::{parser::ParseConfig, ast::WidgetNode};
+use rhai_impl::{parser::ParseConfig, ast::WidgetNode};
 use rhai::{Map, AST};
 
 // use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
