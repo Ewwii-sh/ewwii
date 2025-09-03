@@ -6,7 +6,7 @@ A basic starter bar which will be very helpful to beginners, see [examples/ewwii
 
 ## Installing
 
-This starter bar is installable via [eiipm](https://ewwii-sh.github.io/docs/package-manager/overview/): ewwii's package manager.
+This template is regestered in the [eii-manifests](https://github.com/Ewwii-sh/eii-manifests), so you can install it via [eiipm](https://ewwii-sh.github.io/docs/package-manager/overview/): ewwii's package manager.
 
 Just run the following command and have the template ready in the current working directory in an instant!
 
