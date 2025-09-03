@@ -8,7 +8,7 @@ use gtk::glib::translate::FromGlib;
 use gtk::prelude::LabelExt;
 use gtk::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk::{gdk, glib, pango};
-use iirhai::widgetnode::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
+use iirhai::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 use rhai::Map;
 
 use super::widget_definitions_helper::*;

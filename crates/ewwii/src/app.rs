@@ -27,7 +27,7 @@ use codespan_reporting::files::Files;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk::{gdk, glib};
-use iirhai::widgetnode::WidgetNode;
+use iirhai::ast::WidgetNode;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::Dynamic;
