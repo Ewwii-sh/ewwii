@@ -3,7 +3,7 @@ use gtk::gdk::prelude::Cast;
 
 use crate::{config::WindowDefinition, widgets::widget_definitions::*};
 
-use iirhai::ast::WidgetNode;
+use rhai_impl::ast::WidgetNode;
 
 /// Widget input allows us to pass either a widgetnode or a window_def
 /// this is important to make build_gtk_widget standalone without having to
