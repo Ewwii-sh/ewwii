@@ -36,8 +36,7 @@
 -   [Examples](examples/examples.md)
 
     -   [Starter Bar](examples/starter_bar.md)
-    -   [Interactive Widgets](examples/interactive.md)
-    -   [Theming Tricks](examples/theming.md)
+    -   [Wifi Manager Template](examples/wifi_manager.md)
 
 -   [Advanced Commands](commands/advanced_commands_intro.md)
 
