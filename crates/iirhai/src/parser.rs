@@ -4,7 +4,7 @@ use crate::{
     helper::extract_poll_and_listen_vars,
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
-    widgetnode::WidgetNode,
+    ast::WidgetNode,
 };
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, Scope, AST};

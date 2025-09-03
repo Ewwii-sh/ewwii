@@ -17,7 +17,7 @@
 mod listen;
 mod poll;
 
-use crate::widgetnode::WidgetNode;
+use crate::ast::WidgetNode;
 use listen::handle_listen;
 use once_cell::sync::Lazy;
 use poll::handle_poll;
