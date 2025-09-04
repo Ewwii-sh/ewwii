@@ -1,7 +1,8 @@
 # Writing your ewwii configuration
 
-(For a list of all built-in widgets (i.e. `box`, `label`, `button`), see [Widget Documentation](../widgets/widgets.md).)\
-Ewwii is configured using its own language called `rhai`.
+(For a list of all built-in widgets (i.e. `box`, `label`, `button`), see [Widget Documentation](../widgets/widgets.md).)
+
+Ewwii is configured using a language called `Rhai`.
 Using rhai, you declare the structure and content of your widgets, the geometry, position, and behavior of any windows,
 as well as any state and data that will be used in your widgets.
 Rhai is based around imparative syntax, which you may know from programming languages like C, Rust etc.
