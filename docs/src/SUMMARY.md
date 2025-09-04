@@ -9,11 +9,15 @@
 -   [Configuration & Syntax](config/config_and_syntax.md)
 
     -   [Configuration](config/configuration.md)
-    -   [Rendering and Best Practices](config/rendering_and_best_practices.md)
     -   [Fundamentals](config/config_fundamentals.md)
     -   [Variables](config/variables.md)
     -   [Expression Language](config/expression_language.md)
-    <!-- -   [Magic Variables](magic-vars.md) -->
+    -   [Rendering and Best Practices](config/rendering_and_best_practices.md)
+
+-   [Widgets](widgets/widgets.md)
+
+    -   [Widgets & Parameters](widgets/widgets_and_params.md)
+    -   [Widget Properties](widgets/props.md)
 
 -   [Theming & UI](theming/theming_and_ui.md)
 
@@ -26,11 +30,6 @@
     -   [Global Builtin Rhai Functions](modules/global.md)
     -   [Std Library](modules/stdlib.md)
     -   [API Library](modules/apilib.md)
-
--   [Widgets](widgets/widgets.md)
-
-    -   [Widgets & Parameters](widgets/widgets_and_params.md)
-    -   [Widget Properties](widgets/props.md)
 
 -   [Examples](examples/examples.md)
 
