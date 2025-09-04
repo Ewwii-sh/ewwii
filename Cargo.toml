@@ -58,7 +58,6 @@ textwrap = "0.16.2"
 termsize = "0.1.9"
 unescape = "0.1"
 wait-timeout = "0.2"
-colored = "3.0.0"
 
 [profile.dev]
 split-debuginfo = "unpacked"

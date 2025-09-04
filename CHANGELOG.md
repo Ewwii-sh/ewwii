@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 -   Changed `std::monitor` return values so that it will work fine with Rhai.
+-   Error handling so that it uses [rhai_trace](https://github.com/byson94/rhai_trace) and [codespan-reporting](https://github.com/brendanzab/codespan) for more user-friendly and pretty errors.
 
 ### Fixed
 
