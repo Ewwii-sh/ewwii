@@ -1,5 +1,6 @@
 use crate::error::{format_eval_error, format_parse_error};
-use rhai::{Engine, EvalAltResult, Module, ModuleResolver, Position, Scope, AST};
+use crate::parser::ParseConfig;
+use rhai::{Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
 use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -47,7 +48,12 @@ impl ModuleResolver for SimpleFileResolver {
             log::error!("{}", format_parse_error(&e, &script));
             e
         })?;
-        let scope = Scope::new();
+        let scope = ParseConfig::initial_poll_listen_scope(&script).map_err(|e| {
+            EvalAltResult::ErrorSystem(
+                format!("error setting up default variables: {full_path:?}"),
+                e.into(),
+            )
+        })?;
         let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {
             log::error!("{}", format_eval_error(&e, &script, engine));
             e
