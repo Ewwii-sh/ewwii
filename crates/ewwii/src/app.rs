@@ -83,6 +83,7 @@ pub enum DaemonCommand {
     },
     CallRhaiFns {
         calls: Vec<String>,
+        sender: DaemonResponseSender,
     },
 }
 
@@ -306,8 +307,12 @@ impl<B: DisplayBackend> App<B> {
             DaemonCommand::TriggerUpdateUI { window, inject_vars } => {
                 let _ = self.trigger_ui_update_with(window, inject_vars)?;
             }
-            DaemonCommand::CallRhaiFns { calls } => {
-                let _ = self.call_rhai_fns(calls)?;
+            DaemonCommand::CallRhaiFns { calls, sender } => {
+                let output = match self.call_rhai_fns(calls) {
+                    Ok(_) => String::new(),
+                    Err(e) => e.to_string(),
+                };
+                sender.send_success(output)?
             }
         }
         Ok(())
