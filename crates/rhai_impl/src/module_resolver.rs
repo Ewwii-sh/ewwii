@@ -71,12 +71,24 @@ impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<
         path: &str,
         pos: Position,
     ) -> Result<Rc<Module>, Box<EvalAltResult>> {
-        self.first.resolve(engine, source_path, path, pos).or_else(|e1| {
-            log::trace!(
-                "Error executing resolver 1, falling back to resolver 2. Error details: {}",
-                e1
-            );
-            self.second.resolve(engine, source_path, path, pos)
-        })
+        match self.first.resolve(engine, source_path, path, pos) {
+            Ok(m) => Ok(m),
+            Err(e1) => {
+                log::trace!(
+                    "Error executing resolver 1, falling back to resolver 2. Error details: {}",
+                    e1
+                );
+                match self.second.resolve(engine, source_path, path, pos) {
+                    Ok(m) => Ok(m),
+                    Err(e2) => Err(Box::new(EvalAltResult::ErrorSystem(
+                        format!(
+                            "Both resolvers failed; first: {}, second (possibly unrelated): {}",
+                            e1, e2
+                        ),
+                        Box::new(e2),
+                    ))),
+                }
+            }
+        }
     }
 }
