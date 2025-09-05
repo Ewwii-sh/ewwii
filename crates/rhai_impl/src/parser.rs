@@ -10,34 +10,31 @@ use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, Scope, AST};
 use std::fs;
 use std::path::Path;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 pub struct ParseConfig {
     engine: Engine,
-    // scope: Scope<'a>,
+    all_nodes: Rc<RefCell<Vec<WidgetNode>>>,
 }
 
 impl ParseConfig {
     pub fn new() -> Self {
         let mut engine = Engine::new();
-        // let scope = Scope::new();
+        let all_nodes = Rc::new(RefCell::new(Vec::new()));
 
         engine.set_max_expr_depths(128, 128);
         engine.set_module_resolver(SimpleFileResolver);
 
-        register_all_widgets(&mut engine);
+        register_all_widgets(&mut engine, &all_nodes);
         register_all_providers(&mut engine);
 
-        Self { engine }
+        Self { engine, all_nodes }
     }
 
     pub fn eval_code(&mut self, code: &str) -> Result<WidgetNode> {
-        let mut scope = Scope::new();
-        let node = self
-            .engine
-            .eval_with_scope::<WidgetNode>(&mut scope, code)
-            .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?;
-
-        Ok(node.setup_for_rt("root"))
+        let ast = self.engine.compile(code)?;
+        self.eval_code_with(code, None, Some(&ast))
     }
 
     pub fn compile_code(&mut self, code: &str) -> Result<AST> {
@@ -55,18 +52,38 @@ impl ParseConfig {
             None => Scope::new(),
         };
 
-        let node = match compiled_ast {
-            Some(ast) => self
+        // Just eval as node will be in `all_nodes`
+        if let Some(ast) = compiled_ast {
+            let _ = self
                 .engine
-                .eval_ast_with_scope::<WidgetNode>(&mut scope, &ast)
-                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?,
-            None => self
+                .eval_ast_with_scope::<Dynamic>(&mut scope, &ast)
+                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?;
+        } else {
+            let _ = self
                 .engine
-                .eval_with_scope::<WidgetNode>(&mut scope, code)
-                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?,
+                .eval_with_scope::<Dynamic>(&mut scope, code)
+                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?;
         };
 
-        Ok(node.setup_for_rt("root"))
+        // Merge all nodes in all_nodes (`enter([])`) into a single root node
+        let merged_node = {
+            let mut all_nodes_vec = self.all_nodes.borrow_mut();
+
+            let mut merged_children = Vec::new();
+            for node in all_nodes_vec.drain(..) {
+                match node {
+                    WidgetNode::Enter(children) => merged_children.extend(children),
+                    // I think that the following line is redundant as 
+                    // it will be enter(..) 100% of the time. But, what if it 
+                    // is an empty enter or smth? Idk.. it works... so I'll keep it.
+                    other => merged_children.push(other), 
+                }
+            }
+
+            WidgetNode::Enter(merged_children)
+        };
+
+        Ok(merged_node.setup_for_rt("root"))
     }
 
     pub fn code_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<String> {
