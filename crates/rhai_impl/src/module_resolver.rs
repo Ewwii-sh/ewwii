@@ -71,10 +71,10 @@ impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<
         path: &str,
         pos: Position,
     ) -> Result<Rc<Module>, Box<EvalAltResult>> {
-        self.first.resolve(engine, source_path, path, pos).or_else(|e| {
+        self.first.resolve(engine, source_path, path, pos).or_else(|e1| {
             log::trace!(
                 "Error executing resolver 1, falling back to resolver 2. Error details: {}",
-                e
+                e1
             );
             self.second.resolve(engine, source_path, path, pos)
         })

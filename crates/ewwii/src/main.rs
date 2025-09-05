@@ -77,7 +77,7 @@ fn main() {
         pretty_env_logger::formatted_timed_builder()
             .filter(Some("ewwii"), log_level_filter)
             .filter(Some("notifier_host"), log_level_filter)
-            .filter(Some("iirhai"), log_level_filter)
+            .filter(Some("rhai_impl"), log_level_filter)
             .init();
     }
 
