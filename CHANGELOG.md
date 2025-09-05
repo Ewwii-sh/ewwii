@@ -13,11 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Proper poll/listen handler setup in `open_window(...)`.
 -   Cleaner poll/listen handler shutdown on `ewwii close`.
 -   `api::linux` for getting system information like `cpu`, `gpu`, `ram`, `disk`, `kernel version` etc.
+-   Support for defining multiple `enter([..])` at top level.
 
 ### Changed
 
 -   Changed `std::monitor` return values so that it will work fine with Rhai.
 -   Error handling so that it uses [rhai_trace](https://github.com/byson94/rhai_trace) and [codespan-reporting](https://github.com/brendanzab/codespan) for more user-friendly and pretty errors.
+-   Internal WidgetNode parsing so that user don't have to return anything (in rhai).
 
 ### Fixed
 
