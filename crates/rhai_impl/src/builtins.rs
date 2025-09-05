@@ -1,7 +1,7 @@
 use crate::ast::WidgetNode;
 use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 /// Converts a Dynamic array into a Vec<WidgetNode>, returning proper errors with position.
 fn children_to_vec(
