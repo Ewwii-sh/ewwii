@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Ewwii shutting down all poll/listen handlers when any window closes.
 -   Broken `%` based width/height in window definition.
 -   Default poll/listen variables not working in external modules.
+-   `call-fns` command not returning anything.
 
 ### Removed
 
