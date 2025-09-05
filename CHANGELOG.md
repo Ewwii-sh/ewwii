@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Broken `%` based width/height in window definition.
 -   Default poll/listen variables not working in external modules.
 -   `call-fns` command not returning anything.
+-   `poll/listen` definition extractor not skipping comments.
 
 ### Removed
 
