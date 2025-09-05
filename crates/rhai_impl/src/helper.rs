@@ -2,7 +2,6 @@ use crate::error::format_eval_error;
 use anyhow::Result;
 use rhai::Engine;
 
-// TODO: use the cmd of poll as the initial value of initial is not found.
 pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<String>)>> {
     let mut results = Vec::new();
     let mut engine = Engine::new();
@@ -27,10 +26,28 @@ pub fn extract_poll_and_listen_vars(code: &str) -> Result<Vec<(String, Option<St
 pub fn extract_poll_listen_exprs(code: &str) -> Vec<String> {
     let mut exprs = Vec::new();
     let mut i = 0;
-    // let code_bytes = code.as_bytes();
+    let code_bytes = code.as_bytes();
     let len = code.len();
 
     while i < len {
+        // skipping comments
+        if code[i..].starts_with("//") {
+            while i < len && code_bytes[i] as char != '\n' {
+                i += 1;
+            }
+            i += 1; // skipp a full line
+            continue;
+        }
+
+        if code[i..].starts_with("/*") {
+            i += 2;
+            while i + 1 < len && &code[i..i + 2] != "*/" {
+                i += 1;
+            }
+            i += 2; // skip till `*/` closing
+            continue;
+        }
+
         if code[i..].starts_with("poll(") || code[i..].starts_with("listen(") {
             let start = i;
             let mut depth = 0;
