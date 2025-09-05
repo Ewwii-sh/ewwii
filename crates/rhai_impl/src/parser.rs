@@ -8,10 +8,10 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, Scope, AST};
+use std::cell::RefCell;
 use std::fs;
 use std::path::Path;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 pub struct ParseConfig {
     engine: Engine,
@@ -73,10 +73,10 @@ impl ParseConfig {
             for node in all_nodes_vec.drain(..) {
                 match node {
                     WidgetNode::Enter(children) => merged_children.extend(children),
-                    // I think that the following line is redundant as 
-                    // it will be enter(..) 100% of the time. But, what if it 
+                    // I think that the following line is redundant as
+                    // it will be enter(..) 100% of the time. But, what if it
                     // is an empty enter or smth? Idk.. it works... so I'll keep it.
-                    other => merged_children.push(other), 
+                    other => merged_children.push(other),
                 }
             }
 

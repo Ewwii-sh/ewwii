@@ -1,18 +1,19 @@
-use rhai::{Engine, EvalAltResult, ParseError};
-use rhai_trace::{BetterError, Span};
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFiles;
 use codespan_reporting::term::{self, termcolor::Buffer};
+use rhai::{Engine, EvalAltResult, ParseError};
+use rhai_trace::{BetterError, Span};
 
 /// Return a formatted Rhai evaluation error.
 pub fn format_eval_error(error: &EvalAltResult, code: &str, engine: &Engine) -> String {
-    let better_error = BetterError::improve_eval_error(error, code, engine).unwrap_or(BetterError {
-        message: error.to_string(),
-        help: None,
-        hint: None,
-        note: None,
-        span: Span::new(0, 0, 0, 0)
-    });
+    let better_error =
+        BetterError::improve_eval_error(error, code, engine).unwrap_or(BetterError {
+            message: error.to_string(),
+            help: None,
+            hint: None,
+            note: None,
+            span: Span::new(0, 0, 0, 0),
+        });
     format_codespan_error(better_error, code)
 }
 
@@ -23,11 +24,10 @@ pub fn format_parse_error(error: &ParseError, code: &str) -> String {
         help: None,
         hint: None,
         note: None,
-        span: Span::new(0, 0, 0, 0)
+        span: Span::new(0, 0, 0, 0),
     });
     format_codespan_error(better_error, code)
 }
-
 
 /// Return a formatted error as a String
 pub fn format_codespan_error(be: BetterError, code: &str) -> String {
@@ -50,8 +50,7 @@ pub fn format_codespan_error(be: BetterError, code: &str) -> String {
     let diagnostic = Diagnostic::error()
         .with_message(&be.message)
         .with_labels(vec![
-            Label::primary(file_id, be.span.start()..be.span.end())
-                .with_message(&be.message),
+            Label::primary(file_id, be.span.start()..be.span.end()).with_message(&be.message)
         ])
         .with_notes(notes);
 
