@@ -1,5 +1,7 @@
 use crate::ast::WidgetNode;
 use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
+use std::rc::Rc;
+use std::cell::RefCell;
 
 /// Converts a Dynamic array into a Vec<WidgetNode>, returning proper errors with position.
 fn children_to_vec(
@@ -20,7 +22,7 @@ fn children_to_vec(
         .collect()
 }
 
-pub fn register_all_widgets(engine: &mut Engine) {
+pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<WidgetNode>>>) {
     engine.register_type::<WidgetNode>();
 
     // == Primitive widgets ==
@@ -92,11 +94,16 @@ pub fn register_all_widgets(engine: &mut Engine) {
         },
     );
 
+    let all_nodes_clone = all_nodes.clone();
     engine.register_fn(
         "enter",
-        |ctx: NativeCallContext, children: Array| -> Result<WidgetNode, Box<EvalAltResult>> {
+        move |ctx: NativeCallContext, children: Array| -> Result<(), Box<EvalAltResult>> {
             let children_vec = children_to_vec(children, &ctx)?;
-            Ok(WidgetNode::Enter(children_vec))
+            let node = WidgetNode::Enter(children_vec);
+
+            all_nodes_clone.borrow_mut().push(node);
+
+            Ok(())
         },
     );
 }
