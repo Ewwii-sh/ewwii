@@ -207,6 +207,7 @@ pub enum ActionWithServer {
     #[command(name = "call-fns")]
     CallRhaiFns {
         // Rhai functions to call. Format: --fn-calls "fn_name1(args)" "fn_name2(args)"
+        #[arg(required = true)]
         calls: Vec<String>,
     },
 }
@@ -273,7 +274,12 @@ impl ActionWithServer {
             ActionWithServer::TriggerUpdateUI { window, inject_vars } => {
                 app::DaemonCommand::TriggerUpdateUI { window, inject_vars }
             }
-            ActionWithServer::CallRhaiFns { calls } => app::DaemonCommand::CallRhaiFns { calls },
+            ActionWithServer::CallRhaiFns { calls } => {
+                return with_response_channel(|sender| app::DaemonCommand::CallRhaiFns {
+                    calls,
+                    sender,
+                })
+            }
 
             ActionWithServer::OpenInspector => app::DaemonCommand::OpenInspector,
 
