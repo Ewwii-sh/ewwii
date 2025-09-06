@@ -18,7 +18,7 @@ This will execute the specified functions in the context of your current configu
 
 ## Limitation: Main configuration
 
-However, there is one limitation in `call-fns`. It can only see and call functions defined within your main configuration (i.e `main.rhai` file).
+However, there is one limitation in `call-fns`. It can only see and call functions defined within your main configuration (i.e `ewwii.rhai` file).
 
 ## Solution: Creating wrappers
 
@@ -34,7 +34,7 @@ fn awesome_fn() {
 ```
 
 ```js
-// in main.rhai
+// in ewwii.rhai
 fn call_awesome_fn() {
     import "external" as external;
     external::awesome_fn();
