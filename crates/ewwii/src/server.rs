@@ -86,6 +86,7 @@ pub fn initialize_server<B: DisplayBackend>(
         css_provider: gtk::CssProvider::new(),
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
+        widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
         paths,
         phantom: PhantomData,
     };
