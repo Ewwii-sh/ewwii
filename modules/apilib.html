@@ -573,6 +573,278 @@ let networks = wifi::scan();
 </div>
 </div>
 </br>
+<h1 id="linux"><a class="header" href="#linux">linux</a></h1>
+<p><code>Namespace: global/api/linux</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_battery_perc" class="func-name"><a class="header" href="#fn-get_battery_perc"> <code>fn</code> get_battery_perc </a></h2>
+<pre><code class="language-rust ignore">fn get_battery_perc() -&gt; int</code></pre>
+<div>
+<div class="tab">
+<button group="get_battery_perc" id="link-get_battery_perc-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_battery_perc', 'Description')">
+Description
+</button>
+<button group="get_battery_perc" id="link-get_battery_perc-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_battery_perc', 'Arguments')">
+Arguments
+</button>
+<button group="get_battery_perc" id="link-get_battery_perc-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_battery_perc', 'Returns')">
+Returns
+</button>
+<button group="get_battery_perc" id="link-get_battery_perc-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_battery_perc', 'Example')">
+Example
+</button>
+</div>
+<div group="get_battery_perc" id="get_battery_perc-Description" class="tabcontent"  style="display: block;" >
+Get the current battery percentage.
+</div>
+<div group="get_battery_perc" id="get_battery_perc-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="get_battery_perc" id="get_battery_perc-Returns" class="tabcontent"  style="display: none;" >
+<p>The battery percentage as an integer.</p>
+</div>
+<div group="get_battery_perc" id="get_battery_perc-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::linux" as linux;
+
+let battery_perc = linux::get_battery_perc();
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_cpu_info" class="func-name"><a class="header" href="#fn-get_cpu_info"> <code>fn</code> get_cpu_info </a></h2>
+<pre><code class="language-rust ignore">fn get_cpu_info() -&gt; Array</code></pre>
+<div>
+<div class="tab">
+<button group="get_cpu_info" id="link-get_cpu_info-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_cpu_info', 'Description')">
+Description
+</button>
+<button group="get_cpu_info" id="link-get_cpu_info-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_cpu_info', 'Arguments')">
+Arguments
+</button>
+<button group="get_cpu_info" id="link-get_cpu_info-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_cpu_info', 'Returns')">
+Returns
+</button>
+<button group="get_cpu_info" id="link-get_cpu_info-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_cpu_info', 'Example')">
+Example
+</button>
+</div>
+<div group="get_cpu_info" id="get_cpu_info-Description" class="tabcontent"  style="display: block;" >
+Get the device CPU information.
+</div>
+<div group="get_cpu_info" id="get_cpu_info-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="get_cpu_info" id="get_cpu_info-Returns" class="tabcontent"  style="display: none;" >
+<p>An <code>Array</code> containing the CPU information in a <code>Map</code>:</p>
+<ul>
+<li><code>core_id</code> (Integer)</li>
+<li><code>model</code></li>
+</ul>
+</div>
+<div group="get_cpu_info" id="get_cpu_info-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::linux" as linux;
+
+let cpu_info = linux::get_cpu_info();
+let cpu_model = cpu_info[0].model; // get the model of the 1st core
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_disk_info" class="func-name"><a class="header" href="#fn-get_disk_info"> <code>fn</code> get_disk_info </a></h2>
+<pre><code class="language-rust ignore">fn get_disk_info() -&gt; Map</code></pre>
+<div>
+<div class="tab">
+<button group="get_disk_info" id="link-get_disk_info-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_disk_info', 'Description')">
+Description
+</button>
+<button group="get_disk_info" id="link-get_disk_info-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_disk_info', 'Arguments')">
+Arguments
+</button>
+<button group="get_disk_info" id="link-get_disk_info-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_disk_info', 'Returns')">
+Returns
+</button>
+<button group="get_disk_info" id="link-get_disk_info-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_disk_info', 'Example')">
+Example
+</button>
+</div>
+<div group="get_disk_info" id="get_disk_info-Description" class="tabcontent"  style="display: block;" >
+Get the device disk information.
+</div>
+<div group="get_disk_info" id="get_disk_info-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="get_disk_info" id="get_disk_info-Returns" class="tabcontent"  style="display: none;" >
+<p>A <code>Map</code> containing the disk information:</p>
+<ul>
+<li>Each key is a <code>mountpoint</code>, value is a map with:
+<ul>
+<li><code>device</code> (String)</li>
+<li><code>total_kb</code> (Integer)</li>
+<li><code>used_kb</code> (Integer)</li>
+</ul>
+</li>
+</ul>
+</div>
+<div group="get_disk_info" id="get_disk_info-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::linux" as linux;
+
+let disk_info = linux::get_disk_info();
+let device = disk_info.device;
+let total_kb = disk_info.total_kb;
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_gpu_info" class="func-name"><a class="header" href="#fn-get_gpu_info"> <code>fn</code> get_gpu_info </a></h2>
+<pre><code class="language-rust ignore">fn get_gpu_info() -&gt; Array</code></pre>
+<div>
+<div class="tab">
+<button group="get_gpu_info" id="link-get_gpu_info-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_gpu_info', 'Description')">
+Description
+</button>
+<button group="get_gpu_info" id="link-get_gpu_info-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_gpu_info', 'Arguments')">
+Arguments
+</button>
+<button group="get_gpu_info" id="link-get_gpu_info-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_gpu_info', 'Returns')">
+Returns
+</button>
+<button group="get_gpu_info" id="link-get_gpu_info-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_gpu_info', 'Example')">
+Example
+</button>
+</div>
+<div group="get_gpu_info" id="get_gpu_info-Description" class="tabcontent"  style="display: block;" >
+Get the device GPU information.
+</div>
+<div group="get_gpu_info" id="get_gpu_info-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="get_gpu_info" id="get_gpu_info-Returns" class="tabcontent"  style="display: none;" >
+<p>An <code>Array</code> containing the GPU information in a <code>Map</code>:</p>
+<ul>
+<li><code>sys_name</code> (String): e.g., "card0"</li>
+<li><code>model</code> (String)</li>
+<li><code>vendor</code> (String)</li>
+<li><code>memory_kb</code> (Integer)</li>
+</ul>
+</div>
+<div group="get_gpu_info" id="get_gpu_info-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::linux" as linux;
+
+let gpu_info = linux::get_gpu_info();
+let model = gpu_info[0].model; // 1st GPU card model
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_kernel_version" class="func-name"><a class="header" href="#fn-get_kernel_version"> <code>fn</code> get_kernel_version </a></h2>
+<pre><code class="language-rust ignore">fn get_kernel_version() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="get_kernel_version" id="link-get_kernel_version-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_kernel_version', 'Description')">
+Description
+</button>
+<button group="get_kernel_version" id="link-get_kernel_version-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_kernel_version', 'Arguments')">
+Arguments
+</button>
+<button group="get_kernel_version" id="link-get_kernel_version-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_kernel_version', 'Returns')">
+Returns
+</button>
+<button group="get_kernel_version" id="link-get_kernel_version-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_kernel_version', 'Example')">
+Example
+</button>
+</div>
+<div group="get_kernel_version" id="get_kernel_version-Description" class="tabcontent"  style="display: block;" >
+Get the installed Linux Kernel version.
+</div>
+<div group="get_kernel_version" id="get_kernel_version-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="get_kernel_version" id="get_kernel_version-Returns" class="tabcontent"  style="display: none;" >
+<p>The Kernel version as a <code>String</code>. (e.g. "6.16.4-arch1-1")</p>
+</div>
+<div group="get_kernel_version" id="get_kernel_version-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::linux" as linux;
+
+let k_version = linux::get_kernel_version();
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-get_ram_info" class="func-name"><a class="header" href="#fn-get_ram_info"> <code>fn</code> get_ram_info </a></h2>
+<pre><code class="language-rust ignore">fn get_ram_info() -&gt; Map</code></pre>
+<div>
+<div class="tab">
+<button group="get_ram_info" id="link-get_ram_info-Description"  class="tablinks active" 
+    onclick="openTab(event, 'get_ram_info', 'Description')">
+Description
+</button>
+<button group="get_ram_info" id="link-get_ram_info-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'get_ram_info', 'Arguments')">
+Arguments
+</button>
+<button group="get_ram_info" id="link-get_ram_info-Returns"  class="tablinks" 
+    onclick="openTab(event, 'get_ram_info', 'Returns')">
+Returns
+</button>
+<button group="get_ram_info" id="link-get_ram_info-Example"  class="tablinks" 
+    onclick="openTab(event, 'get_ram_info', 'Example')">
+Example
+</button>
+</div>
+<div group="get_ram_info" id="get_ram_info-Description" class="tabcontent"  style="display: block;" >
+Get the device RAM information.
+</div>
+<div group="get_ram_info" id="get_ram_info-Arguments" class="tabcontent"  style="display: none;" >
+<p>This function does not require any arguments.</p>
+</div>
+<div group="get_ram_info" id="get_ram_info-Returns" class="tabcontent"  style="display: none;" >
+<p>A <code>Map</code> containing the RAM information:</p>
+<ul>
+<li><code>total_kb</code></li>
+<li><code>free_kb</code></li>
+<li><code>available_kb</code></li>
+<li><code>used_kb</code></li>
+</ul>
+</div>
+<div group="get_ram_info" id="get_ram_info-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "api::linux" as linux;
+
+let ram_info = linux::get_ram_info();
+let used_kb = ram_info.used_kb;
+</code></pre>
+</div>
+</div>
+</div>
+</br>
 
                     </main>
 
@@ -582,7 +854,7 @@ let networks = wifi::scan();
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../widgets/widgets.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../examples/examples.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -596,7 +868,7 @@ let networks = wifi::scan();
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../widgets/widgets.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../examples/examples.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
