@@ -200,7 +200,7 @@ ewwii call-fns "first_function('string')" "second_function()"
 </code></pre>
 <p>This will execute the specified functions in the context of your current configuration.</p>
 <h2 id="limitation-main-configuration"><a class="header" href="#limitation-main-configuration">Limitation: Main configuration</a></h2>
-<p>However, there is one limitation in <code>call-fns</code>. It can only see and call functions defined within your main configuration (i.e <code>main.rhai</code> file).</p>
+<p>However, there is one limitation in <code>call-fns</code>. It can only see and call functions defined within your main configuration (i.e <code>ewwii.rhai</code> file).</p>
 <h2 id="solution-creating-wrappers"><a class="header" href="#solution-creating-wrappers">Solution: Creating wrappers</a></h2>
 <p>But, there is one solution though! You can call external functions from functions defined in main.</p>
 <p><strong>Example:</strong></p>
@@ -209,7 +209,7 @@ fn awesome_fn() {
     print("Awesome fn triggered!");
 }
 </code></pre>
-<pre><code class="language-js">// in main.rhai
+<pre><code class="language-js">// in ewwii.rhai
 fn call_awesome_fn() {
     import "external" as external;
     external::awesome_fn();

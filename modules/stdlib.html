@@ -282,6 +282,224 @@ print(output); // output: Hello, world!
 </div>
 </div>
 </br>
+<h1 id="text"><a class="header" href="#text">text</a></h1>
+<p><code>Namespace: global/std/text</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_camel_case" class="func-name"><a class="header" href="#fn-to_camel_case"> <code>fn</code> to_camel_case </a></h2>
+<pre><code class="language-rust ignore">fn to_camel_case(text: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_camel_case" id="link-to_camel_case-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_camel_case', 'Description')">
+Description
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Arguments')">
+Arguments
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Returns')">
+Returns
+</button>
+<button group="to_camel_case" id="link-to_camel_case-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_camel_case', 'Example')">
+Example
+</button>
+</div>
+<div group="to_camel_case" id="to_camel_case-Description" class="tabcontent"  style="display: block;" >
+Converts a string to camel case.
+</div>
+<div group="to_camel_case" id="to_camel_case-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>text</code> - A string to be converted to camel case.</li>
+</ul>
+</div>
+<div group="to_camel_case" id="to_camel_case-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the <code>text</code> in camel case format.</p>
+</div>
+<div group="to_camel_case" id="to_camel_case-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_camel_case("hello world example");
+print(result); // output: "helloWorldExample"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_lower" class="func-name"><a class="header" href="#fn-to_lower"> <code>fn</code> to_lower </a></h2>
+<pre><code class="language-rust ignore">fn to_lower(s: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_lower" id="link-to_lower-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_lower', 'Description')">
+Description
+</button>
+<button group="to_lower" id="link-to_lower-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Arguments')">
+Arguments
+</button>
+<button group="to_lower" id="link-to_lower-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Returns')">
+Returns
+</button>
+<button group="to_lower" id="link-to_lower-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_lower', 'Example')">
+Example
+</button>
+</div>
+<div group="to_lower" id="to_lower-Description" class="tabcontent"  style="display: block;" >
+Converts a string to lowercase.
+</div>
+<div group="to_lower" id="to_lower-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>s</code> - A string to be converted to lowercase.</li>
+</ul>
+</div>
+<div group="to_lower" id="to_lower-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the string in lowercase.</p>
+</div>
+<div group="to_lower" id="to_lower-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_lower("HELLO");
+print(result); // output: "hello"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_slug" class="func-name"><a class="header" href="#fn-to_slug"> <code>fn</code> to_slug </a></h2>
+<pre><code class="language-rust ignore">fn to_slug(text: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_slug" id="link-to_slug-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_slug', 'Description')">
+Description
+</button>
+<button group="to_slug" id="link-to_slug-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Arguments')">
+Arguments
+</button>
+<button group="to_slug" id="link-to_slug-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Returns')">
+Returns
+</button>
+<button group="to_slug" id="link-to_slug-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_slug', 'Example')">
+Example
+</button>
+</div>
+<div group="to_slug" id="to_slug-Description" class="tabcontent"  style="display: block;" >
+Converts a string to a slug (lowercase words joined by hyphens).
+</div>
+<div group="to_slug" id="to_slug-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>text</code> - A string to be converted to a slug.</li>
+</ul>
+</div>
+<div group="to_slug" id="to_slug-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the <code>text</code> as a slug.</p>
+</div>
+<div group="to_slug" id="to_slug-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_slug("Hello World!");
+print(result); // output: "hello-world"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-to_upper" class="func-name"><a class="header" href="#fn-to_upper"> <code>fn</code> to_upper </a></h2>
+<pre><code class="language-rust ignore">fn to_upper(s: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="to_upper" id="link-to_upper-Description"  class="tablinks active" 
+    onclick="openTab(event, 'to_upper', 'Description')">
+Description
+</button>
+<button group="to_upper" id="link-to_upper-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Arguments')">
+Arguments
+</button>
+<button group="to_upper" id="link-to_upper-Returns"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Returns')">
+Returns
+</button>
+<button group="to_upper" id="link-to_upper-Example"  class="tablinks" 
+    onclick="openTab(event, 'to_upper', 'Example')">
+Example
+</button>
+</div>
+<div group="to_upper" id="to_upper-Description" class="tabcontent"  style="display: block;" >
+Converts a string to uppercase.
+</div>
+<div group="to_upper" id="to_upper-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>s</code> - A string to be converted to uppercase.</li>
+</ul>
+</div>
+<div group="to_upper" id="to_upper-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the string in uppercase.</p>
+</div>
+<div group="to_upper" id="to_upper-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::to_upper("hello");
+print(result); // output: "HELLO"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-truncate_chars" class="func-name"><a class="header" href="#fn-truncate_chars"> <code>fn</code> truncate_chars </a></h2>
+<pre><code class="language-rust ignore">fn truncate_chars(text: String, max_chars: int) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="truncate_chars" id="link-truncate_chars-Description"  class="tablinks active" 
+    onclick="openTab(event, 'truncate_chars', 'Description')">
+Description
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Arguments')">
+Arguments
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Returns"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Returns')">
+Returns
+</button>
+<button group="truncate_chars" id="link-truncate_chars-Example"  class="tablinks" 
+    onclick="openTab(event, 'truncate_chars', 'Example')">
+Example
+</button>
+</div>
+<div group="truncate_chars" id="truncate_chars-Description" class="tabcontent"  style="display: block;" >
+Truncates a string to the specified number of characters.
+</div>
+<div group="truncate_chars" id="truncate_chars-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>text</code> - A string to be truncated.</li>
+<li><code>max_chars</code> - The maximum number of characters to keep in the string.</li>
+</ul>
+</div>
+<div group="truncate_chars" id="truncate_chars-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns a truncated string.</p>
+</div>
+<div group="truncate_chars" id="truncate_chars-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::text" as text;
+
+let result = text::truncate_chars("Hello World!", 5);
+print(result); // output: "Hello"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
 <h1 id="monitor"><a class="header" href="#monitor">monitor</a></h1>
 <p><code>Namespace: global/std/monitor</code></p>
 <div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
@@ -820,224 +1038,6 @@ Set the value of an environment variable.
 
 // Set the value of the "MY_VAR" environment variable
 env::set_env("MY_VAR", "SomeValue");
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<h1 id="text"><a class="header" href="#text">text</a></h1>
-<p><code>Namespace: global/std/text</code></p>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-to_camel_case" class="func-name"><a class="header" href="#fn-to_camel_case"> <code>fn</code> to_camel_case </a></h2>
-<pre><code class="language-rust ignore">fn to_camel_case(text: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="to_camel_case" id="link-to_camel_case-Description"  class="tablinks active" 
-    onclick="openTab(event, 'to_camel_case', 'Description')">
-Description
-</button>
-<button group="to_camel_case" id="link-to_camel_case-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'to_camel_case', 'Arguments')">
-Arguments
-</button>
-<button group="to_camel_case" id="link-to_camel_case-Returns"  class="tablinks" 
-    onclick="openTab(event, 'to_camel_case', 'Returns')">
-Returns
-</button>
-<button group="to_camel_case" id="link-to_camel_case-Example"  class="tablinks" 
-    onclick="openTab(event, 'to_camel_case', 'Example')">
-Example
-</button>
-</div>
-<div group="to_camel_case" id="to_camel_case-Description" class="tabcontent"  style="display: block;" >
-Converts a string to camel case.
-</div>
-<div group="to_camel_case" id="to_camel_case-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>text</code> - A string to be converted to camel case.</li>
-</ul>
-</div>
-<div group="to_camel_case" id="to_camel_case-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the <code>text</code> in camel case format.</p>
-</div>
-<div group="to_camel_case" id="to_camel_case-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::to_camel_case("hello world example");
-print(result); // output: "helloWorldExample"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-to_lower" class="func-name"><a class="header" href="#fn-to_lower"> <code>fn</code> to_lower </a></h2>
-<pre><code class="language-rust ignore">fn to_lower(s: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="to_lower" id="link-to_lower-Description"  class="tablinks active" 
-    onclick="openTab(event, 'to_lower', 'Description')">
-Description
-</button>
-<button group="to_lower" id="link-to_lower-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'to_lower', 'Arguments')">
-Arguments
-</button>
-<button group="to_lower" id="link-to_lower-Returns"  class="tablinks" 
-    onclick="openTab(event, 'to_lower', 'Returns')">
-Returns
-</button>
-<button group="to_lower" id="link-to_lower-Example"  class="tablinks" 
-    onclick="openTab(event, 'to_lower', 'Example')">
-Example
-</button>
-</div>
-<div group="to_lower" id="to_lower-Description" class="tabcontent"  style="display: block;" >
-Converts a string to lowercase.
-</div>
-<div group="to_lower" id="to_lower-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>s</code> - A string to be converted to lowercase.</li>
-</ul>
-</div>
-<div group="to_lower" id="to_lower-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the string in lowercase.</p>
-</div>
-<div group="to_lower" id="to_lower-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::to_lower("HELLO");
-print(result); // output: "hello"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-to_slug" class="func-name"><a class="header" href="#fn-to_slug"> <code>fn</code> to_slug </a></h2>
-<pre><code class="language-rust ignore">fn to_slug(text: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="to_slug" id="link-to_slug-Description"  class="tablinks active" 
-    onclick="openTab(event, 'to_slug', 'Description')">
-Description
-</button>
-<button group="to_slug" id="link-to_slug-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'to_slug', 'Arguments')">
-Arguments
-</button>
-<button group="to_slug" id="link-to_slug-Returns"  class="tablinks" 
-    onclick="openTab(event, 'to_slug', 'Returns')">
-Returns
-</button>
-<button group="to_slug" id="link-to_slug-Example"  class="tablinks" 
-    onclick="openTab(event, 'to_slug', 'Example')">
-Example
-</button>
-</div>
-<div group="to_slug" id="to_slug-Description" class="tabcontent"  style="display: block;" >
-Converts a string to a slug (lowercase words joined by hyphens).
-</div>
-<div group="to_slug" id="to_slug-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>text</code> - A string to be converted to a slug.</li>
-</ul>
-</div>
-<div group="to_slug" id="to_slug-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the <code>text</code> as a slug.</p>
-</div>
-<div group="to_slug" id="to_slug-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::to_slug("Hello World!");
-print(result); // output: "hello-world"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-to_upper" class="func-name"><a class="header" href="#fn-to_upper"> <code>fn</code> to_upper </a></h2>
-<pre><code class="language-rust ignore">fn to_upper(s: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="to_upper" id="link-to_upper-Description"  class="tablinks active" 
-    onclick="openTab(event, 'to_upper', 'Description')">
-Description
-</button>
-<button group="to_upper" id="link-to_upper-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'to_upper', 'Arguments')">
-Arguments
-</button>
-<button group="to_upper" id="link-to_upper-Returns"  class="tablinks" 
-    onclick="openTab(event, 'to_upper', 'Returns')">
-Returns
-</button>
-<button group="to_upper" id="link-to_upper-Example"  class="tablinks" 
-    onclick="openTab(event, 'to_upper', 'Example')">
-Example
-</button>
-</div>
-<div group="to_upper" id="to_upper-Description" class="tabcontent"  style="display: block;" >
-Converts a string to uppercase.
-</div>
-<div group="to_upper" id="to_upper-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>s</code> - A string to be converted to uppercase.</li>
-</ul>
-</div>
-<div group="to_upper" id="to_upper-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the string in uppercase.</p>
-</div>
-<div group="to_upper" id="to_upper-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::to_upper("hello");
-print(result); // output: "HELLO"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-truncate_chars" class="func-name"><a class="header" href="#fn-truncate_chars"> <code>fn</code> truncate_chars </a></h2>
-<pre><code class="language-rust ignore">fn truncate_chars(text: String, max_chars: int) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="truncate_chars" id="link-truncate_chars-Description"  class="tablinks active" 
-    onclick="openTab(event, 'truncate_chars', 'Description')">
-Description
-</button>
-<button group="truncate_chars" id="link-truncate_chars-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'truncate_chars', 'Arguments')">
-Arguments
-</button>
-<button group="truncate_chars" id="link-truncate_chars-Returns"  class="tablinks" 
-    onclick="openTab(event, 'truncate_chars', 'Returns')">
-Returns
-</button>
-<button group="truncate_chars" id="link-truncate_chars-Example"  class="tablinks" 
-    onclick="openTab(event, 'truncate_chars', 'Example')">
-Example
-</button>
-</div>
-<div group="truncate_chars" id="truncate_chars-Description" class="tabcontent"  style="display: block;" >
-Truncates a string to the specified number of characters.
-</div>
-<div group="truncate_chars" id="truncate_chars-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>text</code> - A string to be truncated.</li>
-<li><code>max_chars</code> - The maximum number of characters to keep in the string.</li>
-</ul>
-</div>
-<div group="truncate_chars" id="truncate_chars-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns a truncated string.</p>
-</div>
-<div group="truncate_chars" id="truncate_chars-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::text" as text;
-
-let result = text::truncate_chars("Hello World!", 5);
-print(result); // output: "Hello"
 </code></pre>
 </div>
 </div>
