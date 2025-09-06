@@ -91,7 +91,6 @@ pub enum DaemonCommand {
 pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
-    pub widget_reg_store: Rc<Mutex<WidgetRegistry>>,
     pub delete_event_handler_id: Option<glib::SignalHandlerId>,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
@@ -143,6 +142,12 @@ pub struct App<B: DisplayBackend> {
 
     /// Senders that will cancel a windows auto-close timer when started with --duration.
     pub window_close_timer_abort_senders: HashMap<String, futures::channel::oneshot::Sender<()>>,
+
+    /// The dynamic gtk widget registery
+    pub widget_reg_store: Rc<Mutex<Option<WidgetRegistry>>>,
+
+    // The cached store of poll/listen handlers
+    pub pl_handler_store: Option<rhai_impl::updates::ReactiveVarStore>,
 
     pub paths: EwwPaths,
     pub phantom: PhantomData<B>,
@@ -386,31 +391,40 @@ impl<B: DisplayBackend> App<B> {
 
             // Should hold the id and the props of a widget
             // It is critical for supporting dynamic updates
-            let widget_reg_store = Rc::new(Mutex::new(WidgetRegistry::new(Some(
-                config::EwwiiConfig::get_borrowed_windows_root_widget(
-                    self.ewwii_config.get_root_node()?.as_ref(),
-                )?,
-            ))));
+            let new_wdgt_registry =
+                WidgetRegistry::new(Some(self.ewwii_config.get_root_node()?.as_ref()));
+
+            // There should be an optimization here.
+            // like, we should deextend the map when a window 
+            // is gone from scope? :/
+            if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                match maybe_registry.as_mut() {
+                    Some(existing_registry) => {
+                        existing_registry.widgets.extend(new_wdgt_registry.widgets);
+
+                        existing_registry.stored_widget_node = new_wdgt_registry.stored_widget_node;
+                    }
+                    None => {
+                        *maybe_registry = Some(new_wdgt_registry);
+                    }
+                }
+            } else {
+                log::error!("Failed to acquire lock on widget registry");
+            }
 
             let root_widget = {
-                let mut store = widget_reg_store.lock().unwrap();
-                build_gtk_widget(&WidgetInput::Window(window_def), &mut *store)?
+                let mut maybe_registry = self.widget_reg_store.lock().unwrap();
+                let registry = maybe_registry
+                    .as_mut()
+                    .ok_or_else(|| anyhow::anyhow!("WidgetRegistry is not initialized"))?;
+                build_gtk_widget(&WidgetInput::Window(window_def), registry)?
             };
 
             root_widget.style_context().add_class(window_name);
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
-            let mut ewwii_window =
-                initialize_window::<B>(&initiator, monitor, root_widget, widget_reg_store.clone())?;
+            let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
             ewwii_window.gtk_window.style_context().add_class(window_name);
-
-            // listening/polling
-            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
-            let config_path = self.paths.get_rhai_path();
-            let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-            let mut stored_parser = rhai_impl::parser::ParseConfig::new();
-
-            let widget_reg_store = widget_reg_store.clone();
 
             // Start the poll/listen only once per startup
             // at the start, the open_windows will be empty because
@@ -421,11 +435,20 @@ impl<B: DisplayBackend> App<B> {
             // if we can move this piece of code somewhere else.
             // I just cant find the perfect place where it can live
             // so I guess that I will just let it stay right here.
+            let config_path = self.paths.get_rhai_path();
+            let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
+            let mut stored_parser = rhai_impl::parser::ParseConfig::new();
+
             if self.open_windows.is_empty() {
+                let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+                let widget_reg_store = self.widget_reg_store.clone();
+
                 let store = rhai_impl::updates::handle_state_changes(
                     self.ewwii_config.get_root_node()?.as_ref(),
-                    tx,
+                    tx
                 );
+
+                self.pl_handler_store = Some(store.clone());
 
                 glib::MainContext::default().spawn_local(async move {
                     let mut pending_updates = HashSet::new();
@@ -450,8 +473,15 @@ impl<B: DisplayBackend> App<B> {
                         .await
                         {
                             Ok(new_widget) => {
-                                let _ =
-                                    widget_reg_store.lock().unwrap().update_widget_tree(new_widget);
+                                if let Ok(mut maybe_registry) = widget_reg_store.lock() {
+                                    if let Some(registry) = maybe_registry.as_mut() {
+                                        let _ = registry.update_widget_tree(new_widget);
+                                    } else {
+                                        log::error!("WidgetRegistry is None inside async loop");
+                                    }
+                                } else {
+                                    log::error!("Failed to acquire lock on widget registry");
+                                }
                             }
                             Err(e) => {
                                 log::error!("Failed to generate new widgetnode: {:#}", e);
@@ -462,6 +492,37 @@ impl<B: DisplayBackend> App<B> {
                     }
 
                     log::debug!("Receiver loop exited");
+                });
+            } else {
+                // else, just update the window from the current store.
+                let widget_reg_store = self.widget_reg_store.clone();
+                let store = self.pl_handler_store.clone().expect("REASON");
+
+                glib::MainContext::default().spawn_local(async move {
+                    let vars = store.read().unwrap().clone();
+                    match generate_new_widgetnode(
+                        &vars,
+                        &config_path,
+                        compiled_ast.as_deref(),
+                        Some(&mut stored_parser),
+                    )
+                    .await
+                    {
+                        Ok(new_widget) => {
+                            if let Ok(mut maybe_registry) = widget_reg_store.lock() {
+                                if let Some(registry) = maybe_registry.as_mut() {
+                                    let _ = registry.update_widget_tree(new_widget);
+                                } else {
+                                    log::error!("WidgetRegistry is None inside async loop");
+                                }
+                            } else {
+                                log::error!("Failed to acquire lock on widget registry");
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("Failed to generate new widgetnode: {:#}", e);
+                        }
+                    }
                 });
             }
 
@@ -632,16 +693,14 @@ impl<B: DisplayBackend> App<B> {
 
         match config::EwwiiConfig::get_windows_root_widget(new_root_widget) {
             Ok(new_widget) => {
-                if let Some(window) = self.open_windows.get(&window_name) {
-                    let widget_reg_store = window.widget_reg_store.clone();
-
-                    if let Ok(mut store) = widget_reg_store.lock() {
-                        let _ = store.update_widget_tree(new_widget);
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        let _ = widget_registry.update_widget_tree(new_widget);
                     } else {
-                        log::error!("Failed to acquire lock on widget registry");
-                    };
+                        log::error!("Widget registry is empty");
+                    }
                 } else {
-                    log::error!("Failed to get a window with the name: '{}'", window_name);
+                    log::error!("Failed to acquire lock on widget registry");
                 }
             }
             Err(e) => {
@@ -677,7 +736,6 @@ fn initialize_window<B: DisplayBackend>(
     window_init: &WindowInitiator,
     monitor: Monitor,
     root_widget: gtk::Widget,
-    widget_reg_store: Rc<Mutex<WidgetRegistry>>,
 ) -> Result<EwwiiWindow> {
     let monitor_geometry = monitor.geometry();
     let (actual_window_rect, x, y) = match window_init.geometry {
@@ -746,7 +804,6 @@ fn initialize_window<B: DisplayBackend>(
         gtk_window: window,
         delete_event_handler_id: None,
         destroy_event_handler_id: None,
-        widget_reg_store,
     })
 }
 
@@ -779,7 +836,7 @@ async fn generate_new_widgetnode(
 
     let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast)?;
 
-    Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget)?)
+    Ok(new_root_widget)
 }
 
 /// Apply the provided window-positioning rules to the window.
