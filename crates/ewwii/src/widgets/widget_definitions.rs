@@ -56,8 +56,8 @@ pub struct WidgetEntry {
 }
 
 pub struct WidgetRegistry {
-    widgets: HashMap<u64, WidgetEntry>,
-    stored_widget_node: Option<WidgetNode>,
+    pub widgets: HashMap<u64, WidgetEntry>,
+    pub stored_widget_node: Option<WidgetNode>,
 }
 
 pub enum PatchGtkWidget<'a> {
