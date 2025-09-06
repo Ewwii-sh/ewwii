@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   `std::json` (Rhai has built in json support).
 -   `std::math` (Rhai already convers everything that it has).
 -   The need for `dyn_id` for dynamic system. THIS IS A MAJOR UX change as it massivly reduces errors and the burden on users.
+-   Daemon exit on configuration error mechanism in favor of hot-reloading.
 
 ## [0.1.0-beta] - 2025-08-27
 
