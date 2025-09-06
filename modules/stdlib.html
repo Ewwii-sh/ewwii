@@ -191,441 +191,6 @@
 <p>Each library in this module is under <code>std::&lt;m&gt;</code>, where <code>&lt;m&gt;</code> is the name of the specific module.
 These modules provide essential functionalities that are will be useful for making widgets.
 They cover tasks like string manipulation, environmental variable manipuation, running shell commands, and more.</p>
-<h1 id="command"><a class="header" href="#command">command</a></h1>
-<p><code>Namespace: global/std/command</code></p>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-run" class="func-name"><a class="header" href="#fn-run"> <code>fn</code> run </a></h2>
-<pre><code class="language-rust ignore">fn run(cmd: String)</code></pre>
-<div>
-<div class="tab">
-<button group="run" id="link-run-Description"  class="tablinks active" 
-    onclick="openTab(event, 'run', 'Description')">
-Description
-</button>
-<button group="run" id="link-run-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Arguments')">
-Arguments
-</button>
-<button group="run" id="link-run-Returns"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Returns')">
-Returns
-</button>
-<button group="run" id="link-run-Example"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Example')">
-Example
-</button>
-</div>
-<div group="run" id="run-Description" class="tabcontent"  style="display: block;" >
-Executes a shell command without capturing the output.
-</div>
-<div group="run" id="run-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>cmd</code> - The shell command to execute as a string.</li>
-</ul>
-</div>
-<div group="run" id="run-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns nothing if the command executes successfully. If there is an error
-running the command, it returns the error.</p>
-</div>
-<div group="run" id="run-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::command" as cmd;
-
-// Run a shell command (e.g., list directory contents)
-cmd::run("ls -l");
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-run_and_read" class="func-name"><a class="header" href="#fn-run_and_read"> <code>fn</code> run_and_read </a></h2>
-<pre><code class="language-rust ignore">fn run_and_read(cmd: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="run_and_read" id="link-run_and_read-Description"  class="tablinks active" 
-    onclick="openTab(event, 'run_and_read', 'Description')">
-Description
-</button>
-<button group="run_and_read" id="link-run_and_read-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Arguments')">
-Arguments
-</button>
-<button group="run_and_read" id="link-run_and_read-Returns"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Returns')">
-Returns
-</button>
-<button group="run_and_read" id="link-run_and_read-Example"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Example')">
-Example
-</button>
-</div>
-<div group="run_and_read" id="run_and_read-Description" class="tabcontent"  style="display: block;" >
-Executes a shell command and captures its output.
-</div>
-<div group="run_and_read" id="run_and_read-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>cmd</code> - The shell command to execute as a string.</li>
-</ul>
-</div>
-<div group="run_and_read" id="run_and_read-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns the standard output of the command as a <code>string</code>. If the command fails,
-it returns the error.</p>
-</div>
-<div group="run_and_read" id="run_and_read-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::command" as cmd;
-
-// Run a shell command and capture its output
-let output = cmd::run_and_read("echo 'Hello, world!'");
-print(output); // output: Hello, world!
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<h1 id="monitor"><a class="header" href="#monitor">monitor</a></h1>
-<p><code>Namespace: global/std/monitor</code></p>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-all_resolutions" class="func-name"><a class="header" href="#fn-all_resolutions"> <code>fn</code> all_resolutions </a></h2>
-<pre><code class="language-rust ignore">fn all_resolutions() -&gt; Vec&lt;[int;2]&gt;</code></pre>
-<div>
-<div class="tab">
-<button group="all_resolutions" id="link-all_resolutions-Description"  class="tablinks active" 
-    onclick="openTab(event, 'all_resolutions', 'Description')">
-Description
-</button>
-<button group="all_resolutions" id="link-all_resolutions-Returns"  class="tablinks" 
-    onclick="openTab(event, 'all_resolutions', 'Returns')">
-Returns
-</button>
-<button group="all_resolutions" id="link-all_resolutions-Example"  class="tablinks" 
-    onclick="openTab(event, 'all_resolutions', 'Example')">
-Example
-</button>
-</div>
-<div group="all_resolutions" id="all_resolutions-Description" class="tabcontent"  style="display: block;" >
-Get the resolutions of all connected monitors.
-</div>
-<div group="all_resolutions" id="all_resolutions-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns an array of arrays, where each inner array contains the width and height of a monitor.</p>
-</div>
-<div group="all_resolutions" id="all_resolutions-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let resolutions = monitor::all_resolutions();
-print(resolutions); // Output: [[width1, height1], [width2, height2], ...]
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-all_resolutions_str" class="func-name"><a class="header" href="#fn-all_resolutions_str"> <code>fn</code> all_resolutions_str </a></h2>
-<pre><code class="language-rust ignore">fn all_resolutions_str() -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="all_resolutions_str" id="link-all_resolutions_str-Description"  class="tablinks active" 
-    onclick="openTab(event, 'all_resolutions_str', 'Description')">
-Description
-</button>
-<button group="all_resolutions_str" id="link-all_resolutions_str-Returns"  class="tablinks" 
-    onclick="openTab(event, 'all_resolutions_str', 'Returns')">
-Returns
-</button>
-<button group="all_resolutions_str" id="link-all_resolutions_str-Example"  class="tablinks" 
-    onclick="openTab(event, 'all_resolutions_str', 'Example')">
-Example
-</button>
-</div>
-<div group="all_resolutions_str" id="all_resolutions_str-Description" class="tabcontent"  style="display: block;" >
-Get the resolutions of all connected monitors as a string.
-</div>
-<div group="all_resolutions_str" id="all_resolutions_str-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns a string where each monitor's resolution is formatted as "width x height", separated by commas.</p>
-</div>
-<div group="all_resolutions_str" id="all_resolutions_str-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let resolutions_str = monitor::all_resolutions_str();
-print(resolutions_str); // Output: "1920x1080, 1280x720"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-count" class="func-name"><a class="header" href="#fn-count"> <code>fn</code> count </a></h2>
-<pre><code class="language-rust ignore">fn count() -&gt; int</code></pre>
-<div>
-<div class="tab">
-<button group="count" id="link-count-Description"  class="tablinks active" 
-    onclick="openTab(event, 'count', 'Description')">
-Description
-</button>
-<button group="count" id="link-count-Returns"  class="tablinks" 
-    onclick="openTab(event, 'count', 'Returns')">
-Returns
-</button>
-<button group="count" id="link-count-Example"  class="tablinks" 
-    onclick="openTab(event, 'count', 'Example')">
-Example
-</button>
-</div>
-<div group="count" id="count-Description" class="tabcontent"  style="display: block;" >
-Get the number of connected monitors.
-</div>
-<div group="count" id="count-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the total number of connected monitors as an <code>i64</code>.</p>
-</div>
-<div group="count" id="count-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let count = monitor::count();
-print(count); // Output: Number of connected monitors
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-dimensions" class="func-name"><a class="header" href="#fn-dimensions"> <code>fn</code> dimensions </a></h2>
-<pre><code class="language-rust ignore">fn dimensions(index: int) -&gt; [int;4]</code></pre>
-<div>
-<div class="tab">
-<button group="dimensions" id="link-dimensions-Description"  class="tablinks active" 
-    onclick="openTab(event, 'dimensions', 'Description')">
-Description
-</button>
-<button group="dimensions" id="link-dimensions-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'dimensions', 'Arguments')">
-Arguments
-</button>
-<button group="dimensions" id="link-dimensions-Returns"  class="tablinks" 
-    onclick="openTab(event, 'dimensions', 'Returns')">
-Returns
-</button>
-<button group="dimensions" id="link-dimensions-Example"  class="tablinks" 
-    onclick="openTab(event, 'dimensions', 'Example')">
-Example
-</button>
-</div>
-<div group="dimensions" id="dimensions-Description" class="tabcontent"  style="display: block;" >
-Get the dimensions (x, y, width, height) of a specific monitor.
-</div>
-<div group="dimensions" id="dimensions-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>index</code> - The index of the monitor (0-based).</li>
-</ul>
-</div>
-<div group="dimensions" id="dimensions-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns an array with the monitor's position (x, y) and size (width, height).</p>
-</div>
-<div group="dimensions" id="dimensions-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let dimensions = monitor::dimensions(0);
-print(dimensions); // Output: [x, y, width, height]
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-dimensions_str" class="func-name"><a class="header" href="#fn-dimensions_str"> <code>fn</code> dimensions_str </a></h2>
-<pre><code class="language-rust ignore">fn dimensions_str(index: int) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="dimensions_str" id="link-dimensions_str-Description"  class="tablinks active" 
-    onclick="openTab(event, 'dimensions_str', 'Description')">
-Description
-</button>
-<button group="dimensions_str" id="link-dimensions_str-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'dimensions_str', 'Arguments')">
-Arguments
-</button>
-<button group="dimensions_str" id="link-dimensions_str-Returns"  class="tablinks" 
-    onclick="openTab(event, 'dimensions_str', 'Returns')">
-Returns
-</button>
-<button group="dimensions_str" id="link-dimensions_str-Example"  class="tablinks" 
-    onclick="openTab(event, 'dimensions_str', 'Example')">
-Example
-</button>
-</div>
-<div group="dimensions_str" id="dimensions_str-Description" class="tabcontent"  style="display: block;" >
-Get the dimensions of a specific monitor as a string.
-</div>
-<div group="dimensions_str" id="dimensions_str-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>index</code> - The index of the monitor (0-based).</li>
-</ul>
-</div>
-<div group="dimensions_str" id="dimensions_str-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the monitor's dimensions as a string in the format "x,y - width x height".</p>
-</div>
-<div group="dimensions_str" id="dimensions_str-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let dimensions_str = monitor::dimensions_str(0);
-print(dimensions_str); // Output: "0,0 - 1920x1080"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-dpi" class="func-name"><a class="header" href="#fn-dpi"> <code>fn</code> dpi </a></h2>
-<pre><code class="language-rust ignore">fn dpi(index: int) -&gt; float</code></pre>
-<div>
-<div class="tab">
-<button group="dpi" id="link-dpi-Description"  class="tablinks active" 
-    onclick="openTab(event, 'dpi', 'Description')">
-Description
-</button>
-<button group="dpi" id="link-dpi-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'dpi', 'Arguments')">
-Arguments
-</button>
-<button group="dpi" id="link-dpi-Returns"  class="tablinks" 
-    onclick="openTab(event, 'dpi', 'Returns')">
-Returns
-</button>
-<button group="dpi" id="link-dpi-Example"  class="tablinks" 
-    onclick="openTab(event, 'dpi', 'Example')">
-Example
-</button>
-</div>
-<div group="dpi" id="dpi-Description" class="tabcontent"  style="display: block;" >
-Get the DPI (dots per inch) of a specific monitor.
-</div>
-<div group="dpi" id="dpi-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>index</code> - The index of the monitor (0-based).</li>
-</ul>
-</div>
-<div group="dpi" id="dpi-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the DPI (scale factor * base DPI) of the monitor as a <code>f64</code>.</p>
-</div>
-<div group="dpi" id="dpi-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let dpi = monitor::dpi(0);
-print(dpi); // Output: DPI of the monitor
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-dpi_str" class="func-name"><a class="header" href="#fn-dpi_str"> <code>fn</code> dpi_str </a></h2>
-<pre><code class="language-rust ignore">fn dpi_str(index: int) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="dpi_str" id="link-dpi_str-Description"  class="tablinks active" 
-    onclick="openTab(event, 'dpi_str', 'Description')">
-Description
-</button>
-<button group="dpi_str" id="link-dpi_str-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'dpi_str', 'Arguments')">
-Arguments
-</button>
-<button group="dpi_str" id="link-dpi_str-Returns"  class="tablinks" 
-    onclick="openTab(event, 'dpi_str', 'Returns')">
-Returns
-</button>
-<button group="dpi_str" id="link-dpi_str-Example"  class="tablinks" 
-    onclick="openTab(event, 'dpi_str', 'Example')">
-Example
-</button>
-</div>
-<div group="dpi_str" id="dpi_str-Description" class="tabcontent"  style="display: block;" >
-Get the DPI of a specific monitor as a string.
-</div>
-<div group="dpi_str" id="dpi_str-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>index</code> - The index of the monitor (0-based).</li>
-</ul>
-</div>
-<div group="dpi_str" id="dpi_str-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the DPI of the monitor as a string formatted to 1 decimal place.</p>
-</div>
-<div group="dpi_str" id="dpi_str-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let dpi_str = monitor::dpi_str(0);
-print(dpi_str); // Output: "96.0"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-primary_resolution" class="func-name"><a class="header" href="#fn-primary_resolution"> <code>fn</code> primary_resolution </a></h2>
-<pre><code class="language-rust ignore">fn primary_resolution() -&gt; [int;2]</code></pre>
-<div>
-<div class="tab">
-<button group="primary_resolution" id="link-primary_resolution-Description"  class="tablinks active" 
-    onclick="openTab(event, 'primary_resolution', 'Description')">
-Description
-</button>
-<button group="primary_resolution" id="link-primary_resolution-Returns"  class="tablinks" 
-    onclick="openTab(event, 'primary_resolution', 'Returns')">
-Returns
-</button>
-<button group="primary_resolution" id="link-primary_resolution-Example"  class="tablinks" 
-    onclick="openTab(event, 'primary_resolution', 'Example')">
-Example
-</button>
-</div>
-<div group="primary_resolution" id="primary_resolution-Description" class="tabcontent"  style="display: block;" >
-Get the resolution of the primary monitor.
-</div>
-<div group="primary_resolution" id="primary_resolution-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns an array containing the width and height of the primary monitor as two <code>i64</code> values.</p>
-</div>
-<div group="primary_resolution" id="primary_resolution-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let resolution = monitor::primary_resolution();
-print(resolution); // Output: [width, height]
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-primary_resolution_str" class="func-name"><a class="header" href="#fn-primary_resolution_str"> <code>fn</code> primary_resolution_str </a></h2>
-<pre><code class="language-rust ignore">fn primary_resolution_str() -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="primary_resolution_str" id="link-primary_resolution_str-Description"  class="tablinks active" 
-    onclick="openTab(event, 'primary_resolution_str', 'Description')">
-Description
-</button>
-<button group="primary_resolution_str" id="link-primary_resolution_str-Returns"  class="tablinks" 
-    onclick="openTab(event, 'primary_resolution_str', 'Returns')">
-Returns
-</button>
-<button group="primary_resolution_str" id="link-primary_resolution_str-Example"  class="tablinks" 
-    onclick="openTab(event, 'primary_resolution_str', 'Example')">
-Example
-</button>
-</div>
-<div group="primary_resolution_str" id="primary_resolution_str-Description" class="tabcontent"  style="display: block;" >
-Get the resolution of the primary monitor as a string.
-</div>
-<div group="primary_resolution_str" id="primary_resolution_str-Returns" class="tabcontent"  style="display: none;" >
-<p>Returns the resolution of the primary monitor as a string in the format "width x height".</p>
-</div>
-<div group="primary_resolution_str" id="primary_resolution_str-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::monitor" as monitor;
-
-let resolution_str = monitor::primary_resolution_str();
-print(resolution_str); // Output: "1920x1080"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
 <h1 id="text"><a class="header" href="#text">text</a></h1>
 <p><code>Namespace: global/std/text</code></p>
 <div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
@@ -1038,6 +603,441 @@ Set the value of an environment variable.
 
 // Set the value of the "MY_VAR" environment variable
 env::set_env("MY_VAR", "SomeValue");
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<h1 id="monitor"><a class="header" href="#monitor">monitor</a></h1>
+<p><code>Namespace: global/std/monitor</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-all_resolutions" class="func-name"><a class="header" href="#fn-all_resolutions"> <code>fn</code> all_resolutions </a></h2>
+<pre><code class="language-rust ignore">fn all_resolutions() -&gt; Vec&lt;[int;2]&gt;</code></pre>
+<div>
+<div class="tab">
+<button group="all_resolutions" id="link-all_resolutions-Description"  class="tablinks active" 
+    onclick="openTab(event, 'all_resolutions', 'Description')">
+Description
+</button>
+<button group="all_resolutions" id="link-all_resolutions-Returns"  class="tablinks" 
+    onclick="openTab(event, 'all_resolutions', 'Returns')">
+Returns
+</button>
+<button group="all_resolutions" id="link-all_resolutions-Example"  class="tablinks" 
+    onclick="openTab(event, 'all_resolutions', 'Example')">
+Example
+</button>
+</div>
+<div group="all_resolutions" id="all_resolutions-Description" class="tabcontent"  style="display: block;" >
+Get the resolutions of all connected monitors.
+</div>
+<div group="all_resolutions" id="all_resolutions-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns an array of arrays, where each inner array contains the width and height of a monitor.</p>
+</div>
+<div group="all_resolutions" id="all_resolutions-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let resolutions = monitor::all_resolutions();
+print(resolutions); // Output: [[width1, height1], [width2, height2], ...]
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-all_resolutions_str" class="func-name"><a class="header" href="#fn-all_resolutions_str"> <code>fn</code> all_resolutions_str </a></h2>
+<pre><code class="language-rust ignore">fn all_resolutions_str() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="all_resolutions_str" id="link-all_resolutions_str-Description"  class="tablinks active" 
+    onclick="openTab(event, 'all_resolutions_str', 'Description')">
+Description
+</button>
+<button group="all_resolutions_str" id="link-all_resolutions_str-Returns"  class="tablinks" 
+    onclick="openTab(event, 'all_resolutions_str', 'Returns')">
+Returns
+</button>
+<button group="all_resolutions_str" id="link-all_resolutions_str-Example"  class="tablinks" 
+    onclick="openTab(event, 'all_resolutions_str', 'Example')">
+Example
+</button>
+</div>
+<div group="all_resolutions_str" id="all_resolutions_str-Description" class="tabcontent"  style="display: block;" >
+Get the resolutions of all connected monitors as a string.
+</div>
+<div group="all_resolutions_str" id="all_resolutions_str-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns a string where each monitor's resolution is formatted as "width x height", separated by commas.</p>
+</div>
+<div group="all_resolutions_str" id="all_resolutions_str-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let resolutions_str = monitor::all_resolutions_str();
+print(resolutions_str); // Output: "1920x1080, 1280x720"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-count" class="func-name"><a class="header" href="#fn-count"> <code>fn</code> count </a></h2>
+<pre><code class="language-rust ignore">fn count() -&gt; int</code></pre>
+<div>
+<div class="tab">
+<button group="count" id="link-count-Description"  class="tablinks active" 
+    onclick="openTab(event, 'count', 'Description')">
+Description
+</button>
+<button group="count" id="link-count-Returns"  class="tablinks" 
+    onclick="openTab(event, 'count', 'Returns')">
+Returns
+</button>
+<button group="count" id="link-count-Example"  class="tablinks" 
+    onclick="openTab(event, 'count', 'Example')">
+Example
+</button>
+</div>
+<div group="count" id="count-Description" class="tabcontent"  style="display: block;" >
+Get the number of connected monitors.
+</div>
+<div group="count" id="count-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the total number of connected monitors as an <code>i64</code>.</p>
+</div>
+<div group="count" id="count-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let count = monitor::count();
+print(count); // Output: Number of connected monitors
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-dimensions" class="func-name"><a class="header" href="#fn-dimensions"> <code>fn</code> dimensions </a></h2>
+<pre><code class="language-rust ignore">fn dimensions(index: int) -&gt; [int;4]</code></pre>
+<div>
+<div class="tab">
+<button group="dimensions" id="link-dimensions-Description"  class="tablinks active" 
+    onclick="openTab(event, 'dimensions', 'Description')">
+Description
+</button>
+<button group="dimensions" id="link-dimensions-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'dimensions', 'Arguments')">
+Arguments
+</button>
+<button group="dimensions" id="link-dimensions-Returns"  class="tablinks" 
+    onclick="openTab(event, 'dimensions', 'Returns')">
+Returns
+</button>
+<button group="dimensions" id="link-dimensions-Example"  class="tablinks" 
+    onclick="openTab(event, 'dimensions', 'Example')">
+Example
+</button>
+</div>
+<div group="dimensions" id="dimensions-Description" class="tabcontent"  style="display: block;" >
+Get the dimensions (x, y, width, height) of a specific monitor.
+</div>
+<div group="dimensions" id="dimensions-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>index</code> - The index of the monitor (0-based).</li>
+</ul>
+</div>
+<div group="dimensions" id="dimensions-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns an array with the monitor's position (x, y) and size (width, height).</p>
+</div>
+<div group="dimensions" id="dimensions-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let dimensions = monitor::dimensions(0);
+print(dimensions); // Output: [x, y, width, height]
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-dimensions_str" class="func-name"><a class="header" href="#fn-dimensions_str"> <code>fn</code> dimensions_str </a></h2>
+<pre><code class="language-rust ignore">fn dimensions_str(index: int) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="dimensions_str" id="link-dimensions_str-Description"  class="tablinks active" 
+    onclick="openTab(event, 'dimensions_str', 'Description')">
+Description
+</button>
+<button group="dimensions_str" id="link-dimensions_str-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'dimensions_str', 'Arguments')">
+Arguments
+</button>
+<button group="dimensions_str" id="link-dimensions_str-Returns"  class="tablinks" 
+    onclick="openTab(event, 'dimensions_str', 'Returns')">
+Returns
+</button>
+<button group="dimensions_str" id="link-dimensions_str-Example"  class="tablinks" 
+    onclick="openTab(event, 'dimensions_str', 'Example')">
+Example
+</button>
+</div>
+<div group="dimensions_str" id="dimensions_str-Description" class="tabcontent"  style="display: block;" >
+Get the dimensions of a specific monitor as a string.
+</div>
+<div group="dimensions_str" id="dimensions_str-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>index</code> - The index of the monitor (0-based).</li>
+</ul>
+</div>
+<div group="dimensions_str" id="dimensions_str-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the monitor's dimensions as a string in the format "x,y - width x height".</p>
+</div>
+<div group="dimensions_str" id="dimensions_str-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let dimensions_str = monitor::dimensions_str(0);
+print(dimensions_str); // Output: "0,0 - 1920x1080"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-dpi" class="func-name"><a class="header" href="#fn-dpi"> <code>fn</code> dpi </a></h2>
+<pre><code class="language-rust ignore">fn dpi(index: int) -&gt; float</code></pre>
+<div>
+<div class="tab">
+<button group="dpi" id="link-dpi-Description"  class="tablinks active" 
+    onclick="openTab(event, 'dpi', 'Description')">
+Description
+</button>
+<button group="dpi" id="link-dpi-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'dpi', 'Arguments')">
+Arguments
+</button>
+<button group="dpi" id="link-dpi-Returns"  class="tablinks" 
+    onclick="openTab(event, 'dpi', 'Returns')">
+Returns
+</button>
+<button group="dpi" id="link-dpi-Example"  class="tablinks" 
+    onclick="openTab(event, 'dpi', 'Example')">
+Example
+</button>
+</div>
+<div group="dpi" id="dpi-Description" class="tabcontent"  style="display: block;" >
+Get the DPI (dots per inch) of a specific monitor.
+</div>
+<div group="dpi" id="dpi-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>index</code> - The index of the monitor (0-based).</li>
+</ul>
+</div>
+<div group="dpi" id="dpi-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the DPI (scale factor * base DPI) of the monitor as a <code>f64</code>.</p>
+</div>
+<div group="dpi" id="dpi-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let dpi = monitor::dpi(0);
+print(dpi); // Output: DPI of the monitor
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-dpi_str" class="func-name"><a class="header" href="#fn-dpi_str"> <code>fn</code> dpi_str </a></h2>
+<pre><code class="language-rust ignore">fn dpi_str(index: int) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="dpi_str" id="link-dpi_str-Description"  class="tablinks active" 
+    onclick="openTab(event, 'dpi_str', 'Description')">
+Description
+</button>
+<button group="dpi_str" id="link-dpi_str-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'dpi_str', 'Arguments')">
+Arguments
+</button>
+<button group="dpi_str" id="link-dpi_str-Returns"  class="tablinks" 
+    onclick="openTab(event, 'dpi_str', 'Returns')">
+Returns
+</button>
+<button group="dpi_str" id="link-dpi_str-Example"  class="tablinks" 
+    onclick="openTab(event, 'dpi_str', 'Example')">
+Example
+</button>
+</div>
+<div group="dpi_str" id="dpi_str-Description" class="tabcontent"  style="display: block;" >
+Get the DPI of a specific monitor as a string.
+</div>
+<div group="dpi_str" id="dpi_str-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>index</code> - The index of the monitor (0-based).</li>
+</ul>
+</div>
+<div group="dpi_str" id="dpi_str-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the DPI of the monitor as a string formatted to 1 decimal place.</p>
+</div>
+<div group="dpi_str" id="dpi_str-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let dpi_str = monitor::dpi_str(0);
+print(dpi_str); // Output: "96.0"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-primary_resolution" class="func-name"><a class="header" href="#fn-primary_resolution"> <code>fn</code> primary_resolution </a></h2>
+<pre><code class="language-rust ignore">fn primary_resolution() -&gt; [int;2]</code></pre>
+<div>
+<div class="tab">
+<button group="primary_resolution" id="link-primary_resolution-Description"  class="tablinks active" 
+    onclick="openTab(event, 'primary_resolution', 'Description')">
+Description
+</button>
+<button group="primary_resolution" id="link-primary_resolution-Returns"  class="tablinks" 
+    onclick="openTab(event, 'primary_resolution', 'Returns')">
+Returns
+</button>
+<button group="primary_resolution" id="link-primary_resolution-Example"  class="tablinks" 
+    onclick="openTab(event, 'primary_resolution', 'Example')">
+Example
+</button>
+</div>
+<div group="primary_resolution" id="primary_resolution-Description" class="tabcontent"  style="display: block;" >
+Get the resolution of the primary monitor.
+</div>
+<div group="primary_resolution" id="primary_resolution-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns an array containing the width and height of the primary monitor as two <code>i64</code> values.</p>
+</div>
+<div group="primary_resolution" id="primary_resolution-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let resolution = monitor::primary_resolution();
+print(resolution); // Output: [width, height]
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-primary_resolution_str" class="func-name"><a class="header" href="#fn-primary_resolution_str"> <code>fn</code> primary_resolution_str </a></h2>
+<pre><code class="language-rust ignore">fn primary_resolution_str() -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="primary_resolution_str" id="link-primary_resolution_str-Description"  class="tablinks active" 
+    onclick="openTab(event, 'primary_resolution_str', 'Description')">
+Description
+</button>
+<button group="primary_resolution_str" id="link-primary_resolution_str-Returns"  class="tablinks" 
+    onclick="openTab(event, 'primary_resolution_str', 'Returns')">
+Returns
+</button>
+<button group="primary_resolution_str" id="link-primary_resolution_str-Example"  class="tablinks" 
+    onclick="openTab(event, 'primary_resolution_str', 'Example')">
+Example
+</button>
+</div>
+<div group="primary_resolution_str" id="primary_resolution_str-Description" class="tabcontent"  style="display: block;" >
+Get the resolution of the primary monitor as a string.
+</div>
+<div group="primary_resolution_str" id="primary_resolution_str-Returns" class="tabcontent"  style="display: none;" >
+<p>Returns the resolution of the primary monitor as a string in the format "width x height".</p>
+</div>
+<div group="primary_resolution_str" id="primary_resolution_str-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::monitor" as monitor;
+
+let resolution_str = monitor::primary_resolution_str();
+print(resolution_str); // Output: "1920x1080"
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<h1 id="command"><a class="header" href="#command">command</a></h1>
+<p><code>Namespace: global/std/command</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-run" class="func-name"><a class="header" href="#fn-run"> <code>fn</code> run </a></h2>
+<pre><code class="language-rust ignore">fn run(cmd: String)</code></pre>
+<div>
+<div class="tab">
+<button group="run" id="link-run-Description"  class="tablinks active" 
+    onclick="openTab(event, 'run', 'Description')">
+Description
+</button>
+<button group="run" id="link-run-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Arguments')">
+Arguments
+</button>
+<button group="run" id="link-run-Returns"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Returns')">
+Returns
+</button>
+<button group="run" id="link-run-Example"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Example')">
+Example
+</button>
+</div>
+<div group="run" id="run-Description" class="tabcontent"  style="display: block;" >
+Executes a shell command without capturing the output.
+</div>
+<div group="run" id="run-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>cmd</code> - The shell command to execute as a string.</li>
+</ul>
+</div>
+<div group="run" id="run-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns nothing if the command executes successfully. If there is an error
+running the command, it returns the error.</p>
+</div>
+<div group="run" id="run-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::command" as cmd;
+
+// Run a shell command (e.g., list directory contents)
+cmd::run("ls -l");
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-run_and_read" class="func-name"><a class="header" href="#fn-run_and_read"> <code>fn</code> run_and_read </a></h2>
+<pre><code class="language-rust ignore">fn run_and_read(cmd: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="run_and_read" id="link-run_and_read-Description"  class="tablinks active" 
+    onclick="openTab(event, 'run_and_read', 'Description')">
+Description
+</button>
+<button group="run_and_read" id="link-run_and_read-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Arguments')">
+Arguments
+</button>
+<button group="run_and_read" id="link-run_and_read-Returns"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Returns')">
+Returns
+</button>
+<button group="run_and_read" id="link-run_and_read-Example"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Example')">
+Example
+</button>
+</div>
+<div group="run_and_read" id="run_and_read-Description" class="tabcontent"  style="display: block;" >
+Executes a shell command and captures its output.
+</div>
+<div group="run_and_read" id="run_and_read-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>cmd</code> - The shell command to execute as a string.</li>
+</ul>
+</div>
+<div group="run_and_read" id="run_and_read-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the standard output of the command as a <code>string</code>. If the command fails,
+it returns the error.</p>
+</div>
+<div group="run_and_read" id="run_and_read-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::command" as cmd;
+
+// Run a shell command and capture its output
+let output = cmd::run_and_read("echo 'Hello, world!'");
+print(output); // output: Hello, world!
 </code></pre>
 </div>
 </div>
