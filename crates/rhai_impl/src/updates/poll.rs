@@ -18,10 +18,10 @@ use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
 use rhai::Map;
 use shared_utils::extract_props::*;
 use std::time::Duration;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::Command;
 use tokio::sync::watch;
 use tokio::time::sleep;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 pub fn handle_poll(
     var_name: String,

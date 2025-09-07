@@ -392,7 +392,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetRegistry::new(Some(self.ewwii_config.get_root_node()?.as_ref()));
 
             // There should be an optimization here.
-            // like, we should deextend the map when a window 
+            // like, we should deextend the map when a window
             // is gone from scope? :/
             if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                 match maybe_registry.as_mut() {
@@ -442,7 +442,7 @@ impl<B: DisplayBackend> App<B> {
 
                 let store = rhai_impl::updates::handle_state_changes(
                     self.ewwii_config.get_root_node()?.as_ref(),
-                    tx
+                    tx,
                 );
 
                 self.pl_handler_store = Some(store.clone());
