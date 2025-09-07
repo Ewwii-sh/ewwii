@@ -146,6 +146,9 @@ pub struct App<B: DisplayBackend> {
     /// The dynamic gtk widget registery
     pub widget_reg_store: Rc<Mutex<Option<WidgetRegistry>>>,
 
+    // The cached store of poll/listen handlers
+    pub pl_handler_store: Option<rhai_impl::updates::ReactiveVarStore>,
+
     pub paths: EwwPaths,
     pub phantom: PhantomData<B>,
 }
@@ -391,6 +394,9 @@ impl<B: DisplayBackend> App<B> {
             let new_wdgt_registry =
                 WidgetRegistry::new(Some(self.ewwii_config.get_root_node()?.as_ref()));
 
+            // There should be an optimization here.
+            // like, we should deextend the map when a window 
+            // is gone from scope? :/
             if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                 match maybe_registry.as_mut() {
                     Some(existing_registry) => {
@@ -429,18 +435,20 @@ impl<B: DisplayBackend> App<B> {
             // if we can move this piece of code somewhere else.
             // I just cant find the perfect place where it can live
             // so I guess that I will just let it stay right here.
+            let config_path = self.paths.get_rhai_path();
+            let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
+            let mut stored_parser = rhai_impl::parser::ParseConfig::new();
+
             if self.open_windows.is_empty() {
                 let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
-                let config_path = self.paths.get_rhai_path();
-                let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-                let mut stored_parser = rhai_impl::parser::ParseConfig::new();
-
                 let widget_reg_store = self.widget_reg_store.clone();
 
                 let store = rhai_impl::updates::handle_state_changes(
                     self.ewwii_config.get_root_node()?.as_ref(),
                     tx
                 );
+
+                self.pl_handler_store = Some(store.clone());
 
                 glib::MainContext::default().spawn_local(async move {
                     let mut pending_updates = HashSet::new();
@@ -484,6 +492,37 @@ impl<B: DisplayBackend> App<B> {
                     }
 
                     log::debug!("Receiver loop exited");
+                });
+            } else {
+                // else, just update the window from the current store.
+                let widget_reg_store = self.widget_reg_store.clone();
+                let store = self.pl_handler_store.clone().expect("REASON");
+
+                glib::MainContext::default().spawn_local(async move {
+                    let vars = store.read().unwrap().clone();
+                    match generate_new_widgetnode(
+                        &vars,
+                        &config_path,
+                        compiled_ast.as_deref(),
+                        Some(&mut stored_parser),
+                    )
+                    .await
+                    {
+                        Ok(new_widget) => {
+                            if let Ok(mut maybe_registry) = widget_reg_store.lock() {
+                                if let Some(registry) = maybe_registry.as_mut() {
+                                    let _ = registry.update_widget_tree(new_widget);
+                                } else {
+                                    log::error!("WidgetRegistry is None inside async loop");
+                                }
+                            } else {
+                                log::error!("Failed to acquire lock on widget registry");
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("Failed to generate new widgetnode: {:#}", e);
+                        }
+                    }
                 });
             }
 
