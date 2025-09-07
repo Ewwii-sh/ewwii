@@ -117,19 +117,6 @@ impl EwwiiConfig {
         }
     }
 
-    pub fn get_borrowed_windows_root_widget(config_tree: &WidgetNode) -> Result<&WidgetNode> {
-        if let WidgetNode::Enter(children) = config_tree {
-            for node in children {
-                if let WidgetNode::DefWindow { node: boxed_node, .. } = node {
-                    return Ok(&**boxed_node);
-                }
-            }
-            bail!("No `DefWindow` found inside `Enter`");
-        } else {
-            bail!("Expected root node to be `Enter`, but got something else.");
-        }
-    }
-
     pub fn get_owned_compiled_ast(&self) -> Option<Rc<AST>> {
         self.compiled_ast.clone()
     }
