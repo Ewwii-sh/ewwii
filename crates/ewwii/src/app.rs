@@ -145,9 +145,6 @@ pub struct App<B: DisplayBackend> {
 
     /// The dynamic gtk widget registery
     pub widget_reg_store: Rc<Mutex<Option<WidgetRegistry>>>,
-    
-    /// The poll/listen handler
-    pub pl_handler_store: Option<ReactiveVarStore>,
 
     pub paths: EwwPaths,
     pub phantom: PhantomData<B>,
@@ -391,12 +388,8 @@ impl<B: DisplayBackend> App<B> {
 
             // Should hold the id and the props of a widget
             // It is critical for supporting dynamic updates
-            let new_wdgt_registry = WidgetRegistry::new(Some(
-                config::EwwiiConfig::get_borrowed_windows_root_widget(
-                    self.ewwii_config.get_root_node()?.as_ref(),
-                )?,
-            ));
-
+            let new_wdgt_registry =
+                WidgetRegistry::new(Some(self.ewwii_config.get_root_node()?.as_ref()));
 
             if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                 match maybe_registry.as_mut() {
@@ -424,8 +417,7 @@ impl<B: DisplayBackend> App<B> {
             root_widget.style_context().add_class(window_name);
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
-            let mut ewwii_window =
-                initialize_window::<B>(&initiator, monitor, root_widget)?;
+            let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
             ewwii_window.gtk_window.style_context().add_class(window_name);
 
             // Start the poll/listen only once per startup
@@ -438,71 +430,62 @@ impl<B: DisplayBackend> App<B> {
             // I just cant find the perfect place where it can live
             // so I guess that I will just let it stay right here.
             if self.open_windows.is_empty() {
+                let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+                let config_path = self.paths.get_rhai_path();
+                let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
+                let mut stored_parser = rhai_impl::parser::ParseConfig::new();
+
+                let widget_reg_store = self.widget_reg_store.clone();
+
                 let store = rhai_impl::updates::handle_state_changes(
                     self.ewwii_config.get_root_node()?.as_ref(),
+                    tx
                 );
-            }
-            
-            let store = self.pl_handler_store.clone();
-            if store.read().unwrap().is_empty() {
-                rhai_impl::updates::handle_state_changes(
-                    self.ewwii_config.get_root_node()?.as_ref(),
-                    store.clone(),
-                );
-            }
 
-            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
-            let config_path = self.paths.get_rhai_path();
-            let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-            let mut stored_parser = rhai_impl::parser::ParseConfig::new();
+                glib::MainContext::default().spawn_local(async move {
+                    let mut pending_updates = HashSet::new();
 
-            let widget_reg_store = self.widget_reg_store.clone();
+                    while let Some(var_name) = rx.recv().await {
+                        pending_updates.insert(var_name);
 
-            register_tx(tx);
+                        // short batching interval (1 frame)
+                        glib::timeout_future(Duration::from_millis(16)).await;
 
-            glib::MainContext::default().spawn_local(async move {
-                let mut pending_updates = HashSet::new();
+                        while let Ok(next_var) = rx.try_recv() {
+                            pending_updates.insert(next_var);
+                        }
 
-                while let Some(var_name) = rx.recv().await {
-                    pending_updates.insert(var_name);
-
-                    // short batching interval (1 frame)
-                    glib::timeout_future(Duration::from_millis(16)).await;
-
-                    while let Ok(next_var) = rx.try_recv() {
-                        pending_updates.insert(next_var);
-                    }
-
-                    let vars = store.read().unwrap().clone();
-                    match generate_new_widgetnode(
-                        &vars,
-                        &config_path,
-                        compiled_ast.as_deref(),
-                        Some(&mut stored_parser),
-                    )
-                    .await
-                    {
-                        Ok(new_widget) => {
-                            if let Ok(mut maybe_registry) = widget_reg_store.lock() {
-                                if let Some(registry) = maybe_registry.as_mut() {
-                                    let _ = registry.update_widget_tree(new_widget);
+                        let vars = store.read().unwrap().clone();
+                        match generate_new_widgetnode(
+                            &vars,
+                            &config_path,
+                            compiled_ast.as_deref(),
+                            Some(&mut stored_parser),
+                        )
+                        .await
+                        {
+                            Ok(new_widget) => {
+                                if let Ok(mut maybe_registry) = widget_reg_store.lock() {
+                                    if let Some(registry) = maybe_registry.as_mut() {
+                                        let _ = registry.update_widget_tree(new_widget);
+                                    } else {
+                                        log::error!("WidgetRegistry is None inside async loop");
+                                    }
                                 } else {
-                                    log::error!("WidgetRegistry is None inside async loop");
+                                    log::error!("Failed to acquire lock on widget registry");
                                 }
-                            } else {
-                                log::error!("Failed to acquire lock on widget registry");
+                            }
+                            Err(e) => {
+                                log::error!("Failed to generate new widgetnode: {:#}", e);
                             }
                         }
-                        Err(e) => {
-                            log::error!("Failed to generate new widgetnode: {:#}", e);
-                        }
+
+                        pending_updates.clear();
                     }
 
-                    pending_updates.clear();
-                }
-
-                log::debug!("Receiver loop exited");
-            });
+                    log::debug!("Receiver loop exited");
+                });
+            }
 
             let gtk_close_handler = {
                 let app_evt_sender = self.app_evt_send.clone();
@@ -814,7 +797,7 @@ async fn generate_new_widgetnode(
 
     let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast)?;
 
-    Ok(config::EwwiiConfig::get_windows_root_widget(new_root_widget)?)
+    Ok(new_root_widget)
 }
 
 /// Apply the provided window-positioning rules to the window.

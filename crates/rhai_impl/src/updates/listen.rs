@@ -13,7 +13,7 @@
     }
 */
 
-use super::{ReactiveVarStore, SHUTDOWN_REGISTRY, broadcast_update};
+use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
 use nix::{
     sys::signal,
     unistd::{setpgid, Pid},
@@ -31,6 +31,7 @@ pub fn handle_listen(
     var_name: String,
     props: &Map,
     store: ReactiveVarStore,
+    tx: tokio::sync::mpsc::UnboundedSender<String>,
 ) {
     let cmd = match get_string_prop(props, "cmd", Some("")) {
         Ok(c) => c,
@@ -49,6 +50,7 @@ pub fn handle_listen(
     // }
 
     let store = store.clone();
+    let tx = tx.clone();
 
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
@@ -109,7 +111,7 @@ pub fn handle_listen(
                                 last_value = Some(val.clone());
                                 log::debug!("[{}] listened value: {}", var_name, val);
                                 store.write().unwrap().insert(var_name.clone(), val);
-                                let _ = broadcast_update(var_name.clone());
+                                let _ = tx.send(var_name.clone());
                             } else {
                                 log::trace!("[{}] value unchanged, skipping tx", var_name);
                             }
