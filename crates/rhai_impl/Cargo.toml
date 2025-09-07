@@ -22,5 +22,5 @@ ahash.workspace = true
 nix = { workspace = true, features = ["process", "fs", "signal"] }
 libc.workspace = true
 # error handling
-rhai_trace = "0.1.2"
+rhai_trace = "0.2.0"
 codespan-reporting.workspace = true
