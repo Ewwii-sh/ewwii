@@ -77,10 +77,7 @@ pub enum DaemonCommand {
     PrintDebug(DaemonResponseSender),
     ListWindows(DaemonResponseSender),
     ListActiveWindows(DaemonResponseSender),
-    TriggerUpdateUI {
-        window: String,
-        inject_vars: Option<HashMap<String, String>>,
-    },
+    TriggerUpdateUI(Option<HashMap<String, String>>),
     CallRhaiFns {
         calls: Vec<String>,
         sender: DaemonResponseSender,
@@ -309,8 +306,8 @@ impl<B: DisplayBackend> App<B> {
                 let output = format!("{:#?}", &self);
                 sender.send_success(output)?
             }
-            DaemonCommand::TriggerUpdateUI { window, inject_vars } => {
-                let _ = self.trigger_ui_update_with(window, inject_vars)?;
+            DaemonCommand::TriggerUpdateUI(inject_vars) => {
+                let _ = self.trigger_ui_update_with(inject_vars)?;
             }
             DaemonCommand::CallRhaiFns { calls, sender } => {
                 let output = match self.call_rhai_fns(calls) {
@@ -668,7 +665,6 @@ impl<B: DisplayBackend> App<B> {
     /// Even if there are no flags, the UI will still be updated.
     pub fn trigger_ui_update_with(
         &self,
-        window_name: String,
         inject_vars: Option<HashMap<String, String>>,
     ) -> Result<()> {
         let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
