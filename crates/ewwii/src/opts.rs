@@ -191,10 +191,6 @@ pub enum ActionWithServer {
     /// Update the widgets of a particular window. Poll/Listen variables will be cleared
     #[command(name = "update", alias = "u")]
     TriggerUpdateUI {
-        /// Name of the window you want to update.
-        #[arg(long, short)]
-        window: String,
-
         /// Inject variables while updating the UI
         ///
         /// Format: --inject-vars foo="val1" baz="val2"
@@ -271,8 +267,8 @@ impl ActionWithServer {
         self,
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
-            ActionWithServer::TriggerUpdateUI { window, inject_vars } => {
-                app::DaemonCommand::TriggerUpdateUI { window, inject_vars }
+            ActionWithServer::TriggerUpdateUI { inject_vars } => {
+                app::DaemonCommand::TriggerUpdateUI(inject_vars)
             }
             ActionWithServer::CallRhaiFns { calls } => {
                 return with_response_channel(|sender| app::DaemonCommand::CallRhaiFns {
