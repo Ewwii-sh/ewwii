@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.2.0] - [UNRELEASED]
 
+### Added
+
+-   Better poll handling for performance.
+
 ### Changed
 
 -   `update` to not require a window argument.

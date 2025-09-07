@@ -21,6 +21,7 @@ use std::time::Duration;
 use tokio::process::Command;
 use tokio::sync::watch;
 use tokio::time::sleep;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 pub fn handle_poll(
     var_name: String,
@@ -55,35 +56,62 @@ pub fn handle_poll(
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
     tokio::spawn(async move {
+        // Spawn a persistent shell
+        let mut child = match Command::new("/bin/sh")
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+        {
+            Ok(c) => c,
+            Err(err) => {
+                log::error!("[{}] failed to spawn shell: {}", var_name, err);
+                return;
+            }
+        };
+
+        let mut stdin = child.stdin.take().expect("Failed to open stdin");
+        let stdout = child.stdout.take().expect("Failed to open stdout");
+        let mut reader = BufReader::new(stdout).lines();
+
         let mut last_value: Option<String> = None;
 
         loop {
-            match Command::new("/bin/sh").arg("-c").arg(&cmd).output().await {
-                Ok(output) => {
-                    if output.status.success() {
-                        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                        if Some(&stdout) != last_value.as_ref() {
-                            last_value = Some(stdout.clone());
+            // Send command
+            if let Err(err) = stdin.write_all(cmd.as_bytes()).await {
+                log::error!("[{}] failed to write to shell stdin: {}", var_name, err);
+                break;
+            }
+            if let Err(err) = stdin.write_all(b"\n").await {
+                log::error!("[{}] failed to write newline to shell stdin: {}", var_name, err);
+                break;
+            }
+            if let Err(err) = stdin.flush().await {
+                log::error!("[{}] failed to flush shell stdin: {}", var_name, err);
+                break;
+            }
 
-                            log::debug!("[{}] polled value: {}", var_name, stdout);
-                            store.write().unwrap().insert(var_name.clone(), stdout);
-                            let _ = tx.send(var_name.clone());
-                        } else {
-                            log::trace!("[{}] value unchanged, skipping tx", var_name);
-                        }
-                    } else {
-                        log::warn!("[{}] command failed: {:?}", var_name, output.status);
-                    }
+            // Read single line output
+            let output_line = reader.next_line().await;
+            if let Ok(Some(stdout_line)) = output_line {
+                let stdout_trimmed = stdout_line.trim().to_string();
+                if Some(&stdout_trimmed) != last_value.as_ref() {
+                    last_value = Some(stdout_trimmed.clone());
+                    log::debug!("[{}] polled value: {}", var_name, stdout_trimmed);
+                    store.write().unwrap().insert(var_name.clone(), stdout_trimmed);
+                    let _ = tx.send(var_name.clone());
+                } else {
+                    log::trace!("[{}] value unchanged, skipping tx", var_name);
                 }
-                Err(err) => {
-                    log::error!("[{}] failed to execute poll cmd: {}", var_name, err);
-                }
+            } else {
+                log::warn!("[{}] shell output ended or failed: {:?}", var_name, output_line);
+                break;
             }
 
             tokio::select! {
-                _ = sleep(interval) => { continue; }
+                _ = sleep(interval) => {}
                 _ = shutdown_rx.changed() => {
                     if *shutdown_rx.borrow() {
+                        let _ = child.kill().await;
                         break;
                     }
                 }
