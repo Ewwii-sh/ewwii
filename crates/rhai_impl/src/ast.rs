@@ -54,6 +54,17 @@ pub fn get_id_to_widget_info<'a>(
     parent_id: Option<u64>,
 ) -> Result<()> {
     match node {
+        // == Special Cases == //
+        WidgetNode::Enter(children) => {
+            for child in children {
+                get_id_to_widget_info(child, id_to_props, parent_id)?;
+            }
+        }
+        WidgetNode::DefWindow { node: child, .. } => {
+            get_id_to_widget_info(&**child, id_to_props, parent_id)?
+        }
+
+        // == Normal Widgets == //
         WidgetNode::Box { props, children } => {
             let id = hash_props_and_type(props, "Box");
             insert_wdgt_info(node, props, "Box", children.as_slice(), parent_id, id_to_props)?;

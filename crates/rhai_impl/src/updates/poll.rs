@@ -14,7 +14,7 @@
     }
 */
 
-use super::{ReactiveVarStore, SHUTDOWN_REGISTRY, broadcast_update};
+use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
 use rhai::Map;
 use shared_utils::extract_props::*;
 use std::time::Duration;
@@ -26,6 +26,7 @@ pub fn handle_poll(
     var_name: String,
     props: &Map,
     store: ReactiveVarStore,
+    tx: tokio::sync::mpsc::UnboundedSender<String>,
 ) {
     // Parse polling interval
     let interval = get_duration_prop(props, "interval", Some(Duration::from_secs(1)));
@@ -48,6 +49,7 @@ pub fn handle_poll(
     // }
 
     let store = store.clone();
+    let tx = tx.clone();
 
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
@@ -65,7 +67,7 @@ pub fn handle_poll(
 
                             log::debug!("[{}] polled value: {}", var_name, stdout);
                             store.write().unwrap().insert(var_name.clone(), stdout);
-                            let _ = broadcast_update(var_name.clone());
+                            let _ = tx.send(var_name.clone());
                         } else {
                             log::trace!("[{}] value unchanged, skipping tx", var_name);
                         }
