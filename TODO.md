@@ -1,2 +1,0 @@
--   Migrate to GTK4
--   Fix state not updating on startup bug
