@@ -268,7 +268,10 @@ impl ActionWithServer {
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
             ActionWithServer::TriggerUpdateUI { inject_vars } => {
-                app::DaemonCommand::TriggerUpdateUI(inject_vars)
+                return with_response_channel(|sender| app::DaemonCommand::TriggerUpdateUI {
+                    inject_vars,
+                    sender,
+                })
             }
             ActionWithServer::CallRhaiFns { calls } => {
                 return with_response_channel(|sender| app::DaemonCommand::CallRhaiFns {
