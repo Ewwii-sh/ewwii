@@ -26,7 +26,7 @@ Firstly, you will need to create a top-level window. Here, you configure things 
 
 Let's look at an example window definition:
 
-```js
+```js,ignore
 enter([ // Add all defwindow inside enter. Enter is the root of the config.
   defwindow("example", #{
       monitor: 0,
@@ -40,7 +40,7 @@ enter([ // Add all defwindow inside enter. Enter is the root of the config.
         height: "30px",
         anchor: "top center"
       },
-      reserve: #{ distance: "40px" side: "top" }
+      reserve: #{ distance: "40px", side: "top" }
   }, label(#{ text: "example content" }))
 ])
 ```
