@@ -608,6 +608,97 @@ env::set_env("MY_VAR", "SomeValue");
 </div>
 </div>
 </br>
+<h1 id="command"><a class="header" href="#command">command</a></h1>
+<p><code>Namespace: global/std/command</code></p>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-run" class="func-name"><a class="header" href="#fn-run"> <code>fn</code> run </a></h2>
+<pre><code class="language-rust ignore">fn run(cmd: String)</code></pre>
+<div>
+<div class="tab">
+<button group="run" id="link-run-Description"  class="tablinks active" 
+    onclick="openTab(event, 'run', 'Description')">
+Description
+</button>
+<button group="run" id="link-run-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Arguments')">
+Arguments
+</button>
+<button group="run" id="link-run-Returns"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Returns')">
+Returns
+</button>
+<button group="run" id="link-run-Example"  class="tablinks" 
+    onclick="openTab(event, 'run', 'Example')">
+Example
+</button>
+</div>
+<div group="run" id="run-Description" class="tabcontent"  style="display: block;" >
+Executes a shell command without capturing the output.
+</div>
+<div group="run" id="run-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>cmd</code> - The shell command to execute as a string.</li>
+</ul>
+</div>
+<div group="run" id="run-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns nothing if the command executes successfully. If there is an error
+running the command, it returns the error.</p>
+</div>
+<div group="run" id="run-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::command" as cmd;
+
+// Run a shell command (e.g., list directory contents)
+cmd::run("ls -l");
+</code></pre>
+</div>
+</div>
+</div>
+</br>
+<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
+    <h2 id="fn-run_and_read" class="func-name"><a class="header" href="#fn-run_and_read"> <code>fn</code> run_and_read </a></h2>
+<pre><code class="language-rust ignore">fn run_and_read(cmd: String) -&gt; String</code></pre>
+<div>
+<div class="tab">
+<button group="run_and_read" id="link-run_and_read-Description"  class="tablinks active" 
+    onclick="openTab(event, 'run_and_read', 'Description')">
+Description
+</button>
+<button group="run_and_read" id="link-run_and_read-Arguments"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Arguments')">
+Arguments
+</button>
+<button group="run_and_read" id="link-run_and_read-Returns"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Returns')">
+Returns
+</button>
+<button group="run_and_read" id="link-run_and_read-Example"  class="tablinks" 
+    onclick="openTab(event, 'run_and_read', 'Example')">
+Example
+</button>
+</div>
+<div group="run_and_read" id="run_and_read-Description" class="tabcontent"  style="display: block;" >
+Executes a shell command and captures its output.
+</div>
+<div group="run_and_read" id="run_and_read-Arguments" class="tabcontent"  style="display: none;" >
+<ul>
+<li><code>cmd</code> - The shell command to execute as a string.</li>
+</ul>
+</div>
+<div group="run_and_read" id="run_and_read-Returns" class="tabcontent"  style="display: none;" >
+<p>This function returns the standard output of the command as a <code>string</code>. If the command fails,
+it returns the error.</p>
+</div>
+<div group="run_and_read" id="run_and_read-Example" class="tabcontent"  style="display: none;" >
+<pre><code class="language-js">import "std::command" as cmd;
+
+// Run a shell command and capture its output
+let output = cmd::run_and_read("echo 'Hello, world!'");
+print(output); // output: Hello, world!
+</code></pre>
+</div>
+</div>
+</div>
+</br>
 <h1 id="monitor"><a class="header" href="#monitor">monitor</a></h1>
 <p><code>Namespace: global/std/monitor</code></p>
 <div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
@@ -947,97 +1038,6 @@ Get the resolution of the primary monitor as a string.
 
 let resolution_str = monitor::primary_resolution_str();
 print(resolution_str); // Output: "1920x1080"
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<h1 id="command"><a class="header" href="#command">command</a></h1>
-<p><code>Namespace: global/std/command</code></p>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-run" class="func-name"><a class="header" href="#fn-run"> <code>fn</code> run </a></h2>
-<pre><code class="language-rust ignore">fn run(cmd: String)</code></pre>
-<div>
-<div class="tab">
-<button group="run" id="link-run-Description"  class="tablinks active" 
-    onclick="openTab(event, 'run', 'Description')">
-Description
-</button>
-<button group="run" id="link-run-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Arguments')">
-Arguments
-</button>
-<button group="run" id="link-run-Returns"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Returns')">
-Returns
-</button>
-<button group="run" id="link-run-Example"  class="tablinks" 
-    onclick="openTab(event, 'run', 'Example')">
-Example
-</button>
-</div>
-<div group="run" id="run-Description" class="tabcontent"  style="display: block;" >
-Executes a shell command without capturing the output.
-</div>
-<div group="run" id="run-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>cmd</code> - The shell command to execute as a string.</li>
-</ul>
-</div>
-<div group="run" id="run-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns nothing if the command executes successfully. If there is an error
-running the command, it returns the error.</p>
-</div>
-<div group="run" id="run-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::command" as cmd;
-
-// Run a shell command (e.g., list directory contents)
-cmd::run("ls -l");
-</code></pre>
-</div>
-</div>
-</div>
-</br>
-<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; border: 1px solid var(--theme-hover)'>
-    <h2 id="fn-run_and_read" class="func-name"><a class="header" href="#fn-run_and_read"> <code>fn</code> run_and_read </a></h2>
-<pre><code class="language-rust ignore">fn run_and_read(cmd: String) -&gt; String</code></pre>
-<div>
-<div class="tab">
-<button group="run_and_read" id="link-run_and_read-Description"  class="tablinks active" 
-    onclick="openTab(event, 'run_and_read', 'Description')">
-Description
-</button>
-<button group="run_and_read" id="link-run_and_read-Arguments"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Arguments')">
-Arguments
-</button>
-<button group="run_and_read" id="link-run_and_read-Returns"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Returns')">
-Returns
-</button>
-<button group="run_and_read" id="link-run_and_read-Example"  class="tablinks" 
-    onclick="openTab(event, 'run_and_read', 'Example')">
-Example
-</button>
-</div>
-<div group="run_and_read" id="run_and_read-Description" class="tabcontent"  style="display: block;" >
-Executes a shell command and captures its output.
-</div>
-<div group="run_and_read" id="run_and_read-Arguments" class="tabcontent"  style="display: none;" >
-<ul>
-<li><code>cmd</code> - The shell command to execute as a string.</li>
-</ul>
-</div>
-<div group="run_and_read" id="run_and_read-Returns" class="tabcontent"  style="display: none;" >
-<p>This function returns the standard output of the command as a <code>string</code>. If the command fails,
-it returns the error.</p>
-</div>
-<div group="run_and_read" id="run_and_read-Example" class="tabcontent"  style="display: none;" >
-<pre><code class="language-js">import "std::command" as cmd;
-
-// Run a shell command and capture its output
-let output = cmd::run_and_read("echo 'Hello, world!'");
-print(output); // output: Hello, world!
 </code></pre>
 </div>
 </div>

@@ -205,7 +205,7 @@ These files must be placed under <code>$XDG_CONFIG_HOME/ewwii</code> (this is mo
 <h2 id="creating-your-first-window"><a class="header" href="#creating-your-first-window">Creating your first window</a></h2>
 <p>Firstly, you will need to create a top-level window. Here, you configure things such as the name, position, geometry, and content of your window.</p>
 <p>Let's look at an example window definition:</p>
-<pre><code class="language-js">enter([ // Add all defwindow inside enter. Enter is the root of the config.
+<pre><code class="language-js ignore">enter([ // Add all defwindow inside enter. Enter is the root of the config.
   defwindow("example", #{
       monitor: 0,
       windowtype: "dock",
@@ -218,7 +218,7 @@ These files must be placed under <code>$XDG_CONFIG_HOME/ewwii</code> (this is mo
         height: "30px",
         anchor: "top center"
       },
-      reserve: #{ distance: "40px" side: "top" }
+      reserve: #{ distance: "40px", side: "top" }
   }, label(#{ text: "example content" }))
 ])
 </code></pre>
