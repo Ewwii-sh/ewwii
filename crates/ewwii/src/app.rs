@@ -77,7 +77,10 @@ pub enum DaemonCommand {
     PrintDebug(DaemonResponseSender),
     ListWindows(DaemonResponseSender),
     ListActiveWindows(DaemonResponseSender),
-    TriggerUpdateUI(Option<HashMap<String, String>>),
+    TriggerUpdateUI {
+        inject_vars: Option<HashMap<String, String>>,
+        sender: DaemonResponseSender,
+    },
     CallRhaiFns {
         calls: Vec<String>,
         sender: DaemonResponseSender,
@@ -306,8 +309,12 @@ impl<B: DisplayBackend> App<B> {
                 let output = format!("{:#?}", &self);
                 sender.send_success(output)?
             }
-            DaemonCommand::TriggerUpdateUI(inject_vars) => {
-                let _ = self.trigger_ui_update_with(inject_vars)?;
+            DaemonCommand::TriggerUpdateUI { inject_vars, sender } => {
+                let output = match self.trigger_ui_update_with(inject_vars) {
+                    Ok(_) => String::new(),
+                    Err(e) => e.to_string(),
+                };
+                sender.send_success(output)?
             }
             DaemonCommand::CallRhaiFns { calls, sender } => {
                 let output = match self.call_rhai_fns(calls) {
@@ -493,7 +500,10 @@ impl<B: DisplayBackend> App<B> {
             } else {
                 // else, just update the window from the current store.
                 let widget_reg_store = self.widget_reg_store.clone();
-                let store = self.pl_handler_store.clone().expect("REASON");
+                let store = self
+                    .pl_handler_store
+                    .clone()
+                    .expect("Failed to clone poll listen handler store");
 
                 glib::MainContext::default().spawn_local(async move {
                     let vars = store.read().unwrap().clone();
@@ -674,6 +684,15 @@ impl<B: DisplayBackend> App<B> {
         let rhai_code = reeval_parser.code_from_file(&config_path)?;
 
         let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
+
+        if let Some(maybe_all_vars) = &self.pl_handler_store {
+            let all_vars = maybe_all_vars.read().unwrap().clone();
+
+            for (name, val) in all_vars {
+                scope.set_value(name.clone(), Dynamic::from(val.clone()));
+            }
+        }
+
         if let Some(vars) = inject_vars {
             for (name, val) in vars {
                 scope.set_value(name, Dynamic::from(val));
@@ -687,21 +706,14 @@ impl<B: DisplayBackend> App<B> {
         let new_root_widget =
             reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast.as_deref())?;
 
-        match config::EwwiiConfig::get_windows_root_widget(new_root_widget) {
-            Ok(new_widget) => {
-                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                    if let Some(widget_registry) = maybe_registry.as_mut() {
-                        let _ = widget_registry.update_widget_tree(new_widget);
-                    } else {
-                        log::error!("Widget registry is empty");
-                    }
-                } else {
-                    log::error!("Failed to acquire lock on widget registry");
-                }
+        if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+            if let Some(widget_registry) = maybe_registry.as_mut() {
+                let _ = widget_registry.update_widget_tree(new_root_widget);
+            } else {
+                log::error!("Widget registry is empty");
             }
-            Err(e) => {
-                log::error!("Failed to generate new widgetnode: {:#}", e);
-            }
+        } else {
+            log::error!("Failed to acquire lock on widget registry");
         }
 
         Ok(())
