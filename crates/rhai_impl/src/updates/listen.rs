@@ -86,9 +86,41 @@ pub fn handle_listen(
                 .pre_exec(|| {
                     let _ = setpgid(Pid::from_raw(0), Pid::from_raw(0));
 
-                    // chatgpt gave me this thing saying that it will kill all
-                    // children when my program dies. I dont think this will work...
-                    libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM);
+                    #[cfg(target_os = "linux")]
+                    {
+                        if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM) != 0 {
+                            log::error!(
+                                "prctl PR_SET_PDEATHSIG failed: {}",
+                                std::io::Error::last_os_error()
+                            );
+                        }
+                    }
+
+                    #[cfg(target_os = "freebsd")]
+                    {
+                        use libc::{c_int, c_void};
+
+                        const PROC_PDEATHSIG_CTL: c_int = 11;
+                        let sig: c_int = libc::SIGTERM;
+                        if libc::procctl(
+                            libc::P_PID,
+                            0,
+                            PROC_PDEATHSIG_CTL,
+                            &sig as *const _ as *mut c_void,
+                        ) != 0
+                        {
+                            log::error!(
+                                "procctl PROC_PDEATHSIG_CTL failed: {}",
+                                std::io::Error::last_os_error()
+                            );
+                        }
+                    }
+
+                    #[cfg(target_os = "macos")]
+                    {
+                        // Perhaps make it a TODO?
+                        log::warn!("Parent-death signal is not supported on macOS system");
+                    }
 
                     Ok(())
                 })
