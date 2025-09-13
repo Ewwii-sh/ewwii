@@ -112,7 +112,7 @@
 }
 
 .ewwii {
-    --bg: #212223; /* book background */
+    --bg: #111010; /* book background */
     --fg: #c1c3c8; /* default text color */
     --sidebar-bg: #1c1d1e;
     --sidebar-fg: #c1c3c8;
@@ -138,7 +138,7 @@
     --searchbar-shadow-color: #1c1d21;
     --searchresults-header-fg: #c1c3c8;
     --searchresults-border-color: #2c2f3b;
-    --searchresults-li-bg: #212223;
+    --searchresults-li-bg: #111010;
     --search-mark-bg: #fe640b;
     --warning-border: #fe640b;
     --color-scheme: dark;
