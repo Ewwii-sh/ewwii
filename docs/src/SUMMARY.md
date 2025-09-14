@@ -2,10 +2,6 @@
 
 [Introduction](introduction.md)
 
--   [Getting Started](getting_started.md)
-
-    -   [Installation](installation.md)
-
 -   [Configuration & Syntax](config/config_and_syntax.md)
 
     -   [Configuration](config/configuration.md)
