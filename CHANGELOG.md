@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 -   `update` command so that it preserves current widget state.
+-   `--inject-vars` argument of update to just `--inject` (or `-i` in short).
 
 ## [0.1.2] - 2025-09-13
 

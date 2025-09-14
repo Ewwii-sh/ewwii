@@ -193,16 +193,16 @@ pub enum ActionWithServer {
     TriggerUpdateUI {
         /// Inject variables while updating the UI
         ///
-        /// Format: --inject-vars foo="val1" baz="val2"
+        /// Format: --inject foo="val1" baz="val2"
         /// Only variables used by the widget tree will affect the UI.
-        #[arg(long, value_parser = parse_inject_var_map)]
+        #[arg(long = "inject", short, value_parser = parse_inject_var_map)]
         inject_vars: Option<HashMap<String, String>>,
     },
 
     /// Call rhai functions. (NOTE: All poll/listen will default to their initial value)
     #[command(name = "call-fns")]
     CallRhaiFns {
-        // Rhai functions to call. Format: --fn-calls "fn_name1(args)" "fn_name2(args)"
+        // Rhai functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
         #[arg(required = true)]
         calls: Vec<String>,
     },
