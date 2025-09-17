@@ -5,12 +5,16 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.2.0] - UNRELEASED
+## [0.1.3] - 2025-09-17
 
 ### Changed
 
 -   `update` command so that it preserves current widget state.
 -   `--inject-vars` argument of update to just `--inject` (or `-i` in short).
+
+### Fixed
+
+-   `image_width` and `image_height` not working for image widget.
 
 ## [0.1.2] - 2025-09-13
 
