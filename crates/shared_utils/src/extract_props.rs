@@ -63,6 +63,12 @@ pub fn get_i32_prop(props: &Map, key: &str, default: Option<i32>) -> Result<i32>
     if let Some(value) = props.get(key) {
         if let Some(v) = value.clone().try_cast::<i32>() {
             Ok(v)
+        } else if let Some(v) = value.clone().try_cast::<i64>() {
+            if v >= i32::MIN as i64 && v <= i32::MAX as i64 {
+                Ok(v as i32)
+            } else {
+                Err(anyhow!("Value for `{}` is out of range for i32", key))
+            }
         } else if let Some(s) = value.clone().try_cast::<String>() {
             s.parse::<i32>()
                 .map_err(|_| anyhow!("Expected property `{}` to be an i32 or numeric string", key))
