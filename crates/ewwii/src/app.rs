@@ -79,6 +79,7 @@ pub enum DaemonCommand {
     ListActiveWindows(DaemonResponseSender),
     TriggerUpdateUI {
         inject_vars: Option<HashMap<String, String>>,
+        should_preserve_state: bool,
         sender: DaemonResponseSender,
     },
     CallRhaiFns {
@@ -309,8 +310,8 @@ impl<B: DisplayBackend> App<B> {
                 let output = format!("{:#?}", &self);
                 sender.send_success(output)?
             }
-            DaemonCommand::TriggerUpdateUI { inject_vars, sender } => {
-                let output = match self.trigger_ui_update_with(inject_vars) {
+            DaemonCommand::TriggerUpdateUI { inject_vars, should_preserve_state, sender } => {
+                let output = match self.trigger_ui_update_with(inject_vars, should_preserve_state) {
                     Ok(_) => String::new(),
                     Err(e) => e.to_string(),
                 };
@@ -676,9 +677,14 @@ impl<B: DisplayBackend> App<B> {
     pub fn trigger_ui_update_with(
         &self,
         inject_vars: Option<HashMap<String, String>>,
+        should_preserve_state: bool,
     ) -> Result<()> {
         let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
         let config_path = self.paths.get_rhai_path();
+
+        if !config_path.exists() {
+            bail!("The configuration file `{}` does not exist", config_path.display());
+        }
 
         let mut reeval_parser = ParseConfig::new();
         let rhai_code = reeval_parser.code_from_file(&config_path)?;
@@ -695,12 +701,18 @@ impl<B: DisplayBackend> App<B> {
 
         if let Some(vars) = inject_vars {
             for (name, val) in vars {
-                scope.set_value(name, Dynamic::from(val));
-            }
-        }
+                scope.set_value(name.clone(), Dynamic::from(val.clone()));
 
-        if !config_path.exists() {
-            bail!("The configuration file `{}` does not exist", config_path.display());
+                // Preserving the new state.
+                // ---
+                // This is esstentially storing the inject variables
+                // in the poll/listen variable store (or the `pl_handler_store` in self)
+                if should_preserve_state {
+                    if let Some(maybe_store) = &self.pl_handler_store {
+                        maybe_store.write().unwrap().insert(name.clone(), val);
+                    }
+                }
+            }
         }
 
         let new_root_widget =

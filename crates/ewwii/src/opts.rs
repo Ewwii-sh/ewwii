@@ -197,6 +197,10 @@ pub enum ActionWithServer {
         /// Only variables used by the widget tree will affect the UI.
         #[arg(long = "inject", short, value_parser = parse_inject_var_map)]
         inject_vars: Option<HashMap<String, String>>,
+
+        /// Preserve the new updates. Only meaningful if used with inject.
+        #[arg(long = "preserve", short = 'p')]
+        should_preserve_state: bool,
     },
 
     /// Call rhai functions. (NOTE: All poll/listen will default to their initial value)
@@ -267,9 +271,10 @@ impl ActionWithServer {
         self,
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
-            ActionWithServer::TriggerUpdateUI { inject_vars } => {
+            ActionWithServer::TriggerUpdateUI { inject_vars, should_preserve_state } => {
                 return with_response_channel(|sender| app::DaemonCommand::TriggerUpdateUI {
                     inject_vars,
+                    should_preserve_state,
                     sender,
                 })
             }
