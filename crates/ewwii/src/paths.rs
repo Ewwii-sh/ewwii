@@ -8,7 +8,7 @@ use anyhow::{bail, Result};
 
 /// Stores references to all the paths relevant to eww, and abstracts access to these files and directories
 #[derive(Debug, Clone)]
-pub struct EwwPaths {
+pub struct EwwiiPaths {
     pub log_file: PathBuf,
     pub log_dir: PathBuf,
     pub ipc_socket_file: PathBuf,
@@ -16,7 +16,7 @@ pub struct EwwPaths {
 }
 
 // all the eww paths i suppose from the name?
-impl EwwPaths {
+impl EwwiiPaths {
     pub fn from_config_dir<P: AsRef<Path>>(config_dir: P) -> Result<Self> {
         let config_dir = config_dir.as_ref();
         if config_dir.is_file() {
@@ -57,7 +57,7 @@ impl EwwPaths {
 
         Ok(EwwPaths {
             config_dir,
-            log_file: log_dir.join(format!("eww_{}.log", daemon_id)),
+            log_file: log_dir.join(format!("ewwii_{}.log", daemon_id)),
             log_dir,
             ipc_socket_file,
         })
