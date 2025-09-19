@@ -164,13 +164,9 @@ pub enum ActionWithServer {
     #[command(name = "close-all", alias = "ca")]
     CloseAll,
 
-    // /// Prints the variables used in all currently open window
-    // #[command(name = "state")]
-    // ShowState {
-    //     /// Shows all variables, including not currently used ones
-    //     #[arg(short, long)]
-    //     all: bool,
-    // },
+    /// Prints all the variables in the registery
+    #[command(name = "state")]
+    ShowState,
     /// List the names of active windows
     #[command(name = "list-windows")]
     ListWindows,
@@ -284,7 +280,6 @@ impl ActionWithServer {
                     sender,
                 })
             }
-
             ActionWithServer::OpenInspector => app::DaemonCommand::OpenInspector,
 
             ActionWithServer::KillServer => app::DaemonCommand::KillServer,
@@ -329,6 +324,9 @@ impl ActionWithServer {
             }
             ActionWithServer::Reload => {
                 return with_response_channel(app::DaemonCommand::ReloadConfigAndCss)
+            }
+            ActionWithServer::ShowState => {
+                return with_response_channel(app::DaemonCommand::ShowState)
             }
             ActionWithServer::ListWindows => {
                 return with_response_channel(app::DaemonCommand::ListWindows)

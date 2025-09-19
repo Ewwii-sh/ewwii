@@ -75,6 +75,7 @@ pub enum DaemonCommand {
     KillServer,
     CloseAll,
     PrintDebug(DaemonResponseSender),
+    ShowState(DaemonResponseSender),
     ListWindows(DaemonResponseSender),
     ListActiveWindows(DaemonResponseSender),
     TriggerUpdateUI {
@@ -309,6 +310,16 @@ impl<B: DisplayBackend> App<B> {
             DaemonCommand::PrintDebug(sender) => {
                 let output = format!("{:#?}", &self);
                 sender.send_success(output)?
+            }
+            DaemonCommand::ShowState(sender) => {
+                if let Some(maybe_store) = &self.pl_handler_store {
+                    let output = format!("{:#?}", maybe_store.read().unwrap());
+                    sender.send_success(output)?
+                } else {
+                    sender.send_failure(
+                        "The poll/listen handler store doesn't exist or is empty".to_string(),
+                    )?
+                }
             }
             DaemonCommand::TriggerUpdateUI { inject_vars, should_preserve_state, sender } => {
                 let output = match self.trigger_ui_update_with(inject_vars, should_preserve_state) {
@@ -709,7 +720,7 @@ impl<B: DisplayBackend> App<B> {
                 // in the poll/listen variable store (or the `pl_handler_store` in self)
                 if should_preserve_state {
                     if let Some(maybe_store) = &self.pl_handler_store {
-                        maybe_store.write().unwrap().insert(name.clone(), val);
+                        maybe_store.write().unwrap().insert(name, val);
                     }
                 }
             }
