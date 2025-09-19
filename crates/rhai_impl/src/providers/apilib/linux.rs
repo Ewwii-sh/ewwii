@@ -20,7 +20,7 @@ pub mod linux {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::linux" as linux;
     ///
     /// let k_version = linux::get_kernel_version();
@@ -44,7 +44,7 @@ pub mod linux {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::linux" as linux;
     ///
     /// let battery_perc = linux::get_battery_perc();
@@ -88,7 +88,7 @@ pub mod linux {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::linux" as linux;
     ///
     /// let cpu_info = linux::get_cpu_info();
@@ -143,7 +143,7 @@ pub mod linux {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::linux" as linux;
     ///
     /// let ram_info = linux::get_ram_info();
@@ -201,7 +201,7 @@ pub mod linux {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::linux" as linux;
     ///
     /// let gpu_info = linux::get_gpu_info();
@@ -272,7 +272,7 @@ pub mod linux {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::linux" as linux;
     ///
     /// let disk_info = linux::get_disk_info();
