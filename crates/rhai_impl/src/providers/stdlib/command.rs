@@ -17,7 +17,7 @@ pub mod command {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::command" as cmd;
     ///
     /// // Run a shell command (e.g., list directory contents)
@@ -46,7 +46,7 @@ pub mod command {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::command" as cmd;
     ///
     /// // Run a shell command and capture its output
