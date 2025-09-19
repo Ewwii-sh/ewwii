@@ -33,7 +33,7 @@ impl ParseConfig {
     }
 
     pub fn eval_code(&mut self, code: &str) -> Result<WidgetNode> {
-        let ast = self.engine.compile(code)?;
+        let ast = self.compile_code(code)?;
         self.eval_code_with(code, None, Some(&ast))
     }
 
