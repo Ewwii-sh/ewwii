@@ -1,1 +1,0 @@
-# Global Builtin Rhai Functions
