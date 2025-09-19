@@ -16,7 +16,7 @@ pub mod env {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::env" as env;
     ///
     /// // Get the value of the "HOME" environment variable
@@ -41,7 +41,7 @@ pub mod env {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::env" as env;
     ///
     /// // Set the value of the "MY_VAR" environment variable
@@ -60,7 +60,7 @@ pub mod env {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::env" as env;
     ///
     /// // Get the home directory
@@ -81,7 +81,7 @@ pub mod env {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::env" as env;
     ///
     /// // Get the current working directory
@@ -106,7 +106,7 @@ pub mod env {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::env" as env;
     ///
     /// // Get the username of the current user
