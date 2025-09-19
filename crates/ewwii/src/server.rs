@@ -316,7 +316,7 @@ fn do_detach(log_file_path: impl AsRef<Path>) -> Result<ForkResult> {
 /// Ensure the log directory never grows larger than 100MB by deleting files older than 7 days,
 /// and truncating all other logfiles to 100MB.
 fn cleanup_log_dir(log_dir: impl AsRef<Path>) -> Result<()> {
-    // Find all files named "eww_*.log" in the log directory
+    // Find all files named "ewwii_*.log" in the log directory
     let log_files = std::fs::read_dir(&log_dir)?
         .filter_map(|entry| {
             let entry = entry.ok()?;
