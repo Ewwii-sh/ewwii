@@ -16,7 +16,7 @@ pub mod text {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::text" as text;
     ///
     /// let result = text::to_slug("Hello World!");
@@ -48,7 +48,7 @@ pub mod text {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::text" as text;
     ///
     /// let result = text::to_camel_case("hello world example");
@@ -93,7 +93,7 @@ pub mod text {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::text" as text;
     ///
     /// let result = text::truncate_chars("Hello World!", 5);
@@ -118,7 +118,7 @@ pub mod text {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::text" as text;
     ///
     /// let result = text::to_upper("hello");
@@ -140,7 +140,7 @@ pub mod text {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::text" as text;
     ///
     /// let result = text::to_lower("HELLO");
