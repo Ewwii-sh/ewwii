@@ -30,15 +30,28 @@ fn generate_docs(
 
     let mut filtered_lines = Vec::new();
     let mut in_frontmatter = false;
+    let mut frontmatter_title: Option<String> = None;
 
     for line in &mut lines {
         let trimmed = line.trim();
 
         if trimmed == "---" {
             in_frontmatter = !in_frontmatter;
+
+            if !in_frontmatter {
+                if let Some(title) = &frontmatter_title {
+                    filtered_lines.push(format!("# {}", title));
+                }
+                frontmatter_title = None;
+            }
+
             continue;
         }
+
         if in_frontmatter {
+            if let Some(title) = trimmed.strip_prefix("title: ") {
+                frontmatter_title = Some(title.to_string());
+            }
             continue;
         }
 
@@ -48,7 +61,7 @@ fn generate_docs(
             continue;
         }
 
-        filtered_lines.push(line);
+        filtered_lines.push(line.to_string());
     }
 
     // combine
