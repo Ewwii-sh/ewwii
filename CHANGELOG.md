@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 -   `state` command to print the current poll/listen variable state.
+-   Support for `open-many` command.
 
 ### Fixed
 

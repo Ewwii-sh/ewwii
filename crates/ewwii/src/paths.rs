@@ -54,7 +54,7 @@ impl EwwiiPaths {
             std::fs::create_dir_all(&log_dir)?;
         }
 
-        Ok(EwwPaths {
+        Ok(Self {
             config_dir,
             log_file: log_dir.join(format!("ewwii_{}.log", daemon_id)),
             log_dir,
@@ -93,7 +93,7 @@ impl EwwiiPaths {
     }
 }
 
-impl std::fmt::Display for EwwPaths {
+impl std::fmt::Display for EwwiiPaths {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
