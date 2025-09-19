@@ -167,12 +167,11 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
             false
         }
 
-        // make sure that there isn't already a Eww daemon running.
+        // make sure that there isn't already a Ewwii daemon running.
         opts::Action::Daemon if check_server_running(paths.get_ipc_socket_file()) => {
             eprintln!("Ewwii server already running.");
             true
         }
-        // initializing the eww server i see..
         opts::Action::Daemon => {
             log::info!("Initializing Ewwii server. ({})", paths.get_ipc_socket_file().display());
             let _ = std::fs::remove_file(paths.get_ipc_socket_file());
