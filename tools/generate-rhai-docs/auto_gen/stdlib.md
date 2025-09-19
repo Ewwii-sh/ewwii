@@ -1,5 +1,11 @@
+---
+title: command
+slug: /command
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+
 
 
 # Std Library Module
@@ -10,11 +16,6 @@ Each library in this module is under `std::<m>`, where `<m>` is the name of the 
 These modules provide essential functionalities that are will be useful for making widgets.
 They cover tasks like string manipulation, environmental variable manipuation, running shell commands, and more.
     
-
-# command
-
-
-```Namespace: global/std/command```
 
 
 
@@ -88,182 +89,13 @@ fn run_and_read(cmd: String) -> String
     </TabItem>
 </Tabs>
 
-# text
+---
+title: monitor
+slug: /monitor
+---
 
-
-```Namespace: global/std/text```
-
-A module providing utility functions for string manipulation.
-
-
-## <code>fn</code> to_camel_case {#fn-to_camel_case}
-
-```js
-fn to_camel_case(text: String) -> String
-```
-
-<Tabs>
-    <TabItem value="Description" default>
-
-        Converts a string to camel case.
-    </TabItem>
-    <TabItem value="Arguments" default>
-
-
-        * `text` - A string to be converted to camel case.
-    </TabItem>
-    <TabItem value="Returns" default>
-
-
-        Returns the `text` in camel case format.
-    </TabItem>
-    <TabItem value="Example" default>
-
-
-        ```javascript
-        import "std::text" as text;
-        
-        let result = text::to_camel_case("hello world example");
-        print(result); // output: "helloWorldExample"
-        ```
-    </TabItem>
-</Tabs>
-
-## <code>fn</code> to_lower {#fn-to_lower}
-
-```js
-fn to_lower(s: String) -> String
-```
-
-<Tabs>
-    <TabItem value="Description" default>
-
-        Converts a string to lowercase.
-    </TabItem>
-    <TabItem value="Arguments" default>
-
-
-        * `s` - A string to be converted to lowercase.
-    </TabItem>
-    <TabItem value="Returns" default>
-
-
-        Returns the string in lowercase.
-    </TabItem>
-    <TabItem value="Example" default>
-
-
-        ```javascript
-        import "std::text" as text;
-        
-        let result = text::to_lower("HELLO");
-        print(result); // output: "hello"
-        ```
-    </TabItem>
-</Tabs>
-
-## <code>fn</code> to_slug {#fn-to_slug}
-
-```js
-fn to_slug(text: String) -> String
-```
-
-<Tabs>
-    <TabItem value="Description" default>
-
-        Converts a string to a slug (lowercase words joined by hyphens).
-    </TabItem>
-    <TabItem value="Arguments" default>
-
-
-        * `text` - A string to be converted to a slug.
-    </TabItem>
-    <TabItem value="Returns" default>
-
-
-        Returns the `text` as a slug.
-    </TabItem>
-    <TabItem value="Example" default>
-
-
-        ```javascript
-        import "std::text" as text;
-        
-        let result = text::to_slug("Hello World!");
-        print(result); // output: "hello-world"
-        ```
-    </TabItem>
-</Tabs>
-
-## <code>fn</code> to_upper {#fn-to_upper}
-
-```js
-fn to_upper(s: String) -> String
-```
-
-<Tabs>
-    <TabItem value="Description" default>
-
-        Converts a string to uppercase.
-    </TabItem>
-    <TabItem value="Arguments" default>
-
-
-        * `s` - A string to be converted to uppercase.
-    </TabItem>
-    <TabItem value="Returns" default>
-
-
-        Returns the string in uppercase.
-    </TabItem>
-    <TabItem value="Example" default>
-
-
-        ```javascript
-        import "std::text" as text;
-        
-        let result = text::to_upper("hello");
-        print(result); // output: "HELLO"
-        ```
-    </TabItem>
-</Tabs>
-
-## <code>fn</code> truncate_chars {#fn-truncate_chars}
-
-```js
-fn truncate_chars(text: String, max_chars: int) -> String
-```
-
-<Tabs>
-    <TabItem value="Description" default>
-
-        Truncates a string to the specified number of characters.
-    </TabItem>
-    <TabItem value="Arguments" default>
-
-
-        * `text` - A string to be truncated.
-        * `max_chars` - The maximum number of characters to keep in the string.
-    </TabItem>
-    <TabItem value="Returns" default>
-
-
-        Returns a truncated string.
-    </TabItem>
-    <TabItem value="Example" default>
-
-
-        ```javascript
-        import "std::text" as text;
-        
-        let result = text::truncate_chars("Hello World!", 5);
-        print(result); // output: "Hello"
-        ```
-    </TabItem>
-</Tabs>
-
-# monitor
-
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 ```Namespace: global/std/monitor```
 
@@ -542,8 +374,13 @@ fn primary_resolution_str() -> String
     </TabItem>
 </Tabs>
 
-# env
+---
+title: env
+slug: /env
+---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 ```Namespace: global/std/env```
 
@@ -705,6 +542,185 @@ fn set_env(var: String, value: String)
         
         // Set the value of the "MY_VAR" environment variable
         env::set_env("MY_VAR", "SomeValue");
+        ```
+    </TabItem>
+</Tabs>
+
+---
+title: text
+slug: /text
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+```Namespace: global/std/text```
+
+A module providing utility functions for string manipulation.
+
+
+## <code>fn</code> to_camel_case {#fn-to_camel_case}
+
+```js
+fn to_camel_case(text: String) -> String
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Converts a string to camel case.
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+
+        * `text` - A string to be converted to camel case.
+    </TabItem>
+    <TabItem value="Returns" default>
+
+
+        Returns the `text` in camel case format.
+    </TabItem>
+    <TabItem value="Example" default>
+
+
+        ```javascript
+        import "std::text" as text;
+        
+        let result = text::to_camel_case("hello world example");
+        print(result); // output: "helloWorldExample"
+        ```
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> to_lower {#fn-to_lower}
+
+```js
+fn to_lower(s: String) -> String
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Converts a string to lowercase.
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+
+        * `s` - A string to be converted to lowercase.
+    </TabItem>
+    <TabItem value="Returns" default>
+
+
+        Returns the string in lowercase.
+    </TabItem>
+    <TabItem value="Example" default>
+
+
+        ```javascript
+        import "std::text" as text;
+        
+        let result = text::to_lower("HELLO");
+        print(result); // output: "hello"
+        ```
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> to_slug {#fn-to_slug}
+
+```js
+fn to_slug(text: String) -> String
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Converts a string to a slug (lowercase words joined by hyphens).
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+
+        * `text` - A string to be converted to a slug.
+    </TabItem>
+    <TabItem value="Returns" default>
+
+
+        Returns the `text` as a slug.
+    </TabItem>
+    <TabItem value="Example" default>
+
+
+        ```javascript
+        import "std::text" as text;
+        
+        let result = text::to_slug("Hello World!");
+        print(result); // output: "hello-world"
+        ```
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> to_upper {#fn-to_upper}
+
+```js
+fn to_upper(s: String) -> String
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Converts a string to uppercase.
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+
+        * `s` - A string to be converted to uppercase.
+    </TabItem>
+    <TabItem value="Returns" default>
+
+
+        Returns the string in uppercase.
+    </TabItem>
+    <TabItem value="Example" default>
+
+
+        ```javascript
+        import "std::text" as text;
+        
+        let result = text::to_upper("hello");
+        print(result); // output: "HELLO"
+        ```
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> truncate_chars {#fn-truncate_chars}
+
+```js
+fn truncate_chars(text: String, max_chars: int) -> String
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Truncates a string to the specified number of characters.
+    </TabItem>
+    <TabItem value="Arguments" default>
+
+
+        * `text` - A string to be truncated.
+        * `max_chars` - The maximum number of characters to keep in the string.
+    </TabItem>
+    <TabItem value="Returns" default>
+
+
+        Returns a truncated string.
+    </TabItem>
+    <TabItem value="Example" default>
+
+
+        ```javascript
+        import "std::text" as text;
+        
+        let result = text::truncate_chars("Hello World!", 5);
+        print(result); // output: "Hello"
         ```
     </TabItem>
 </Tabs>

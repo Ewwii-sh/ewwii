@@ -1,5 +1,11 @@
+---
+title: global
+slug: /global
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+
 
 
 # Global Builtin Rhai Functions
@@ -15,11 +21,6 @@ let x = PI();
 This section covers all the core functions provided by Rhai that are ready to use out of the box.
     
 
-# global
-
-
-```Namespace: global```
-
 
 
 
@@ -27,42 +28,26 @@ This section covers all the core functions provided by Rhai that are ready to us
 
 ```js
 op u8 != u8 -> bool
-op i8 != i8 -> bool
-op u128 != u128 -> bool
-op u32 != u32 -> bool
-op Array != Array -> bool
-op int != f32 -> bool
-op u16 != u16 -> bool
-op u64 != u64 -> bool
-op Map != Map -> bool
-op i16 != i16 -> bool
-op i32 != i32 -> bool
 op f32 != f32 -> bool
-op i128 != i128 -> bool
+op u128 != u128 -> bool
 op Instant != Instant -> bool
+op i32 != i32 -> bool
+op u32 != u32 -> bool
+op i16 != i16 -> bool
+op i128 != i128 -> bool
+op Array != Array -> bool
+op u64 != u64 -> bool
+op u16 != u16 -> bool
+op i8 != i8 -> bool
+op int != f32 -> bool
 op f32 != int -> bool
+op Map != Map -> bool
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return `true` if two arrays are not-equal (i.e. any element not equal or not in the same order).
-        
-        The operator `==` is used to compare elements and must be defined,
-        otherwise `false` is assumed.
-    </TabItem>
-    <TabItem value="Example" default>
-
-
-        ```rhai
-        let x = [1, 2, 3, 4, 5];
-        let y = [1, 2, 3, 4, 5];
-        let z = [1, 2, 3, 4];
-        
-        print(x != y);      // prints false
-        
-        print(x != z);      // prints true
-        ```
+        Return `true` if two timestamps are not equal.
     </TabItem>
 </Tabs>
 
@@ -72,42 +57,74 @@ op f32 != int -> bool
 fn +(x: f32) -> f32
 fn +(x: int) -> int
 fn +(x: i128) -> i128
-fn +(x: i32) -> i32
 fn +(x: float) -> float
-fn +(x: i8) -> i8
 fn +(x: i16) -> i16
-fn +(map1: Map, map2: Map) -> Map
-fn +(x: f32, y: f32) -> f32
-fn +(item: ?, string: String) -> String
-fn +(x: i16, y: i16) -> i16
-fn +(x: i32, y: i32) -> i32
-fn +(x: i128, y: i128) -> i128
-fn +(timestamp: Instant, seconds: float) -> Instant
-fn +(x: f32, y: int) -> f32
-fn +(character: char, string: String) -> String
-fn +(string: String, mut item: ?) -> String
-fn +(item: ?, string: String) -> String
-fn +(string: String, item: ?) -> String
-fn +(string: String, utf8: Blob) -> String
-fn +(string: String, character: char) -> String
-fn +(utf8: Blob, string: String) -> String
-fn +(x: u8, y: u8) -> u8
-fn +(x: u32, y: u32) -> u32
+fn +(x: i32) -> i32
+fn +(x: i8) -> i8
 fn +(x: i8, y: i8) -> i8
-fn +(x: u128, y: u128) -> u128
-fn +(string1: String, string2: String) -> String
-fn +(timestamp: Instant, seconds: int) -> Instant
+fn +(item: ?, string: String) -> String
+fn +(string: String, utf8: Blob) -> String
 fn +(array1: Array, array2: Array) -> Array
+fn +(string: String, character: char) -> String
 fn +(x: u64, y: u64) -> u64
-fn +(x: int, y: f32) -> f32
 fn +(x: u16, y: u16) -> u16
+fn +(x: f32, y: int) -> f32
+fn +(map1: Map, map2: Map) -> Map
+fn +(utf8: Blob, string: String) -> String
+fn +(x: int, y: f32) -> f32
+fn +(item: ?, string: String) -> String
+fn +(timestamp: Instant, seconds: float) -> Instant
+fn +(x: u8, y: u8) -> u8
+fn +(x: i16, y: i16) -> i16
+fn +(string: String, mut item: ?) -> String
+fn +(string1: String, string2: String) -> String
+fn +(string: String, item: ?) -> String
+fn +(x: i128, y: i128) -> i128
+fn +(character: char, string: String) -> String
+fn +(x: f32, y: f32) -> f32
+fn +(x: u128, y: u128) -> u128
+fn +(x: u32, y: u32) -> u32
+fn +(x: i32, y: i32) -> i32
+fn +(timestamp: Instant, seconds: int) -> Instant
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Make a copy of the object map, add all property values of another object map
-        (existing property values of the same names are replaced), then returning it.
+        Combine two arrays into a new array and return it.
+    </TabItem>
+    <TabItem value="Example" default>
+
+
+        ```rhai
+        let x = [1, 2, 3];
+        let y = [true, 'x'];
+        
+        print(x + y);   // prints "[1, 2, 3, true, 'x']"
+        
+        print(x);       // prints "[1, 2, 3"
+        ```
+    </TabItem>
+</Tabs>
+
+## <code>fn</code> +&#x3D; {#fn-+&#x3D;}
+
+```js
+fn +=(string: String, character: char)
+fn +=(string: String, utf8: Blob)
+fn +=(map: Map, map2: Map)
+fn +=(string: String, mut item: ?)
+fn +=(timestamp: Instant, seconds: float)
+fn +=(string: String, item: ?)
+fn +=(timestamp: Instant, seconds: int)
+fn +=(string1: String, string2: String)
+```
+
+<Tabs>
+    <TabItem value="Description" default>
+
+        Add all property values of another object map into the object map.
+        Existing property values of the same names are replaced.
     </TabItem>
     <TabItem value="Example" default>
 
@@ -116,58 +133,38 @@ fn +(x: u16, y: u16) -> u16
         let m = #{a:1, b:2, c:3};
         let n = #{a: 42, d:0};
         
-        print(m + n);       // prints "#{a:42, b:2, c:3, d:0}"
+        m.mixin(n);
         
-        print(m);           // prints "#{a:1, b:2, c:3}"
+        print(m);       // prints "#{a:42, b:2, c:3, d:0}"
         ```
-    </TabItem>
-</Tabs>
-
-## <code>fn</code> +&#x3D; {#fn-+&#x3D;}
-
-```js
-fn +=(string: String, mut item: ?)
-fn +=(string: String, item: ?)
-fn +=(string: String, utf8: Blob)
-fn +=(string: String, character: char)
-fn +=(string1: String, string2: String)
-fn +=(timestamp: Instant, seconds: int)
-fn +=(map: Map, map2: Map)
-fn +=(timestamp: Instant, seconds: float)
-```
-
-<Tabs>
-    <TabItem value="Description" default>
-
-        Add the specified number of `seconds` to the timestamp.
     </TabItem>
 </Tabs>
 
 ## <code>fn</code> - {#fn--}
 
 ```js
-fn -(x: f32) -> f32
-fn -(x: int) -> int
-fn -(x: i128) -> i128
-fn -(x: i32) -> i32
+fn -(x: i8) -> i8
 fn -(x: float) -> float
 fn -(x: i16) -> i16
-fn -(x: i8) -> i8
-fn -(x: u16, y: u16) -> u16
-fn -(x: int, y: f32) -> f32
-fn -(x: u64, y: u64) -> u64
-fn -(timestamp: Instant, seconds: int) -> Instant
-fn -(x: u128, y: u128) -> u128
-fn -(x: i8, y: i8) -> i8
-fn -(x: u32, y: u32) -> u32
+fn -(x: i32) -> i32
+fn -(x: i128) -> i128
+fn -(x: int) -> int
+fn -(x: f32) -> f32
 fn -(x: u8, y: u8) -> u8
-fn -(x: f32, y: int) -> f32
 fn -(timestamp: Instant, seconds: float) -> Instant
 fn -(x: i128, y: i128) -> i128
-fn -(timestamp1: Instant, timestamp2: Instant) -> ?
-fn -(x: i32, y: i32) -> i32
 fn -(x: i16, y: i16) -> i16
 fn -(x: f32, y: f32) -> f32
+fn -(x: i32, y: i32) -> i32
+fn -(timestamp: Instant, seconds: int) -> Instant
+fn -(x: u32, y: u32) -> u32
+fn -(x: u128, y: u128) -> u128
+fn -(timestamp1: Instant, timestamp2: Instant) -> ?
+fn -(x: i8, y: i8) -> i8
+fn -(x: u16, y: u16) -> u16
+fn -(x: u64, y: u64) -> u64
+fn -(x: f32, y: int) -> f32
+fn -(x: int, y: f32) -> f32
 ```
 
 <Tabs>
@@ -194,18 +191,18 @@ fn -=(timestamp: Instant, seconds: float)
 ## <code>op</code> &lt; {#op-&lt;}
 
 ```js
-op f32 < int -> bool
-op i128 < i128 -> bool
-op Instant < Instant -> bool
-op i16 < i16 -> bool
-op i32 < i32 -> bool
-op f32 < f32 -> bool
-op u16 < u16 -> bool
 op int < f32 -> bool
+op f32 < int -> bool
+op u16 < u16 -> bool
 op u64 < u64 -> bool
 op i8 < i8 -> bool
-op u128 < u128 -> bool
+op f32 < f32 -> bool
+op i32 < i32 -> bool
 op u32 < u32 -> bool
+op u128 < u128 -> bool
+op Instant < Instant -> bool
+op i128 < i128 -> bool
+op i16 < i16 -> bool
 op u8 < u8 -> bool
 ```
 
@@ -219,19 +216,19 @@ op u8 < u8 -> bool
 ## <code>op</code> &lt;&#x3D; {#op-&lt;&#x3D;}
 
 ```js
-op Instant <= Instant -> bool
-op i128 <= i128 -> bool
 op f32 <= int -> bool
-op f32 <= f32 -> bool
-op i32 <= i32 -> bool
-op i16 <= i16 -> bool
-op u64 <= u64 -> bool
 op int <= f32 -> bool
-op u16 <= u16 -> bool
-op u8 <= u8 -> bool
-op u32 <= u32 -> bool
-op u128 <= u128 -> bool
 op i8 <= i8 -> bool
+op u16 <= u16 -> bool
+op u64 <= u64 -> bool
+op i128 <= i128 -> bool
+op i16 <= i16 -> bool
+op f32 <= f32 -> bool
+op u32 <= u32 -> bool
+op i32 <= i32 -> bool
+op u128 <= u128 -> bool
+op Instant <= Instant -> bool
+op u8 <= u8 -> bool
 ```
 
 <Tabs>
@@ -244,43 +241,27 @@ op i8 <= i8 -> bool
 ## <code>op</code> &#x3D;&#x3D; {#op-&#x3D;&#x3D;}
 
 ```js
-op Map == Map -> bool
+op u8 == u8 -> bool
+op f32 == f32 -> bool
+op Instant == Instant -> bool
+op u128 == u128 -> bool
+op u32 == u32 -> bool
 op i32 == i32 -> bool
 op i16 == i16 -> bool
-op f32 == f32 -> bool
 op i128 == i128 -> bool
-op Instant == Instant -> bool
-op f32 == int -> bool
-op u8 == u8 -> bool
-op u128 == u128 -> bool
-op i8 == i8 -> bool
-op u32 == u32 -> bool
 op Array == Array -> bool
-op int == f32 -> bool
-op u16 == u16 -> bool
 op u64 == u64 -> bool
+op u16 == u16 -> bool
+op i8 == i8 -> bool
+op int == f32 -> bool
+op f32 == int -> bool
+op Map == Map -> bool
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return `true` if two object maps are equal (i.e. all property values are equal).
-        
-        The operator `==` is used to compare property values and must be defined,
-        otherwise `false` is assumed.
-    </TabItem>
-    <TabItem value="Example" default>
-
-
-        ```rhai
-        let m1 = #{a:1, b:2, c:3};
-        let m2 = #{a:1, b:2, c:3};
-        let m3 = #{a:1, c:3};
-        
-        print(m1 == m2);        // prints true
-        
-        print(m1 == m3);        // prints false
-        ```
+        Return `true` if two timestamps are equal.
     </TabItem>
 </Tabs>
 
@@ -288,18 +269,18 @@ op u64 == u64 -> bool
 
 ```js
 op i8 > i8 -> bool
-op u128 > u128 -> bool
-op u32 > u32 -> bool
-op u8 > u8 -> bool
-op u16 > u16 -> bool
-op int > f32 -> bool
 op u64 > u64 -> bool
-op i16 > i16 -> bool
-op i32 > i32 -> bool
-op f32 > f32 -> bool
+op u16 > u16 -> bool
 op f32 > int -> bool
+op int > f32 -> bool
+op u8 > u8 -> bool
 op i128 > i128 -> bool
+op i16 > i16 -> bool
+op u32 > u32 -> bool
+op i32 > i32 -> bool
 op Instant > Instant -> bool
+op u128 > u128 -> bool
+op f32 > f32 -> bool
 ```
 
 <Tabs>
@@ -312,19 +293,19 @@ op Instant > Instant -> bool
 ## <code>op</code> &gt;&#x3D; {#op-&gt;&#x3D;}
 
 ```js
+op u8 >= u8 -> bool
+op f32 >= f32 -> bool
+op i32 >= i32 -> bool
+op u32 >= u32 -> bool
+op u128 >= u128 -> bool
 op Instant >= Instant -> bool
 op i128 >= i128 -> bool
-op f32 >= int -> bool
-op f32 >= f32 -> bool
 op i16 >= i16 -> bool
-op i32 >= i32 -> bool
-op u64 >= u64 -> bool
 op u16 >= u16 -> bool
-op int >= f32 -> bool
-op u8 >= u8 -> bool
-op u32 >= u32 -> bool
+op u64 >= u64 -> bool
 op i8 >= i8 -> bool
-op u128 >= u128 -> bool
+op int >= f32 -> bool
+op f32 >= int -> bool
 ```
 
 <Tabs>
@@ -730,13 +711,13 @@ get String.len -> int
 ## <code>fn</code> abs {#fn-abs}
 
 ```js
-fn abs(x: int) -> int
-fn abs(x: f32) -> f32
 fn abs(x: i128) -> i128
-fn abs(x: i32) -> i32
-fn abs(x: float) -> float
-fn abs(x: i16) -> i16
 fn abs(x: i8) -> i8
+fn abs(x: i32) -> i32
+fn abs(x: i16) -> i16
+fn abs(x: float) -> float
+fn abs(x: f32) -> f32
+fn abs(x: int) -> int
 ```
 
 <Tabs>
@@ -817,12 +798,12 @@ fn all(array: Array, filter: FnPtr) -> bool
 
 ```js
 fn append(blob: Blob, value: int)
-fn append(blob1: Blob, blob2: Blob)
+fn append(string: String, mut item: ?)
 fn append(blob: Blob, character: char)
+fn append(blob: Blob, string: String)
 fn append(array: Array, new_array: Array)
 fn append(string: String, utf8: Blob)
-fn append(blob: Blob, string: String)
-fn append(string: String, mut item: ?)
+fn append(blob1: Blob, blob2: Blob)
 ```
 
 <Tabs>
@@ -928,9 +909,9 @@ fn atanh(x: float) -> float
 
 ```js
 fn bits(value: int) -> BitRange
-fn bits(value: int, from: int) -> BitRange
 fn bits(value: int, range: RangeInclusive<int>) -> BitRange
 fn bits(value: int, range: Range<int>) -> BitRange
+fn bits(value: int, from: int) -> BitRange
 fn bits(value: int, from: int, len: int) -> BitRange
 ```
 
@@ -1031,31 +1012,33 @@ fn chars(string: String, start: int, len: int) -> CharsStream
 ## <code>fn</code> chop {#fn-chop}
 
 ```js
-fn chop(array: Array, len: int)
 fn chop(blob: Blob, len: int)
+fn chop(array: Array, len: int)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Cut off the head of the array, leaving a tail of the specified length.
+        Cut off the head of the BLOB, leaving a tail of the specified length.
         
-        * If `len` ≤ 0, the array is cleared.
-        * If `len` ≥ length of array, the array is not modified.
+        * If `len` ≤ 0, the BLOB is cleared.
+        * If `len` ≥ length of BLOB, the BLOB is not modified.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let x = [1, 2, 3, 4, 5];
+        let b = blob();
         
-        x.chop(3);
+        b += 1; b += 2; b += 3; b += 4; b += 5;
         
-        print(x);       // prints "[3, 4, 5]"
+        b.chop(3);
         
-        x.chop(10);
+        print(b);           // prints "[030405]"
         
-        print(x);       // prints "[3, 4, 5]"
+        b.chop(10);
+        
+        print(b);           // prints "[030405]"
         ```
     </TabItem>
 </Tabs>
@@ -1063,45 +1046,45 @@ fn chop(blob: Blob, len: int)
 ## <code>fn</code> clear {#fn-clear}
 
 ```js
-fn clear(blob: Blob)
-fn clear(map: Map)
 fn clear(array: Array)
+fn clear(blob: Blob)
 fn clear(string: String)
+fn clear(map: Map)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Clear the BLOB.
+        Clear the array.
     </TabItem>
 </Tabs>
 
 ## <code>fn</code> contains {#fn-contains}
 
 ```js
-fn contains(map: Map, property: String) -> bool
-fn contains(range: Range<int>, value: int) -> bool
-fn contains(blob: Blob, value: int) -> bool
-fn contains(range: RangeInclusive<int>, value: int) -> bool
 fn contains(string: String, character: char) -> bool
+fn contains(range: RangeInclusive<int>, value: int) -> bool
 fn contains(array: Array, value: ?) -> bool
+fn contains(map: Map, property: String) -> bool
+fn contains(blob: Blob, value: int) -> bool
 fn contains(string: String, match_string: String) -> bool
+fn contains(range: Range<int>, value: int) -> bool
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Returns `true` if the object map contains a specified property.
+        Return `true` if the string contains a specified character.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let m = #{a: 1, b: 2, c: 3};
+        let text = "hello, world!";
         
-        print(m.contains("b"));     // prints true
+        print(text.contains('h'));      // prints true
         
-        print(m.contains("x"));     // prints false
+        print(text.contains('x'));      // prints false
         ```
     </TabItem>
 </Tabs>
@@ -1136,8 +1119,8 @@ fn cosh(x: float) -> float
 
 ```js
 fn crop(string: String, range: Range<int>)
-fn crop(string: String, range: RangeInclusive<int>)
 fn crop(string: String, start: int)
+fn crop(string: String, range: RangeInclusive<int>)
 fn crop(string: String, start: int, len: int)
 ```
 
@@ -1163,16 +1146,16 @@ fn crop(string: String, start: int, len: int)
 
 ```js
 fn debug() -> String
-fn debug(number: float) -> String
-fn debug(f: FnPtr) -> String
-fn debug(unit: ?) -> String
-fn debug(character: char) -> String
-fn debug(map: Map) -> String
 fn debug(string: String) -> String
+fn debug(unit: ?) -> String
+fn debug(number: float) -> String
+fn debug(map: Map) -> String
 fn debug(array: Array) -> String
 fn debug(number: f32) -> String
-fn debug(item: ?) -> String
 fn debug(value: bool) -> String
+fn debug(character: char) -> String
+fn debug(item: ?) -> String
+fn debug(f: FnPtr) -> String
 ```
 
 <Tabs>
@@ -1214,51 +1197,41 @@ fn dedup(array: Array, comparer: FnPtr)
 ## <code>fn</code> drain {#fn-drain}
 
 ```js
-fn drain(array: Array, filter: FnPtr) -> Array
+fn drain(blob: Blob, range: RangeInclusive<int>) -> Blob
+fn drain(array: Array, filter: String) -> Array
 fn drain(array: Array, range: RangeInclusive<int>) -> Array
 fn drain(blob: Blob, range: Range<int>) -> Blob
-fn drain(blob: Blob, range: RangeInclusive<int>) -> Blob
 fn drain(map: Map, filter: FnPtr) -> Map
+fn drain(array: Array, filter: FnPtr) -> Array
 fn drain(array: Array, range: Range<int>) -> Array
-fn drain(array: Array, filter: String) -> Array
-fn drain(array: Array, start: int, len: int) -> Array
 fn drain(blob: Blob, start: int, len: int) -> Blob
+fn drain(array: Array, start: int, len: int) -> Array
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Remove all elements in the array that returns `true` when applied the `filter` function and
-        return them as a new array.
-    </TabItem>
-    <TabItem value="No Function Parameter" default>
-
-
-        Array element (mutable) is bound to `this`.
-    </TabItem>
-    <TabItem value="Function Parameters" default>
-
-
-        * `element`: copy of array element
-        * `index` _(optional)_: current index in the array
+        Remove all bytes in the BLOB within an inclusive `range` and return them as a new BLOB.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let x = [1, 2, 3, 4, 5];
+        let b1 = blob();
         
-        let y = x.drain(|v| v < 3);
+        b1 += 1; b1 += 2; b1 += 3; b1 += 4; b1 += 5;
         
-        print(x);       // prints "[3, 4, 5]"
+        let b2 = b1.drain(1..=2);
         
-        print(y);       // prints "[1, 2]"
+        print(b1);      // prints "[010405]"
         
-        let z = x.drain(|v, i| v + i > 5);
+        print(b2);      // prints "[0203]"
         
-        print(x);       // prints "[3, 4]"
+        let b3 = b1.drain(2..=2);
         
-        print(z);       // prints "[5]"
+        print(b1);      // prints "[0104]"
+        
+        print(b3);      // prints "[05]"
         ```
     </TabItem>
 </Tabs>
@@ -1290,14 +1263,14 @@ fn elapsed(timestamp: Instant) -> ?
 ## <code>fn</code> end {#fn-end}
 
 ```js
-fn end(range: Range<int>) -> int
 fn end(range: RangeInclusive<int>) -> int
+fn end(range: Range<int>) -> int
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return the end of the exclusive range.
+        Return the end of the inclusive range.
     </TabItem>
 </Tabs>
 
@@ -1361,20 +1334,20 @@ fn exp(x: float) -> float
 ## <code>fn</code> extract {#fn-extract}
 
 ```js
-fn extract(blob: Blob, range: RangeInclusive<int>) -> Blob
-fn extract(blob: Blob, start: int) -> Blob
-fn extract(array: Array, range: Range<int>) -> Array
-fn extract(array: Array, start: int) -> Array
-fn extract(array: Array, range: RangeInclusive<int>) -> Array
 fn extract(blob: Blob, range: Range<int>) -> Blob
-fn extract(array: Array, start: int, len: int) -> Array
+fn extract(array: Array, range: RangeInclusive<int>) -> Array
+fn extract(array: Array, start: int) -> Array
+fn extract(blob: Blob, range: RangeInclusive<int>) -> Blob
+fn extract(array: Array, range: Range<int>) -> Array
+fn extract(blob: Blob, start: int) -> Blob
 fn extract(blob: Blob, start: int, len: int) -> Blob
+fn extract(array: Array, start: int, len: int) -> Array
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Copy an inclusive `range` of the BLOB and return it as a new BLOB.
+        Copy an exclusive `range` of the BLOB and return it as a new BLOB.
     </TabItem>
     <TabItem value="Example" default>
 
@@ -1384,7 +1357,7 @@ fn extract(blob: Blob, start: int, len: int) -> Blob
         
         b += 1; b += 2; b += 3; b += 4; b += 5;
         
-        print(b.extract(1..=3));    // prints "[020304]"
+        print(b.extract(1..3));     // prints "[0203]"
         
         print(b);                   // prints "[0102030405]"
         ```
@@ -1433,28 +1406,27 @@ fn fill_with(map: Map, map2: Map)
 ## <code>fn</code> filter {#fn-filter}
 
 ```js
+fn filter(array: Array, filter: FnPtr) -> Array
 fn filter(array: Array, filter_func: String) -> Array
 fn filter(map: Map, filter: FnPtr) -> Map
-fn filter(array: Array, filter: FnPtr) -> Array
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Iterate through all the elements in the array, applying a function named by `filter` to each
-        element in turn, and return a copy of all elements (in order) that return `true` as a new array.
+        Iterate through all the elements in the array, applying a `filter` function to each element
+        in turn, and return a copy of all elements (in order) that return `true` as a new array.
     </TabItem>
-    <TabItem value="Deprecated API" default>
+    <TabItem value="No Function Parameter" default>
 
 
-        This method is deprecated and will be removed from the next major version.
-        Use `array.filter(Fn("fn_name"))` instead.
+        Array element (mutable) is bound to `this`.
+        
+        This method is marked _pure_; the `filter` function should not mutate array elements.
     </TabItem>
     <TabItem value="Function Parameters" default>
 
 
-        A function with the same name as the value of `filter` must exist taking these parameters:
-        
         * `element`: copy of array element
         * `index` _(optional)_: current index in the array
     </TabItem>
@@ -1462,15 +1434,13 @@ fn filter(array: Array, filter: FnPtr) -> Array
 
 
         ```rhai
-        fn screen(x, i) { x * i >= 10 }
-        
         let x = [1, 2, 3, 4, 5];
         
-        let y = x.filter("is_odd");
+        let y = x.filter(|v| v >= 3);
         
-        print(y);       // prints "[1, 3, 5]"
+        print(y);       // prints "[3, 4, 5]"
         
-        let y = x.filter("screen");
+        let y = x.filter(|v, i| v * i >= 10);
         
         print(y);       // prints "[12, 20]"
         ```
@@ -1740,34 +1710,32 @@ fn fraction(x: float) -> float
 ## <code>fn</code> get {#fn-get}
 
 ```js
-fn get(blob: Blob, index: int) -> int
-fn get(map: Map, property: String) -> ?
 fn get(string: String, index: int) -> ?
 fn get(array: Array, index: int) -> ?
+fn get(map: Map, property: String) -> ?
+fn get(blob: Blob, index: int) -> int
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Get the byte value at the `index` position in the BLOB.
+        Get the character at the `index` position in the string.
         
-        * If `index` < 0, position counts from the end of the BLOB (`-1` is the last element).
-        * If `index` < -length of BLOB, zero is returned.
-        * If `index` ≥ length of BLOB, zero is returned.
+        * If `index` < 0, position counts from the end of the string (`-1` is the last character).
+        * If `index` < -length of string, zero is returned.
+        * If `index` ≥ length of string, zero is returned.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let b = blob();
+        let text = "hello, world!";
         
-        b += 1; b += 2; b += 3; b += 4; b += 5;
+        print(text.get(0));     // prints 'h'
         
-        print(b.get(0));        // prints 1
+        print(text.get(-1));    // prints '!'
         
-        print(b.get(-1));       // prints 5
-        
-        print(b.get(99));       // prints 0
+        print(text.get(99));    // prints empty (for '()')'
         ```
     </TabItem>
 </Tabs>
@@ -2011,52 +1979,33 @@ get i8.is_zero -> bool
 ## <code>fn</code> index_of {#fn-index_of}
 
 ```js
-fn index_of(array: Array, filter: String) -> int
-fn index_of(string: String, character: char) -> int
-fn index_of(array: Array, filter: FnPtr) -> int
 fn index_of(string: String, find_string: String) -> int
+fn index_of(array: Array, filter: FnPtr) -> int
+fn index_of(string: String, character: char) -> int
+fn index_of(array: Array, filter: String) -> int
 fn index_of(array: Array, value: ?) -> int
-fn index_of(string: String, character: char, start: int) -> int
-fn index_of(array: Array, filter: FnPtr, start: int) -> int
+fn index_of(string: String, find_string: String, start: int) -> int
 fn index_of(array: Array, value: ?, start: int) -> int
 fn index_of(array: Array, filter: String, start: int) -> int
-fn index_of(string: String, find_string: String, start: int) -> int
+fn index_of(string: String, character: char, start: int) -> int
+fn index_of(array: Array, filter: FnPtr, start: int) -> int
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Iterate through all the elements in the array, applying a function named by `filter` to each
-        element in turn, and return the index of the first element that returns `true`.
-        If no element returns `true`, `-1` is returned.
-    </TabItem>
-    <TabItem value="Deprecated API" default>
-
-
-        This method is deprecated and will be removed from the next major version.
-        Use `array.index_of(Fn("fn_name"))` instead.
-    </TabItem>
-    <TabItem value="Function Parameters" default>
-
-
-        A function with the same name as the value of `filter` must exist taking these parameters:
-        
-        * `element`: copy of array element
-        * `index` _(optional)_: current index in the array
+        Find the specified `character` in the string and return the first index where it is found.
+        If the `character` is not found, `-1` is returned.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        fn is_special(x) { x > 3 }
+        let text = "hello, world! hello, foobar!";
         
-        fn is_dumb(x) { x > 8 }
+        print(text.index_of("ll"));     // prints 2 (first index)
         
-        let x = [1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 5];
-        
-        print(x.index_of("is_special"));    // prints 3
-        
-        print(x.index_of("is_dumb"));       // prints -1
+        print(text.index_of("xx:));     // prints -1
         ```
     </TabItem>
 </Tabs>
@@ -2064,30 +2013,32 @@ fn index_of(string: String, find_string: String, start: int) -> int
 ## <code>fn</code> insert {#fn-insert}
 
 ```js
-fn insert(blob: Blob, index: int, value: int)
 fn insert(array: Array, index: int, item: ?)
+fn insert(blob: Blob, index: int, value: int)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Add a byte `value` to the BLOB at a particular `index` position.
+        Add a new element into the array at a particular `index` position.
         
-        * If `index` < 0, position counts from the end of the BLOB (`-1` is the last byte).
-        * If `index` < -length of BLOB, the byte value is added to the beginning of the BLOB.
-        * If `index` ≥ length of BLOB, the byte value is appended to the end of the BLOB.
-        
-        Only the lower 8 bits of the `value` are used; all other bits are ignored.
+        * If `index` < 0, position counts from the end of the array (`-1` is the last element).
+        * If `index` < -length of array, the element is added to the beginning of the array.
+        * If `index` ≥ length of array, the element is appended to the end of the array.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let b = blob(5, 0x42);
+        let x = [1, 2, 3];
         
-        b.insert(2, 0x18);
+        x.insert(0, "hello");
         
-        print(b);       // prints "[4242184242]"
+        x.insert(2, true);
+        
+        x.insert(-2, 42);
+        
+        print(x);       // prints ["hello", 1, true, 2, 42, 3]
         ```
     </TabItem>
 </Tabs>
@@ -2193,34 +2144,34 @@ fn is_anonymous(fn_ptr: FnPtr) -> bool
 ## <code>fn</code> is_empty {#fn-is_empty}
 
 ```js
-fn is_empty(array: Array) -> bool
-fn is_empty(range: RangeInclusive<int>) -> bool
+fn is_empty(range: Range<int>) -> bool
 fn is_empty(string: String) -> bool
 fn is_empty(map: Map) -> bool
-fn is_empty(range: Range<int>) -> bool
+fn is_empty(array: Array) -> bool
+fn is_empty(range: RangeInclusive<int>) -> bool
 fn is_empty(blob: Blob) -> bool
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return true if the array is empty.
+        Return true if the range contains no items.
     </TabItem>
 </Tabs>
 
 ## <code>fn</code> is_even {#fn-is_even}
 
 ```js
-fn is_even(x: i32) -> bool
-fn is_even(x: i128) -> bool
-fn is_even(x: i8) -> bool
-fn is_even(x: i16) -> bool
-fn is_even(x: u128) -> bool
-fn is_even(x: u8) -> bool
-fn is_even(x: u64) -> bool
 fn is_even(x: u32) -> bool
-fn is_even(x: u16) -> bool
 fn is_even(x: int) -> bool
+fn is_even(x: u64) -> bool
+fn is_even(x: i32) -> bool
+fn is_even(x: i16) -> bool
+fn is_even(x: i8) -> bool
+fn is_even(x: u8) -> bool
+fn is_even(x: i128) -> bool
+fn is_even(x: u16) -> bool
+fn is_even(x: u128) -> bool
 ```
 
 <Tabs>
@@ -2233,8 +2184,8 @@ fn is_even(x: int) -> bool
 ## <code>fn</code> is_exclusive {#fn-is_exclusive}
 
 ```js
-fn is_exclusive(range: Range<int>) -> bool
 fn is_exclusive(range: RangeInclusive<int>) -> bool
+fn is_exclusive(range: Range<int>) -> bool
 ```
 
 <Tabs>
@@ -2260,8 +2211,8 @@ fn is_finite(x: float) -> bool
 ## <code>fn</code> is_inclusive {#fn-is_inclusive}
 
 ```js
-fn is_inclusive(range: Range<int>) -> bool
 fn is_inclusive(range: RangeInclusive<int>) -> bool
+fn is_inclusive(range: Range<int>) -> bool
 ```
 
 <Tabs>
@@ -2300,16 +2251,16 @@ fn is_nan(x: float) -> bool
 ## <code>fn</code> is_odd {#fn-is_odd}
 
 ```js
-fn is_odd(x: i16) -> bool
-fn is_odd(x: i8) -> bool
-fn is_odd(x: i32) -> bool
-fn is_odd(x: i128) -> bool
-fn is_odd(x: u64) -> bool
 fn is_odd(x: u32) -> bool
-fn is_odd(x: u16) -> bool
 fn is_odd(x: int) -> bool
-fn is_odd(x: u128) -> bool
+fn is_odd(x: i16) -> bool
+fn is_odd(x: i32) -> bool
+fn is_odd(x: u64) -> bool
 fn is_odd(x: u8) -> bool
+fn is_odd(x: i8) -> bool
+fn is_odd(x: u16) -> bool
+fn is_odd(x: i128) -> bool
+fn is_odd(x: u128) -> bool
 ```
 
 <Tabs>
@@ -2322,24 +2273,24 @@ fn is_odd(x: u8) -> bool
 ## <code>fn</code> is_zero {#fn-is_zero}
 
 ```js
+fn is_zero(x: f32) -> bool
 fn is_zero(x: int) -> bool
 fn is_zero(x: u32) -> bool
-fn is_zero(x: u16) -> bool
-fn is_zero(x: f32) -> bool
-fn is_zero(x: u64) -> bool
-fn is_zero(x: u8) -> bool
 fn is_zero(x: u128) -> bool
-fn is_zero(x: float) -> bool
-fn is_zero(x: i8) -> bool
-fn is_zero(x: i16) -> bool
 fn is_zero(x: i128) -> bool
+fn is_zero(x: u16) -> bool
+fn is_zero(x: i8) -> bool
+fn is_zero(x: u8) -> bool
+fn is_zero(x: i16) -> bool
+fn is_zero(x: float) -> bool
+fn is_zero(x: u64) -> bool
 fn is_zero(x: i32) -> bool
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return true if the number is zero.
+        Return true if the floating-point number is zero.
     </TabItem>
 </Tabs>
 
@@ -2368,27 +2319,16 @@ fn keys(map: Map) -> Array
 ## <code>fn</code> len {#fn-len}
 
 ```js
-fn len(blob: Blob) -> int
 fn len(map: Map) -> int
 fn len(string: String) -> int
 fn len(array: Array) -> int
+fn len(blob: Blob) -> int
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return the length of the BLOB.
-    </TabItem>
-    <TabItem value="Example" default>
-
-
-        ```rhai
-        let b = blob(10, 0x42);
-        
-        print(b);           // prints "[4242424242424242 4242]"
-        
-        print(b.len());     // prints 10
-        ```
+        Return the number of properties in the object map.
     </TabItem>
 </Tabs>
 
@@ -2447,24 +2387,24 @@ fn make_lower(string: String)
 ## <code>fn</code> make_upper {#fn-make_upper}
 
 ```js
-fn make_upper(character: char)
 fn make_upper(string: String)
+fn make_upper(character: char)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Convert the character to upper-case.
+        Convert the string to all upper-case.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let ch = 'a';
+        let text = "hello, world!"
         
-        ch.make_upper();
+        text.make_upper();
         
-        print(ch);          // prints 'A'
+        print(text);        // prints "HELLO, WORLD!";
         ```
     </TabItem>
 </Tabs>
@@ -2515,38 +2455,38 @@ fn map(array: Array, mapper: String) -> Array
 ## <code>fn</code> max {#fn-max}
 
 ```js
-fn max(x: f32, y: f32) -> f32
-fn max(x: i16, y: i16) -> i16
-fn max(x: i32, y: i32) -> i32
-fn max(char1: char, char2: char) -> char
-fn max(x: f32, y: int) -> f32
 fn max(x: f32, y: float) -> float
-fn max(x: float, y: f32) -> float
+fn max(x: f32, y: int) -> f32
 fn max(x: int, y: float) -> float
-fn max(x: i128, y: i128) -> i128
-fn max(x: u32, y: u32) -> u32
-fn max(x: i8, y: i8) -> i8
-fn max(x: u128, y: u128) -> u128
-fn max(x: float, y: int) -> float
-fn max(x: int, y: int) -> int
-fn max(x: u8, y: u8) -> u8
-fn max(x: float, y: float) -> float
-fn max(x: u64, y: u64) -> u64
-fn max(x: u16, y: u16) -> u16
 fn max(x: int, y: f32) -> f32
+fn max(x: float, y: int) -> float
+fn max(x: i8, y: i8) -> i8
+fn max(x: u16, y: u16) -> u16
+fn max(x: u64, y: u64) -> u64
+fn max(x: i16, y: i16) -> i16
+fn max(x: i128, y: i128) -> i128
+fn max(x: u128, y: u128) -> u128
+fn max(x: int, y: int) -> int
+fn max(x: i32, y: i32) -> i32
+fn max(x: u32, y: u32) -> u32
+fn max(x: f32, y: f32) -> f32
+fn max(x: float, y: float) -> float
+fn max(x: u8, y: u8) -> u8
 fn max(string1: String, string2: String) -> String
+fn max(x: float, y: f32) -> float
+fn max(char1: char, char2: char) -> char
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return the character that is lexically greater than the other character.
+        Return the number that is larger than the other number.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        max('h', 'w');      // returns 'w'
+        max(42, 123);   // returns 132
         ```
     </TabItem>
 </Tabs>
@@ -2554,38 +2494,38 @@ fn max(string1: String, string2: String) -> String
 ## <code>fn</code> min {#fn-min}
 
 ```js
-fn min(x: i128, y: i128) -> i128
-fn min(x: float, y: f32) -> float
-fn min(x: int, y: float) -> float
+fn min(x: int, y: f32) -> f32
 fn min(x: f32, y: float) -> float
 fn min(x: f32, y: int) -> f32
-fn min(char1: char, char2: char) -> char
-fn min(x: i16, y: i16) -> i16
-fn min(x: i32, y: i32) -> i32
-fn min(x: f32, y: f32) -> f32
-fn min(string1: String, string2: String) -> String
-fn min(x: int, y: f32) -> f32
-fn min(x: u16, y: u16) -> u16
+fn min(x: int, y: float) -> float
 fn min(x: u64, y: u64) -> u64
-fn min(x: u8, y: u8) -> u8
-fn min(x: float, y: float) -> float
-fn min(x: int, y: int) -> int
+fn min(x: u16, y: u16) -> u16
 fn min(x: float, y: int) -> float
 fn min(x: i8, y: i8) -> i8
+fn min(x: int, y: int) -> int
 fn min(x: u128, y: u128) -> u128
+fn min(x: i32, y: i32) -> i32
 fn min(x: u32, y: u32) -> u32
+fn min(x: f32, y: f32) -> f32
+fn min(x: float, y: float) -> float
+fn min(x: i16, y: i16) -> i16
+fn min(string1: String, string2: String) -> String
+fn min(x: i128, y: i128) -> i128
+fn min(x: u8, y: u8) -> u8
+fn min(x: float, y: f32) -> float
+fn min(char1: char, char2: char) -> char
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return the character that is lexically smaller than the other character.
+        Return the number that is smaller than the other number.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        max('h', 'w');      // returns 'h'
+        min(42, 123);   // returns 42
         ```
     </TabItem>
 </Tabs>
@@ -2643,8 +2583,8 @@ fn name(fn_ptr: FnPtr) -> String
 ## <code>fn</code> pad {#fn-pad}
 
 ```js
-fn pad(string: String, len: int, character: char)
 fn pad(blob: Blob, len: int, value: int)
+fn pad(string: String, len: int, character: char)
 fn pad(array: Array, len: int, item: ?)
 fn pad(string: String, len: int, padding: String)
 ```
@@ -2652,23 +2592,25 @@ fn pad(string: String, len: int, padding: String)
 <Tabs>
     <TabItem value="Description" default>
 
-        Pad the string to at least the specified number of characters with the specified `character`.
+        Pad the BLOB to at least the specified length with copies of a specified byte `value`.
         
-        If `len` ≤ length of string, no padding is done.
+        If `len` ≤ length of BLOB, no padding is done.
+        
+        Only the lower 8 bits of the `value` are used; all other bits are ignored.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let text = "hello";
+        let b = blob(3, 0x42);
         
-        text.pad(8, '!');
+        b.pad(5, 0x18)
         
-        print(text);        // prints "hello!!!"
+        print(b);               // prints "[4242421818]"
         
-        text.pad(5, '*');
+        b.pad(3, 0xab)
         
-        print(text);        // prints "hello!!!"
+        print(b);               // prints "[4242421818]"
         ```
     </TabItem>
 </Tabs>
@@ -2695,15 +2637,15 @@ fn parse_be_float(blob: Blob, start: int, len: int) -> float
 ## <code>fn</code> parse_be_int {#fn-parse_be_int}
 
 ```js
-fn parse_be_int(blob: Blob, range: Range<int>) -> int
 fn parse_be_int(blob: Blob, range: RangeInclusive<int>) -> int
+fn parse_be_int(blob: Blob, range: Range<int>) -> int
 fn parse_be_int(blob: Blob, start: int, len: int) -> int
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Parse the bytes within an exclusive `range` in the BLOB as an `INT`
+        Parse the bytes within an inclusive `range` in the BLOB as an `INT`
         in big-endian byte order.
         
         * If number of bytes in `range` < number of bytes for `INT`, zeros are padded.
@@ -2714,9 +2656,9 @@ fn parse_be_int(blob: Blob, start: int, len: int) -> int
         
         b += 1; b += 2; b += 3; b += 4; b += 5;
         
-        let x = b.parse_be_int(1..3);   // parse two bytes
+        let x = b.parse_be_int(1..=3);  // parse three bytes
         
-        print(x.to_hex());              // prints "02030000...00"
+        print(x.to_hex());              // prints "0203040000...00"
         ```
     </TabItem>
 </Tabs>
@@ -2791,15 +2733,15 @@ fn parse_json(json: String) -> ?
 ## <code>fn</code> parse_le_float {#fn-parse_le_float}
 
 ```js
-fn parse_le_float(blob: Blob, range: RangeInclusive<int>) -> float
 fn parse_le_float(blob: Blob, range: Range<int>) -> float
+fn parse_le_float(blob: Blob, range: RangeInclusive<int>) -> float
 fn parse_le_float(blob: Blob, start: int, len: int) -> float
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Parse the bytes within an inclusive `range` in the BLOB as a `FLOAT`
+        Parse the bytes within an exclusive `range` in the BLOB as a `FLOAT`
         in little-endian byte order.
         
         * If number of bytes in `range` < number of bytes for `FLOAT`, zeros are padded.
@@ -2840,8 +2782,8 @@ fn parse_le_int(blob: Blob, start: int, len: int) -> int
 
 ```js
 fn pop(blob: Blob) -> int
-fn pop(string: String) -> ?
 fn pop(array: Array) -> ?
+fn pop(string: String) -> ?
 fn pop(string: String, len: int) -> String
 ```
 
@@ -2871,15 +2813,15 @@ fn pop(string: String, len: int) -> String
 
 ```js
 fn print() -> String
-fn print(array: Array) -> String
-fn print(string: String) -> String
-fn print(map: Map) -> String
-fn print(value: bool) -> String
-fn print(item: ?) -> String
-fn print(number: f32) -> String
-fn print(unit: ?) -> String
-fn print(character: char) -> String
 fn print(number: float) -> String
+fn print(map: Map) -> String
+fn print(string: String) -> String
+fn print(unit: ?) -> String
+fn print(item: ?) -> String
+fn print(array: Array) -> String
+fn print(number: f32) -> String
+fn print(value: bool) -> String
+fn print(character: char) -> String
 ```
 
 <Tabs>
@@ -2919,60 +2861,52 @@ fn push(blob: Blob, value: int)
 ## <code>fn</code> range {#fn-range}
 
 ```js
-fn range(range: Range<i32>, step: i32) -> StepRange<i32>
-fn range(range: Range<u8>, step: u8) -> StepRange<u8>
-fn range(range: Range<i128>, step: i128) -> StepRange<i128>
-fn range(range: Range<float>, step: float) -> StepRange<float>
-fn range(range: Range<i8>, step: i8) -> StepRange<i8>
-fn range(from: i128, to: i128) -> Range<i128>
-fn range(from: i16, to: i16) -> Range<i16>
-fn range(from: i32, to: i32) -> Range<i32>
-fn range(range: Range<int>, step: int) -> StepRange<int>
-fn range(range: Range<i16>, step: i16) -> StepRange<i16>
-fn range(range: Range<u32>, step: u32) -> StepRange<u32>
-fn range(from: u16, to: u16) -> Range<u16>
 fn range(from: u64, to: u64) -> Range<u64>
-fn range(range: Range<u16>, step: u16) -> StepRange<u16>
+fn range(from: u16, to: u16) -> Range<u16>
 fn range(range: Range<u128>, step: u128) -> StepRange<u128>
-fn range(range: Range<u64>, step: u64) -> StepRange<u64>
+fn range(range: Range<u8>, step: u8) -> StepRange<u8>
 fn range(from: i8, to: i8) -> Range<i8>
-fn range(from: u128, to: u128) -> Range<u128>
-fn range(from: u32, to: u32) -> Range<u32>
+fn range(range: Range<u16>, step: u16) -> StepRange<u16>
+fn range(range: Range<i128>, step: i128) -> StepRange<i128>
 fn range(from: u8, to: u8) -> Range<u8>
+fn range(range: Range<i16>, step: i16) -> StepRange<i16>
+fn range(range: Range<i32>, step: i32) -> StepRange<i32>
+fn range(range: Range<float>, step: float) -> StepRange<float>
+fn range(from: u32, to: u32) -> Range<u32>
+fn range(from: i32, to: i32) -> Range<i32>
 fn range(from: int, to: int) -> Range<int>
+fn range(from: u128, to: u128) -> Range<u128>
+fn range(range: Range<int>, step: int) -> StepRange<int>
+fn range(range: Range<u32>, step: u32) -> StepRange<u32>
+fn range(range: Range<u64>, step: u64) -> StepRange<u64>
+fn range(from: i128, to: i128) -> Range<i128>
+fn range(range: Range<i8>, step: i8) -> StepRange<i8>
+fn range(from: i16, to: i16) -> Range<i16>
+fn range(from: i16, to: i16, step: i16) -> StepRange<i16>
+fn range(from: i128, to: i128, step: i128) -> StepRange<i128>
+fn range(from: i8, to: i8, step: i8) -> StepRange<i8>
+fn range(from: float, to: float, step: float) -> StepRange<float>
 fn range(from: u16, to: u16, step: u16) -> StepRange<u16>
+fn range(from: u128, to: u128, step: u128) -> StepRange<u128>
+fn range(from: u8, to: u8, step: u8) -> StepRange<u8>
 fn range(from: i32, to: i32, step: i32) -> StepRange<i32>
+fn range(from: int, to: int, step: int) -> StepRange<int>
 fn range(from: u64, to: u64, step: u64) -> StepRange<u64>
 fn range(from: u32, to: u32, step: u32) -> StepRange<u32>
-fn range(from: int, to: int, step: int) -> StepRange<int>
-fn range(from: float, to: float, step: float) -> StepRange<float>
-fn range(from: i16, to: i16, step: i16) -> StepRange<i16>
-fn range(from: u128, to: u128, step: u128) -> StepRange<u128>
-fn range(from: i8, to: i8, step: i8) -> StepRange<i8>
-fn range(from: i128, to: i128, step: i128) -> StepRange<i128>
-fn range(from: u8, to: u8, step: u8) -> StepRange<u8>
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return an iterator over an exclusive range, each iteration increasing by `step`.
-        
-        If `range` is reversed and `step` < 0, iteration goes backwards.
-        
-        Otherwise, if `range` is empty, an empty iterator is returned.
+        Return an iterator over the exclusive range of `from..to`.
+        The value `to` is never included.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        // prints all values from 8 to 17 in steps of 3
-        for n in range(8..18, 3) {
-            print(n);
-        }
-        
-        // prints all values down from 18 to 9 in steps of -3
-        for n in range(18..8, -3) {
+        // prints all values from 8 to 17
+        for n in range(8, 18) {
             print(n);
         }
         ```
@@ -2982,37 +2916,50 @@ fn range(from: u8, to: u8, step: u8) -> StepRange<u8>
 ## <code>fn</code> reduce {#fn-reduce}
 
 ```js
-fn reduce(array: Array, reducer: FnPtr) -> ?
 fn reduce(array: Array, reducer: String) -> ?
-fn reduce(array: Array, reducer: String, initial: ?) -> ?
+fn reduce(array: Array, reducer: FnPtr) -> ?
 fn reduce(array: Array, reducer: FnPtr, initial: ?) -> ?
+fn reduce(array: Array, reducer: String, initial: ?) -> ?
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Reduce an array by iterating through all elements while applying the `reducer` function.
+        Reduce an array by iterating through all elements while applying a function named by `reducer`.
+    </TabItem>
+    <TabItem value="Deprecated API" default>
+
+
+        This method is deprecated and will be removed from the next major version.
+        Use `array.reduce(Fn("fn_name"))` instead.
     </TabItem>
     <TabItem value="Function Parameters" default>
 
 
-        * `result`: accumulated result, initially `()`
-        * `element`: copy of array element, or bound to `this` if omitted
-        * `index` _(optional)_: current index in the array
+        A function with the same name as the value of `reducer` must exist taking these parameters:
         
-        This method is marked _pure_; the `reducer` function should not mutate array elements.
+        * `result`: accumulated result, initially `()`
+        * `element`: copy of array element
+        * `index` _(optional)_: current index in the array
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
+        fn process(r, x) {
+            x + (r ?? 0)
+        }
+        fn process_extra(r, x, i) {
+            x + i + (r ?? 0)
+        }
+        
         let x = [1, 2, 3, 4, 5];
         
-        let y = x.reduce(|r, v| v + (r ?? 0));
+        let y = x.reduce("process");
         
         print(y);       // prints 15
         
-        let y = x.reduce(|r, v, i| v + i + (r ?? 0));
+        let y = x.reduce("process_extra");
         
         print(y);       // prints 25
         ```
@@ -3024,8 +2971,8 @@ fn reduce(array: Array, reducer: FnPtr, initial: ?) -> ?
 ```js
 fn reduce_rev(array: Array, reducer: String) -> ?
 fn reduce_rev(array: Array, reducer: FnPtr) -> ?
-fn reduce_rev(array: Array, reducer: FnPtr, initial: ?) -> ?
 fn reduce_rev(array: Array, reducer: String, initial: ?) -> ?
+fn reduce_rev(array: Array, reducer: FnPtr, initial: ?) -> ?
 ```
 
 <Tabs>
@@ -3076,27 +3023,31 @@ fn reduce_rev(array: Array, reducer: String, initial: ?) -> ?
 ## <code>fn</code> remove {#fn-remove}
 
 ```js
-fn remove(string: String, sub_string: String)
-fn remove(string: String, character: char)
-fn remove(array: Array, index: int) -> ?
-fn remove(blob: Blob, index: int) -> int
 fn remove(map: Map, property: String) -> ?
+fn remove(array: Array, index: int) -> ?
+fn remove(string: String, character: char)
+fn remove(string: String, sub_string: String)
+fn remove(blob: Blob, index: int) -> int
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Remove all occurrences of a sub-string from the string.
+        Remove any property of the specified `name` from the object map, returning its value.
+        
+        If the property does not exist, `()` is returned.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let text = "hello, world! hello, foobar!";
+        let m = #{a:1, b:2, c:3};
         
-        text.remove("hello");
+        let x = m.remove("b");
         
-        print(text);        // prints ", world! , foobar!"
+        print(x);       // prints 2
+        
+        print(m);       // prints "#{a:1, c:3}"
         ```
     </TabItem>
 </Tabs>
@@ -3104,16 +3055,16 @@ fn remove(map: Map, property: String) -> ?
 ## <code>fn</code> replace {#fn-replace}
 
 ```js
-fn replace(string: String, find_string: String, substitute_character: char)
-fn replace(string: String, find_character: char, substitute_character: char)
 fn replace(string: String, find_character: char, substitute_string: String)
 fn replace(string: String, find_string: String, substitute_string: String)
+fn replace(string: String, find_string: String, substitute_character: char)
+fn replace(string: String, find_character: char, substitute_character: char)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Replace all occurrences of the specified sub-string in the string with the specified character.
+        Replace all occurrences of the specified character in the string with another string.
     </TabItem>
     <TabItem value="Example" default>
 
@@ -3121,9 +3072,9 @@ fn replace(string: String, find_string: String, substitute_string: String)
         ```rhai
         let text = "hello, world! hello, foobar!";
         
-        text.replace("hello", '*');
+        text.replace('l', "(^)");
         
-        print(text);        // prints "*, world! *, foobar!"
+        print(text);        // prints "he(^)(^)o, wor(^)d! he(^)(^)o, foobar!"
         ```
     </TabItem>
 </Tabs>
@@ -3131,13 +3082,13 @@ fn replace(string: String, find_string: String, substitute_string: String)
 ## <code>fn</code> retain {#fn-retain}
 
 ```js
-fn retain(blob: Blob, range: Range<int>) -> Blob
-fn retain(array: Array, range: RangeInclusive<int>) -> Array
-fn retain(array: Array, filter: FnPtr) -> Array
-fn retain(map: Map, filter: FnPtr) -> Map
-fn retain(blob: Blob, range: RangeInclusive<int>) -> Blob
-fn retain(array: Array, filter: String) -> Array
 fn retain(array: Array, range: Range<int>) -> Array
+fn retain(array: Array, filter: FnPtr) -> Array
+fn retain(array: Array, range: RangeInclusive<int>) -> Array
+fn retain(map: Map, filter: FnPtr) -> Map
+fn retain(blob: Blob, range: Range<int>) -> Blob
+fn retain(array: Array, filter: String) -> Array
+fn retain(blob: Blob, range: RangeInclusive<int>) -> Blob
 fn retain(array: Array, start: int, len: int) -> Array
 fn retain(blob: Blob, start: int, len: int) -> Blob
 ```
@@ -3145,27 +3096,25 @@ fn retain(blob: Blob, start: int, len: int) -> Blob
 <Tabs>
     <TabItem value="Description" default>
 
-        Remove all bytes in the BLOB not within an exclusive `range` and return them as a new BLOB.
+        Remove all elements in the array not within an exclusive `range` and return them as a new array.
     </TabItem>
     <TabItem value="Example" default>
 
 
         ```rhai
-        let b1 = blob();
+        let x = [1, 2, 3, 4, 5];
         
-        b1 += 1; b1 += 2; b1 += 3; b1 += 4; b1 += 5;
+        let y = x.retain(1..4);
         
-        let b2 = b1.retain(1..4);
+        print(x);       // prints "[2, 3, 4]"
         
-        print(b1);      // prints "[020304]"
+        print(y);       // prints "[1, 5]"
         
-        print(b2);      // prints "[0105]"
+        let z = x.retain(1..3);
         
-        let b3 = b1.retain(1..3);
+        print(x);       // prints "[3, 4]"
         
-        print(b1);      // prints "[0304]"
-        
-        print(b2);      // prints "[01]"
+        print(z);       // prints "[1]"
         ```
     </TabItem>
 </Tabs>
@@ -3290,15 +3239,15 @@ fn set_bit(value: int, bit: int, new_value: bool)
 ## <code>fn</code> set_bits {#fn-set_bits}
 
 ```js
-fn set_bits(value: int, range: Range<int>, new_value: int)
 fn set_bits(value: int, range: RangeInclusive<int>, new_value: int)
+fn set_bits(value: int, range: Range<int>, new_value: int)
 fn set_bits(value: int, bit: int, bits: int, new_value: int)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Replace an exclusive range of bits in the number with a new value.
+        Replace an inclusive range of bits in the number with a new value.
     </TabItem>
     <TabItem value="Example" default>
 
@@ -3306,7 +3255,7 @@ fn set_bits(value: int, bit: int, bits: int, new_value: int)
         ```rhai
         let x = 123456;
         
-        x.set_bits(5..10, 42);
+        x.set_bits(5..=9, 42);
         
         print(x);           // print 123200
         ```
@@ -3369,19 +3318,19 @@ fn shift(array: Array) -> ?
 ## <code>fn</code> sign {#fn-sign}
 
 ```js
+fn sign(x: int) -> int
+fn sign(x: f32) -> int
+fn sign(x: i32) -> int
 fn sign(x: float) -> int
 fn sign(x: i16) -> int
 fn sign(x: i8) -> int
 fn sign(x: i128) -> int
-fn sign(x: i32) -> int
-fn sign(x: int) -> int
-fn sign(x: f32) -> int
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return the sign (as an integer) of the floating-point number according to the following:
+        Return the sign (as an integer) of the number according to the following:
         
         * `0` if the number is zero
         * `1` if the number is positive
@@ -3418,8 +3367,8 @@ fn sinh(x: float) -> float
 ## <code>fn</code> sleep {#fn-sleep}
 
 ```js
-fn sleep(seconds: int)
 fn sleep(seconds: float)
+fn sleep(seconds: int)
 ```
 
 <Tabs>
@@ -3432,7 +3381,7 @@ fn sleep(seconds: float)
 
         ```rhai
         // Do nothing for 10 seconds!
-        sleep(10);
+        sleep(10.0);
         ```
     </TabItem>
 </Tabs>
@@ -3528,11 +3477,11 @@ fn sort(array: Array, comparer: FnPtr)
 
 ```js
 fn splice(blob: Blob, range: Range<int>, replace: Blob)
-fn splice(array: Array, range: Range<int>, replace: Array)
-fn splice(blob: Blob, range: RangeInclusive<int>, replace: Blob)
 fn splice(array: Array, range: RangeInclusive<int>, replace: Array)
-fn splice(array: Array, start: int, len: int, replace: Array)
+fn splice(blob: Blob, range: RangeInclusive<int>, replace: Blob)
+fn splice(array: Array, range: Range<int>, replace: Array)
 fn splice(blob: Blob, start: int, len: int, replace: Blob)
+fn splice(array: Array, start: int, len: int, replace: Array)
 ```
 
 <Tabs>
@@ -3558,11 +3507,11 @@ fn splice(blob: Blob, start: int, len: int, replace: Blob)
 
 ```js
 fn split(string: String) -> Array
-fn split(string: String, delimiter: char) -> Array
-fn split(string: String, index: int) -> Array
-fn split(array: Array, index: int) -> Array
 fn split(string: String, delimiter: String) -> Array
 fn split(blob: Blob, index: int) -> Blob
+fn split(array: Array, index: int) -> Array
+fn split(string: String, index: int) -> Array
+fn split(string: String, delimiter: char) -> Array
 fn split(string: String, delimiter: String, segments: int) -> Array
 fn split(string: String, delimiter: char, segments: int) -> Array
 ```
@@ -3663,21 +3612,16 @@ fn starts_with(string: String, match_string: String) -> bool
 ## <code>fn</code> sub_string {#fn-sub_string}
 
 ```js
-fn sub_string(string: String, start: int) -> String
-fn sub_string(string: String, range: RangeInclusive<int>) -> String
 fn sub_string(string: String, range: Range<int>) -> String
+fn sub_string(string: String, range: RangeInclusive<int>) -> String
+fn sub_string(string: String, start: int) -> String
 fn sub_string(string: String, start: int, len: int) -> String
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Copy a portion of the string beginning at the `start` position till the end and return it as
-        a new string.
-        
-        * If `start` < 0, position counts from the end of the string (`-1` is the last character).
-        * If `start` < -length of string, the entire string is copied and returned.
-        * If `start` ≥ length of string, an empty string is returned.
+        Copy an exclusive range of characters from the string and return it as a new string.
     </TabItem>
     <TabItem value="Example" default>
 
@@ -3685,9 +3629,7 @@ fn sub_string(string: String, start: int, len: int) -> String
         ```rhai
         let text = "hello, world!";
         
-        print(text.sub_string(5));      // prints ", world!"
-        
-        print(text.sub_string(-5));      // prints "orld!"
+        print(text.sub_string(3..7));   // prints "lo, "
         ```
     </TabItem>
 </Tabs>
@@ -3820,16 +3762,16 @@ fn to_array(blob: Blob) -> Array
 ## <code>fn</code> to_binary {#fn-to_binary}
 
 ```js
-fn to_binary(value: u64) -> String
-fn to_binary(value: u16) -> String
-fn to_binary(value: u32) -> String
 fn to_binary(value: int) -> String
-fn to_binary(value: u128) -> String
-fn to_binary(value: u8) -> String
-fn to_binary(value: i16) -> String
-fn to_binary(value: i8) -> String
-fn to_binary(value: i32) -> String
+fn to_binary(value: u32) -> String
 fn to_binary(value: i128) -> String
+fn to_binary(value: u16) -> String
+fn to_binary(value: u128) -> String
+fn to_binary(value: i16) -> String
+fn to_binary(value: u64) -> String
+fn to_binary(value: i32) -> String
+fn to_binary(value: i8) -> String
+fn to_binary(value: u8) -> String
 ```
 
 <Tabs>
@@ -3888,22 +3830,22 @@ fn to_chars(string: String) -> Array
 ## <code>fn</code> to_debug {#fn-to_debug}
 
 ```js
-fn to_debug(unit: ?) -> String
-fn to_debug(character: char) -> String
-fn to_debug(number: float) -> String
-fn to_debug(f: FnPtr) -> String
-fn to_debug(number: f32) -> String
 fn to_debug(item: ?) -> String
-fn to_debug(value: bool) -> String
-fn to_debug(map: Map) -> String
-fn to_debug(string: String) -> String
+fn to_debug(f: FnPtr) -> String
 fn to_debug(array: Array) -> String
+fn to_debug(value: bool) -> String
+fn to_debug(character: char) -> String
+fn to_debug(number: f32) -> String
+fn to_debug(map: Map) -> String
+fn to_debug(number: float) -> String
+fn to_debug(string: String) -> String
+fn to_debug(unit: ?) -> String
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Convert the unit into a string in debug format.
+        Convert the value of the `item` into a string in debug format.
     </TabItem>
 </Tabs>
 
@@ -3923,12 +3865,12 @@ fn to_degrees(x: float) -> float
 ## <code>fn</code> to_float {#fn-to_float}
 
 ```js
-fn to_float()
-fn to_float()
-fn to_float()
-fn to_float()
-fn to_float()
 fn to_float(x: f32) -> float
+fn to_float()
+fn to_float()
+fn to_float()
+fn to_float()
+fn to_float()
 fn to_float()
 fn to_float()
 fn to_float()
@@ -3947,16 +3889,16 @@ fn to_float()
 ## <code>fn</code> to_hex {#fn-to_hex}
 
 ```js
-fn to_hex(value: u8) -> String
-fn to_hex(value: u128) -> String
-fn to_hex(value: u64) -> String
-fn to_hex(value: int) -> String
 fn to_hex(value: u32) -> String
-fn to_hex(value: u16) -> String
-fn to_hex(value: i32) -> String
-fn to_hex(value: i128) -> String
+fn to_hex(value: int) -> String
 fn to_hex(value: i16) -> String
+fn to_hex(value: u64) -> String
+fn to_hex(value: i32) -> String
 fn to_hex(value: i8) -> String
+fn to_hex(value: u8) -> String
+fn to_hex(value: i128) -> String
+fn to_hex(value: u16) -> String
+fn to_hex(value: u128) -> String
 ```
 
 <Tabs>
@@ -3972,14 +3914,14 @@ fn to_hex(value: i8) -> String
 fn to_int()
 fn to_int()
 fn to_int()
-fn to_int(x: f32) -> int
-fn to_int()
-fn to_int()
 fn to_int()
 fn to_int()
 fn to_int()
 fn to_int()
 fn to_int(x: float) -> int
+fn to_int()
+fn to_int()
+fn to_int(x: f32) -> int
 fn to_int()
 fn to_int()
 ```
@@ -4053,16 +3995,16 @@ fn to_lower(character: char) -> char
 ## <code>fn</code> to_octal {#fn-to_octal}
 
 ```js
-fn to_octal(value: i16) -> String
-fn to_octal(value: i8) -> String
-fn to_octal(value: i32) -> String
-fn to_octal(value: i128) -> String
-fn to_octal(value: u64) -> String
-fn to_octal(value: u16) -> String
-fn to_octal(value: u32) -> String
 fn to_octal(value: int) -> String
-fn to_octal(value: u128) -> String
+fn to_octal(value: u32) -> String
 fn to_octal(value: u8) -> String
+fn to_octal(value: i8) -> String
+fn to_octal(value: i16) -> String
+fn to_octal(value: i32) -> String
+fn to_octal(value: u64) -> String
+fn to_octal(value: u128) -> String
+fn to_octal(value: u16) -> String
+fn to_octal(value: i128) -> String
 ```
 
 <Tabs>
@@ -4088,21 +4030,21 @@ fn to_radians(x: float) -> float
 ## <code>fn</code> to_string {#fn-to_string}
 
 ```js
-fn to_string(character: char) -> String
-fn to_string(unit: ?) -> String
-fn to_string(number: float) -> String
-fn to_string(value: bool) -> String
 fn to_string(item: ?) -> String
-fn to_string(number: f32) -> String
 fn to_string(array: Array) -> String
-fn to_string(string: String) -> String
+fn to_string(value: bool) -> String
+fn to_string(character: char) -> String
+fn to_string(number: f32) -> String
 fn to_string(map: Map) -> String
+fn to_string(number: float) -> String
+fn to_string(string: String) -> String
+fn to_string(unit: ?) -> String
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Return the character into a string.
+        Convert the value of the `item` into a string.
     </TabItem>
 </Tabs>
 
@@ -4408,15 +4350,15 @@ fn values(map: Map) -> Array
 ## <code>fn</code> write_ascii {#fn-write_ascii}
 
 ```js
-fn write_ascii(blob: Blob, range: RangeInclusive<int>, string: String)
 fn write_ascii(blob: Blob, range: Range<int>, string: String)
+fn write_ascii(blob: Blob, range: RangeInclusive<int>, string: String)
 fn write_ascii(blob: Blob, start: int, len: int, string: String)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Write an ASCII string to the bytes within an inclusive `range` in the BLOB.
+        Write an ASCII string to the bytes within an exclusive `range` in the BLOB.
         
         Each ASCII character encodes to one single byte in the BLOB.
         Non-ASCII characters are ignored.
@@ -4427,9 +4369,9 @@ fn write_ascii(blob: Blob, start: int, len: int, string: String)
         ```rhai
         let b = blob(8);
         
-        b.write_ascii(1..=5, "hello, world!");
+        b.write_ascii(1..5, "hello, world!");
         
-        print(b);       // prints "[0068656c6c6f0000]"
+        print(b);       // prints "[0068656c6c000000]"
         ```
     </TabItem>
 </Tabs>
@@ -4437,10 +4379,10 @@ fn write_ascii(blob: Blob, start: int, len: int, string: String)
 ## <code>fn</code> write_be {#fn-write_be}
 
 ```js
+fn write_be(blob: Blob, range: RangeInclusive<int>, value: int)
+fn write_be(blob: Blob, range: Range<int>, value: int)
 fn write_be(blob: Blob, range: Range<int>, value: float)
 fn write_be(blob: Blob, range: RangeInclusive<int>, value: float)
-fn write_be(blob: Blob, range: Range<int>, value: int)
-fn write_be(blob: Blob, range: RangeInclusive<int>, value: int)
 fn write_be(blob: Blob, start: int, len: int, value: float)
 fn write_be(blob: Blob, start: int, len: int, value: int)
 ```
@@ -4448,29 +4390,37 @@ fn write_be(blob: Blob, start: int, len: int, value: int)
 <Tabs>
     <TabItem value="Description" default>
 
-        Write a `FLOAT` value to the bytes within an exclusive `range` in the BLOB
+        Write an `INT` value to the bytes within an inclusive `range` in the BLOB
         in big-endian byte order.
         
-        * If number of bytes in `range` < number of bytes for `FLOAT`, extra bytes in `FLOAT` are not written.
-        * If number of bytes in `range` > number of bytes for `FLOAT`, extra bytes in `range` are not modified.
+        * If number of bytes in `range` < number of bytes for `INT`, extra bytes in `INT` are not written.
+        * If number of bytes in `range` > number of bytes for `INT`, extra bytes in `range` are not modified.
+        
+        ```rhai
+        let b = blob(8, 0x42);
+        
+        b.write_be_int(1..=3, 0x99);
+        
+        print(b);       // prints "[4200000042424242]"
+        ```
     </TabItem>
 </Tabs>
 
 ## <code>fn</code> write_le {#fn-write_le}
 
 ```js
-fn write_le(blob: Blob, range: RangeInclusive<int>, value: float)
 fn write_le(blob: Blob, range: Range<int>, value: float)
+fn write_le(blob: Blob, range: RangeInclusive<int>, value: float)
 fn write_le(blob: Blob, range: RangeInclusive<int>, value: int)
 fn write_le(blob: Blob, range: Range<int>, value: int)
-fn write_le(blob: Blob, start: int, len: int, value: float)
 fn write_le(blob: Blob, start: int, len: int, value: int)
+fn write_le(blob: Blob, start: int, len: int, value: float)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Write a `FLOAT` value to the bytes within an inclusive `range` in the BLOB
+        Write a `FLOAT` value to the bytes within an exclusive `range` in the BLOB
         in little-endian byte order.
         
         * If number of bytes in `range` < number of bytes for `FLOAT`, extra bytes in `FLOAT` are not written.
@@ -4481,15 +4431,15 @@ fn write_le(blob: Blob, start: int, len: int, value: int)
 ## <code>fn</code> write_utf8 {#fn-write_utf8}
 
 ```js
-fn write_utf8(blob: Blob, range: RangeInclusive<int>, string: String)
 fn write_utf8(blob: Blob, range: Range<int>, string: String)
+fn write_utf8(blob: Blob, range: RangeInclusive<int>, string: String)
 fn write_utf8(blob: Blob, start: int, len: int, string: String)
 ```
 
 <Tabs>
     <TabItem value="Description" default>
 
-        Write a string to the bytes within an inclusive `range` in the BLOB in UTF-8 encoding.
+        Write a string to the bytes within an exclusive `range` in the BLOB in UTF-8 encoding.
         
         * If number of bytes in `range` < length of `string`, extra bytes in `string` are not written.
         * If number of bytes in `range` > length of `string`, extra bytes in `range` are not modified.
@@ -4497,9 +4447,9 @@ fn write_utf8(blob: Blob, start: int, len: int, string: String)
         ```rhai
         let b = blob(8);
         
-        b.write_utf8(1..=5, "朝には紅顔ありて夕べには白骨となる");
+        b.write_utf8(1..5, "朝には紅顔ありて夕べには白骨となる");
         
-        print(b);       // prints "[00e69c9de3810000]"
+        print(b);       // prints "[00e69c9de3000000]"
         ```
     </TabItem>
 </Tabs>
