@@ -1,6 +1,6 @@
-//! Types to manage messages that notify the eww client over the result of a command
+//! Types to manage messages that notify the ewwii client over the result of a command
 //!
-//! Communcation between the daemon and eww client happens via IPC.
+//! Communcation between the daemon and ewwii client happens via IPC.
 //! If the daemon needs to send messages back to the client as a response to a command (mostly for CLI output),
 //! this happens via the DaemonResponse types
 
