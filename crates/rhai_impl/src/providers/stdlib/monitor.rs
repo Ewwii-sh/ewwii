@@ -12,7 +12,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let count = monitor::count();
@@ -30,7 +30,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let resolution = monitor::primary_resolution();
@@ -49,7 +49,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let resolution_str = monitor::primary_resolution_str();
@@ -68,7 +68,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let resolutions = monitor::all_resolutions();
@@ -86,7 +86,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let resolutions_str = monitor::all_resolutions_str();
@@ -112,7 +112,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let dimensions = monitor::dimensions(0);
@@ -135,7 +135,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let dimensions_str = monitor::dimensions_str(0);
@@ -158,7 +158,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let dpi = monitor::dpi(0);
@@ -180,7 +180,7 @@ pub mod monitor {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "std::monitor" as monitor;
     ///
     /// let dpi_str = monitor::dpi_str(0);

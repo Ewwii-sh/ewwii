@@ -57,7 +57,7 @@ These functions are built-in and available globally, meaning they can be used di
 
 For example, to get the value of PI, you can simply write:
 
-```js
+```javascript
 let x = PI();
 ```
 

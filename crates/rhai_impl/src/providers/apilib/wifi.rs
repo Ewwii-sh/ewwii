@@ -21,7 +21,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// let networks = wifi::scan();
@@ -66,7 +66,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// let networks = wifi::scan();
@@ -111,7 +111,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// let networks = wifi::scan();
@@ -146,7 +146,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// let connection = wifi::current_connection();
@@ -225,7 +225,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// wifi::connect("MySecretNetwork", "password123");
@@ -277,7 +277,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// wifi::connect_without_password("MySecretNetwork", "password123");
@@ -329,7 +329,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// wifi::disconnect();
@@ -402,7 +402,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// wifi::disable_adapter();
@@ -453,7 +453,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// wifi::enable_adapter();
@@ -516,7 +516,7 @@ pub mod wifi {
     ///
     /// # Example
     ///
-    /// ```js
+    /// ```javascript
     /// import "api::wifi" as wifi;
     ///
     /// wifi::enable_adapter();
