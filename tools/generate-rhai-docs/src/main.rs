@@ -1,5 +1,5 @@
 use rhai::{Engine, module_resolvers::StaticModuleResolver};
-use rhai_autodocs::{export::options, generate::mdbook};
+use rhai_autodocs::{export::options, generate::docusaurus};
 use rhai_impl::providers;
 use std::{env, fs, path::Path};
 
@@ -16,7 +16,7 @@ fn generate_docs(
         .expect("failed to generate documentation");
 
     // Generate markdown documentation content
-    let docs_content = mdbook().generate(&docs).unwrap();
+    let docs_content = docusaurus().generate(&docs).unwrap();
 
     if docs_content.is_empty() {
         eprintln!("No documentation generated for {}.", filename);
@@ -38,7 +38,7 @@ fn generate_docs(
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let path = if args.len() > 1 { &args[1] } else { "./docs/src/modules" };
+    let path = if args.len() > 1 { &args[1] } else { "./tools/generate-rhai-docs/" };
 
     // engine/resolver
     let engine = Engine::new();
