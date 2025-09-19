@@ -56,9 +56,8 @@ mod window_arguments;
 mod window_initiator;
 
 fn main() {
-    // gets the eww binary
-    let eww_binary_name = std::env::args().next().unwrap();
-    let opts: opts::Opt = opts::Opt::from_env(); // opts of clap (from ./opts.rs)
+    let ewwii_binary_name = std::env::args().next().unwrap();
+    let opts: opts::Opt = opts::Opt::from_env();
 
     let trace_enabled = std::env::var("EWWII_TRACE").is_ok();
 
@@ -101,14 +100,14 @@ fn main() {
             opts.force_wayland,
             detected_wayland
         );
-        run::<display_backend::WaylandBackend>(opts, eww_binary_name)
+        run::<display_backend::WaylandBackend>(opts, ewwii_binary_name)
     } else {
         log::debug!(
             "Running on X11. force_wayland={}, detected_wayland={}",
             opts.force_wayland,
             detected_wayland
         );
-        run::<display_backend::X11Backend>(opts, eww_binary_name)
+        run::<display_backend::X11Backend>(opts, ewwii_binary_name)
     };
 
     #[cfg(all(not(feature = "wayland"), feature = "x11"))]
@@ -116,14 +115,14 @@ fn main() {
         if use_wayland {
             log::warn!("Ewwii compiled without wayland support. Falling back to X11, eventhough wayland was requested.");
         }
-        run::<display_backend::X11Backend>(opts, eww_binary_name)
+        run::<display_backend::X11Backend>(opts, ewwii_binary_name)
     };
 
     #[cfg(all(feature = "wayland", not(feature = "x11")))]
-    let result = run::<display_backend::WaylandBackend>(opts, eww_binary_name);
+    let result = run::<display_backend::WaylandBackend>(opts, ewwii_binary_name);
 
     #[cfg(not(any(feature = "wayland", feature = "x11")))]
-    let result = run::<display_backend::NoBackend>(opts, eww_binary_name);
+    let result = run::<display_backend::NoBackend>(opts, ewwii_binary_name);
 
     if let Err(err) = result {
         error_handling_ctx::print_error(err);
@@ -139,7 +138,7 @@ fn detect_wayland() -> bool {
         || (!wayland_display.is_empty() && !session_type.contains("x11"))
 }
 
-fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()> {
+fn run<B: DisplayBackend>(opts: opts::Opt, ewwii_binary_name: String) -> Result<()> {
     let paths = opts
         .config_path
         .map(EwwiiPaths::from_config_dir)
@@ -179,7 +178,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
             if !opts.show_logs {
                 println!(
                     "Run `{} logs` to see any errors while editing your configuration.",
-                    eww_binary_name
+                    ewwii_binary_name
                 );
             }
             let fork_result =
@@ -216,7 +215,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()
                     if !opts.show_logs {
                         println!(
                             "Run `{} logs` to see any errors while editing your configuration.",
-                            eww_binary_name
+                            ewwii_binary_name
                         );
                     }
 
