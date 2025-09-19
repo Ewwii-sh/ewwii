@@ -15,7 +15,6 @@ fn generate_docs(
         .export(engine)
         .expect("failed to generate documentation");
 
-    // Generate markdown documentation content
     let docs_content = docusaurus().generate(&docs).unwrap();
 
     if docs_content.is_empty() {
@@ -27,47 +26,37 @@ fn generate_docs(
     let full_docs =
         docs_content.into_iter().map(|(_, doc)| doc).collect::<Vec<String>>().join("\n");
 
-    // combination of all docs and pre description
-    let mut final_docs = String::new();
     let mut lines = full_docs.lines();
 
+    let mut filtered_lines = Vec::new();
     let mut in_frontmatter = false;
-    for line in &mut lines {
-        if line.trim() == "---" {
-            final_docs.push_str(line);
-            final_docs.push('\n');
-
-            if !in_frontmatter {
-                in_frontmatter = true;
-            } else {
-                in_frontmatter = false;
-                break;
-            }
-        } else if in_frontmatter {
-            final_docs.push_str(line);
-            final_docs.push('\n');
-        }
-    }
 
     for line in &mut lines {
-        if line.starts_with("import ") || line.trim().is_empty() {
-            final_docs.push_str(line);
-            final_docs.push('\n');
-        } else {
-            break;
+        let trimmed = line.trim();
+
+        if trimmed == "---" {
+            in_frontmatter = !in_frontmatter;
+            continue;
         }
+        if in_frontmatter {
+            continue;
+        }
+
+        if trimmed == "import Tabs from '@theme/Tabs';"
+            || trimmed == "import TabItem from '@theme/TabItem';"
+        {
+            continue;
+        }
+
+        filtered_lines.push(line);
     }
 
-    final_docs.push('\n');
-    final_docs.push_str(pre_description);
-    final_docs.push('\n');
+    // combine
+    let all_imports = "import Tabs from '@theme/Tabs';\nimport TabItem from '@theme/TabItem';";
+    let final_docs =
+        format!("{}\n\n{}\n\n{}", all_imports, pre_description, filtered_lines.join("\n"));
 
-    for line in lines {
-        final_docs.push_str(line);
-        final_docs.push('\n');
-    }
-
-    // Write documentation to markdown file
+    // Write to file
     let file_path = Path::new(path).join(format!("{}.md", filename));
     fs::write(&file_path, final_docs).expect("failed to write documentation");
     println!("Documentation generated at: {}", file_path.display());
