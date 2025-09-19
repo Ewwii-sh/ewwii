@@ -6,7 +6,7 @@ use crate::{
     gtk::prelude::{
         ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt,
     },
-    paths::EwwPaths,
+    paths::EwwiiPaths,
     widgets::window::Window,
     // dynval::DynVal,
     widgets::{
@@ -151,7 +151,7 @@ pub struct App<B: DisplayBackend> {
     // The cached store of poll/listen handlers
     pub pl_handler_store: Option<rhai_impl::updates::ReactiveVarStore>,
 
-    pub paths: EwwPaths,
+    pub paths: EwwiiPaths,
     pub phantom: PhantomData<B>,
 }
 
