@@ -1,7 +1,7 @@
 use crate::{
     // ipc_server,
     // error_handling_ctx,
-    paths::EwwPaths,
+    paths::EwwiiPaths,
     window::backend_window_options::BackendWindowOptionsDef,
 };
 use anyhow::{bail, Context, Result};
@@ -13,9 +13,9 @@ use rhai_impl::{ast::WidgetNode, parser::ParseConfig};
 
 // use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
 
-/// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwPaths`],
+/// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_ewwii_paths(eww_paths: &EwwPaths) -> Result<EwwiiConfig> {
+pub fn read_from_ewwii_paths(eww_paths: &EwwiiPaths) -> Result<EwwiiConfig> {
     EwwiiConfig::read_from_dir(eww_paths)
 }
 
@@ -36,8 +36,8 @@ pub struct WindowDefinition {
 }
 
 impl EwwiiConfig {
-    /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwPaths`], reading the main config file.
-    pub fn read_from_dir(eww_paths: &EwwPaths) -> Result<Self> {
+    /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`], reading the main config file.
+    pub fn read_from_dir(eww_paths: &EwwiiPaths) -> Result<Self> {
         let rhai_path = eww_paths.get_rhai_path();
         if !rhai_path.exists() {
             bail!("The configuration file `{}` does not exist", rhai_path.display());

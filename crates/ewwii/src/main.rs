@@ -28,7 +28,7 @@ use clap::CommandFactory as _;
 use daemon_response::{DaemonResponse, DaemonResponseReceiver};
 use display_backend::DisplayBackend;
 use opts::ActionWithServer;
-use paths::EwwPaths;
+use paths::EwwiiPaths;
 use std::{os::unix::net, path::Path, time::Duration};
 
 use crate::server::ForkResult;
@@ -142,8 +142,8 @@ fn detect_wayland() -> bool {
 fn run<B: DisplayBackend>(opts: opts::Opt, eww_binary_name: String) -> Result<()> {
     let paths = opts
         .config_path
-        .map(EwwPaths::from_config_dir)
-        .unwrap_or_else(EwwPaths::default)
+        .map(EwwiiPaths::from_config_dir)
+        .unwrap_or_else(EwwiiPaths::default)
         .context("Failed to initialize ewwii paths")?;
 
     let should_restart = match &opts.action {
@@ -259,7 +259,7 @@ fn listen_for_daemon_response(mut recv: DaemonResponseReceiver) {
 
 /// attempt to send a command to the daemon and send it the given action repeatedly.
 fn handle_server_command(
-    paths: &EwwPaths,
+    paths: &EwwiiPaths,
     action: &ActionWithServer,
     connect_attempts: usize,
 ) -> Result<Option<DaemonResponse>> {

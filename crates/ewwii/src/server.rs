@@ -2,7 +2,7 @@ use crate::{
     app::{self, App, DaemonCommand},
     config, daemon_response,
     display_backend::DisplayBackend,
-    error_handling_ctx, ipc_server, EwwPaths,
+    error_handling_ctx, ipc_server, EwwiiPaths,
 };
 use anyhow::{Context, Result};
 
@@ -19,7 +19,7 @@ use std::{
 use tokio::sync::mpsc::*;
 
 pub fn initialize_server<B: DisplayBackend>(
-    paths: EwwPaths,
+    paths: EwwiiPaths,
     action: Option<DaemonCommand>,
     should_daemonize: bool,
 ) -> Result<ForkResult> {
@@ -165,7 +165,7 @@ fn reload_config_and_css(ui_send: &UnboundedSender<DaemonCommand>) -> Result<()>
 }
 
 fn init_async_part(
-    paths: EwwPaths,
+    paths: EwwiiPaths,
     ui_send: UnboundedSender<app::DaemonCommand>,
 ) -> tokio::runtime::Handle {
     let rt = tokio::runtime::Builder::new_multi_thread()

@@ -3,7 +3,7 @@ use std::process::Stdio;
 use crate::{
     daemon_response::DaemonResponse,
     opts::{self, ActionClientOnly},
-    paths::EwwPaths,
+    paths::EwwiiPaths,
 };
 use anyhow::{Context, Result};
 use std::{
@@ -11,7 +11,7 @@ use std::{
     os::unix::net::UnixStream,
 };
 
-pub fn handle_client_only_action(paths: &EwwPaths, action: ActionClientOnly) -> Result<()> {
+pub fn handle_client_only_action(paths: &EwwiiPaths, action: ActionClientOnly) -> Result<()> {
     match action {
         ActionClientOnly::Logs => {
             std::process::Command::new("tail")
