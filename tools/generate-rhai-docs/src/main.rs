@@ -28,7 +28,44 @@ fn generate_docs(
         docs_content.into_iter().map(|(_, doc)| doc).collect::<Vec<String>>().join("\n");
 
     // combination of all docs and pre description
-    let final_docs = format!("{}\n\n{}", pre_description, full_docs);
+    let mut final_docs = String::new();
+    let mut lines = full_docs.lines();
+
+    let mut in_frontmatter = false;
+    for line in &mut lines {
+        if line.trim() == "---" {
+            final_docs.push_str(line);
+            final_docs.push('\n');
+
+            if !in_frontmatter {
+                in_frontmatter = true;
+            } else {
+                in_frontmatter = false;
+                break;
+            }
+        } else if in_frontmatter {
+            final_docs.push_str(line);
+            final_docs.push('\n');
+        }
+    }
+
+    for line in &mut lines {
+        if line.starts_with("import ") || line.trim().is_empty() {
+            final_docs.push_str(line);
+            final_docs.push('\n');
+        } else {
+            break;
+        }
+    }
+
+    final_docs.push('\n');
+    final_docs.push_str(pre_description);
+    final_docs.push('\n');
+
+    for line in lines {
+        final_docs.push_str(line);
+        final_docs.push('\n');
+    }
 
     // Write documentation to markdown file
     let file_path = Path::new(path).join(format!("{}.md", filename));
@@ -38,7 +75,7 @@ fn generate_docs(
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let path = if args.len() > 1 { &args[1] } else { "./tools/generate-rhai-docs/" };
+    let path = if args.len() > 1 { &args[1] } else { "./tools/generate-rhai-docs/auto_gen" };
 
     // engine/resolver
     let engine = Engine::new();
