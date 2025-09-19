@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::{bail, Result};
 
-/// Stores references to all the paths relevant to eww, and abstracts access to these files and directories
+/// Stores references to all the paths relevant to ewwii, and abstracts access to these files and directories
 #[derive(Debug, Clone)]
 pub struct EwwiiPaths {
     pub log_file: PathBuf,
@@ -15,7 +15,6 @@ pub struct EwwiiPaths {
     pub config_dir: PathBuf,
 }
 
-// all the eww paths i suppose from the name?
 impl EwwiiPaths {
     pub fn from_config_dir<P: AsRef<Path>>(config_dir: P) -> Result<Self> {
         let config_dir = config_dir.as_ref();
