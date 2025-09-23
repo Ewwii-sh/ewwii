@@ -1843,6 +1843,7 @@ dependencies = [
  "log",
  "nix",
  "once_cell",
+ "regex",
  "rhai",
  "rhai_trace",
  "serde",
