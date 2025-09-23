@@ -24,3 +24,4 @@ libc.workspace = true
 # error handling
 rhai_trace = "0.2.0"
 codespan-reporting.workspace = true
+regex.workspace = true
