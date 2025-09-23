@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 -   `state` command to print the current poll/listen variable state.
 -   `m` as another duration unit for minute.
+-   `std::regex` library for regex matching.
 
 ### Fixed
 
