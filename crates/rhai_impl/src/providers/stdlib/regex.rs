@@ -84,10 +84,8 @@ pub mod regex_lib {
     #[rhai_fn(return_raw)]
     pub fn find_all(text: &str, pattern: &str) -> Result<Array, Box<EvalAltResult>> {
         let re = Regex::new(pattern).map_err(|e| format!("Failed to read regex pattern: {}", e))?;
-        let results: Array = re
-            .find_iter(text)
-            .map(|m| Dynamic::from(m.as_str().to_string()))
-            .collect();
+        let results: Array =
+            re.find_iter(text).map(|m| Dynamic::from(m.as_str().to_string())).collect();
 
         Ok(results)
     }
