@@ -202,9 +202,16 @@ pub enum ActionWithServer {
     /// Call rhai functions. (NOTE: All poll/listen will default to their initial value)
     #[command(name = "call-fns")]
     CallRhaiFns {
-        // Rhai functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
+        /// Rhai functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
         #[arg(required = true)]
         calls: Vec<String>,
+    },
+
+    /// Override the default runtime engine settings
+    #[command(name = "engine-override")]
+    EngineOverride {
+        /// Configuration in JSON format
+        config_json: String,
     },
 }
 
@@ -336,6 +343,12 @@ impl ActionWithServer {
             }
             ActionWithServer::ShowDebug => {
                 return with_response_channel(app::DaemonCommand::PrintDebug)
+            }
+            ActionWithServer::EngineOverride { config_json } => {
+                return with_response_channel(|sender| app::DaemonCommand::EngineOverride {
+                    config: config_json,
+                    sender,
+                })
             }
         };
         (command, None)
