@@ -31,6 +31,7 @@ use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rhai::Dynamic;
 use rhai_impl::ast::WidgetNode;
+use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use shared_utils::Span;
 use std::{
     cell::{Cell, RefCell},
@@ -85,6 +86,10 @@ pub enum DaemonCommand {
     },
     CallRhaiFns {
         calls: Vec<String>,
+        sender: DaemonResponseSender,
+    },
+    EngineOverride {
+        config: String,
         sender: DaemonResponseSender,
     },
 }
@@ -150,6 +155,8 @@ pub struct App<B: DisplayBackend> {
 
     // The cached store of poll/listen handlers
     pub pl_handler_store: Option<rhai_impl::updates::ReactiveVarStore>,
+
+    pub rt_engine_config: EngineConfValues,
 
     pub paths: EwwiiPaths,
     pub phantom: PhantomData<B>,
@@ -335,6 +342,13 @@ impl<B: DisplayBackend> App<B> {
                 };
                 sender.send_success(output)?
             }
+            DaemonCommand::EngineOverride { config, sender } => {
+                let output = match self.set_engine_overrides(config) {
+                    Ok(_) => String::new(),
+                    Err(e) => e.to_string(),
+                };
+                sender.send_success(output)?
+            }
         }
         Ok(())
     }
@@ -454,6 +468,9 @@ impl<B: DisplayBackend> App<B> {
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
             let mut stored_parser = rhai_impl::parser::ParseConfig::new();
+            stored_parser.set_opt_level(get_opt_level_from(
+                self.rt_engine_config.optimization_level.unwrap_or(1),
+            ));
 
             if self.open_windows.is_empty() {
                 let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
@@ -465,6 +482,7 @@ impl<B: DisplayBackend> App<B> {
                 );
 
                 self.pl_handler_store = Some(store.clone());
+                let b_interval = self.rt_engine_config.batching_interval;
 
                 glib::MainContext::default().spawn_local(async move {
                     let mut pending_updates = HashSet::new();
@@ -472,8 +490,13 @@ impl<B: DisplayBackend> App<B> {
                     while let Some(var_name) = rx.recv().await {
                         pending_updates.insert(var_name);
 
-                        // short batching interval (1 frame)
-                        glib::timeout_future(Duration::from_millis(16)).await;
+                        match b_interval {
+                            Some(i) => glib::timeout_future(Duration::from_millis(i)).await,
+                            None => {
+                                // short batching interval (1 frame)
+                                glib::timeout_future(Duration::from_millis(16)).await
+                            }
+                        }
 
                         while let Ok(next_var) = rx.try_recv() {
                             pending_updates.insert(next_var);
@@ -761,6 +784,45 @@ impl<B: DisplayBackend> App<B> {
 
         Ok(())
     }
+
+    pub fn set_engine_overrides(&mut self, config: String) -> Result<()> {
+        let parsed_config: EngineConfValues = serde_json::from_str(&config)?;
+
+        self.rt_engine_config = parsed_config;
+
+        Ok(())
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct EngineConfValues {
+    pub batching_interval: Option<u64>,
+    #[serde(default, deserialize_with = "validate_optimization_level")]
+    pub optimization_level: Option<u8>,
+}
+
+impl EngineConfValues {
+    pub fn default() -> Self {
+        Self {
+            batching_interval: Some(16), // 16 ms
+            optimization_level: Some(1), // 1 = simple
+        }
+    }
+}
+
+fn validate_optimization_level<'de, D>(deserializer: D) -> Result<Option<u8>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::<u8>::deserialize(deserializer)?;
+    if let Some(value) = opt {
+        match value {
+            0 | 1 | 2 => Ok(Some(value)),
+            _ => Err(D::Error::custom("optimization_level must be 0, 1, or 2")),
+        }
+    } else {
+        Ok(None)
+    }
 }
 
 fn initialize_window<B: DisplayBackend>(
@@ -868,6 +930,15 @@ async fn generate_new_widgetnode(
     let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast)?;
 
     Ok(new_root_widget)
+}
+
+fn get_opt_level_from(n: u8) -> rhai::OptimizationLevel {
+    match n {
+        0 => rhai::OptimizationLevel::None,
+        1 => rhai::OptimizationLevel::Simple,
+        2 => rhai::OptimizationLevel::Full,
+        _ => rhai::OptimizationLevel::Simple,
+    }
 }
 
 /// Apply the provided window-positioning rules to the window.

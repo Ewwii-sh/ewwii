@@ -7,7 +7,7 @@ use crate::{
     providers::register_all_providers,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, Scope, AST};
+use rhai::{Dynamic, Engine, OptimizationLevel, Scope, AST};
 use std::cell::RefCell;
 use std::fs;
 use std::path::Path;
@@ -143,5 +143,9 @@ impl ParseConfig {
                 Err(anyhow::anyhow!(e.to_string()))
             }
         }
+    }
+
+    pub fn set_opt_level(&mut self, opt_lvl: OptimizationLevel) {
+        self.engine.set_optimization_level(opt_lvl);
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    app::{self, App, DaemonCommand},
+    app::{self, App, DaemonCommand, EngineConfValues},
     config, daemon_response,
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,
@@ -88,6 +88,7 @@ pub fn initialize_server<B: DisplayBackend>(
         window_close_timer_abort_senders: HashMap::new(),
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
         pl_handler_store: None,
+        rt_engine_config: EngineConfValues::default(),
         paths,
         phantom: PhantomData,
     };
