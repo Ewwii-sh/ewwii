@@ -787,8 +787,7 @@ impl<B: DisplayBackend> App<B> {
 
     pub fn set_engine_overrides(&mut self, config: String) -> Result<()> {
         let parsed_config: EngineConfValues = serde_json::from_str(&config)?;
-
-        self.rt_engine_config = parsed_config;
+        self.rt_engine_config = self.rt_engine_config.merge(parsed_config);
 
         Ok(())
     }
@@ -806,6 +805,18 @@ impl EngineConfValues {
         Self {
             batching_interval: Some(16), // 16 ms
             optimization_level: Some(1), // 1 = simple
+        }
+    }
+
+    pub fn merge(&self, val: Self) -> Self {
+        // could be cleaner
+        Self {
+            batching_interval: Some(
+                val.batching_interval.unwrap_or(self.batching_interval.unwrap_or(16)),
+            ),
+            optimization_level: Some(
+                val.optimization_level.unwrap_or(self.optimization_level.unwrap_or(1)),
+            ),
         }
     }
 }
