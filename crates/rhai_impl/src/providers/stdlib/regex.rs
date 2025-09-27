@@ -73,8 +73,6 @@ pub mod regex_lib {
     ///
     /// # Example
     ///
-    /// # Example
-    ///
     /// ```javascript
     /// import "std::regex" as regex;
     ///
