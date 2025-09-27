@@ -81,6 +81,7 @@ impl BackendWindowOptionsDef {
             exclusive: Self::get_optional(map, "exclusive")?,
             focusable,
             namespace: Self::get_optional(map, "namespace")?,
+            force_normal: Self::get_optional(map, "force_normal")?,
         };
 
         Ok(Self { wayland, x11 })
@@ -167,6 +168,7 @@ pub struct WlBackendWindowOptions {
     pub exclusive: bool,
     pub focusable: WlWindowFocusable,
     pub namespace: Option<String>,
+    pub force_normal: bool,
 }
 
 /// Unevaluated form of [`WlBackendWindowOptions`]
@@ -175,6 +177,7 @@ pub struct WlBackendWindowOptionsDef {
     pub exclusive: Option<bool>,
     pub focusable: Option<String>,
     pub namespace: Option<String>,
+    pub force_normal: Option<bool>,
 }
 
 impl WlBackendWindowOptionsDef {
@@ -189,6 +192,10 @@ impl WlBackendWindowOptionsDef {
                 None => WlWindowFocusable::default(),
             },
             namespace: properties.get("namespace").map(|d| d.clone_cast::<String>()),
+            force_normal: properties
+                .get("force_normal")
+                .map(|d| d.clone_cast::<bool>())
+                .unwrap_or(false),
         })
     }
 }
