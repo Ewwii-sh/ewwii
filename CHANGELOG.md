@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Logs not truncating if it is over 100MB and not deleting if over 7 days old.
 -   Ewwii crashing on invalid duration property.
 
+### Removed
+
+-   Legacy `true`/`false` support for `focusable` window property.
+
 ## [0.1.4] - 2025-09-18
 
 ### Added
