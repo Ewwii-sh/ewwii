@@ -63,85 +63,94 @@ mod platform_wayland {
             y: i32,
         ) -> Option<Window> {
             let window = Window::new(gtk::WindowType::Toplevel, x, y);
-            // Initialising a layer shell surface
-            window.init_layer_shell();
-            // Sets the monitor where the surface is shown
-            if let Some(ident) = window_init.monitor.clone() {
-                let display = gdk::Display::default().expect("could not get default display");
-                if let Some(monitor) = crate::app::get_monitor_from_display(&display, &ident) {
-                    window.set_monitor(&monitor);
-                } else {
-                    return None;
-                }
-            };
-            window.set_resizable(window_init.resizable);
-
-            // Sets the layer where the layer shell surface will spawn
-            match window_init.stacking {
-                WindowStacking::Foreground => window.set_layer(gtk_layer_shell::Layer::Top),
-                WindowStacking::Background => window.set_layer(gtk_layer_shell::Layer::Background),
-                WindowStacking::Bottom => window.set_layer(gtk_layer_shell::Layer::Bottom),
-                WindowStacking::Overlay => window.set_layer(gtk_layer_shell::Layer::Overlay),
-            }
-
-            if let Some(namespace) = &window_init.backend_options.wayland.namespace {
-                window.set_namespace(namespace);
-            }
 
             // Sets the keyboard interactivity
             match window_init.backend_options.wayland.focusable {
                 WlWindowFocusable::None => window.set_keyboard_mode(KeyboardMode::None),
-                WlWindowFocusable::Exclusive => window.set_keyboard_mode(KeyboardMode::Exclusive),
+                WlWindowFocusable::Exclusive => {
+                    window.set_keyboard_mode(KeyboardMode::Exclusive)
+                }
                 WlWindowFocusable::OnDemand => window.set_keyboard_mode(KeyboardMode::OnDemand),
             }
 
-            if let Some(geometry) = window_init.geometry {
-                // Positioning surface
-                let mut top = false;
-                let mut left = false;
-                let mut right = false;
-                let mut bottom = false;
+            window.set_resizable(window_init.resizable);
 
-                match geometry.anchor_point.x {
-                    AnchorAlignment::START => left = true,
-                    AnchorAlignment::CENTER => {}
-                    AnchorAlignment::END => right = true,
-                }
-                match geometry.anchor_point.y {
-                    AnchorAlignment::START => top = true,
-                    AnchorAlignment::CENTER => {}
-                    AnchorAlignment::END => bottom = true,
+            if !window_init.backend_options.wayland.force_normal {
+                // Initialising a layer shell surface
+                window.init_layer_shell();
+                // Sets the monitor where the surface is shown
+                if let Some(ident) = window_init.monitor.clone() {
+                    let display = gdk::Display::default().expect("could not get default display");
+                    if let Some(monitor) = crate::app::get_monitor_from_display(&display, &ident) {
+                        window.set_monitor(&monitor);
+                    } else {
+                        return None;
+                    }
+                };
+
+                // Sets the layer where the layer shell surface will spawn
+                match window_init.stacking {
+                    WindowStacking::Foreground => window.set_layer(gtk_layer_shell::Layer::Top),
+                    WindowStacking::Background => {
+                        window.set_layer(gtk_layer_shell::Layer::Background)
+                    }
+                    WindowStacking::Bottom => window.set_layer(gtk_layer_shell::Layer::Bottom),
+                    WindowStacking::Overlay => window.set_layer(gtk_layer_shell::Layer::Overlay),
                 }
 
-                window.set_anchor(gtk_layer_shell::Edge::Left, left);
-                window.set_anchor(gtk_layer_shell::Edge::Right, right);
-                window.set_anchor(gtk_layer_shell::Edge::Top, top);
-                window.set_anchor(gtk_layer_shell::Edge::Bottom, bottom);
-
-                let xoffset = geometry.offset.x.pixels_relative_to(monitor.width());
-                let yoffset = geometry.offset.y.pixels_relative_to(monitor.height());
-
-                if left {
-                    window.set_layer_shell_margin(gtk_layer_shell::Edge::Left, xoffset);
-                } else {
-                    window.set_layer_shell_margin(gtk_layer_shell::Edge::Right, xoffset);
+                if let Some(namespace) = &window_init.backend_options.wayland.namespace {
+                    window.set_namespace(namespace);
                 }
-                if bottom {
-                    window.set_layer_shell_margin(gtk_layer_shell::Edge::Bottom, yoffset);
-                } else {
-                    window.set_layer_shell_margin(gtk_layer_shell::Edge::Top, yoffset);
+
+                if let Some(geometry) = window_init.geometry {
+                    // Positioning surface
+                    let mut top = false;
+                    let mut left = false;
+                    let mut right = false;
+                    let mut bottom = false;
+
+                    match geometry.anchor_point.x {
+                        AnchorAlignment::START => left = true,
+                        AnchorAlignment::CENTER => {}
+                        AnchorAlignment::END => right = true,
+                    }
+                    match geometry.anchor_point.y {
+                        AnchorAlignment::START => top = true,
+                        AnchorAlignment::CENTER => {}
+                        AnchorAlignment::END => bottom = true,
+                    }
+
+                    window.set_anchor(gtk_layer_shell::Edge::Left, left);
+                    window.set_anchor(gtk_layer_shell::Edge::Right, right);
+                    window.set_anchor(gtk_layer_shell::Edge::Top, top);
+                    window.set_anchor(gtk_layer_shell::Edge::Bottom, bottom);
+
+                    let xoffset = geometry.offset.x.pixels_relative_to(monitor.width());
+                    let yoffset = geometry.offset.y.pixels_relative_to(monitor.height());
+
+                    if left {
+                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Left, xoffset);
+                    } else {
+                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Right, xoffset);
+                    }
+                    if bottom {
+                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Bottom, yoffset);
+                    } else {
+                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Top, yoffset);
+                    }
+                    // https://github.com/elkowar/eww/issues/296
+                    if window_init.backend_options.wayland.exclusive
+                        && geometry.anchor_point.x != AnchorAlignment::CENTER
+                        && geometry.anchor_point.y != AnchorAlignment::CENTER
+                    {
+                        log::warn!("When ':exclusive true' the anchor has to include 'center', otherwise exlcusive won't work")
+                    }
                 }
-                // https://github.com/elkowar/eww/issues/296
-                if window_init.backend_options.wayland.exclusive
-                    && geometry.anchor_point.x != AnchorAlignment::CENTER
-                    && geometry.anchor_point.y != AnchorAlignment::CENTER
-                {
-                    log::warn!("When ':exclusive true' the anchor has to include 'center', otherwise exlcusive won't work")
+                if window_init.backend_options.wayland.exclusive {
+                    window.auto_exclusive_zone_enable();
                 }
             }
-            if window_init.backend_options.wayland.exclusive {
-                window.auto_exclusive_zone_enable();
-            }
+
             Some(window)
         }
     }
