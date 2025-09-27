@@ -67,9 +67,7 @@ mod platform_wayland {
             // Sets the keyboard interactivity
             match window_init.backend_options.wayland.focusable {
                 WlWindowFocusable::None => window.set_keyboard_mode(KeyboardMode::None),
-                WlWindowFocusable::Exclusive => {
-                    window.set_keyboard_mode(KeyboardMode::Exclusive)
-                }
+                WlWindowFocusable::Exclusive => window.set_keyboard_mode(KeyboardMode::Exclusive),
                 WlWindowFocusable::OnDemand => window.set_keyboard_mode(KeyboardMode::OnDemand),
             }
 
