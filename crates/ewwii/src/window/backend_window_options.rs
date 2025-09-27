@@ -226,9 +226,6 @@ impl FromStr for WlWindowFocusable {
             "none" => Self::None,
             "exclusive" => Self::Exclusive,
             "ondemand" => Self::OnDemand,
-            // legacy support
-            "true" => Self::Exclusive,
-            "false" => Self::None,
         }
     }
 }
