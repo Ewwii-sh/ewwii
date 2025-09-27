@@ -40,7 +40,12 @@ fn generate_docs(
 
             if !in_frontmatter {
                 if let Some(title) = &frontmatter_title {
-                    filtered_lines.push(format!("# {}", title));
+                    // The following will be generated:
+                    //
+                    // :::note Module
+                    // # title
+                    // :::
+                    filtered_lines.push(format!(":::note Module\n# {}\n:::", title));
                 }
                 frontmatter_title = None;
             }
