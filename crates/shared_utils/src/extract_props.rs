@@ -114,10 +114,15 @@ pub fn get_duration_prop(props: &Map, key: &str, default: Option<Duration>) -> R
             let num = &key_str[..key_str.len() - 1];
             let s = num.parse::<u64>().map_err(|_| anyhow!("Invalid s value: '{}'", key_str))?;
             Ok(Duration::from_secs(s))
-        } else if key_str.ends_with("min") || key_str.ends_with("m") {
+        } else if key_str.ends_with("min") {
             let num = &key_str[..key_str.len() - 3];
-            let mins =
-                num.parse::<u64>().map_err(|_| anyhow!("Invalid min value: '{}'", key_str))?;
+            let mins = num.parse::<u64>()
+                .map_err(|_| anyhow!("Invalid min value: '{}'", key_str))?;
+            Ok(Duration::from_secs(mins * 60))
+        } else if key_str.ends_with("m") {
+            let num = &key_str[..key_str.len() - 1];
+            let mins = num.parse::<u64>()
+                .map_err(|_| anyhow!("Invalid m value: '{}'", key_str))?;
             Ok(Duration::from_secs(mins * 60))
         } else if key_str.ends_with("h") {
             let num = &key_str[..key_str.len() - 1];
