@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   `std::regex` library for regex matching.
 -   `engine-override` command which can be used to change engine settings of a configuration.
 -   `force_normal` property for ewwii windows. It allows user to create normal windows on wayland.
+-   Better error support by migrating to `rhai_trace` v0.3.0.
 
 ### Fixed
 
