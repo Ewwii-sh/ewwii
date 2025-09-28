@@ -484,7 +484,6 @@ pub(super) fn build_gtk_event_box(
                             timeout,
                             &onscroll,
                             &[if delta < 0f64 { "up" } else { "down" }],
-                            None,
                         );
                     }
                     glib::Propagation::Proceed
@@ -499,7 +498,7 @@ pub(super) fn build_gtk_event_box(
                 widget,
                 widget.connect_enter_notify_event(move |_, evt| {
                     if evt.detail() != NotifyType::Inferior {
-                        run_command(timeout, &onhover, &[evt.position().0, evt.position().1], None);
+                        run_command(timeout, &onhover, &[evt.position().0, evt.position().1]);
                     }
                     glib::Propagation::Proceed
                 })
@@ -517,7 +516,6 @@ pub(super) fn build_gtk_event_box(
                             timeout,
                             &onhoverlost,
                             &[evt.position().0, evt.position().1],
-                            None,
                         );
                     }
                     glib::Propagation::Proceed
@@ -585,14 +583,12 @@ pub(super) fn build_gtk_event_box(
                                 timeout,
                                 &ondropped,
                                 &[data.to_string(), "file".to_string()],
-                                None,
                             );
                         } else if let Some(data) = selection_data.text() {
                             run_command(
                                 timeout,
                                 &ondropped,
                                 &[data.to_string(), "text".to_string()],
-                                None,
                             );
                         }
                     }
@@ -649,9 +645,9 @@ pub(super) fn build_gtk_event_box(
             widget,
             widget.connect_button_release_event(move |_, evt| {
                 match evt.button() {
-                    1 => run_command(timeout, &onclick, &[] as &[&str], None),
-                    2 => run_command(timeout, &onmiddleclick, &[] as &[&str], None),
-                    3 => run_command(timeout, &onrightclick, &[] as &[&str], None),
+                    1 => run_command(timeout, &onclick, &[] as &[&str]),
+                    2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
+                    3 => run_command(timeout, &onrightclick, &[] as &[&str]),
                     _ => {}
                 }
                 glib::Propagation::Proceed
@@ -1135,9 +1131,9 @@ pub(super) fn build_gtk_button(
             widget,
             widget.connect_button_release_event(move |_, evt| {
                 match evt.button() {
-                    1 => run_command(timeout, &onclick, &[] as &[&str], None),
-                    2 => run_command(timeout, &onmiddleclick, &[] as &[&str], None),
-                    3 => run_command(timeout, &onrightclick, &[] as &[&str], None),
+                    1 => run_command(timeout, &onclick, &[] as &[&str]),
+                    2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
+                    3 => run_command(timeout, &onrightclick, &[] as &[&str]),
                     _ => {}
                 }
                 glib::Propagation::Proceed
@@ -1149,9 +1145,9 @@ pub(super) fn build_gtk_button(
             widget.connect_key_release_event(move |_, evt| {
                 match evt.scancode() {
                     // return
-                    36 => run_command(timeout, &onclick_, &[] as &[&str], None),
+                    36 => run_command(timeout, &onclick_, &[] as &[&str]),
                     // space
-                    65 => run_command(timeout, &onclick_, &[] as &[&str], None),
+                    65 => run_command(timeout, &onclick_, &[] as &[&str]),
                     _ => {}
                 }
                 glib::Propagation::Proceed
@@ -1326,12 +1322,10 @@ pub(super) fn build_gtk_input(
             connect_signal_handler!(
                 widget,
                 widget.connect_changed(move |widget| {
-                    let input_val = widget.text().to_string();
                     run_command(
                         timeout,
                         &onchange,
                         &[widget.text().to_string()],
-                        Some(vec![("INPUT_VAL".to_string(), input_val)]),
                     );
                 })
             );
@@ -1341,12 +1335,10 @@ pub(super) fn build_gtk_input(
             connect_signal_handler!(
                 widget,
                 widget.connect_activate(move |widget| {
-                    let input_val = widget.text().to_string();
                     run_command(
                         timeout,
                         &onaccept,
                         &[widget.text().to_string()],
-                        Some(vec![("INPUT_VAL".to_string(), input_val)]),
                     );
                 })
             );
@@ -1441,7 +1433,7 @@ pub(super) fn build_gtk_calendar(
             connect_signal_handler!(
                 widget,
                 widget.connect_day_selected(move |w| {
-                    run_command(timeout, &onclick, &[w.day(), w.month(), w.year()], None)
+                    run_command(timeout, &onclick, &[w.day(), w.month(), w.year()])
                 })
             );
         }
@@ -1497,7 +1489,6 @@ pub(super) fn build_gtk_combo_box_text(
                     timeout,
                     &onchange,
                     &[widget.active_text().unwrap_or_else(|| "".into())],
-                    None,
                 );
             })
         );
@@ -1667,7 +1658,6 @@ pub(super) fn build_gtk_checkbox(
                     timeout,
                     if widget.is_active() { &onchecked } else { &onunchecked },
                     &[] as &[&str],
-                    None,
                 );
             })
         );
@@ -1720,7 +1710,7 @@ pub(super) fn build_gtk_color_button(
             connect_signal_handler!(
                 widget,
                 widget.connect_color_set(move |widget| {
-                    run_command(timeout, &onchange, &[widget.rgba()], None);
+                    run_command(timeout, &onchange, &[widget.rgba()]);
                 })
             );
         }
@@ -1773,7 +1763,7 @@ pub(super) fn build_gtk_color_chooser(
             connect_signal_handler!(
                 widget,
                 widget.connect_color_activated(move |_a, color| {
-                    run_command(timeout, &onchange, &[*color], None);
+                    run_command(timeout, &onchange, &[*color]);
                 })
             );
         }
@@ -2068,7 +2058,7 @@ pub(super) fn resolve_range_attrs(
             gtk_widget.connect_value_changed(move |gtk_widget| {
                 let value = gtk_widget.value();
                 if last_set_value.borrow_mut().take() != Some(value) {
-                    run_command(timeout, &onchange, &[value], None);
+                    run_command(timeout, &onchange, &[value]);
                 }
             })
         );
