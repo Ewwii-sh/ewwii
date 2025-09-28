@@ -83,7 +83,7 @@ impl ParseConfig {
             WidgetNode::Enter(merged_children)
         };
 
-        Ok(merged_node.setup_for_rt("root"))
+        Ok(merged_node.setup_dyn_ids("root"))
     }
 
     pub fn code_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<String> {
