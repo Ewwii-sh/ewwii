@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Removed
 
 -   Legacy `true`/`false` support for `focusable` window property.
+-   `$INPUT_VAL` variable injected in commands ran by input widget.
 
 ## [0.1.4] - 2025-09-18
 
