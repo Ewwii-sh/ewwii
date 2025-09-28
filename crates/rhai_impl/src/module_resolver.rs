@@ -45,8 +45,10 @@ impl ModuleResolver for SimpleFileResolver {
         })?;
 
         let ast: AST = engine.compile(&script).map_err(|e| {
-            log::error!("{}", format_parse_error(&e, &script));
-            e
+            Box::new(EvalAltResult::ErrorSystem(
+                "module_parse_failed".into(),
+                format_parse_error(&e, &script).into(),
+            ))
         })?;
         let scope = ParseConfig::initial_poll_listen_scope(&script).map_err(|e| {
             EvalAltResult::ErrorSystem(
@@ -55,8 +57,10 @@ impl ModuleResolver for SimpleFileResolver {
             )
         })?;
         let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {
-            log::error!("{}", format_eval_error(&e, &script, engine));
-            e
+            Box::new(EvalAltResult::ErrorSystem(
+                "module_eval_failed".into(),
+                format_eval_error(&e, &script, engine).into(),
+            ))
         })?;
 
         module.build_index();
@@ -80,6 +84,12 @@ impl<R1: ModuleResolver, R2: ModuleResolver> ModuleResolver for ChainedResolver<
         match self.first.resolve(engine, source_path, path, pos) {
             Ok(m) => Ok(m),
             Err(e1) => {
+                if let EvalAltResult::ErrorSystem(msg, _) = e1.as_ref() {
+                    if msg == "module_eval_failed" || msg == "module_parse_failed" {
+                        return Err(e1);
+                    }
+                }
+
                 log::trace!(
                     "Error executing resolver 1, falling back to resolver 2. Error details: {}",
                     e1

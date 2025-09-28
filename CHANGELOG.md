@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   The logs going to `eww_{}.log` instead of `ewwii_{}.log`.
 -   Logs not truncating if it is over 100MB and not deleting if over 7 days old.
 -   Ewwii crashing on invalid duration property.
+-   The module resolver throwing error at `import` defenition.
 
 ### Removed
 
