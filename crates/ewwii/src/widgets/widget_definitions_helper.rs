@@ -9,7 +9,6 @@ pub(super) fn run_command<T>(
     timeout: std::time::Duration,
     cmd: &str,
     args: &[T],
-    injected_vars: Option<Vec<(String, String)>>,
 ) where
     T: 'static + std::fmt::Display + Send + Sync + Clone,
 {
@@ -25,12 +24,6 @@ pub(super) fn run_command<T>(
             );
             let mut command = Command::new("/bin/sh");
             command.arg("-c").arg(&cmd);
-
-            if let Some(vars) = injected_vars {
-                for (key, value) in vars {
-                    command.env(key, value);
-                }
-            }
 
             let child = command.spawn();
             match child {
