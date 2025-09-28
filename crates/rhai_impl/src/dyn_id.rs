@@ -4,7 +4,7 @@ use rhai::{Dynamic, Map};
 impl WidgetNode {
     /// A very important implementation of [`WidgetNode`].
     /// This function implements dyn_id property to widgets.
-    pub fn setup_for_rt(&self, parent_path: &str) -> Self {
+    pub fn setup_dyn_ids(&self, parent_path: &str) -> Self {
         // fn to assign dyn_id to a node
         fn with_dyn_id(mut props: Map, dyn_id: &str) -> Map {
             props.insert("dyn_id".into(), Dynamic::from(dyn_id.to_string()));
@@ -22,7 +22,7 @@ impl WidgetNode {
                 .enumerate()
                 .map(|(idx, child)| {
                     let child_path = format!("{}_{}_{}", parent_path, kind, idx);
-                    child.setup_for_rt(&child_path)
+                    child.setup_dyn_ids(&child_path)
                 })
                 .collect()
         }
@@ -31,7 +31,7 @@ impl WidgetNode {
             WidgetNode::DefWindow { name, props, node } => WidgetNode::DefWindow {
                 name: name.clone(),
                 props: props.clone(),
-                node: Box::new(node.setup_for_rt(name)),
+                node: Box::new(node.setup_dyn_ids(name)),
             },
 
             // == Containers with children ==
