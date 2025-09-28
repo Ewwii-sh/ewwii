@@ -1853,9 +1853,9 @@ dependencies = [
 
 [[package]]
 name = "rhai_trace"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3b719976dd04e8f881b0637892aa5b459f47048f91b1632c6bc32b632d44367"
+checksum = "90093b2d5beff618cbf5698c4952ecca7eca5c5a6d9a892c0d19d9046d8329e4"
 dependencies = [
  "rhai",
 ]
