@@ -32,13 +32,8 @@ impl ParseConfig {
         Self { engine, all_nodes }
     }
 
-    pub fn eval_code(&mut self, code: &str) -> Result<WidgetNode> {
-        let ast = self.compile_code(code)?;
-        self.eval_code_with(code, None, Some(&ast))
-    }
-
-    pub fn compile_code(&mut self, code: &str) -> Result<AST> {
-        self.engine.compile(code).map_err(|e| anyhow!(format_parse_error(&e, code)))
+    pub fn compile_code(&mut self, code: &str, file_path: &str) -> Result<AST> {
+        self.engine.compile(code).map_err(|e| anyhow!(format_parse_error(&e, code, Some(file_path))))
     }
 
     pub fn eval_code_with(
@@ -46,6 +41,7 @@ impl ParseConfig {
         code: &str,
         rhai_scope: Option<Scope>,
         compiled_ast: Option<&AST>,
+        file_id: Option<&str>
     ) -> Result<WidgetNode> {
         let mut scope = match rhai_scope {
             Some(s) => s,
@@ -57,12 +53,12 @@ impl ParseConfig {
             let _ = self
                 .engine
                 .eval_ast_with_scope::<Dynamic>(&mut scope, &ast)
-                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?;
+                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, file_id)))?;
         } else {
             let _ = self
                 .engine
                 .eval_with_scope::<Dynamic>(&mut scope, code)
-                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine)))?;
+                .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, file_id)))?;
         };
 
         // Merge all nodes in all_nodes (`enter([])`) into a single root node

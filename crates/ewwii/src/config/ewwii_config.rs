@@ -49,13 +49,17 @@ impl EwwiiConfig {
         // get code from file
         let rhai_code = config_parser.code_from_file(&rhai_path)?;
 
+        // Get Option<&str> form of rhai_path
+        let rhai_path_opt_str = rhai_path.to_str();
+
         // get the iirhai widget tree
-        let compiled_ast = config_parser.compile_code(&rhai_code)?;
+        let compiled_ast = config_parser.compile_code(&rhai_code, rhai_path_opt_str.unwrap_or("<rhai>"))?;
         let poll_listen_scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
         let config_tree = config_parser.eval_code_with(
             &rhai_code,
             Some(poll_listen_scope),
             Some(&compiled_ast),
+            rhai_path_opt_str
         )?;
 
         let mut window_definitions = HashMap::new();

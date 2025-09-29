@@ -47,7 +47,7 @@ impl ModuleResolver for SimpleFileResolver {
         let ast: AST = engine.compile(&script).map_err(|e| {
             Box::new(EvalAltResult::ErrorSystem(
                 "module_parse_failed".into(),
-                format_parse_error(&e, &script).into(),
+                format_parse_error(&e, &script, full_path.to_str()).into(),
             ))
         })?;
         let scope = ParseConfig::initial_poll_listen_scope(&script).map_err(|e| {
@@ -59,7 +59,7 @@ impl ModuleResolver for SimpleFileResolver {
         let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {
             Box::new(EvalAltResult::ErrorSystem(
                 "module_eval_failed".into(),
-                format_eval_error(&e, &script, engine).into(),
+                format_eval_error(&e, &script, engine, full_path.to_str()).into(),
             ))
         })?;
 
