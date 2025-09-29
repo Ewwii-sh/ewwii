@@ -33,7 +33,9 @@ impl ParseConfig {
     }
 
     pub fn compile_code(&mut self, code: &str, file_path: &str) -> Result<AST> {
-        self.engine.compile(code).map_err(|e| anyhow!(format_parse_error(&e, code, Some(file_path))))
+        self.engine
+            .compile(code)
+            .map_err(|e| anyhow!(format_parse_error(&e, code, Some(file_path))))
     }
 
     pub fn eval_code_with(
@@ -41,7 +43,7 @@ impl ParseConfig {
         code: &str,
         rhai_scope: Option<Scope>,
         compiled_ast: Option<&AST>,
-        file_id: Option<&str>
+        file_id: Option<&str>,
     ) -> Result<WidgetNode> {
         let mut scope = match rhai_scope {
             Some(s) => s,
