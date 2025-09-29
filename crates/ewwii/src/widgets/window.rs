@@ -1,10 +1,10 @@
-use gtk::glib::{self, object_subclass, wrapper, Properties};
-use gtk::{prelude::*, subclass::prelude::*};
+use gtk4::glib::{self, object_subclass, wrapper, Properties};
+use gtk4::{prelude::*, subclass::prelude::*};
 use std::cell::RefCell;
 
 wrapper! {
     pub struct Window(ObjectSubclass<WindowPriv>)
-    @extends gtk::Window, gtk::Bin, gtk::Container, gtk::Widget, @implements gtk::Buildable;
+    @extends gtk4::Window, gtk4::Bin, gtk4::Container, gtk4::Widget, @implements gtk4::Buildable;
 }
 
 #[derive(Properties)]
@@ -26,7 +26,7 @@ impl Default for WindowPriv {
 
 #[object_subclass]
 impl ObjectSubclass for WindowPriv {
-    type ParentType = gtk::Window;
+    type ParentType = gtk4::Window;
     type Type = Window;
 
     const NAME: &'static str = "WindowEwwii";
@@ -38,15 +38,15 @@ impl Default for Window {
     }
 }
 
-impl Window {
-    pub fn new(type_: gtk::WindowType, x_: i32, y_: i32) -> Self {
-        let w: Self = glib::Object::builder().property("type", type_).build();
-        let priv_ = w.imp();
-        priv_.x.replace(x_);
-        priv_.y.replace(y_);
-        w
-    }
-}
+// impl Window {
+//     pub fn new(type_: gtk4::WindowType, x_: i32, y_: i32) -> Self {
+//         let w: Self = glib::Object::builder().property("type", type_).build();
+//         let priv_ = w.imp();
+//         priv_.x.replace(x_);
+//         priv_.y.replace(y_);
+//         w
+//     }
+// }
 
 impl ObjectImpl for WindowPriv {
     fn properties() -> &'static [glib::ParamSpec] {
@@ -57,7 +57,7 @@ impl ObjectImpl for WindowPriv {
         self.derived_property(id, pspec)
     }
 }
-impl WindowImpl for WindowPriv {}
-impl BinImpl for WindowPriv {}
-impl ContainerImpl for WindowPriv {}
-impl WidgetImpl for WindowPriv {}
+// impl WindowImpl for WindowPriv {}
+// impl BinImpl for WindowPriv {}
+// impl ContainerImpl for WindowPriv {}
+// impl WidgetImpl for WindowPriv {}

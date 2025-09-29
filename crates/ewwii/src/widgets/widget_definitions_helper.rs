@@ -1,6 +1,6 @@
-use crate::gtk::prelude::LabelExt;
+use crate::gtk4::prelude::LabelExt;
 use anyhow::{anyhow, Result};
-use gtk::pango;
+use gtk4::pango;
 use rhai::Map;
 use std::process::Command;
 
@@ -75,29 +75,29 @@ pub fn dynamic_eq(a: &rhai::Dynamic, b: &rhai::Dynamic) -> bool {
 }
 
 /// ALL WIDGETS
-pub(super) fn parse_align(o: &str) -> Result<gtk::Align> {
+pub(super) fn parse_align(o: &str) -> Result<gtk4::Align> {
     match o.to_ascii_lowercase().as_str() {
-        "fill" => Ok(gtk::Align::Fill),
-        "baseline" => Ok(gtk::Align::Baseline),
-        "center" => Ok(gtk::Align::Center),
-        "start" => Ok(gtk::Align::Start),
-        "end" => Ok(gtk::Align::End),
+        "fill" => Ok(gtk4::Align::Fill),
+        "baseline" => Ok(gtk4::Align::Baseline),
+        "center" => Ok(gtk4::Align::Center),
+        "start" => Ok(gtk4::Align::Start),
+        "end" => Ok(gtk4::Align::End),
         other => Err(anyhow!("Invalid alignment: {}", other)),
     }
 }
 
 /// Gtk Box
-pub(super) fn parse_orientation(ori: &str) -> Result<gtk::Orientation> {
+pub(super) fn parse_orientation(ori: &str) -> Result<gtk4::Orientation> {
     match ori.to_ascii_lowercase().as_str() {
-        "h" | "horizontal" => Ok(gtk::Orientation::Horizontal),
-        "v" | "vertical" => Ok(gtk::Orientation::Vertical),
+        "h" | "horizontal" => Ok(gtk4::Orientation::Horizontal),
+        "v" | "vertical" => Ok(gtk4::Orientation::Vertical),
         other => Err(anyhow!("Invalid orientation: {}", other)),
     }
 }
 
 /// Gtk Label
 pub(super) fn apply_ellipsize_settings(
-    label: &gtk::Label,
+    label: &gtk4::Label,
     truncate: bool,
     limit_width: i32,
     truncate_left: bool,
@@ -126,12 +126,12 @@ pub(super) fn parse_gravity(s: &str) -> Result<pango::Gravity> {
     }
 }
 
-pub(super) fn parse_justification(s: &str) -> Result<gtk::Justification> {
+pub(super) fn parse_justification(s: &str) -> Result<gtk4::Justification> {
     match s.to_ascii_lowercase().as_str() {
-        "left" => Ok(gtk::Justification::Left),
-        "right" => Ok(gtk::Justification::Right),
-        "center" => Ok(gtk::Justification::Center),
-        "fill" => Ok(gtk::Justification::Fill),
+        "left" => Ok(gtk4::Justification::Left),
+        "right" => Ok(gtk4::Justification::Right),
+        "center" => Ok(gtk4::Justification::Center),
+        "fill" => Ok(gtk4::Justification::Fill),
         _ => Err(anyhow!("Invalid justification: '{}'", s)),
     }
 }
@@ -146,12 +146,12 @@ pub(super) fn parse_wrap_mode(s: &str) -> Result<pango::WrapMode> {
 }
 
 /// Gtk scale (slider)
-pub(super) fn parse_position_type(s: &str) -> Result<gtk::PositionType> {
+pub(super) fn parse_position_type(s: &str) -> Result<gtk4::PositionType> {
     match s.to_ascii_lowercase().as_str() {
-        "left" => Ok(gtk::PositionType::Left),
-        "right" => Ok(gtk::PositionType::Right),
-        "top" => Ok(gtk::PositionType::Top),
-        "bottom" => Ok(gtk::PositionType::Bottom),
+        "left" => Ok(gtk4::PositionType::Left),
+        "right" => Ok(gtk4::PositionType::Right),
+        "top" => Ok(gtk4::PositionType::Top),
+        "bottom" => Ok(gtk4::PositionType::Bottom),
         _ => Err(anyhow!("Invalid position type: '{}'", s)),
     }
 }
@@ -172,28 +172,24 @@ where
 }
 
 /// Revealer
-pub(super) fn parse_revealer_transition(t: &str) -> Result<gtk::RevealerTransitionType> {
+pub(super) fn parse_revealer_transition(t: &str) -> Result<gtk4::RevealerTransitionType> {
     match t.to_ascii_lowercase().as_str() {
-        "slideright" => Ok(gtk::RevealerTransitionType::SlideRight),
-        "slideleft" => Ok(gtk::RevealerTransitionType::SlideLeft),
-        "slideup" => Ok(gtk::RevealerTransitionType::SlideUp),
-        "slidedown" => Ok(gtk::RevealerTransitionType::SlideDown),
-        "fade" | "crossfade" => Ok(gtk::RevealerTransitionType::Crossfade),
-        "none" => Ok(gtk::RevealerTransitionType::None),
+        "slideright" => Ok(gtk4::RevealerTransitionType::SlideRight),
+        "slideleft" => Ok(gtk4::RevealerTransitionType::SlideLeft),
+        "slideup" => Ok(gtk4::RevealerTransitionType::SlideUp),
+        "slidedown" => Ok(gtk4::RevealerTransitionType::SlideDown),
+        "fade" | "crossfade" => Ok(gtk4::RevealerTransitionType::Crossfade),
+        "none" => Ok(gtk4::RevealerTransitionType::None),
         _ => Err(anyhow!("Invalid transition: '{}'", t)),
     }
 }
 
 /// Gtk Image
-// icon-size - "menu", "small-toolbar", "toolbar", "large-toolbar", "button", "dnd", "dialog"
-pub(super) fn parse_icon_size(o: &str) -> Result<gtk::IconSize> {
+// icon-size - "normal", "large"
+pub(super) fn parse_icon_size(o: &str) -> Result<gtk4::IconSize> {
     match o.to_ascii_lowercase().as_str() {
-        "menu" => Ok(gtk::IconSize::Menu),
-        "small-toolbar" | "toolbar" => Ok(gtk::IconSize::SmallToolbar),
-        "large-toolbar" => Ok(gtk::IconSize::LargeToolbar),
-        "button" => Ok(gtk::IconSize::Button),
-        "dnd" => Ok(gtk::IconSize::Dnd),
-        "dialog" => Ok(gtk::IconSize::Dialog),
+        "normal" => Ok(gtk4::IconSize::Normal),
+        "large" => Ok(gtk4::IconSize::Large),
         _ => Err(anyhow!("Invalid icon size: '{}'", o)),
     }
 }
@@ -215,14 +211,14 @@ pub(super) fn parse_dragtype(o: &str) -> Result<DragEntryType> {
 
 /// Stack widget
 // transition - "slideright", "slideleft", "slideup", "slidedown", "crossfade", "none"
-pub(super) fn parse_stack_transition(t: &str) -> Result<gtk::StackTransitionType> {
+pub(super) fn parse_stack_transition(t: &str) -> Result<gtk4::StackTransitionType> {
     match t.to_ascii_lowercase().as_str() {
-        "slideright" => Ok(gtk::StackTransitionType::SlideRight),
-        "slideleft" => Ok(gtk::StackTransitionType::SlideLeft),
-        "slideup" => Ok(gtk::StackTransitionType::SlideUp),
-        "slidedown" => Ok(gtk::StackTransitionType::SlideDown),
-        "fade" | "crossfade" => Ok(gtk::StackTransitionType::Crossfade),
-        "none" => Ok(gtk::StackTransitionType::None),
+        "slideright" => Ok(gtk4::StackTransitionType::SlideRight),
+        "slideleft" => Ok(gtk4::StackTransitionType::SlideLeft),
+        "slideup" => Ok(gtk4::StackTransitionType::SlideUp),
+        "slidedown" => Ok(gtk4::StackTransitionType::SlideDown),
+        "fade" | "crossfade" => Ok(gtk4::StackTransitionType::Crossfade),
+        "none" => Ok(gtk4::StackTransitionType::None),
         _ => Err(anyhow!("Invalid stack transition: '{}'", t)),
     }
 }

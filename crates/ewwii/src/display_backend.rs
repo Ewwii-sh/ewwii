@@ -1,6 +1,6 @@
 use crate::{widgets::window::Window, window_initiator::WindowInitiator};
 
-use gtk::gdk;
+use gtk4::gdk;
 
 #[cfg(feature = "wayland")]
 pub use platform_wayland::WaylandBackend;
@@ -35,7 +35,11 @@ impl DisplayBackend for NoBackend {
         x: i32,
         y: i32,
     ) -> Option<Window> {
-        Some(Window::new(gtk::WindowType::Toplevel, x, y))
+        // top level
+        let window = Window::new();
+        window.move_(x, y);
+
+        Some(window)
     }
 }
 
@@ -46,9 +50,9 @@ mod platform_wayland {
     use crate::window::window_definition::WindowStacking;
     use crate::window::window_geometry::AnchorAlignment;
     use crate::{widgets::window::Window, window_initiator::WindowInitiator};
-    use gtk::gdk;
-    use gtk::prelude::*;
-    use gtk_layer_shell::{KeyboardMode, LayerShell};
+    use gtk4::gdk;
+    use gtk4::prelude::*;
+    use gtk4_layer_shell::{KeyboardMode, LayerShell};
 
     pub struct WaylandBackend;
 
@@ -62,7 +66,9 @@ mod platform_wayland {
             x: i32,
             y: i32,
         ) -> Option<Window> {
-            let window = Window::new(gtk::WindowType::Toplevel, x, y);
+            // top level
+            let window = Window::new();
+            window.move_(x, y);
 
             // Sets the keyboard interactivity
             match window_init.backend_options.wayland.focusable {
@@ -88,12 +94,12 @@ mod platform_wayland {
 
                 // Sets the layer where the layer shell surface will spawn
                 match window_init.stacking {
-                    WindowStacking::Foreground => window.set_layer(gtk_layer_shell::Layer::Top),
+                    WindowStacking::Foreground => window.set_layer(gtk4_layer_shell::Layer::Top),
                     WindowStacking::Background => {
-                        window.set_layer(gtk_layer_shell::Layer::Background)
+                        window.set_layer(gtk4_layer_shell::Layer::Background)
                     }
-                    WindowStacking::Bottom => window.set_layer(gtk_layer_shell::Layer::Bottom),
-                    WindowStacking::Overlay => window.set_layer(gtk_layer_shell::Layer::Overlay),
+                    WindowStacking::Bottom => window.set_layer(gtk4_layer_shell::Layer::Bottom),
+                    WindowStacking::Overlay => window.set_layer(gtk4_layer_shell::Layer::Overlay),
                 }
 
                 if let Some(namespace) = &window_init.backend_options.wayland.namespace {
@@ -118,23 +124,23 @@ mod platform_wayland {
                         AnchorAlignment::END => bottom = true,
                     }
 
-                    window.set_anchor(gtk_layer_shell::Edge::Left, left);
-                    window.set_anchor(gtk_layer_shell::Edge::Right, right);
-                    window.set_anchor(gtk_layer_shell::Edge::Top, top);
-                    window.set_anchor(gtk_layer_shell::Edge::Bottom, bottom);
+                    window.set_anchor(gtk4_layer_shell::Edge::Left, left);
+                    window.set_anchor(gtk4_layer_shell::Edge::Right, right);
+                    window.set_anchor(gtk4_layer_shell::Edge::Top, top);
+                    window.set_anchor(gtk4_layer_shell::Edge::Bottom, bottom);
 
                     let xoffset = geometry.offset.x.pixels_relative_to(monitor.width());
                     let yoffset = geometry.offset.y.pixels_relative_to(monitor.height());
 
                     if left {
-                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Left, xoffset);
+                        window.set_layer_shell_margin(gtk4_layer_shell::Edge::Left, xoffset);
                     } else {
-                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Right, xoffset);
+                        window.set_layer_shell_margin(gtk4_layer_shell::Edge::Right, xoffset);
                     }
                     if bottom {
-                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Bottom, yoffset);
+                        window.set_layer_shell_margin(gtk4_layer_shell::Edge::Bottom, yoffset);
                     } else {
-                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Top, yoffset);
+                        window.set_layer_shell_margin(gtk4_layer_shell::Edge::Top, yoffset);
                     }
                     // https://github.com/elkowar/eww/issues/296
                     if window_init.backend_options.wayland.exclusive
@@ -162,8 +168,8 @@ mod platform_x11 {
     use crate::{widgets::window::Window, window_initiator::WindowInitiator};
     use anyhow::{Context, Result};
     use gdk::Monitor;
-    use gtk::gdk;
-    use gtk::{self, prelude::*};
+    use gtk4::gdk;
+    use gtk4::{self, prelude::*};
     use x11rb::protocol::xproto::ConnectionExt;
 
     use x11rb::{
@@ -186,12 +192,13 @@ mod platform_x11 {
             x: i32,
             y: i32,
         ) -> Option<Window> {
+            let window = Window::new();
+            window.move_(x, y);
+
             let window_type = if window_init.backend_options.x11.wm_ignore {
-                gtk::WindowType::Popup
-            } else {
-                gtk::WindowType::Toplevel
-            };
-            let window = Window::new(window_type, x, y);
+                window.modal(true);
+            }; // else: normal, which is toplevel
+
             window.set_resizable(window_init.resizable);
             window.set_keep_above(window_init.stacking == WindowStacking::Foreground);
             window.set_keep_below(window_init.stacking == WindowStacking::Background);
