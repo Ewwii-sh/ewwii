@@ -5,7 +5,12 @@ use rhai::{Engine, EvalAltResult, ParseError};
 use rhai_trace::{BetterError, Span};
 
 /// Return a formatted Rhai evaluation error.
-pub fn format_eval_error(error: &EvalAltResult, code: &str, engine: &Engine, file_id: Option<&str>) -> String {
+pub fn format_eval_error(
+    error: &EvalAltResult,
+    code: &str,
+    engine: &Engine,
+    file_id: Option<&str>,
+) -> String {
     let better_error =
         BetterError::improve_eval_error(error, code, engine, None).unwrap_or(BetterError {
             message: error.to_string(),
