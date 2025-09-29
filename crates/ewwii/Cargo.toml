@@ -12,13 +12,13 @@ edition = "2021"
 [features]
 default = ["x11", "wayland"]
 x11 = ["gdkx11", "x11rb"]
-wayland = ["gtk-layer-shell"]
+wayland = ["gtk4-layer-shell"]
 
 [dependencies]
 shared_utils.workspace = true
 rhai_impl.workspace = true
 
-gtk-layer-shell = { version = "0.8.1", optional = true, features=["v0_6"] }
+gtk4-layer-shell = { version = "0.6.3", optional = true }
 gdkx11 = { version = "0.18", optional = true }
 x11rb = { version = "0.13.1", features = ["randr"], optional = true }
 gdk-sys = "0.18.0"
@@ -35,7 +35,7 @@ derive_more.workspace = true
 extend.workspace = true
 futures.workspace = true
 smart-default.workspace = true
-gtk.workspace = true
+gtk4.workspace = true
 itertools.workspace = true
 log.workspace = true
 nix = { workspace = true, features = ["process", "fs", "signal"] }
