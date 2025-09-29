@@ -1,5 +1,5 @@
 use anyhow::Result;
-use gtk::gdk::prelude::Cast;
+use gtk4::gdk::prelude::Cast;
 
 use crate::{config::WindowDefinition, widgets::widget_definitions::*};
 
@@ -17,7 +17,7 @@ pub enum WidgetInput<'a> {
 pub fn build_gtk_widget<'a>(
     input: &'a WidgetInput<'a>,
     widget_reg: &mut WidgetRegistry,
-) -> Result<gtk::Widget> {
+) -> Result<gtk4::Widget> {
     let node: &'a WidgetNode = match input {
         WidgetInput::Node(n) => n,
         WidgetInput::BorrowedNode(n) => n,
@@ -30,7 +30,7 @@ pub fn build_gtk_widget<'a>(
 fn build_gtk_widget_from_node(
     root_node: &WidgetNode,
     widget_reg: &mut WidgetRegistry,
-) -> Result<gtk::Widget> {
+) -> Result<gtk4::Widget> {
     /*
         When a a new widget is added to the build process,
         make sure to update get_id_to_props_map() found in
@@ -44,7 +44,7 @@ fn build_gtk_widget_from_node(
             build_center_box(props, children, widget_reg)?.upcast()
         }
         WidgetNode::EventBox { props, children } => {
-            build_gtk_event_box(props, children, widget_reg)?.upcast()
+            build_event_box(props, children, widget_reg)?.upcast()
         }
         WidgetNode::ToolTip { props, children } => {
             build_tooltip(props, children, widget_reg)?.upcast()

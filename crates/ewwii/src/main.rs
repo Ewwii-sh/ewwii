@@ -18,9 +18,9 @@
 #![allow(rustdoc::private_intra_doc_links)]
 
 // getting gtk stuff
-extern crate gtk;
+extern crate gtk4;
 #[cfg(feature = "wayland")]
-extern crate gtk_layer_shell as gtk_layer_shell;
+extern crate gtk4_layer_shell as gtk4_layer_shell;
 
 // imporing dependencies
 use anyhow::{Context, Result};
