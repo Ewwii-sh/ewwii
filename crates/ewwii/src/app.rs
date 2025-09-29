@@ -750,7 +750,7 @@ impl<B: DisplayBackend> App<B> {
         }
 
         let new_root_widget =
-            reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast.as_deref())?;
+            reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast.as_deref(), config_path.to_str())?;
 
         if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
             if let Some(widget_registry) = maybe_registry.as_mut() {
@@ -938,7 +938,7 @@ async fn generate_new_widgetnode(
         bail!("The configuration file `{}` does not exist", code_path.display());
     }
 
-    let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast)?;
+    let new_root_widget = reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast, code_path.to_str())?;
 
     Ok(new_root_widget)
 }
