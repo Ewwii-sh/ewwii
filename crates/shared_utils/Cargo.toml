@@ -10,6 +10,5 @@ homepage = "https://github.com/elkowar/eww"
 
 [dependencies]
 serde.workspace = true
-derive_more.workspace = true
-rhai = { version = "1.22.2" }
+rhai.workspace = true
 anyhow.workspace = true

@@ -1878,7 +1878,6 @@ name = "shared_utils"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "derive_more",
  "rhai",
  "serde",
 ]
