@@ -5,11 +5,8 @@ use rhai::Map;
 use std::process::Command;
 
 // Run a command and get the output
-pub(super) fn run_command<T>(
-    timeout: std::time::Duration,
-    cmd: &str,
-    args: &[T],
-) where
+pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
+where
     T: 'static + std::fmt::Display + Send + Sync + Clone,
 {
     use wait_timeout::ChildExt;
