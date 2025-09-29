@@ -76,74 +76,80 @@ pub fn initialize_server<B: DisplayBackend>(
     if B::IS_WAYLAND {
         std::env::set_var("GDK_BACKEND", "wayland")
     }
-    gtk::init()?;
-
-    let mut app: App<B> = app::App {
-        ewwii_config,
-        open_windows: HashMap::new(),
-        failed_windows: HashSet::new(),
-        instance_id_to_args: HashMap::new(),
-        css_provider: gtk::CssProvider::new(),
-        app_evt_send: ui_send.clone(),
-        window_close_timer_abort_senders: HashMap::new(),
-        widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
-        pl_handler_store: None,
-        rt_engine_config: EngineConfValues::default(),
-        paths,
-        phantom: PhantomData,
-    };
-
-    if let Some(screen) = gtk::gdk::Screen::default() {
-        gtk::StyleContext::add_provider_for_screen(
-            &screen,
-            &app.css_provider,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
-
-    if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
-        if let Err(e) = app.load_css(file_id, &css) {
-            error_handling_ctx::print_error(e);
-        }
-    }
+    
+    let gtk_app = gtk4::Application::builder()
+        .application_id("com.widgetsystem.ewwii")
+        .build();
 
     connect_monitor_added(ui_send.clone());
 
     // initialize all the handlers and tasks running asyncronously
-    let tokio_handle = init_async_part(app.paths.clone(), ui_send);
-
-    gtk::glib::MainContext::default().spawn_local(async move {
-        // if an action was given to the daemon initially, execute it first.
-        if let Some(action) = action {
-            app.handle_command(action).await;
-        }
-
-        loop {
-            tokio::select! {
-                // Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
-                //     app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
-                // },
-                Some(ui_event) = ui_recv.recv() => {
-                    app.handle_command(ui_event).await;
-                }
-                else => break,
-            }
-        }
-    });
+    let tokio_handle = init_async_part(paths.clone(), ui_send);
 
     // allow the GTK main thread to do tokio things
     let _g = tokio_handle.enter();
 
-    gtk::main();
-    log::info!("main application thread finished");
+    gtk_app.connect_activate(move |gtk_app| {
+        let mut app: App<B> = app::App {
+            ewwii_config: ewwii_config.clone(),
+            open_windows: HashMap::new(),
+            failed_windows: HashSet::new(),
+            instance_id_to_args: HashMap::new(),
+            css_provider: gtk4::CssProvider::new(),
+            app_evt_send: ui_send.clone(),
+            window_close_timer_abort_senders: HashMap::new(),
+            widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
+            pl_handler_store: None,
+            rt_engine_config: EngineConfValues::default(),
+            paths: paths.clone(),
+            gtk_app: gtk_app.clone(),
+            phantom: PhantomData,
+        };
+
+        if let Some(screen) = gtk4::gdk::Screen::default() {
+            gtk4::StyleContext::add_provider_for_screen(
+                &screen,
+                &app.css_provider,
+                gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
+        }
+
+        if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
+            if let Err(e) = app.load_css(file_id, &css) {
+                error_handling_ctx::print_error(e);
+            }
+        }
+
+        gtk4::glib::MainContext::default().spawn_local(async move {
+            // if an action was given to the daemon initially, execute it first.
+            if let Some(action) = action {
+                app.handle_command(action).await;
+            }
+
+            loop {
+                tokio::select! {
+                    // Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
+                    //     app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
+                    // },
+                    Some(ui_event) = ui_recv.recv() => {
+                        app.handle_command(ui_event).await;
+                    }
+                    else => break,
+                }
+            }
+        });
+    });
+
+    let exit_status = gtk_app.run();
+    log::info!("main application thread finished with exit status: {}", exit_status);
 
     Ok(ForkResult::Child)
 }
 
 fn connect_monitor_added(ui_send: UnboundedSender<DaemonCommand>) {
-    let display = gtk::gdk::Display::default().expect("could not get default display");
+    let display = gtk4::gdk::Display::default().expect("could not get default display");
     display.connect_monitor_added({
-        move |_display: &gtk::gdk::Display, _monitor: &gtk::gdk::Monitor| {
+        move |_display: &gtk4::gdk::Display, _monitor: &gtk4::gdk::Monitor| {
             log::info!("New monitor connected, reloading configuration");
             let _ = reload_config_and_css(&ui_send);
         }

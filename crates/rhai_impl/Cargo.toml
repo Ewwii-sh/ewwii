@@ -13,7 +13,6 @@ shared_utils.workspace = true
 
 rhai = { workspace = true, features = ["internals"] }
 anyhow.workspace = true
-gtk.workspace = true
 tokio = { workspace = true, features = ["full"] }
 log.workspace = true
 once_cell.workspace = true
