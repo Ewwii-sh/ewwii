@@ -512,11 +512,7 @@ pub(super) fn build_gtk_event_box(
                 widget,
                 widget.connect_leave_notify_event(move |_, evt| {
                     if evt.detail() != NotifyType::Inferior {
-                        run_command(
-                            timeout,
-                            &onhoverlost,
-                            &[evt.position().0, evt.position().1],
-                        );
+                        run_command(timeout, &onhoverlost, &[evt.position().0, evt.position().1]);
                     }
                     glib::Propagation::Proceed
                 })
@@ -1322,11 +1318,7 @@ pub(super) fn build_gtk_input(
             connect_signal_handler!(
                 widget,
                 widget.connect_changed(move |widget| {
-                    run_command(
-                        timeout,
-                        &onchange,
-                        &[widget.text().to_string()],
-                    );
+                    run_command(timeout, &onchange, &[widget.text().to_string()]);
                 })
             );
         }
@@ -1335,11 +1327,7 @@ pub(super) fn build_gtk_input(
             connect_signal_handler!(
                 widget,
                 widget.connect_activate(move |widget| {
-                    run_command(
-                        timeout,
-                        &onaccept,
-                        &[widget.text().to_string()],
-                    );
+                    run_command(timeout, &onaccept, &[widget.text().to_string()]);
                 })
             );
         }
