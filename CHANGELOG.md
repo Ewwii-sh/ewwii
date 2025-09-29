@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Legacy `true`/`false` support for `focusable` window property.
 -   `$INPUT_VAL` variable injected in commands ran by input widget.
 -   Many dependencies and code for faster build and lesser binary size.
+-   `monitor` library as a step towards GTK4.
 
 ## [0.1.4] - 2025-09-18
 
