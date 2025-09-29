@@ -90,6 +90,7 @@ pub enum DaemonCommand {
     },
     EngineOverride {
         config: String,
+        print: bool,
         sender: DaemonResponseSender,
     },
 }
@@ -329,25 +330,28 @@ impl<B: DisplayBackend> App<B> {
                 }
             }
             DaemonCommand::TriggerUpdateUI { inject_vars, should_preserve_state, sender } => {
-                let output = match self.trigger_ui_update_with(inject_vars, should_preserve_state) {
-                    Ok(_) => String::new(),
-                    Err(e) => e.to_string(),
+                match self.trigger_ui_update_with(inject_vars, should_preserve_state) {
+                    Ok(_) => sender.send_success(String::new())?,
+                    Err(e) => sender.send_failure(e.to_string())?,
                 };
-                sender.send_success(output)?
             }
             DaemonCommand::CallRhaiFns { calls, sender } => {
-                let output = match self.call_rhai_fns(calls) {
-                    Ok(_) => String::new(),
-                    Err(e) => e.to_string(),
+                match self.call_rhai_fns(calls) {
+                    Ok(_) => sender.send_success(String::new())?,
+                    Err(e) => sender.send_failure(e.to_string())?,
                 };
-                sender.send_success(output)?
             }
-            DaemonCommand::EngineOverride { config, sender } => {
-                let output = match self.set_engine_overrides(config) {
-                    Ok(_) => String::new(),
-                    Err(e) => e.to_string(),
+            DaemonCommand::EngineOverride { config, print, sender } => {
+                match self.set_engine_overrides(config) {
+                    Ok(_) => {
+                        if print {
+                            sender.send_success(format!("{:#?}", self.rt_engine_config))?
+                        } else {
+                            sender.send_success(String::new())?
+                        }
+                    }
+                    Err(e) => sender.send_failure(e.to_string())?,
                 };
-                sender.send_success(output)?
             }
         }
         Ok(())

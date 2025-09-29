@@ -191,7 +191,7 @@ pub enum ActionWithServer {
         ///
         /// Format: --inject foo="val1" baz="val2"
         /// Only variables used by the widget tree will affect the UI.
-        #[arg(long = "inject", short, value_parser = parse_inject_var_map)]
+        #[arg(long = "inject", short = 'i', value_parser = parse_inject_var_map)]
         inject_vars: Option<HashMap<String, String>>,
 
         /// Preserve the new updates. Only meaningful if used with inject.
@@ -212,6 +212,10 @@ pub enum ActionWithServer {
     EngineOverride {
         /// Configuration in JSON format
         config_json: String,
+
+        /// Weather to print the current engine settings
+        #[arg(long = "sprint", short = 'p')]
+        print: bool,
     },
 }
 
@@ -344,9 +348,10 @@ impl ActionWithServer {
             ActionWithServer::ShowDebug => {
                 return with_response_channel(app::DaemonCommand::PrintDebug)
             }
-            ActionWithServer::EngineOverride { config_json } => {
+            ActionWithServer::EngineOverride { config_json, print } => {
                 return with_response_channel(|sender| app::DaemonCommand::EngineOverride {
                     config: config_json,
+                    print,
                     sender,
                 })
             }
