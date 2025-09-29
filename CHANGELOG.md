@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Logs not truncating if it is over 100MB and not deleting if over 7 days old.
 -   Ewwii crashing on invalid duration property.
 -   The module resolver throwing error at `import` defenition.
+-   Fixed commands sending error with success status.
 
 ### Removed
 
