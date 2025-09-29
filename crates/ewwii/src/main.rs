@@ -293,7 +293,7 @@ fn attempt_connect(socket_path: impl AsRef<Path>, attempts: usize) -> Option<net
     None
 }
 
-/// Check if a eww server is currently running by trying to send a ping message to it.
+/// Check if a ewwii server is currently running by trying to send a ping message to it.
 fn check_server_running(socket_path: impl AsRef<Path>) -> bool {
     let response = net::UnixStream::connect(socket_path).ok().and_then(|mut stream| {
         client::do_server_call(&mut stream, &opts::ActionWithServer::Ping).ok()
