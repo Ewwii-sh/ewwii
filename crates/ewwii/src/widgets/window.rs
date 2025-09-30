@@ -57,7 +57,7 @@ impl ObjectImpl for WindowPriv {
         self.derived_property(id, pspec)
     }
 }
-impl WindowImpl for WindowPriv {}
+// impl WindowImpl for WindowPriv {}
 // impl BinImpl for WindowPriv {}
 // impl ContainerImpl for WindowPriv {}
-impl WidgetImpl for WindowPriv {}
+// impl WidgetImpl for WindowPriv {}

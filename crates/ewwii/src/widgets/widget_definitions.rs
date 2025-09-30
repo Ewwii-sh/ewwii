@@ -434,38 +434,39 @@ pub(super) fn build_center_box(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_event_box(
+pub(super) fn build_event_box(
     props: &Map,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
 
+    let hover_controller = EventControllerHover::new();
+    let gesture_controller = GestureClick::new();
+    let scroll_controller = EventControllerScroll::new(gtk::Orientation::Both, Some(20.0));
+
     // Support :hover selector
-    gtk_widget.connect_enter_notify_event(|gtk_widget, evt| {
+    hover_controller.connect_enter(|gtk_widget, evt| {
         if evt.detail() != NotifyType::Inferior {
             gtk_widget.set_state_flags(gtk4::StateFlags::PRELIGHT, false);
         }
-        glib::Propagation::Proceed
     });
 
-    gtk_widget.connect_leave_notify_event(|gtk_widget, evt| {
+    hover_controller.connect_leave(|gtk_widget, evt| {
         if evt.detail() != NotifyType::Inferior {
             gtk_widget.unset_state_flags(gtk4::StateFlags::PRELIGHT);
         }
-        glib::Propagation::Proceed
     });
 
     // Support :active selector
-    gtk_widget.connect_button_press_event(|gtk_widget, _| {
+    gesture_controller.connect_pressed(|gtk_widget, _, _, _| {
         gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
-        glib::Propagation::Proceed
     });
 
-    gtk_widget.connect_button_release_event(|gtk_widget, _| {
+    gesture_controller.connect_released(|gtk_widget, _, _, _| {
         gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
-        glib::Propagation::Proceed
     });
+    gtk_widget.add_controller(&gesture_controller);
 
     // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
     let apply_props = |props: &Map, widget: &gtk4::EventBox| -> Result<()> {
@@ -473,11 +474,9 @@ pub(super) fn build_gtk_event_box(
         let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
         if let Ok(onscroll) = get_string_prop(&props, "onscroll", None) {
-            widget.add_events(gdk::EventMask::SCROLL_MASK);
-            widget.add_events(gdk::EventMask::SMOOTH_SCROLL_MASK);
             connect_signal_handler!(
                 widget,
-                widget.connect_scroll_event(move |_, evt| {
+                scroll_controller.connect_scroll(move |_, evt| {
                     let delta = evt.delta().1;
                     if delta != 0f64 {
                         // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
@@ -487,47 +486,40 @@ pub(super) fn build_gtk_event_box(
                             &[if delta < 0f64 { "up" } else { "down" }],
                         );
                     }
-                    glib::Propagation::Proceed
                 })
             );
         }
 
+
         // onhover - event to execute when the user hovers over the widget
         if let Ok(onhover) = get_string_prop(&props, "onhover", None) {
-            widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK);
             connect_signal_handler!(
                 widget,
-                widget.connect_enter_notify_event(move |_, evt| {
+                hover_controller.connect_enter(move |_, evt| {
                     if evt.detail() != NotifyType::Inferior {
                         run_command(timeout, &onhover, &[evt.position().0, evt.position().1]);
                     }
-                    glib::Propagation::Proceed
                 })
             );
         }
 
         // onhoverlost - event to execute when the user losts hovers over the widget
         if let Ok(onhoverlost) = get_string_prop(&props, "onhoverlost", None) {
-            widget.add_events(gdk::EventMask::LEAVE_NOTIFY_MASK);
             connect_signal_handler!(
                 widget,
-                widget.connect_leave_notify_event(move |_, evt| {
+                hover_controller.connect_leave(move |_, evt| {
                     if evt.detail() != NotifyType::Inferior {
                         run_command(timeout, &onhoverlost, &[evt.position().0, evt.position().1]);
                     }
-                    glib::Propagation::Proceed
                 })
             );
         }
 
         // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
         if let Ok(cursor) = get_string_prop(&props, "cursor", None) {
-            widget.add_events(gdk::EventMask::ENTER_NOTIFY_MASK);
-            widget.add_events(gdk::EventMask::LEAVE_NOTIFY_MASK);
-
             connect_signal_handler!(
                 widget,
-                widget.connect_enter_notify_event(move |widget, _evt| {
+                hover_controller.connect_enter(move |widget, _evt| {
                     if _evt.detail() != NotifyType::Inferior {
                         let display = gdk::Display::default();
                         let gdk_window = widget.window();
@@ -536,19 +528,17 @@ pub(super) fn build_gtk_event_box(
                                 .set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
                         }
                     }
-                    glib::Propagation::Proceed
                 })
             );
             connect_signal_handler!(
                 widget,
-                widget.connect_leave_notify_event(move |widget, _evt| {
+                hover_controller.connect_leave(move |widget, _evt| {
                     if _evt.detail() != NotifyType::Inferior {
                         let gdk_window = widget.window();
                         if let Some(gdk_window) = gdk_window {
                             gdk_window.set_cursor(None);
                         }
                     }
-                    glib::Propagation::Proceed
                 })
             );
         }
@@ -637,10 +627,9 @@ pub(super) fn build_gtk_event_box(
         // onrightclick - command to run when the widget is rightclicked
         let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
 
-        widget.add_events(gdk::EventMask::BUTTON_PRESS_MASK);
         connect_signal_handler!(
             widget,
-            widget.connect_button_release_event(move |_, evt| {
+            gesture_click.connect_released(move |_, evt| {
                 match evt.button() {
                     1 => run_command(timeout, &onclick, &[] as &[&str]),
                     2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
@@ -653,6 +642,9 @@ pub(super) fn build_gtk_event_box(
 
         Ok(())
     };
+
+    widget.add_controller(hover_controller);
+    widget.add_controller(scroll_controller);
 
     apply_props(&props, &gtk_widget)?;
 
@@ -709,7 +701,7 @@ pub(super) fn build_gtk_stack(
 
     for (i, child) in children.enumerate() {
         let child = child?;
-        gtk_widget.add_named(&child, &i.to_string());
+        gtk_widget.add_named(&child, Some(&i.to_string()));
         child.show();
     }
 
@@ -753,122 +745,122 @@ pub(super) fn build_gtk_stack(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_transform(
-    props: &Map,
-    widget_registry: &mut WidgetRegistry,
-) -> Result<Transform> {
-    let widget = Transform::new();
+// pub(super) fn build_transform(
+//     props: &Map,
+//     widget_registry: &mut WidgetRegistry,
+// ) -> Result<Transform> {
+//     let widget = Transform::new();
 
-    let apply_props = |props: &Map, widget: &Transform| -> Result<()> {
-        // rotate - the percentage to rotate
-        if let Ok(rotate) = get_f64_prop(&props, "rotate", None) {
-            widget.set_property("rotate", rotate);
-        }
+//     let apply_props = |props: &Map, widget: &Transform| -> Result<()> {
+//         // rotate - the percentage to rotate
+//         if let Ok(rotate) = get_f64_prop(&props, "rotate", None) {
+//             widget.set_property("rotate", rotate);
+//         }
 
-        // transform-origin-x - x coordinate of origin of transformation (px or %)
-        if let Ok(transform_origin_x) = get_string_prop(&props, "transform_origin_x", None) {
-            widget.set_property("transform-origin-x", transform_origin_x);
-        }
+//         // transform-origin-x - x coordinate of origin of transformation (px or %)
+//         if let Ok(transform_origin_x) = get_string_prop(&props, "transform_origin_x", None) {
+//             widget.set_property("transform-origin-x", transform_origin_x);
+//         }
 
-        // transform-origin-y - y coordinate of origin of transformation (px or %)
-        if let Ok(transform_origin_y) = get_string_prop(&props, "transform_origin_y", None) {
-            widget.set_property("transform-origin-y", transform_origin_y);
-        }
+//         // transform-origin-y - y coordinate of origin of transformation (px or %)
+//         if let Ok(transform_origin_y) = get_string_prop(&props, "transform_origin_y", None) {
+//             widget.set_property("transform-origin-y", transform_origin_y);
+//         }
 
-        // translate-x - the amount to translate in the x direction (px or %)
-        if let Ok(translate_x) = get_string_prop(&props, "translate_x", None) {
-            widget.set_property("translate-x", translate_x);
-        }
+//         // translate-x - the amount to translate in the x direction (px or %)
+//         if let Ok(translate_x) = get_string_prop(&props, "translate_x", None) {
+//             widget.set_property("translate-x", translate_x);
+//         }
 
-        // translate-y - the amount to translate in the y direction (px or %)
-        if let Ok(translate_y) = get_string_prop(&props, "translate_y", None) {
-            widget.set_property("translate-y", translate_y);
-        }
+//         // translate-y - the amount to translate in the y direction (px or %)
+//         if let Ok(translate_y) = get_string_prop(&props, "translate_y", None) {
+//             widget.set_property("translate-y", translate_y);
+//         }
 
-        // scale-x - the amount to scale in the x direction (px or %)
-        if let Ok(scale_x) = get_string_prop(&props, "scale_x", None) {
-            widget.set_property("scale-x", scale_x);
-        }
+//         // scale-x - the amount to scale in the x direction (px or %)
+//         if let Ok(scale_x) = get_string_prop(&props, "scale_x", None) {
+//             widget.set_property("scale-x", scale_x);
+//         }
 
-        // scale-y - the amount to scale in the y direction (px or %)
-        if let Ok(scale_y) = get_string_prop(&props, "scale_y", None) {
-            widget.set_property("scale-y", scale_y);
-        }
+//         // scale-y - the amount to scale in the y direction (px or %)
+//         if let Ok(scale_y) = get_string_prop(&props, "scale_y", None) {
+//             widget.set_property("scale-y", scale_y);
+//         }
 
-        Ok(())
-    };
+//         Ok(())
+//     };
 
-    apply_props(&props, &widget)?;
+//     apply_props(&props, &widget)?;
 
-    let widget_clone = widget.clone();
-    let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &widget_clone);
+//     let widget_clone = widget.clone();
+//     let update_fn: UpdateFn = Box::new(move |props: &Map| {
+//         let _ = apply_props(props, &widget_clone);
 
-        // now re-apply generic widget attrs
-        if let Err(err) =
-            resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk4::Widget>(), &props)
-        {
-            eprintln!("Failed to update widget attrs: {:?}", err);
-        }
-    });
+//         // now re-apply generic widget attrs
+//         if let Err(err) =
+//             resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+//         {
+//             eprintln!("Failed to update widget attrs: {:?}", err);
+//         }
+//     });
 
-    let id = hash_props_and_type(&props, "Transform");
+//     let id = hash_props_and_type(&props, "Transform");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
+//     widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
 
-    resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
+//     resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
-    Ok(widget)
-}
+//     Ok(widget)
+// }
 
-pub(super) fn build_circular_progress_bar(
-    props: &Map,
-    widget_registry: &mut WidgetRegistry,
-) -> Result<CircProg> {
-    let widget = CircProg::new();
+// pub(super) fn build_circular_progress_bar(
+//     props: &Map,
+//     widget_registry: &mut WidgetRegistry,
+// ) -> Result<CircProg> {
+//     let widget = CircProg::new();
 
-    let apply_props = |props: &Map, widget: &CircProg| -> Result<()> {
-        if let Ok(value) = get_f64_prop(&props, "value", None) {
-            widget.set_property("value", value.clamp(0.0, 100.0));
-        }
+//     let apply_props = |props: &Map, widget: &CircProg| -> Result<()> {
+//         if let Ok(value) = get_f64_prop(&props, "value", None) {
+//             widget.set_property("value", value.clamp(0.0, 100.0));
+//         }
 
-        if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
-            widget.set_property("start-at", start_at.clamp(0.0, 100.0));
-        }
+//         if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
+//             widget.set_property("start-at", start_at.clamp(0.0, 100.0));
+//         }
 
-        if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
-            widget.set_property("thickness", thickness);
-        }
+//         if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
+//             widget.set_property("thickness", thickness);
+//         }
 
-        if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
-            widget.set_property("clockwise", clockwise);
-        }
+//         if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
+//             widget.set_property("clockwise", clockwise);
+//         }
 
-        Ok(())
-    };
+//         Ok(())
+//     };
 
-    apply_props(&props, &widget)?;
+//     apply_props(&props, &widget)?;
 
-    let widget_clone = widget.clone();
-    let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &widget_clone);
+//     let widget_clone = widget.clone();
+//     let update_fn: UpdateFn = Box::new(move |props: &Map| {
+//         let _ = apply_props(props, &widget_clone);
 
-        // now re-apply generic widget attrs
-        if let Err(err) =
-            resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk4::Widget>(), &props)
-        {
-            eprintln!("Failed to update widget attrs: {:?}", err);
-        }
-    });
+//         // now re-apply generic widget attrs
+//         if let Err(err) =
+//             resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+//         {
+//             eprintln!("Failed to update widget attrs: {:?}", err);
+//         }
+//     });
 
-    let id = hash_props_and_type(&props, "CircularProgressBar");
+//     let id = hash_props_and_type(&props, "CircularProgressBar");
 
-    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
+//     widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
 
-    resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
+//     resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
-    Ok(widget)
-}
+//     Ok(widget)
+// }
 
 // pub(super) fn build_graph(
 //     props: &Map,
@@ -1030,7 +1022,8 @@ pub(super) fn build_gtk_image(
         if path.ends_with(".gif") {
             let pixbuf_animation =
                 gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-            widget.set_from_animation(&pixbuf_animation);
+            let paintable = pixbuf_animation.to_printable();
+            image.set_paintable(Some(&paintable));
         } else {
             let pixbuf;
             // populate the pixel buffer
@@ -1106,6 +1099,9 @@ pub(super) fn build_gtk_button(
 ) -> Result<gtk4::Button> {
     let gtk_widget = gtk4::Button::new();
 
+    let key_controller = EventControllerKey::new();
+    let mouse_controller = GestureClick::new();
+
     let apply_props = |props: &Map, widget: &gtk4::Button| -> Result<()> {
         let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
@@ -1117,29 +1113,27 @@ pub(super) fn build_gtk_button(
         // since we do this, we can't use `connect_clicked` as that would always run `onclick` as well
         connect_signal_handler!(
             widget,
-            widget.connect_button_press_event(move |button, _| {
+            mouse_controller.connect_pressed(move |button, _, _, _| {
                 button.emit_activate();
-                glib::Propagation::Proceed
             })
         );
         let onclick_ = onclick.clone();
         // mouse click events
         connect_signal_handler!(
             widget,
-            widget.connect_button_release_event(move |_, evt| {
+            mouse_controller.connect_released(move |_, evt, _, _| {
                 match evt.button() {
                     1 => run_command(timeout, &onclick, &[] as &[&str]),
                     2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
                     3 => run_command(timeout, &onrightclick, &[] as &[&str]),
                     _ => {}
                 }
-                glib::Propagation::Proceed
             })
         );
         // keyboard events
         connect_signal_handler!(
             widget,
-            widget.connect_key_release_event(move |_, evt| {
+            key_controller.connect_key_released(move |_, evt| {
                 match evt.scancode() {
                     // return
                     36 => run_command(timeout, &onclick_, &[] as &[&str]),
@@ -1147,7 +1141,6 @@ pub(super) fn build_gtk_button(
                     65 => run_command(timeout, &onclick_, &[] as &[&str]),
                     _ => {}
                 }
-                glib::Propagation::Proceed
             })
         );
 
@@ -1159,6 +1152,8 @@ pub(super) fn build_gtk_button(
     };
 
     apply_props(&props, &gtk_widget)?;
+
+    gtk_widget.add_controller(key_controller);
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
@@ -1246,12 +1241,12 @@ pub(super) fn build_gtk_label(
         }
 
         if let Ok(wrap) = get_bool_prop(&props, "wrap", Some(false)) {
-            widget.set_line_wrap(wrap);
+            widget.set_wrap(wrap);
         }
 
-        if let Ok(angle) = get_f64_prop(&props, "angle", Some(0.0)) {
-            widget.set_angle(angle);
-        }
+        // if let Ok(angle) = get_f64_prop(&props, "angle", Some(0.0)) {
+        //     widget.set_angle(angle);
+        // }
 
         let gravity = get_string_prop(&props, "gravity", Some("south"))?;
         widget.pango_context().set_base_gravity(parse_gravity(&gravity)?);
@@ -1394,10 +1389,10 @@ pub(super) fn build_gtk_calendar(
             widget.set_year(year as i32)
         }
 
-        // show-details - show details
-        if let Ok(show_details) = get_bool_prop(&props, "show_details", None) {
-            widget.set_show_details(show_details)
-        }
+        // // show-details - show details
+        // if let Ok(show_details) = get_bool_prop(&props, "show_details", None) {
+        //     widget.set_show_details(show_details)
+        // }
 
         // show-heading - show heading line
         if let Ok(show_heading) = get_bool_prop(&props, "show_heading", None) {
@@ -1527,7 +1522,7 @@ pub(super) fn build_gtk_expander(
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
     let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
-    gtk_widget.add(&child_widget);
+    expander.set_child(Some(&child_widget));
     child_widget.show();
 
     let apply_props = |props: &Map, widget: &gtk4::Expander| -> Result<()> {
@@ -1895,7 +1890,7 @@ pub(super) fn build_gtk_scrolledwindow(
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
     let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
-    gtk_widget.add(&child_widget);
+    gtk_widget.set_child(Some(&child_widget));
     child_widget.show();
 
     let id = hash_props_and_type(&props, "ScrolledWindow");
@@ -1937,8 +1932,8 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         let style_context = gtk_widget.style_context();
 
         // remove all classes
-        for class in style_context.list_classes().to_vec() {
-            style_context.remove_class(class);
+        for class in gtk_widget.css_classes() {
+            style_context.remove_class(&class);
         }
 
         // then apply the classes
@@ -2043,7 +2038,6 @@ pub(super) fn resolve_range_attrs(
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
     if let Some(onchange) = onchange {
-        gtk_widget.add_events(gdk::EventMask::PROPERTY_CHANGE_MASK);
         let last_set_value = last_set_value_clone.clone();
         connect_signal_handler!(
             gtk_widget,
