@@ -4,7 +4,7 @@ use crate::{
     display_backend::DisplayBackend,
     error_handling_ctx,
     gtk4::prelude::{
-        ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt,
+        ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt, ObjectExt, ApplicationExt, CellAreaExt, GskRendererExt
     },
     paths::EwwiiPaths,
     widgets::window::Window,
@@ -23,7 +23,6 @@ use crate::{
     *,
 };
 use anyhow::{anyhow, bail};
-use codespan_reporting::files::Files;
 use gdk::Monitor;
 use glib::ObjectExt;
 use gtk4::{gdk, glib};
@@ -600,10 +599,10 @@ impl<B: DisplayBackend> App<B> {
 
             // handling users close request
             ewwii_window.delete_event_handler_id =
-                Some(ewwii_window.gtk_window.connect_delete_event({
+                Some(ewwii_window.gtk_window.connect_close_request({
                     let handler = gtk_close_handler.clone();
                     let closed_by_user = closed_by_user.clone();
-                    move |_, _| {
+                    move |_| {
                         handler(false); // -- false: don't reopen window to respect users intent
                         closed_by_user.set(true);
                         glib::Propagation::Proceed
@@ -689,7 +688,7 @@ impl<B: DisplayBackend> App<B> {
     }
 
     /// Load a given CSS string into the gtk css provider, returning a nicely formatted [`DiagError`] when GTK errors out
-    pub fn load_css(&mut self, file_id: usize, css: &str) -> Result<()> {
+    pub fn load_css(&mut self, _file_id: usize, css: &str) -> Result<()> {
         self.css_provider.load_from_data(&css);
 
         Ok(())
@@ -953,14 +952,17 @@ fn apply_window_position(
     monitor_geometry: gdk::Rectangle,
     window: &Window,
 ) -> Result<()> {
-    let gdk_window = window.window().context("Failed to get gdk window from gtk window")?;
-    window_geometry.size = crate::window::window_geometry::Coords::from_pixels(window.size());
-    let actual_window_rect = get_window_rectangle(window_geometry, monitor_geometry);
+    let gdk_window = window.surface().context("Failed to get gdk surface from gtk window")?;
+    
+    if let Some(x11_surface) = surface.downcast_ref::<gdkx11::X11Surface>() {
+        window_geometry.size = crate::window::window_geometry::Coords::from_pixels(window.default_size());
+        let actual_window_rect = get_window_rectangle(window_geometry, monitor_geometry);
 
-    let gdk_origin = gdk_window.origin();
+        let (origin_x, origin_y) = x11_surface.position();
 
-    if actual_window_rect.x() != gdk_origin.1 || actual_window_rect.y() != gdk_origin.2 {
-        gdk_window.move_(actual_window_rect.x(), actual_window_rect.y());
+        if actual_window_rect.x() != origin_x || actual_window_rect.y() != origin_y {
+            x11_surface.move_(actual_window_rect.x(), actual_window_rect.y());
+        }
     }
 
     Ok(())

@@ -44,7 +44,7 @@ fn build_gtk_widget_from_node(
             build_center_box(props, children, widget_reg)?.upcast()
         }
         WidgetNode::EventBox { props, children } => {
-            build_gtk_event_box(props, children, widget_reg)?.upcast()
+            build_event_box(props, children, widget_reg)?.upcast()
         }
         WidgetNode::ToolTip { props, children } => {
             build_tooltip(props, children, widget_reg)?.upcast()

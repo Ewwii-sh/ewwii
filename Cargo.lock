@@ -531,7 +531,6 @@ dependencies = [
  "derive_more",
  "extend",
  "futures",
- "gdk-sys",
  "gdkx11",
  "grass",
  "gtk4",

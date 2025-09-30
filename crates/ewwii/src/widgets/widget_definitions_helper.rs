@@ -185,15 +185,11 @@ pub(super) fn parse_revealer_transition(t: &str) -> Result<gtk4::RevealerTransit
 }
 
 /// Gtk Image
-// icon-size - "menu", "small-toolbar", "toolbar", "large-toolbar", "button", "dnd", "dialog"
+// icon-size - "normal", "large"
 pub(super) fn parse_icon_size(o: &str) -> Result<gtk4::IconSize> {
     match o.to_ascii_lowercase().as_str() {
-        "menu" => Ok(gtk4::IconSize::Menu),
-        "small-toolbar" | "toolbar" => Ok(gtk4::IconSize::SmallToolbar),
-        "large-toolbar" => Ok(gtk4::IconSize::LargeToolbar),
-        "button" => Ok(gtk4::IconSize::Button),
-        "dnd" => Ok(gtk4::IconSize::Dnd),
-        "dialog" => Ok(gtk4::IconSize::Dialog),
+        "normal" => Ok(gtk4::IconSize::Normal),
+        "large" => Ok(gtk4::IconSize::Large),
         _ => Err(anyhow!("Invalid icon size: '{}'", o)),
     }
 }

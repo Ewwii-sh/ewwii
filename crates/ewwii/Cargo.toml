@@ -21,7 +21,6 @@ rhai_impl.workspace = true
 gtk4-layer-shell = { version = "0.6.3", optional = true }
 gdkx11 = { version = "0.18", optional = true }
 x11rb = { version = "0.13.1", features = ["randr"], optional = true }
-gdk-sys = "0.18.0"
 
 grass.workspace = true
 thiserror.workspace = true
