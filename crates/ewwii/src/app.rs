@@ -3,8 +3,8 @@ use crate::{
     display_backend::DisplayBackend,
     error_handling_ctx,
     gtk4::prelude::{
-        ApplicationExt, CellAreaExt, GskRendererExt, GtkWindowExt, MonitorExt, ObjectExt,
-        StyleContextExt, WidgetExt, DisplayExt, ListModelExt, Cast, CastNone
+        ApplicationExt, Cast, CastNone, CellAreaExt, DisplayExt, GskRendererExt, GtkWindowExt,
+        ListModelExt, MonitorExt, ObjectExt, StyleContextExt, WidgetExt,
     },
     paths::EwwiiPaths,
     // dynval::DynVal,
@@ -1008,7 +1008,8 @@ fn get_gdk_monitor(identifier: Option<MonitorIdentifier>) -> Result<Monitor> {
                 anyhow::bail!("No monitors found on the display");
             }
 
-            monitors.item(0)
+            monitors
+                .item(0)
                 .and_downcast::<gdk::Monitor>()
                 .context("Failed to get the primary monitor from the list of monitors")?
         }

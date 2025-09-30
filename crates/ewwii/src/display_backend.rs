@@ -50,9 +50,9 @@ mod platform_wayland {
     use crate::window::window_definition::WindowStacking;
     use crate::window::window_geometry::AnchorAlignment;
     use crate::window_initiator::WindowInitiator;
-    use gtk4::Window;
     use gtk4::gdk;
     use gtk4::prelude::*;
+    use gtk4::Window;
     use gtk4_layer_shell::{KeyboardMode, LayerShell};
 
     pub struct WaylandBackend;
@@ -168,8 +168,8 @@ mod platform_x11 {
     use crate::window_initiator::WindowInitiator;
     use anyhow::{Context, Result};
     use gdk::Monitor;
-    use gtk4::Window;
     use gtk4::gdk;
+    use gtk4::Window;
     use gtk4::{self, prelude::*};
     use x11rb::protocol::xproto::ConnectionExt;
 
@@ -199,11 +199,20 @@ mod platform_x11 {
                 window.set_decorated(false);
                 window.set_modal(true);
             }; // else: normal, toplevel
-            // window.move_(x, y);
+               // window.move_(x, y);
 
             window.set_resizable(window_init.resizable);
-            window.set_keep_above(window_init.stacking == WindowStacking::Foreground);
-            window.set_keep_below(window_init.stacking == WindowStacking::Background);
+
+            let gdk_surface = window.surface()?;
+
+            let x11_surface = gdk_surface.downcast::<X11Surface>().ok()?;
+
+            match window_init.stacking {
+                WindowStacking::Foreground => x11_surface.set_keep_above(true),
+                WindowStacking::Background => x11_surface.set_keep_below(true),
+                _ => {}
+            }
+
             if let Some(gdk_x11_window) =
                 gtk_window.window().and_then(|w| w.downcast::<gdk4_x11::X11Window>().ok())
             {
