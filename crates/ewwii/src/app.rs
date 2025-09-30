@@ -24,6 +24,7 @@ use crate::{
 use anyhow::{anyhow, bail};
 use gdk::Monitor;
 use gtk4::{gdk, glib};
+use gtk4::Window;
 use itertools::Itertools;
 use rhai::Dynamic;
 use rhai_impl::ast::WidgetNode;
@@ -960,7 +961,7 @@ fn apply_window_position(
 ) -> Result<()> {
     let gdk_window = window.surface().context("Failed to get gdk surface from gtk window")?;
 
-    if let Some(x11_surface) = surface.downcast_ref::<gdk4_x11::X11Surface>() {
+    if let Some(x11_surface) = gdk_window.downcast_ref::<gdk4_x11::X11Surface>() {
         window_geometry.size =
             crate::window::window_geometry::Coords::from_pixels(window.default_size());
         let actual_window_rect = get_window_rectangle(window_geometry, monitor_geometry);
