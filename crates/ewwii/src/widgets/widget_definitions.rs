@@ -7,7 +7,7 @@ use gdk::{ModifierType, NotifyType};
 use gtk4::glib::translate::FromGlib;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
-use gtk4::{GestureClick, EventControllerScroll, EventControllerMotion};
+use gtk4::{EventControllerMotion, EventControllerScroll, GestureClick};
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
@@ -433,6 +433,22 @@ pub(super) fn build_center_box(
     Ok(gtk_widget)
 }
 
+#[derive(Copy, Clone)]
+struct EventBoxCtrlData {
+    // hover controller data
+    onhover_cmd: String,
+    onhoverlost_cmd: String,
+    hover_cursor: String,
+
+    // gesture controller data
+    onclick_cmd: String,
+    onmiddleclick_cmd: String,
+    onrightclick_cmd: String,
+
+    // other
+    cmd_timeout: Duration,
+}
+
 pub(super) fn build_event_box(
     props: &Map,
     children: &Vec<WidgetNode>,
@@ -440,75 +456,153 @@ pub(super) fn build_event_box(
 ) -> Result<gtk4::Box> {
     let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
 
+    // controllers
     let hover_controller = EventControllerMotion::new();
     let gesture_controller = GestureClick::new();
     let scroll_controller = EventControllerScroll::new(gtk4::Orientation::Both, Some(20.0));
 
-    // Support :hover selector
-    hover_controller.connect_enter(|gtk_widget, evt| {
-        if evt.detail() != NotifyType::Inferior {
-            gtk_widget.set_state_flags(gtk4::StateFlags::PRELIGHT, false);
+    let drop_text_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
+    let drop_uri_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
+
+    // properties that can be updated
+    let controller_data = Rc::new(RefCell::new(EventBoxCtrlData {
+        onhover_cmd: String::new(),
+        onhoverlost_cmd: String::new(),
+        hover_cursor: String::new(),
+        onclick_cmd: String::new(),
+        onmiddleclick_cmd: String::new(),
+        onrightclick_cmd: String::new,
+        cmd_timeout: Duration::from_millis(200),
+    }));
+
+    // Support :hover selector and run command
+    hover_controller.connect_enter(glib::clone!(
+        #[weak]
+        gtk_widget,
+        move |_, x, y| {
+            if let Some(gtk_widget) = gtk_widget.upgrade() {
+                gtk_widget.set_state_flags(gtk4::StateFlags::PRELIGHT, false);
+
+                // set cursor
+                let display = gdk::Display::default();
+                let gdk_window = widget.window();
+                if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
+                    gdk_window.set_cursor(gdk::Cursor::from_name(&display, &hover_cursor).as_ref());
+                }
+            }
+            run_command(&controller_data.cmd_timeout, &controller_data.onhover_cmd, &[x, y]);
+        }
+    ));
+
+    hover_controller.connect_leave(glib::clone!(
+        #[weak]
+        gtk_widget,
+        move |_| {
+            if let Some(gtk_widget) = gtk_widget.upgrade() {
+                gtk_widget.unset_state_flags(gtk4::StateFlags::PRELIGHT);
+
+                // reset cursor
+                let gdk_window = widget.window();
+                if let Some(gdk_window) = gdk_window {
+                    gdk_window.set_cursor(None);
+                }
+            }
+            run_command(
+                &controller_data.cmd_timeout,
+                &controller_data.onhoverlost_cmd,
+                &[] as &[&str],
+            );
+        }
+    ));
+
+    // Support :active selector and run command
+    gesture_controller.connect_pressed(glib::clone!(
+        #[weak]
+        gtk_widget,
+        move |_, bi, x, y| {
+            if let Some(gtk_widget) = gtk_widget.upgrade() {
+                gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
+            }
+        }
+    ));
+
+    // Scroll event handler to run command
+    scroll_controller.connect_scroll(move |_, _, dy| {
+        if dy != 0.0 {
+            // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
+            run_command(
+                &controller_data.cmd_timeout,
+                &controller_data.onscroll,
+                &[if dy < 0.0 { "up" } else { "down" }],
+            );
         }
     });
 
-    hover_controller.connect_leave(|gtk_widget, evt| {
-        if evt.detail() != NotifyType::Inferior {
-            gtk_widget.unset_state_flags(gtk4::StateFlags::PRELIGHT);
+    gesture_controller.connect_released(glib::clone!(
+        #[weak]
+        gtk_widget,
+        move |_, id, _, _| {
+            if let Some(gtk_widget) = gtk_widget.upgrade() {
+                gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
+            }
+
+            match id {
+                1 => run_command(
+                    &controller_data.cmd_timeout,
+                    &controller_data.onclick_cmd,
+                    &[] as &[&str],
+                ),
+                2 => run_command(
+                    &controller_data.cmd_timeout,
+                    &controller_data.onmiddleclick_cmd,
+                    &[] as &[&str],
+                ),
+                3 => run_command(
+                    &controller_data.cmd_timeout,
+                    &controller_data.onrightclick_cmd,
+                    &[] as &[&str],
+                ),
+                _ => {}
+            }
         }
+    ));
+
+    gesture_controller.connect_unpaired_release(|_, _, _, id, _| match id {
+        1 => {
+            run_command(&controller_data.cmd_timeout, &controller_data.onclick_cmd, &[] as &[&str])
+        }
+        2 => run_command(
+            &controller_data.cmd_timeout,
+            &controller_data.onmiddleclick,
+            &[] as &[&str],
+        ),
+        3 => {
+            run_command(&controller_data.cmd_timeout, &controller_data.onrightclick, &[] as &[&str])
+        }
+        _ => {}
     });
 
-    // Support :active selector
-    gesture_controller.connect_pressed(|gtk_widget, _, _, _| {
-        gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
-    });
+    gtk_widget.add_controller(gesture_controller);
+    gtk_widget.add_controller(hover_controller);
+    gtk_widget.add_controller(scroll_controller);
 
-    gesture_controller.connect_released(|gtk_widget, _, _, _| {
-        gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
-    });
-
-    // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
     let apply_props = |props: &Map, widget: &gtk4::Box| -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
         let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
+        // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
         if let Ok(onscroll) = get_string_prop(&props, "onscroll", None) {
-            connect_signal_handler!(
-                widget,
-                scroll_controller.connect_scroll(move |_, evt| {
-                    let delta = evt.delta().1;
-                    if delta != 0f64 {
-                        // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
-                        run_command(
-                            timeout,
-                            &onscroll,
-                            &[if delta < 0f64 { "up" } else { "down" }],
-                        );
-                    }
-                })
-            );
+            connect_signal_handler!(widget,);
         }
-
 
         // onhover - event to execute when the user hovers over the widget
         if let Ok(onhover) = get_string_prop(&props, "onhover", None) {
-            connect_signal_handler!(
-                widget,
-                hover_controller.connect_enter(move |_, x, y| {
-                    run_command(timeout, &onhover, &[x, y]);
-                })
-            );
+            connect_signal_handler!(widget, hover_controller.connect_enter(move |_, x, y| {}));
         }
 
-        // onhoverlost - event to execute when the user losts hovers over the widget
+        // onhoverlost - event to execute when the user loses hover over the widget
         if let Ok(onhoverlost) = get_string_prop(&props, "onhoverlost", None) {
-            connect_signal_handler!(
-                widget,
-                hover_controller.connect_leave(move |_, evt| {
-                    if evt.detail() != NotifyType::Inferior {
-                        run_command(timeout, &onhoverlost, &[evt.position().0, evt.position().1]);
-                    }
-                })
-            );
+            connect_signal_handler!(widget, hover_controller.connect_leave(move |_| {}));
         }
 
         // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
@@ -519,8 +613,7 @@ pub(super) fn build_event_box(
                     let display = gdk::Display::default();
                     let gdk_window = widget.window();
                     if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
-                        gdk_window
-                            .set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
+                        gdk_window.set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
                     }
                 })
             );
@@ -539,42 +632,21 @@ pub(super) fn build_event_box(
 
         // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
         if let Ok(ondropped) = get_string_prop(&props, "ondropped", None) {
-            widget.drag_dest_set(
-                DestDefaults::ALL,
-                &[
-                    TargetEntry::new(
-                        "text/uri-list",
-                        gtk4::TargetFlags::OTHER_APP | gtk4::TargetFlags::OTHER_WIDGET,
-                        0,
-                    ),
-                    TargetEntry::new(
-                        "text/plain",
-                        gtk4::TargetFlags::OTHER_APP | gtk4::TargetFlags::OTHER_WIDGET,
-                        0,
-                    ),
-                ],
-                gdk::DragAction::COPY,
-            );
-            connect_signal_handler!(
-                widget,
-                widget.connect_drag_data_received(
-                    move |_, _, _x, _y, selection_data, _target_type, _timestamp| {
-                        if let Some(data) = selection_data.uris().first() {
-                            run_command(
-                                timeout,
-                                &ondropped,
-                                &[data.to_string(), "file".to_string()],
-                            );
-                        } else if let Some(data) = selection_data.text() {
-                            run_command(
-                                timeout,
-                                &ondropped,
-                                &[data.to_string(), "text".to_string()],
-                            );
-                        }
+            uri_target.connect_drop(glib::clone!(@strong timeout, @strong ondropped => move |_target, value, _position| {
+                if let Some(uris) = value.get::<String>() {
+                    if let Some(first_uri) = uris.split_whitespace().next() {
+                        run_command(timeout, &ondropped, &[first_uri.to_string(), "file".to_string()]);
                     }
-                )
-            );
+                }
+                true
+            }));
+
+            text_target.connect_drop(glib::clone!(@strong timeout, @strong ondropped => move |_target, value, _position| {
+                if let Some(text) = value.get::<String>() {
+                    run_command(timeout, &ondropped, &[text.to_string(), "text".to_string()]);
+                }
+                true
+            }));
         }
 
         // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
@@ -636,10 +708,6 @@ pub(super) fn build_event_box(
 
         Ok(())
     };
-
-    gtk_widget.add_controller(gesture_controller);
-    gtk_widget.add_controller(hover_controller);
-    gtk_widget.add_controller(scroll_controller);
 
     apply_props(&props, &gtk_widget)?;
 
@@ -1940,8 +2008,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
     if let Ok(style_str) = get_string_prop(&props, "style", None) {
         let css_provider = gtk4::CssProvider::new();
         let scss = format!("* {{ {} }}", style_str);
-        css_provider
-            .load_from_data(&grass::from_string(scss, &grass::Options::default())?);
+        css_provider.load_from_data(&grass::from_string(scss, &grass::Options::default())?);
         gtk_widget
             .style_context()
             .add_provider(&css_provider, gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -1949,8 +2016,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
 
     if let Ok(css_str) = get_string_prop(&props, "css", None) {
         let css_provider = gtk4::CssProvider::new();
-        css_provider
-            .load_from_data(&grass::from_string(css_str, &grass::Options::default())?);
+        css_provider.load_from_data(&grass::from_string(css_str, &grass::Options::default())?);
         gtk_widget
             .style_context()
             .add_provider(&css_provider, gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -1997,14 +2063,22 @@ pub(super) fn resolve_range_attrs(
     is_being_dragged: Rc<RefCell<bool>>,
 ) -> Result<()> {
     let gesture = GestureClick::new();
-    
-    gesture.connect_pressed(glib::clone!(#[strong] is_being_dragged, move |_, _, _, _| {
-        *is_being_dragged.borrow_mut() = true;
-    }));
 
-    gesture.connect_released(glib::clone!(#[strong] is_being_dragged, move |_, _, _, _| {
-        *is_being_dragged.borrow_mut() = false;
-    }));
+    gesture.connect_pressed(glib::clone!(
+        #[strong]
+        is_being_dragged,
+        move |_, _, _, _| {
+            *is_being_dragged.borrow_mut() = true;
+        }
+    ));
+
+    gesture.connect_released(glib::clone!(
+        #[strong]
+        is_being_dragged,
+        move |_, _, _, _| {
+            *is_being_dragged.borrow_mut() = false;
+        }
+    ));
 
     gtk_widget.add_controller(gesture);
 
