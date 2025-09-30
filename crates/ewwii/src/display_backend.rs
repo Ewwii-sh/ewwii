@@ -35,11 +35,7 @@ impl DisplayBackend for NoBackend {
         x: i32,
         y: i32,
     ) -> Option<Window> {
-        // top level
-        let window = Window::new();
-        window.move_(x, y);
-
-        Some(window)
+        Some(Window::new(gtk4::WindowType::Toplevel, x, y))
     }
 }
 
@@ -66,9 +62,7 @@ mod platform_wayland {
             x: i32,
             y: i32,
         ) -> Option<Window> {
-            // top level
-            let window = Window::new();
-            window.move_(x, y);
+            let window = Window::new(gtk4::WindowType::Toplevel, x, y);
 
             // Sets the keyboard interactivity
             match window_init.backend_options.wayland.focusable {
@@ -86,7 +80,7 @@ mod platform_wayland {
                 if let Some(ident) = window_init.monitor.clone() {
                     let display = gdk::Display::default().expect("could not get default display");
                     if let Some(monitor) = crate::app::get_monitor_from_display(&display, &ident) {
-                        window.set_monitor(&monitor);
+                        window.set_monitor(Some(&monitor));
                     } else {
                         return None;
                     }
@@ -103,7 +97,7 @@ mod platform_wayland {
                 }
 
                 if let Some(namespace) = &window_init.backend_options.wayland.namespace {
-                    window.set_namespace(namespace);
+                    window.set_namespace(Some(namespace));
                 }
 
                 if let Some(geometry) = window_init.geometry {
@@ -124,23 +118,23 @@ mod platform_wayland {
                         AnchorAlignment::END => bottom = true,
                     }
 
-                    window.set_anchor(gtk4_layer_shell::Edge::Left, left);
-                    window.set_anchor(gtk4_layer_shell::Edge::Right, right);
-                    window.set_anchor(gtk4_layer_shell::Edge::Top, top);
-                    window.set_anchor(gtk4_layer_shell::Edge::Bottom, bottom);
+                    window.set_anchor(gtk_layer_shell::Edge::Left, left);
+                    window.set_anchor(gtk_layer_shell::Edge::Right, right);
+                    window.set_anchor(gtk_layer_shell::Edge::Top, top);
+                    window.set_anchor(gtk_layer_shell::Edge::Bottom, bottom);
 
                     let xoffset = geometry.offset.x.pixels_relative_to(monitor.width());
                     let yoffset = geometry.offset.y.pixels_relative_to(monitor.height());
 
                     if left {
-                        window.set_layer_shell_margin(gtk4_layer_shell::Edge::Left, xoffset);
+                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Left, xoffset);
                     } else {
-                        window.set_layer_shell_margin(gtk4_layer_shell::Edge::Right, xoffset);
+                        window.set_margin(gtk4_layer_shell::Edge::Right, xoffset);
                     }
                     if bottom {
-                        window.set_layer_shell_margin(gtk4_layer_shell::Edge::Bottom, yoffset);
+                        window.set_margin(gtk4_layer_shell::Edge::Bottom, yoffset);
                     } else {
-                        window.set_layer_shell_margin(gtk4_layer_shell::Edge::Top, yoffset);
+                        window.set_margin(gtk4_layer_shell::Edge::Top, yoffset);
                     }
                     // https://github.com/elkowar/eww/issues/296
                     if window_init.backend_options.wayland.exclusive
@@ -192,20 +186,23 @@ mod platform_x11 {
             x: i32,
             y: i32,
         ) -> Option<Window> {
-            let window = Window::new();
-            window.move_(x, y);
-
             let window_type = if window_init.backend_options.x11.wm_ignore {
-                window.modal(true);
-            }; // else: normal, which is toplevel
-
+                gtk4::WindowType::Popup
+            } else {
+                gtk4::WindowType::Toplevel
+            };
+            let window = Window::new(window_type, x, y);
             window.set_resizable(window_init.resizable);
             window.set_keep_above(window_init.stacking == WindowStacking::Foreground);
             window.set_keep_below(window_init.stacking == WindowStacking::Background);
-            if window_init.backend_options.x11.sticky {
-                window.stick();
-            } else {
-                window.unstick();
+            if let Some(gdk_x11_window) =
+                gtk_window.window().and_then(|w| w.downcast::<gdk4_x11::X11Window>().ok())
+            {
+                if window_init.backend_options.x11.sticky {
+                    gdk_x11_window.stick();
+                } else {
+                    gdk_x11_window.unstick();
+                }
             }
             Some(window)
         }
@@ -245,7 +242,7 @@ mod platform_x11 {
             let scale_factor = monitor.scale_factor() as u32;
             let gdk_window = window.window().context("Couldn't get gdk window from gtk window")?;
             let win_id = gdk_window
-                .downcast_ref::<gdkx11::X11Window>()
+                .downcast_ref::<gdk4x11::X11Window>()
                 .context("Failed to get x11 window for gtk window")?
                 .xid() as u32;
             let strut_def = window_init.backend_options.x11.struts;

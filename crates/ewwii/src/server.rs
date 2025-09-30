@@ -5,7 +5,7 @@ use crate::{
     error_handling_ctx, ipc_server, EwwiiPaths,
 };
 use anyhow::{Context, Result};
-
+use gtk4::prelude::{ApplicationExt, ApplicationExtManual};
 use std::{
     // cell::RefCell,
     collections::{HashMap, HashSet},
@@ -76,10 +76,8 @@ pub fn initialize_server<B: DisplayBackend>(
     if B::IS_WAYLAND {
         std::env::set_var("GDK_BACKEND", "wayland")
     }
-    
-    let gtk_app = gtk4::Application::builder()
-        .application_id("com.widgetsystem.ewwii")
-        .build();
+
+    let gtk_app = gtk4::Application::builder().application_id("com.widgetsystem.ewwii").build();
 
     connect_monitor_added(ui_send.clone());
 
@@ -114,7 +112,8 @@ pub fn initialize_server<B: DisplayBackend>(
             );
         }
 
-        if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
+        if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir())
+        {
             if let Err(e) = app.load_css(file_id, &css) {
                 error_handling_ctx::print_error(e);
             }
@@ -141,7 +140,7 @@ pub fn initialize_server<B: DisplayBackend>(
     });
 
     let exit_status = gtk_app.run();
-    log::info!("main application thread finished with exit status: {}", exit_status);
+    log::info!("main application thread finished with exit status: {:#?}", exit_status);
 
     Ok(ForkResult::Child)
 }
