@@ -38,26 +38,30 @@ impl Default for Window {
     }
 }
 
-// impl Window {
-//     pub fn new(type_: gtk4::WindowType, x_: i32, y_: i32) -> Self {
-//         let w: Self = glib::Object::builder().property("type", type_).build();
-//         let priv_ = w.imp();
-//         priv_.x.replace(x_);
-//         priv_.y.replace(y_);
-//         w
-//     }
-// }
-
-impl ObjectImpl for WindowPriv {
-    fn properties() -> &'static [glib::ParamSpec] {
-        Self::derived_properties()
-    }
-
-    fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
-        self.derived_property(id, pspec)
+impl Window {
+    pub fn new(type_: gtk4::WindowType, x_: i32, y_: i32) -> Self {
+        let w: Self = glib::Object::builder().property("type", type_).build();
+        let priv_ = w.imp();
+        priv_.x.replace(x_);
+        priv_.y.replace(y_);
+        w
     }
 }
+
+// impl ObjectImpl for WindowPriv {
+//     fn properties() -> &'static [glib::ParamSpec] {
+//         Self::derived_properties()
+//     }
+
+//     fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+//         self.derived_property(id, pspec)
+//     }
+// }
 // impl WindowImpl for WindowPriv {}
 // impl BinImpl for WindowPriv {}
 // impl ContainerImpl for WindowPriv {}
 // impl WidgetImpl for WindowPriv {}
+
+impl ObjectImpl for WindowPriv {}
+impl WidgetImpl for WindowPriv {}
+impl WindowImpl for WindowPriv {}
