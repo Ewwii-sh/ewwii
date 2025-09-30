@@ -4,10 +4,9 @@ use crate::{
     error_handling_ctx,
     gtk4::prelude::{
         ApplicationExt, CellAreaExt, GskRendererExt, GtkWindowExt, MonitorExt, ObjectExt,
-        StyleContextExt, WidgetExt,
+        StyleContextExt, WidgetExt, DisplayExt, ListModelExt, Cast, CastNone
     },
     paths::EwwiiPaths,
-    widgets::window::Window,
     // dynval::DynVal,
     widgets::{
         build_widget::build_gtk_widget, build_widget::WidgetInput,
@@ -177,8 +176,18 @@ async fn wait_for_monitor_model() {
     let display = gdk::Display::default().expect("could not get default display");
     let start = std::time::Instant::now();
     loop {
-        let all_monitors_set = (0..display.n_monitors())
-            .all(|i| display.monitor(i).and_then(|monitor| monitor.model()).is_some());
+        let monitors_model = display.monitors();
+        let n_monitors = monitors_model.n_items();
+
+        let all_monitors_set = (0..n_monitors).all(|i| {
+            if let Some(obj) = monitors_model.item(i) {
+                // Downcast GObject to Monitor
+                let monitor: Monitor = obj.downcast().unwrap();
+                monitor.model().is_some()
+            } else {
+                false
+            }
+        });
         if all_monitors_set {
             break;
         }
@@ -982,9 +991,12 @@ fn get_gdk_monitor(identifier: Option<MonitorIdentifier>) -> Result<Monitor> {
             mon.with_context(|| {
                 let head = format!("Failed to get monitor {}\nThe available monitors are:", ident);
                 let mut body = String::new();
-                for m in 0..display.n_monitors() {
-                    if let Some(model) = display.monitor(m).and_then(|x| x.model()) {
-                        body.push_str(format!("\n\t[{}] {}", m, model).as_str());
+                let monitors = display.monitors();
+                for i in 0..monitors.n_items() {
+                    if let Some(monitor) = monitors.item(i).and_downcast::<gdk::Monitor>() {
+                        if let Some(model) = monitor.model() {
+                            body.push_str(format!("\n\t[{}] {}", i, model).as_str());
+                        }
                     }
                 }
                 format!("{}{}", head, body)

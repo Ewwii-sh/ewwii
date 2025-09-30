@@ -1,4 +1,4 @@
-use crate::{widgets::window::Window, window_initiator::WindowInitiator};
+use crate::window_initiator::WindowInitiator;
 
 use gtk4::gdk;
 
@@ -35,7 +35,11 @@ impl DisplayBackend for NoBackend {
         x: i32,
         y: i32,
     ) -> Option<Window> {
-        Some(Window::new(gtk4::WindowType::Toplevel, x, y))
+        // top level
+        let window = Window::new();
+        window.move_(x, y);
+
+        Some(window)
     }
 }
 
@@ -45,7 +49,8 @@ mod platform_wayland {
     use crate::window::backend_window_options::WlWindowFocusable;
     use crate::window::window_definition::WindowStacking;
     use crate::window::window_geometry::AnchorAlignment;
-    use crate::{widgets::window::Window, window_initiator::WindowInitiator};
+    use crate::window_initiator::WindowInitiator;
+    use gtk4::Window;
     use gtk4::gdk;
     use gtk4::prelude::*;
     use gtk4_layer_shell::{KeyboardMode, LayerShell};
@@ -62,7 +67,8 @@ mod platform_wayland {
             x: i32,
             y: i32,
         ) -> Option<Window> {
-            let window = Window::new(gtk4::WindowType::Toplevel, x, y);
+            let window = Window::new();
+            // window.move_(x, y);
 
             // Sets the keyboard interactivity
             match window_init.backend_options.wayland.focusable {
@@ -127,7 +133,7 @@ mod platform_wayland {
                     let yoffset = geometry.offset.y.pixels_relative_to(monitor.height());
 
                     if left {
-                        window.set_layer_shell_margin(gtk_layer_shell::Edge::Left, xoffset);
+                        window.set_margin(gtk_layer_shell::Edge::Left, xoffset);
                     } else {
                         window.set_margin(gtk4_layer_shell::Edge::Right, xoffset);
                     }
@@ -159,9 +165,10 @@ mod platform_x11 {
     use crate::window::backend_window_options::Side;
     use crate::window::backend_window_options::X11WindowType;
     use crate::window::window_definition::WindowStacking;
-    use crate::{widgets::window::Window, window_initiator::WindowInitiator};
+    use crate::window_initiator::WindowInitiator;
     use anyhow::{Context, Result};
     use gdk::Monitor;
+    use gtk4::Window;
     use gtk4::gdk;
     use gtk4::{self, prelude::*};
     use x11rb::protocol::xproto::ConnectionExt;
@@ -186,12 +193,14 @@ mod platform_x11 {
             x: i32,
             y: i32,
         ) -> Option<Window> {
+            let window = Window::new();
             let window_type = if window_init.backend_options.x11.wm_ignore {
-                gtk4::WindowType::Popup
-            } else {
-                gtk4::WindowType::Toplevel
-            };
-            let window = Window::new(window_type, x, y);
+                // popup
+                window.set_decorated(false);
+                window.set_modal(true);
+            }; // else: normal, toplevel
+            // window.move_(x, y);
+
             window.set_resizable(window_init.resizable);
             window.set_keep_above(window_init.stacking == WindowStacking::Foreground);
             window.set_keep_below(window_init.stacking == WindowStacking::Background);
@@ -240,7 +249,7 @@ mod platform_x11 {
         ) -> Result<()> {
             let monitor_rect = monitor.geometry();
             let scale_factor = monitor.scale_factor() as u32;
-            let gdk_window = window.window().context("Couldn't get gdk window from gtk window")?;
+            let gdk_window = window.surface().context("Couldn't get gdk window from gtk window")?;
             let win_id = gdk_window
                 .downcast_ref::<gdk4x11::X11Window>()
                 .context("Failed to get x11 window for gtk window")?
