@@ -960,7 +960,7 @@ fn apply_window_position(
 ) -> Result<()> {
     let gdk_window = window.surface().context("Failed to get gdk surface from gtk window")?;
 
-    if let Some(x11_surface) = surface.downcast_ref::<gdk4x11::X11Surface>() {
+    if let Some(x11_surface) = surface.downcast_ref::<gdk4_x11::X11Surface>() {
         window_geometry.size =
             crate::window::window_geometry::Coords::from_pixels(window.default_size());
         let actual_window_rect = get_window_rectangle(window_geometry, monitor_geometry);
@@ -1017,20 +1017,20 @@ fn get_gdk_monitor(identifier: Option<MonitorIdentifier>) -> Result<Monitor> {
     Ok(monitor)
 }
 
-/// Get the name of monitor plug for given monitor number
-/// workaround gdk not providing this information on wayland in regular calls
-/// gdk_screen_get_monitor_plug_name is deprecated but works fine for that case
-fn get_monitor_plug_name(display: &gdk::Display, monitor_num: i32) -> Option<&str> {
-    unsafe {
-        use glib::translate::ToGlibPtr;
-        let plug_name_pointer = gdk_sys::gdk_screen_get_monitor_plug_name(
-            display.default_screen().to_glib_none().0,
-            monitor_num,
-        );
-        use std::ffi::CStr;
-        CStr::from_ptr(plug_name_pointer).to_str().ok()
-    }
-}
+// /// Get the name of monitor plug for given monitor number
+// /// workaround gdk not providing this information on wayland in regular calls
+// /// gdk_screen_get_monitor_plug_name is deprecated but works fine for that case
+// fn get_monitor_plug_name(display: &gdk::Display, monitor_num: i32) -> Option<&str> {
+//     unsafe {
+//         use glib::translate::ToGlibPtr;
+//         let plug_name_pointer = gdk_sys::gdk_screen_get_monitor_plug_name(
+//             display.default_screen().to_glib_none().0,
+//             monitor_num,
+//         );
+//         use std::ffi::CStr;
+//         CStr::from_ptr(plug_name_pointer).to_str().ok()
+//     }
+// }
 
 /// Returns the [Monitor][gdk::Monitor] structure corresponding to the identifer.
 /// Outside of x11, only [MonitorIdentifier::Numeric] is supported
