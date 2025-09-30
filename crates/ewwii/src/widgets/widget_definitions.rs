@@ -7,7 +7,7 @@ use gdk::{ModifierType, NotifyType};
 use gtk4::glib::translate::FromGlib;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
-use gtk4::{EventControllerLegacy, EventControllerMotion, EventControllerScroll, GestureClick};
+use gtk4::{EventControllerLegacy, EventControllerMotion, EventControllerScroll, EventControllerKey, GestureClick};
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
@@ -1081,7 +1081,6 @@ pub(super) fn build_gtk_image(
                         let paintable = frame_pixbuf.to_paintable();
                         image_clone.set_paintable(Some(&paintable));
                     }
-                    glib::Continue(true)
                 });
             }
         } else {
