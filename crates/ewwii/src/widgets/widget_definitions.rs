@@ -2003,11 +2003,11 @@ pub(super) fn resolve_range_attrs(
 ) -> Result<()> {
     let gesture = GestureClick::new();
     
-    gesture.connect_pressed(glib::clone!(@strong is_being_dragged => move |_, _, _, _| {
+    gesture.connect_pressed(glib::clone!(#[strong] is_being_dragged, move |_, _, _, _| {
         *is_being_dragged.borrow_mut() = true;
     }));
 
-    gesture.connect_released(glib::clone!(@strong is_being_dragged => move |_, _, _, _| {
+    gesture.connect_released(glib::clone!(#[strong] is_being_dragged, move |_, _, _, _| {
         *is_being_dragged.borrow_mut() = false;
     }));
 
