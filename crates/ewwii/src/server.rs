@@ -5,7 +5,7 @@ use crate::{
     error_handling_ctx, ipc_server, EwwiiPaths,
 };
 use anyhow::{Context, Result};
-use gtk4::prelude::{ApplicationExt, ApplicationExtManual};
+use gtk4::prelude::{ApplicationExt, ApplicationExtManual, DisplayExt, ListModelExt};
 use std::{
     // cell::RefCell,
     collections::{HashMap, HashSet},
@@ -147,12 +147,15 @@ pub fn initialize_server<B: DisplayBackend>(
 
 fn connect_monitor_added(ui_send: UnboundedSender<DaemonCommand>) {
     let display = gtk4::gdk::Display::default().expect("could not get default display");
-    display.connect_monitor_added({
-        move |_display: &gtk4::gdk::Display, _monitor: &gtk4::gdk::Monitor| {
-            log::info!("New monitor connected, reloading configuration");
+    let monitors = display.monitors();
+    monitors.connect_items_changed(gtk4::glib::clone!(
+        #[strong]
+        ui_send,
+        move |_, _, _, _| {
+            log::info!("Monitor list changed, reloading configuration");
             let _ = reload_config_and_css(&ui_send);
         }
-    });
+    ));
 }
 
 fn reload_config_and_css(ui_send: &UnboundedSender<DaemonCommand>) -> Result<()> {
