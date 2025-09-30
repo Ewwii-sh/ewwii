@@ -7,7 +7,7 @@ use gdk::{ModifierType, NotifyType};
 use gtk4::glib::translate::FromGlib;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
-use gtk4::{EventControllerMotion, EventControllerScroll, GestureClick};
+use gtk4::{EventControllerLegacy, EventControllerMotion, EventControllerScroll, GestureClick};
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
@@ -433,7 +433,10 @@ pub(super) fn build_center_box(
     Ok(gtk_widget)
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Cloneopy, Clone)]
+struct GtkButtonCtrlData {
+    // click
+}
 struct EventBoxCtrlData {
     // hover controller data
     onhover_cmd: String,
@@ -444,6 +447,9 @@ struct EventBoxCtrlData {
     onclick_cmd: String,
     onmiddleclick_cmd: String,
     onrightclick_cmd: String,
+
+    // scroll controoler data
+    onscroll_cmd: String,
 
     // other
     cmd_timeout: Duration,
@@ -460,6 +466,7 @@ pub(super) fn build_event_box(
     let hover_controller = EventControllerMotion::new();
     let gesture_controller = GestureClick::new();
     let scroll_controller = EventControllerScroll::new(gtk4::Orientation::Both, Some(20.0));
+    let legacy_controller = EventControllerLegacy::new();
 
     let drop_text_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
     let drop_uri_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
@@ -471,7 +478,8 @@ pub(super) fn build_event_box(
         hover_cursor: String::new(),
         onclick_cmd: String::new(),
         onmiddleclick_cmd: String::new(),
-        onrightclick_cmd: String::new,
+        onrightclick_cmd: String::new(),
+        onscroll_cmd: String::new(),
         cmd_timeout: Duration::from_millis(200),
     }));
 
@@ -480,6 +488,8 @@ pub(super) fn build_event_box(
         #[weak]
         gtk_widget,
         move |_, x, y| {
+            let controller = controller_data.borrow();
+
             if let Some(gtk_widget) = gtk_widget.upgrade() {
                 gtk_widget.set_state_flags(gtk4::StateFlags::PRELIGHT, false);
 
@@ -490,7 +500,7 @@ pub(super) fn build_event_box(
                     gdk_window.set_cursor(gdk::Cursor::from_name(&display, &hover_cursor).as_ref());
                 }
             }
-            run_command(&controller_data.cmd_timeout, &controller_data.onhover_cmd, &[x, y]);
+            run_command(&controller.cmd_timeout, &controller.onhover_cmd, &[x, y]);
         }
     ));
 
@@ -498,6 +508,8 @@ pub(super) fn build_event_box(
         #[weak]
         gtk_widget,
         move |_| {
+            let controller = controller_data.borrow();
+
             if let Some(gtk_widget) = gtk_widget.upgrade() {
                 gtk_widget.unset_state_flags(gtk4::StateFlags::PRELIGHT);
 
@@ -507,11 +519,7 @@ pub(super) fn build_event_box(
                     gdk_window.set_cursor(None);
                 }
             }
-            run_command(
-                &controller_data.cmd_timeout,
-                &controller_data.onhoverlost_cmd,
-                &[] as &[&str],
-            );
+            run_command(&controller.cmd_timeout, &controller.onhoverlost_cmd, &[] as &[&str]);
         }
     ));
 
@@ -528,11 +536,13 @@ pub(super) fn build_event_box(
 
     // Scroll event handler to run command
     scroll_controller.connect_scroll(move |_, _, dy| {
+        let controller = controller_data.borrow();
+
         if dy != 0.0 {
             // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
             run_command(
-                &controller_data.cmd_timeout,
-                &controller_data.onscroll,
+                &controller.cmd_timeout,
+                &controller.onscroll_cmd,
                 &[if dy < 0.0 { "up" } else { "down" }],
             );
         }
@@ -545,89 +555,68 @@ pub(super) fn build_event_box(
             if let Some(gtk_widget) = gtk_widget.upgrade() {
                 gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
             }
-
-            match id {
-                1 => run_command(
-                    &controller_data.cmd_timeout,
-                    &controller_data.onclick_cmd,
-                    &[] as &[&str],
-                ),
-                2 => run_command(
-                    &controller_data.cmd_timeout,
-                    &controller_data.onmiddleclick_cmd,
-                    &[] as &[&str],
-                ),
-                3 => run_command(
-                    &controller_data.cmd_timeout,
-                    &controller_data.onrightclick_cmd,
-                    &[] as &[&str],
-                ),
-                _ => {}
-            }
         }
     ));
 
-    gesture_controller.connect_unpaired_release(|_, _, _, id, _| match id {
-        1 => {
-            run_command(&controller_data.cmd_timeout, &controller_data.onclick_cmd, &[] as &[&str])
+    legacy_controller.connect_event(|_, event| {
+        if event.event_type() == gtk4::gdk::EventType::ButtonPress {
+            if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
+                let button = button_event.button();
+                let controller = controller_data.borrow();
+                match button {
+                    1 => run_command(
+                        &controller.cmd_timeout,
+                        &controller.onclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    2 => run_command(
+                        &controller.cmd_timeout,
+                        &controller.onmiddleclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    3 => run_command(
+                        &controller.cmd_timeout,
+                        &controller.onrightclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    _ => {}
+                }
+            }
         }
-        2 => run_command(
-            &controller_data.cmd_timeout,
-            &controller_data.onmiddleclick,
-            &[] as &[&str],
-        ),
-        3 => {
-            run_command(&controller_data.cmd_timeout, &controller_data.onrightclick, &[] as &[&str])
-        }
-        _ => {}
+        gtk4::glib::Propagation::Proceed
     });
 
     gtk_widget.add_controller(gesture_controller);
     gtk_widget.add_controller(hover_controller);
     gtk_widget.add_controller(scroll_controller);
+    gtk_widget.add_controller(legacy_controller);
 
-    let apply_props = |props: &Map, widget: &gtk4::Box| -> Result<()> {
+    let apply_props = |props: &Map,
+                       widget: &gtk4::Box,
+                       controller_data: Rc<RefCell<EventBoxCtrlData>>|
+     -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
-        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        controller_data.borrow_mut().cmd_timeout =
+            get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
         // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
         if let Ok(onscroll) = get_string_prop(&props, "onscroll", None) {
-            connect_signal_handler!(widget,);
+            controller_data.borrow_mut().onscroll_cmd = onscroll;
         }
 
         // onhover - event to execute when the user hovers over the widget
         if let Ok(onhover) = get_string_prop(&props, "onhover", None) {
-            connect_signal_handler!(widget, hover_controller.connect_enter(move |_, x, y| {}));
+            controller_data.borrow_mut().onhover_cmd = onhover;
         }
 
         // onhoverlost - event to execute when the user loses hover over the widget
         if let Ok(onhoverlost) = get_string_prop(&props, "onhoverlost", None) {
-            connect_signal_handler!(widget, hover_controller.connect_leave(move |_| {}));
+            controller_data.borrow_mut().onhoverlost_cmd = onhoverlost;
         }
 
         // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
         if let Ok(cursor) = get_string_prop(&props, "cursor", None) {
-            connect_signal_handler!(
-                widget,
-                hover_controller.connect_enter(move |widget, _, _| {
-                    let display = gdk::Display::default();
-                    let gdk_window = widget.window();
-                    if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
-                        gdk_window.set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
-                    }
-                })
-            );
-            connect_signal_handler!(
-                widget,
-                hover_controller.connect_leave(move |widget, _evt| {
-                    if _evt.detail() != NotifyType::Inferior {
-                        let gdk_window = widget.window();
-                        if let Some(gdk_window) = gdk_window {
-                            gdk_window.set_cursor(None);
-                        }
-                    }
-                })
-            );
+            controller_data.borrow_mut().hover_cursor = cursor;
         }
 
         // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
@@ -687,33 +676,27 @@ pub(super) fn build_event_box(
         }
 
         // onclick - command to run when the widget is clicked
-        let onclick = get_string_prop(&props, "onclick", Some(""))?;
+        if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
+            controller_data.borrow_mut().onclick_cmd = onclick;
+        }
         // onmiddleclick - command to run when the widget is middleclicked
-        let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
+        if let Ok(onmiddleclick) = get_string_prop(&props, "onmiddleclick", None) {
+            controller_data.borrow_mut().onmiddleclick_cmd = onmiddleclick;
+        }
         // onrightclick - command to run when the widget is rightclicked
-        let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
-
-        connect_signal_handler!(
-            widget,
-            gesture_controller.connect_released(move |_, evt, _, _| {
-                match evt.button() {
-                    1 => run_command(timeout, &onclick, &[] as &[&str]),
-                    2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
-                    3 => run_command(timeout, &onrightclick, &[] as &[&str]),
-                    _ => {}
-                }
-                glib::Propagation::Proceed
-            })
-        );
+        if let Ok(onrightclick) = get_string_prop(&props, "onrightclick", None) {
+            controller_data.borrow_mut().onrightclick_cmd = onrightclick;
+        }
 
         Ok(())
     };
 
-    apply_props(&props, &gtk_widget)?;
+    apply_props(&props, &gtk_widget, controller_data)?;
 
     let gtk_widget_clone = gtk_widget.clone();
+    let controller_data_clone = controller_data.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone, controller_data_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -733,7 +716,7 @@ pub(super) fn build_event_box(
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
     let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
-    gtk_widget.add(&child_widget);
+    gtk_widget.append(&child_widget);
     child_widget.show();
 
     let id = hash_props_and_type(&props, "EventBox");
@@ -1085,8 +1068,26 @@ pub(super) fn build_gtk_image(
         if path.ends_with(".gif") {
             let pixbuf_animation =
                 gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-            let paintable = pixbuf_animation.to_printable();
+            let iter = animation.iter(None);
+
+            let frame = iter.pixbuf().unwrap();
+            let paintable = frame.to_paintable();
             image.set_paintable(Some(&paintable));
+
+            let image_clone = image.clone();
+            let animation_clone = animation.clone();
+
+            if let Some(delay) = iter.delay_time() {
+                glib::timeout_add_local(Duration::from_millis(delay as u64), move || {
+                    // Advance frame
+                    let has_frame = iter.advance(30_000_000); // microsecond
+                    if let Some(frame_pixbuf) = iter.pixbuf() {
+                        let paintable = frame_pixbuf.to_paintable();
+                        image_clone.set_paintable(Some(&paintable));
+                    }
+                    glib::Continue(true)
+                });
+            }
         } else {
             let pixbuf;
             // populate the pixel buffer
@@ -1156,56 +1157,93 @@ pub(super) fn build_gtk_image(
     Ok(gtk_widget)
 }
 
+#[derive(Copy, Clone)]
+struct GtkButtonCtrlData {
+    // button press
+    onclick_cmd: String,
+    onmiddleclick_cmd: String,
+    onrightclick_cmd: String,
+
+    // command timeout
+    cmd_timeout: Duration,
+}
+
 pub(super) fn build_gtk_button(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Button> {
     let gtk_widget = gtk4::Button::new();
 
+    let controller_data = Rc::new(RefCell::new(GtkButtonCtrlData {
+        onclick_cmd: String::new(),
+        onmiddleclick_cmd: String::new(),
+        onrightclick_cmd: String::new(),
+        cmd_timeout: Duration::from_millis(200),
+    }));
+
     let key_controller = EventControllerKey::new();
-    let mouse_controller = GestureClick::new();
+    let legacy_controller = EventControllerLegacy::new();
 
-    let apply_props = |props: &Map, widget: &gtk4::Button| -> Result<()> {
-        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+    gtk_widget.connect_clicked(move |button, _, _, _| {
+        button.emit_activate();
+    });
 
-        let onclick = get_string_prop(&props, "onclick", Some(""))?;
-        let onmiddleclick = get_string_prop(&props, "onmiddleclick", Some(""))?;
-        let onrightclick = get_string_prop(&props, "onrightclick", Some(""))?;
-
-        // animate button upon right-/middleclick (if gtk theme supports it)
-        // since we do this, we can't use `connect_clicked` as that would always run `onclick` as well
-        connect_signal_handler!(
-            widget,
-            mouse_controller.connect_pressed(move |button, _, _, _| {
-                button.emit_activate();
-            })
-        );
-        let onclick_ = onclick.clone();
-        // mouse click events
-        connect_signal_handler!(
-            widget,
-            mouse_controller.connect_released(move |_, evt, _, _| {
-                match evt.button() {
-                    1 => run_command(timeout, &onclick, &[] as &[&str]),
-                    2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
-                    3 => run_command(timeout, &onrightclick, &[] as &[&str]),
+    legacy_controller.connect_event(|_, event| {
+        if event.event_type() == gtk4::gdk::EventType::ButtonPress {
+            if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
+                let button = button_event.button();
+                let controller = controller_data.borrow();
+                match button {
+                    1 => {
+                        run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str])
+                    }
+                    2 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onmiddleclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    3 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onrightclick_cmd,
+                        &[] as &[&str],
+                    ),
                     _ => {}
                 }
-            })
-        );
-        // keyboard events
-        connect_signal_handler!(
-            widget,
-            key_controller.connect_key_released(move |_, evt| {
-                match evt.scancode() {
-                    // return
-                    36 => run_command(timeout, &onclick_, &[] as &[&str]),
-                    // space
-                    65 => run_command(timeout, &onclick_, &[] as &[&str]),
-                    _ => {}
-                }
-            })
-        );
+            }
+        }
+        gtk4::glib::Propagation::Proceed
+    });
+
+    key_controller.connect_key_released(move |_, code, _, _| {
+        let controller = controller_data.borrow();
+        match code {
+            // return
+            36 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+            // space
+            65 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+            _ => {}
+        }
+    });
+
+    gtk_widget.add_controller(key_controller);
+    gtk_widget.add_controller(key_controller);
+
+    let apply_props = |props: &Map,
+                       widget: &gtk4::Button,
+                       controller_data: Rc<RefCell<GtkButtonCtrlData>>|
+     -> Result<()> {
+        controller_data.borrow_mut().cmd_timeout =
+            get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+
+        if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
+            controller_data.borrow_mut().onclick_cmd = onclick;
+        }
+        if let Ok(onmiddleclick) = get_string_prop(&props, "onmiddleclick", None) {
+            controller_data.borrow_mut().onmiddleclick_cmd = onmiddleclick;
+        }
+        if let Ok(onrightclick) = get_string_prop(&props, "onrightclick", None) {
+            controller_data.borrow_mut().onrightclick_cmd = onrightclick;
+        }
 
         if let Ok(button_label) = get_string_prop(&props, "label", None) {
             widget.set_label(&button_label);
@@ -1214,13 +1252,12 @@ pub(super) fn build_gtk_button(
         Ok(())
     };
 
-    apply_props(&props, &gtk_widget)?;
-
-    gtk_widget.add_controller(key_controller);
+    apply_props(&props, &gtk_widget, controller_data)?;
 
     let gtk_widget_clone = gtk_widget.clone();
+    let controller_data_clone = controller_data.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone, controller_data_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
