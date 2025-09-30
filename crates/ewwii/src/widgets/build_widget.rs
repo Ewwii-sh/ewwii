@@ -1,7 +1,8 @@
 use anyhow::Result;
 use gtk4::gdk::prelude::Cast;
 
-use crate::{config::WindowDefinition, widgets::widget_definitions::*};
+use crate::config::WindowDefinition;
+use crate::widgets::widget_definitions::*;
 
 use rhai_impl::ast::WidgetNode;
 
