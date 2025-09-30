@@ -23,8 +23,8 @@ use crate::{
 };
 use anyhow::{anyhow, bail};
 use gdk::Monitor;
-use gtk4::{gdk, glib};
 use gtk4::Window;
+use gtk4::{gdk, glib};
 use itertools::Itertools;
 use rhai::Dynamic;
 use rhai_impl::ast::WidgetNode;

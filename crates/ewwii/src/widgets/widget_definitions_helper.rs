@@ -8,6 +8,10 @@ pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T]
 where
     T: 'static + std::fmt::Display + Send + Sync + Clone,
 {
+    if cmd.is_empty() {
+        return;
+    }
+
     use wait_timeout::ChildExt;
     let cmd = replace_placeholders(cmd, args);
     std::thread::Builder::new()
