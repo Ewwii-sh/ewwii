@@ -104,9 +104,9 @@ pub fn initialize_server<B: DisplayBackend>(
             phantom: PhantomData,
         };
 
-        if let Some(screen) = gtk4::gdk::Screen::default() {
-            gtk4::StyleContext::add_provider_for_screen(
-                &screen,
+        if let Some(display) = gtk4::gdk::Display::default() {
+            StyleContext::add_provider_for_display(
+                &display,
                 &app.css_provider,
                 gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
             );

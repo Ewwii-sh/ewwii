@@ -260,7 +260,7 @@ mod platform_x11 {
             let scale_factor = monitor.scale_factor() as u32;
             let gdk_window = window.surface().context("Couldn't get gdk window from gtk window")?;
             let win_id = gdk_window
-                .downcast_ref::<gdk4x11::X11Window>()
+                .downcast_ref::<gdk4_x11::X11Window>()
                 .context("Failed to get x11 window for gtk window")?
                 .xid() as u32;
             let strut_def = window_init.backend_options.x11.struts;
