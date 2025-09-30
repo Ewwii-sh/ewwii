@@ -500,7 +500,7 @@ pub(super) fn build_event_box(
                     gdk_window.set_cursor(gdk::Cursor::from_name(&display, &hover_cursor).as_ref());
                 }
             }
-            run_command(&controller.cmd_timeout, &controller.onhover_cmd, &[x, y]);
+            run_command(controller.cmd_timeout, &controller.onhover_cmd, &[x, y]);
         }
     ));
 
@@ -519,7 +519,7 @@ pub(super) fn build_event_box(
                     gdk_window.set_cursor(None);
                 }
             }
-            run_command(&controller.cmd_timeout, &controller.onhoverlost_cmd, &[] as &[&str]);
+            run_command(controller.cmd_timeout, &controller.onhoverlost_cmd, &[] as &[&str]);
         }
     ));
 
@@ -541,7 +541,7 @@ pub(super) fn build_event_box(
         if dy != 0.0 {
             // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
             run_command(
-                &controller.cmd_timeout,
+                controller.cmd_timeout,
                 &controller.onscroll_cmd,
                 &[if dy < 0.0 { "up" } else { "down" }],
             );
@@ -565,17 +565,17 @@ pub(super) fn build_event_box(
                 let controller = controller_data.borrow();
                 match button {
                     1 => run_command(
-                        &controller.cmd_timeout,
+                        controller.cmd_timeout,
                         &controller.onclick_cmd,
                         &[] as &[&str],
                     ),
                     2 => run_command(
-                        &controller.cmd_timeout,
+                        controller.cmd_timeout,
                         &controller.onmiddleclick_cmd,
                         &[] as &[&str],
                     ),
                     3 => run_command(
-                        &controller.cmd_timeout,
+                        controller.cmd_timeout,
                         &controller.onrightclick_cmd,
                         &[] as &[&str],
                     ),
