@@ -1081,7 +1081,10 @@ pub(super) fn build_gtk_image(
                     if let Some(frame_pixbuf) = iter.pixbuf() {
                         let paintable = frame_pixbuf.to_paintable();
                         image_clone.set_paintable(Some(&paintable));
+
                     }
+
+                    glib::ControlFlow::Continue
                 });
             }
         } else {
