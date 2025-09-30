@@ -206,7 +206,7 @@ mod platform_x11 {
 
             let gdk_surface = window.surface()?;
 
-            let x11_surface = gdk_surface.downcast::<X11Surface>().ok()?;
+            let x11_surface = gdk_surface.downcast::<gdk4_x11::X11Surface>().ok()?;
 
             match window_init.stacking {
                 WindowStacking::Foreground => x11_surface.set_keep_above(true),

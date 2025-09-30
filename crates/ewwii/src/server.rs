@@ -82,7 +82,7 @@ pub fn initialize_server<B: DisplayBackend>(
     connect_monitor_added(ui_send.clone());
 
     // initialize all the handlers and tasks running asyncronously
-    let tokio_handle = init_async_part(paths.clone(), ui_send);
+    let tokio_handle = init_async_part(paths.clone(), ui_send.clone());
 
     // allow the GTK main thread to do tokio things
     let _g = tokio_handle.enter();
@@ -105,7 +105,7 @@ pub fn initialize_server<B: DisplayBackend>(
         };
 
         if let Some(display) = gtk4::gdk::Display::default() {
-            StyleContext::add_provider_for_display(
+            gtk4::StyleContext::add_provider_for_display(
                 &display,
                 &app.css_provider,
                 gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
