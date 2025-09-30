@@ -976,7 +976,7 @@ fn apply_window_position(
 }
 
 fn on_screen_changed(window: &Window, _old_screen: Option<&gdk::Screen>) {
-    let visual = gtk4::prelude::GtkWindowExt::screen(window).and_then(|screen| {
+    let visual = window.screen().and_then(|screen| {
         screen.rgba_visual().filter(|_| screen.is_composited()).or_else(|| screen.system_visual())
     });
     window.set_visual(visual.as_ref());
@@ -1002,9 +1002,16 @@ fn get_gdk_monitor(identifier: Option<MonitorIdentifier>) -> Result<Monitor> {
                 format!("{}{}", head, body)
             })?
         }
-        None => display
-            .primary_monitor()
-            .context("Failed to get primary monitor from GTK. Try explicitly specifying the monitor on your window.")?,
+        None => {
+            let monitors = display.monitors();
+            if monitors.n_items() == 0 {
+                anyhow::bail!("No monitors found on the display");
+            }
+
+            monitors.item(0)
+                .and_downcast::<gdk::Monitor>()
+                .context("Failed to get the primary monitor from the list of monitors")?
+        }
     };
     Ok(monitor)
 }
@@ -1030,6 +1037,7 @@ pub fn get_monitor_from_display(
     display: &gdk::Display,
     identifier: &MonitorIdentifier,
 ) -> Option<gdk::Monitor> {
+    let monitors = display.monitors();
     match identifier {
         MonitorIdentifier::List(list) => {
             for ident in list {
@@ -1039,13 +1047,27 @@ pub fn get_monitor_from_display(
             }
             None
         }
-        MonitorIdentifier::Primary => display.primary_monitor(),
-        MonitorIdentifier::Numeric(num) => display.monitor(*num),
+        MonitorIdentifier::Primary => {
+            if monitors.n_items() > 0 {
+                monitors.item(0).and_downcast::<gdk::Monitor>()
+            } else {
+                None
+            }
+        }
+        MonitorIdentifier::Numeric(num) => {
+            if *num < monitors.n_items() as i32 {
+                monitors.item(*num as u32).and_downcast::<gdk::Monitor>()
+            } else {
+                None
+            }
+        }
         MonitorIdentifier::Name(name) => {
-            for m in 0..display.n_monitors() {
-                if let Some(model) = display.monitor(m).and_then(|x| x.model()) {
-                    if model == *name || Some(name.as_str()) == get_monitor_plug_name(display, m) {
-                        return display.monitor(m);
+            for i in 0..monitors.n_items() {
+                if let Some(monitor) = monitors.item(i).and_downcast::<gdk::Monitor>() {
+                    if let Some(model) = monitor.model() {
+                        if model == *name {
+                            return Some(monitor);
+                        }
                     }
                 }
             }
