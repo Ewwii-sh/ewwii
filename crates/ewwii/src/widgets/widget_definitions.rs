@@ -7,7 +7,8 @@ use gdk::{ModifierType, NotifyType};
 use gtk4::glib::translate::FromGlib;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
-use gtk4::{EventControllerLegacy, EventControllerMotion, EventControllerScroll, EventControllerKey, GestureClick};
+use gtk4::{EventControllerLegacy, EventControllerMotion, EventControllerScroll, EventControllerKey, GestureClick, DropTarget};
+use gtk4::glib::Type;
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
@@ -1209,7 +1210,7 @@ pub(super) fn build_gtk_button(
         gtk4::glib::Propagation::Proceed
     });
 
-    key_controller.connect_key_released(move |_, code, _, _| {
+    key_controller.connect_key_released(move |_, _, code, _| {
         let controller = controller_data.borrow();
         match code {
             // return
