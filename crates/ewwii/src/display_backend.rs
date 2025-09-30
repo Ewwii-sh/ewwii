@@ -1,4 +1,5 @@
 use crate::window_initiator::WindowInitiator;
+use gtk4::Window;
 
 use gtk4::gdk;
 
