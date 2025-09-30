@@ -5,10 +5,9 @@ use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use anyhow::{anyhow, bail, Result};
 use gdk::{ModifierType, NotifyType};
 use gtk4::glib::translate::FromGlib;
-use gtk4::prelude::LabelExt;
-use gtk4::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
+use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
-use gtk4::{GestureClick, EventControllerScroll, EventControllerHover};
+use gtk4::{GestureClick, EventControllerScroll, EventControllerMotion};
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
@@ -441,7 +440,7 @@ pub(super) fn build_event_box(
 ) -> Result<gtk4::Box> {
     let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
 
-    let hover_controller = EventControllerHover::new();
+    let hover_controller = EventControllerMotion::new();
     let gesture_controller = GestureClick::new();
     let scroll_controller = EventControllerScroll::new(gtk4::Orientation::Both, Some(20.0));
 
@@ -494,10 +493,8 @@ pub(super) fn build_event_box(
         if let Ok(onhover) = get_string_prop(&props, "onhover", None) {
             connect_signal_handler!(
                 widget,
-                hover_controller.connect_enter(move |_, evt| {
-                    if evt.detail() != NotifyType::Inferior {
-                        run_command(timeout, &onhover, &[evt.position().0, evt.position().1]);
-                    }
+                hover_controller.connect_enter(move |_, x, y| {
+                    run_command(timeout, &onhover, &[x, y]);
                 })
             );
         }
@@ -518,14 +515,12 @@ pub(super) fn build_event_box(
         if let Ok(cursor) = get_string_prop(&props, "cursor", None) {
             connect_signal_handler!(
                 widget,
-                hover_controller.connect_enter(move |widget, _evt| {
-                    if _evt.detail() != NotifyType::Inferior {
-                        let display = gdk::Display::default();
-                        let gdk_window = widget.window();
-                        if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
-                            gdk_window
-                                .set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
-                        }
+                hover_controller.connect_enter(move |widget, _, _| {
+                    let display = gdk::Display::default();
+                    let gdk_window = widget.window();
+                    if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
+                        gdk_window
+                            .set_cursor(gdk::Cursor::from_name(&display, &cursor).as_ref());
                     }
                 })
             );
@@ -628,7 +623,7 @@ pub(super) fn build_event_box(
 
         connect_signal_handler!(
             widget,
-            gesture_controller.connect_released(move |_, evt| {
+            gesture_controller.connect_released(move |_, evt, _, _| {
                 match evt.button() {
                     1 => run_command(timeout, &onclick, &[] as &[&str]),
                     2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
@@ -642,7 +637,7 @@ pub(super) fn build_event_box(
         Ok(())
     };
 
-    gtk_widget.add_controller(&gesture_controller);
+    gtk_widget.add_controller(gesture_controller);
     gtk_widget.add_controller(hover_controller);
     gtk_widget.add_controller(scroll_controller);
 

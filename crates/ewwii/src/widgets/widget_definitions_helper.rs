@@ -1,4 +1,3 @@
-use crate::gtk4::prelude::LabelExt;
 use anyhow::{anyhow, Result};
 use gtk4::pango;
 use rhai::Map;
