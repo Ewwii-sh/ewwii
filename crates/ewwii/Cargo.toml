@@ -11,7 +11,7 @@ edition = "2021"
 
 [features]
 default = ["x11", "wayland"]
-x11 = ["gdkx11", "x11rb"]
+x11 = ["gdk4-x11", "x11rb"]
 wayland = ["gtk4-layer-shell"]
 
 [dependencies]
@@ -19,7 +19,7 @@ shared_utils.workspace = true
 rhai_impl.workspace = true
 
 gtk4-layer-shell = { version = "0.6.3", optional = true }
-gdkx11 = { version = "0.18", optional = true }
+gdk4-x11 = { version = "0.10.1", optional = true }
 x11rb = { version = "0.13.1", features = ["randr"], optional = true }
 
 grass.workspace = true
