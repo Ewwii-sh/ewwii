@@ -125,16 +125,16 @@ mod platform_wayland {
                         AnchorAlignment::END => bottom = true,
                     }
 
-                    window.set_anchor(gtk_layer_shell::Edge::Left, left);
-                    window.set_anchor(gtk_layer_shell::Edge::Right, right);
-                    window.set_anchor(gtk_layer_shell::Edge::Top, top);
-                    window.set_anchor(gtk_layer_shell::Edge::Bottom, bottom);
+                    window.set_anchor(gtk4_layer_shell::Edge::Left, left);
+                    window.set_anchor(gtk4_layer_shell::Edge::Right, right);
+                    window.set_anchor(gtk4_layer_shell::Edge::Top, top);
+                    window.set_anchor(gtk4_layer_shell::Edge::Bottom, bottom);
 
                     let xoffset = geometry.offset.x.pixels_relative_to(monitor.width());
                     let yoffset = geometry.offset.y.pixels_relative_to(monitor.height());
 
                     if left {
-                        window.set_margin(gtk_layer_shell::Edge::Left, xoffset);
+                        window.set_margin(gtk4_layer_shell::Edge::Left, xoffset);
                     } else {
                         window.set_margin(gtk4_layer_shell::Edge::Right, xoffset);
                     }
