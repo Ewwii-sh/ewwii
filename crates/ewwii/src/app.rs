@@ -1,10 +1,10 @@
-use crate::diag_error::DiagError;
 use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
     error_handling_ctx,
     gtk4::prelude::{
-        ContainerExt, CssProviderExt, GtkWindowExt, MonitorExt, StyleContextExt, WidgetExt, ObjectExt, ApplicationExt, CellAreaExt, GskRendererExt
+        ApplicationExt, CellAreaExt, GskRendererExt, GtkWindowExt, MonitorExt, ObjectExt,
+        StyleContextExt, WidgetExt,
     },
     paths::EwwiiPaths,
     widgets::window::Window,
@@ -24,14 +24,11 @@ use crate::{
 };
 use anyhow::{anyhow, bail};
 use gdk::Monitor;
-use glib::ObjectExt;
 use gtk4::{gdk, glib};
 use itertools::Itertools;
-use once_cell::sync::Lazy;
 use rhai::Dynamic;
 use rhai_impl::ast::WidgetNode;
 use serde::{de::Error as SerdeError, Deserialize, Deserializer};
-use shared_utils::Span;
 use std::{
     cell::{Cell, RefCell},
     collections::{HashMap, HashSet},
@@ -953,9 +950,10 @@ fn apply_window_position(
     window: &Window,
 ) -> Result<()> {
     let gdk_window = window.surface().context("Failed to get gdk surface from gtk window")?;
-    
-    if let Some(x11_surface) = surface.downcast_ref::<gdkx11::X11Surface>() {
-        window_geometry.size = crate::window::window_geometry::Coords::from_pixels(window.default_size());
+
+    if let Some(x11_surface) = surface.downcast_ref::<gdk4x11::X11Surface>() {
+        window_geometry.size =
+            crate::window::window_geometry::Coords::from_pixels(window.default_size());
         let actual_window_rect = get_window_rectangle(window_geometry, monitor_geometry);
 
         let (origin_x, origin_y) = x11_surface.position();

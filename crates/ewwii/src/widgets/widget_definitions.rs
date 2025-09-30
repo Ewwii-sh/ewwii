@@ -8,7 +8,7 @@ use gtk4::glib::translate::FromGlib;
 use gtk4::prelude::LabelExt;
 use gtk4::{self, prelude::*, DestDefaults, TargetEntry, TargetList};
 use gtk4::{gdk, glib, pango};
-use gtk4::GestureClick;
+use gtk4::{GestureClick, EventControllerScroll, EventControllerHover};
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
@@ -443,7 +443,7 @@ pub(super) fn build_event_box(
 
     let hover_controller = EventControllerHover::new();
     let gesture_controller = GestureClick::new();
-    let scroll_controller = EventControllerScroll::new(gtk::Orientation::Both, Some(20.0));
+    let scroll_controller = EventControllerScroll::new(gtk4::Orientation::Both, Some(20.0));
 
     // Support :hover selector
     hover_controller.connect_enter(|gtk_widget, evt| {
@@ -466,10 +466,9 @@ pub(super) fn build_event_box(
     gesture_controller.connect_released(|gtk_widget, _, _, _| {
         gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
     });
-    gtk_widget.add_controller(&gesture_controller);
 
     // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
-    let apply_props = |props: &Map, widget: &gtk4::EventBox| -> Result<()> {
+    let apply_props = |props: &Map, widget: &gtk4::Box| -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
         let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
@@ -629,7 +628,7 @@ pub(super) fn build_event_box(
 
         connect_signal_handler!(
             widget,
-            gesture_click.connect_released(move |_, evt| {
+            gesture_controller.connect_released(move |_, evt| {
                 match evt.button() {
                     1 => run_command(timeout, &onclick, &[] as &[&str]),
                     2 => run_command(timeout, &onmiddleclick, &[] as &[&str]),
@@ -643,8 +642,9 @@ pub(super) fn build_event_box(
         Ok(())
     };
 
-    widget.add_controller(hover_controller);
-    widget.add_controller(scroll_controller);
+    gtk_widget.add_controller(&gesture_controller);
+    gtk_widget.add_controller(hover_controller);
+    gtk_widget.add_controller(scroll_controller);
 
     apply_props(&props, &gtk_widget)?;
 
