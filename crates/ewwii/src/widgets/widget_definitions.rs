@@ -433,10 +433,7 @@ pub(super) fn build_center_box(
     Ok(gtk_widget)
 }
 
-#[derive(Copy, Cloneopy, Clone)]
-struct GtkButtonCtrlData {
-    // click
-}
+#[derive(Clone)]
 struct EventBoxCtrlData {
     // hover controller data
     onhover_cmd: String,
@@ -490,16 +487,18 @@ pub(super) fn build_event_box(
         move |_, x, y| {
             let controller = controller_data.borrow();
 
-            if let Some(gtk_widget) = gtk_widget.upgrade() {
-                gtk_widget.set_state_flags(gtk4::StateFlags::PRELIGHT, false);
+            gtk_widget.set_state_flags(gtk4::StateFlags::PRELIGHT, false);
 
-                // set cursor
-                let display = gdk::Display::default();
-                let gdk_window = widget.window();
-                if let (Some(display), Some(gdk_window)) = (display, gdk_window) {
-                    gdk_window.set_cursor(gdk::Cursor::from_name(&display, &hover_cursor).as_ref());
+            // set cursor
+            if let Some(native) = gtk_widget.native() {
+                if let Some(surface) = native.surface() {
+                    // Create a cursor by name. You can supply a fallback cursor too.
+                    if let Some(cursor) = gtk4::gdk::Cursor::from_name(&controller.hover_cursor, None) {
+                        surface.set_cursor(Some(&cursor));
+                    }
                 }
             }
+
             run_command(controller.cmd_timeout, &controller.onhover_cmd, &[x, y]);
         }
     ));
@@ -510,15 +509,16 @@ pub(super) fn build_event_box(
         move |_| {
             let controller = controller_data.borrow();
 
-            if let Some(gtk_widget) = gtk_widget.upgrade() {
-                gtk_widget.unset_state_flags(gtk4::StateFlags::PRELIGHT);
+            gtk_widget.unset_state_flags(gtk4::StateFlags::PRELIGHT);
 
-                // reset cursor
-                let gdk_window = widget.window();
-                if let Some(gdk_window) = gdk_window {
-                    gdk_window.set_cursor(None);
+            // reset cursor
+            if let Some(native) = gtk_widget.native() {
+                if let Some(surface) = native.surface() {
+                    // Reset to default
+                    surface.set_cursor(None);
                 }
             }
+
             run_command(controller.cmd_timeout, &controller.onhoverlost_cmd, &[] as &[&str]);
         }
     ));
@@ -528,9 +528,7 @@ pub(super) fn build_event_box(
         #[weak]
         gtk_widget,
         move |_, bi, x, y| {
-            if let Some(gtk_widget) = gtk_widget.upgrade() {
-                gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
-            }
+            gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
         }
     ));
 
@@ -552,9 +550,7 @@ pub(super) fn build_event_box(
         #[weak]
         gtk_widget,
         move |_, id, _, _| {
-            if let Some(gtk_widget) = gtk_widget.upgrade() {
-                gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
-            }
+            gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
         }
     ));
 
@@ -1157,7 +1153,7 @@ pub(super) fn build_gtk_image(
     Ok(gtk_widget)
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 struct GtkButtonCtrlData {
     // button press
     onclick_cmd: String,
