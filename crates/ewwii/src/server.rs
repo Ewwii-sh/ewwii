@@ -94,7 +94,7 @@ pub fn initialize_server<B: DisplayBackend>(
         let ui_recv = ui_recv.clone();
         let action = action.clone();
         let ui_send_clone = ui_send.clone();
-        
+
         move |gtk_app| {
             let mut app: App<B> = app::App {
                 ewwii_config: ewwii_config.clone(),
@@ -120,7 +120,8 @@ pub fn initialize_server<B: DisplayBackend>(
                 );
             }
 
-            if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir())
+            if let Ok((file_id, css)) =
+                config::scss::parse_scss_from_config(app.paths.get_config_dir())
             {
                 if let Err(e) = app.load_css(file_id, &css) {
                     error_handling_ctx::print_error(e);
@@ -150,7 +151,8 @@ pub fn initialize_server<B: DisplayBackend>(
                     }
                 });
             }
-    }});
+        }
+    });
 
     let exit_status = gtk_app.run();
     log::info!("main application thread finished with exit status: {:#?}", exit_status);

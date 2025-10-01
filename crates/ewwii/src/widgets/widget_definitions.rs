@@ -5,10 +5,14 @@ use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use anyhow::{anyhow, bail, Result};
 use gdk::{ModifierType, NotifyType};
 use gtk4::glib::translate::FromGlib;
+use gtk4::glib::Type;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
-use gtk4::{EventControllerLegacy, EventControllerMotion, EventControllerScroll, EventControllerKey, GestureClick, DropTarget};
-use gtk4::glib::Type;
+use gtk4::{
+    DropTarget, EventControllerKey, EventControllerLegacy, EventControllerMotion,
+    EventControllerScroll, GestureClick, DragSource
+};
+use gtk4::gdk::{DragAction};
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
@@ -449,6 +453,11 @@ struct EventBoxCtrlData {
     // scroll controoler data
     onscroll_cmd: String,
 
+    // drop controller data
+    ondropped_cmd: String,
+    dragvalue: String,
+    dragtype: String,
+
     // other
     cmd_timeout: Duration,
 }
@@ -465,6 +474,7 @@ pub(super) fn build_event_box(
     let gesture_controller = GestureClick::new();
     let scroll_controller = EventControllerScroll::new(gtk4::Orientation::Both);
     let legacy_controller = EventControllerLegacy::new();
+    let drag_source_ctl = DragSource::new();
 
     let drop_text_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
     let drop_uri_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
@@ -478,6 +488,9 @@ pub(super) fn build_event_box(
         onmiddleclick_cmd: String::new(),
         onrightclick_cmd: String::new(),
         onscroll_cmd: String::new(),
+        ondropped_cmd: String::new(),
+        dragvalue: String::new(),
+        dragtype: String::new(),
         cmd_timeout: Duration::from_millis(200),
     }));
 
@@ -485,7 +498,8 @@ pub(super) fn build_event_box(
     hover_controller.connect_enter(glib::clone!(
         #[weak]
         gtk_widget,
-        #[strong] controller_data,
+        #[strong]
+        controller_data,
         move |_, x, y| {
             let controller = controller_data.borrow();
 
@@ -495,7 +509,9 @@ pub(super) fn build_event_box(
             if let Some(native) = gtk_widget.native() {
                 if let Some(surface) = native.surface() {
                     // Create a cursor by name. You can supply a fallback cursor too.
-                    if let Some(cursor) = gtk4::gdk::Cursor::from_name(&controller.hover_cursor, None) {
+                    if let Some(cursor) =
+                        gtk4::gdk::Cursor::from_name(&controller.hover_cursor, None)
+                    {
                         surface.set_cursor(Some(&cursor));
                     }
                 }
@@ -508,7 +524,8 @@ pub(super) fn build_event_box(
     hover_controller.connect_leave(glib::clone!(
         #[weak]
         gtk_widget,
-        #[strong] controller_data,
+        #[strong]
+        controller_data,
         move |_| {
             let controller = controller_data.borrow();
 
@@ -536,27 +553,31 @@ pub(super) fn build_event_box(
     ));
 
     // Scroll event handler to run command
-    scroll_controller.connect_scroll(glib::clone!(#[strong] controller_data, move |_, _, dy| {
-        let controller = controller_data.borrow();
+    scroll_controller.connect_scroll(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_, dx, dy| {
+            let controller = controller_data.borrow();
 
-        if dy != 0.0 {
-            run_command(
-                controller.cmd_timeout,
-                &controller.onscroll_cmd,
-                &[if dy < 0.0 { "up" } else { "down" }],
-            );
+            if dy != 0.0 {
+                run_command(
+                    controller.cmd_timeout,
+                    &controller.onscroll_cmd,
+                    &[if dy < 0.0 { "up" } else { "down" }],
+                );
+            }
+
+            if dx != 0.0 {
+                run_command(
+                    controller.cmd_timeout,
+                    &controller.onscroll_cmd,
+                    &[if dy < 0.0 { "left" } else { "right" }],
+                );
+            }
+
+            glib::Propagation::Proceed
         }
-
-        if dx != 0.0 {
-            run_command(
-                controller.cmd_timeout,
-                &controller.onscroll_cmd,
-                &[if dy < 0.0 { "left" } else { "right" }],
-            );
-        }
-
-        glib::Propagation::Proceed
-    }));
+    ));
 
     gesture_controller.connect_released(glib::clone!(
         #[weak]
@@ -566,38 +587,89 @@ pub(super) fn build_event_box(
         }
     ));
 
-    legacy_controller.connect_event(glib::clone!(#[strong] controller_data, move |_, event| {
-        if event.event_type() == gtk4::gdk::EventType::ButtonPress {
-            if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
-                let button = button_event.button();
-                let controller = controller_data.borrow();
-                match button {
-                    1 => run_command(
-                        controller.cmd_timeout,
-                        &controller.onclick_cmd,
-                        &[] as &[&str],
-                    ),
-                    2 => run_command(
-                        controller.cmd_timeout,
-                        &controller.onmiddleclick_cmd,
-                        &[] as &[&str],
-                    ),
-                    3 => run_command(
-                        controller.cmd_timeout,
-                        &controller.onrightclick_cmd,
-                        &[] as &[&str],
-                    ),
-                    _ => {}
+    legacy_controller.connect_event(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_, event| {
+            if event.event_type() == gtk4::gdk::EventType::ButtonPress {
+                if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
+                    let button = button_event.button();
+                    let controller = controller_data.borrow();
+                    match button {
+                        1 => run_command(
+                            controller.cmd_timeout,
+                            &controller.onclick_cmd,
+                            &[] as &[&str],
+                        ),
+                        2 => run_command(
+                            controller.cmd_timeout,
+                            &controller.onmiddleclick_cmd,
+                            &[] as &[&str],
+                        ),
+                        3 => run_command(
+                            controller.cmd_timeout,
+                            &controller.onrightclick_cmd,
+                            &[] as &[&str],
+                        ),
+                        _ => {}
+                    }
                 }
             }
+            glib::Propagation::Proceed
         }
-        glib::Propagation::Proceed
+    ));
+
+    drop_uri_target.connect_drop(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_target, value, _position| {
+            let controller = controller_data.borrow();
+            if let Some(uris) = value.get::<String>() {
+                if let Some(first_uri) = uris.split_whitespace().next() {
+                    run_command(controller.cmd_timeout, &controller.ondropped_cmd, &[first_uri.to_string(), "file".to_string()]);
+                }
+            }
+            true
+        }
+    ));
+
+    drop_text_target.connect_drop(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_target, value, _position| {
+            let controller = controller_data.borrow();
+            if let Some(text) = value.get::<String>() {
+                run_command(
+                    controller.cmd_timeout,
+                    &controller.ondropped_cmd,
+                    &[text.to_string(), "text".to_string()],
+                );
+            }
+            true
+        }
+    ));
+
+    // drag source settings
+    let drag_source = DragSource::new();
+    drag_source.set_actions(DragAction::COPY | DragAction::MOVE);
+    drag_source.connect_prepare(|_, _| true);
+
+    drag_source.connect_data_get(glib::clone!(#[strong] controller_data, move |_, _, data, _| {
+        let controller = controller_data.borrow();
+
+        match controller.dragtype {
+            DragEntryType::File => data.set_uris(&[&controller.dragvalue]),
+            DragEntryType::Text => data.set_text(&controller.dragvalue),
+        };
     }));
 
     gtk_widget.add_controller(gesture_controller);
     gtk_widget.add_controller(hover_controller);
     gtk_widget.add_controller(scroll_controller);
     gtk_widget.add_controller(legacy_controller);
+    gtk_widget.add_controller(drop_text_target);
+    gtk_widget.add_controller(drop_uri_target);
+    gtk_widget.add_controller(&drag_source_ctl);
 
     let apply_props = |props: &Map,
                        widget: &gtk4::Box,
@@ -629,58 +701,17 @@ pub(super) fn build_event_box(
 
         // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
         if let Ok(ondropped) = get_string_prop(&props, "ondropped", None) {
-            uri_target.connect_drop(glib::clone!(@strong timeout, @strong ondropped => move |_target, value, _position| {
-                if let Some(uris) = value.get::<String>() {
-                    if let Some(first_uri) = uris.split_whitespace().next() {
-                        run_command(timeout, &ondropped, &[first_uri.to_string(), "file".to_string()]);
-                    }
-                }
-                true
-            }));
-
-            text_target.connect_drop(glib::clone!(@strong timeout, @strong ondropped => move |_target, value, _position| {
-                if let Some(text) = value.get::<String>() {
-                    run_command(timeout, &ondropped, &[text.to_string(), "text".to_string()]);
-                }
-                true
-            }));
+            controller_data.borrow_mut().ondropped_cmd = ondropped;
         }
 
         // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
-        let dragtype = get_string_prop(&props, "drag_type", Some("file"))?;
+        if let dragtype = get_string_prop(&props, "drag_type", Some("file")) {
+            controller_data.borrow_mut().dragtype = dragtype;
+        }
 
         // dragvalue - URI that will be provided when dragging from this widget
         if let Ok(dragvalue) = get_string_prop(&props, "dragvalue", None) {
-            let dragtype = parse_dragtype(&dragtype)?;
-            if dragvalue.is_empty() {
-                widget.drag_source_unset();
-            } else {
-                let target_entry = match dragtype {
-                    DragEntryType::File => TargetEntry::new(
-                        "text/uri-list",
-                        gtk4::TargetFlags::OTHER_APP | gtk4::TargetFlags::OTHER_WIDGET,
-                        0,
-                    ),
-                    DragEntryType::Text => TargetEntry::new(
-                        "text/plain",
-                        gtk4::TargetFlags::OTHER_APP | gtk4::TargetFlags::OTHER_WIDGET,
-                        0,
-                    ),
-                };
-                widget.drag_source_set(
-                    ModifierType::BUTTON1_MASK,
-                    &[target_entry.clone()],
-                    gdk::DragAction::COPY | gdk::DragAction::MOVE,
-                );
-                widget.drag_source_set_target_list(Some(&TargetList::new(&[target_entry])));
-            }
-
-            connect_signal_handler!(widget, if !dragvalue.is_empty(), widget.connect_drag_data_get(move |_, _, data, _, _| {
-                match dragtype {
-                    DragEntryType::File => data.set_uris(&[&dragvalue]),
-                    DragEntryType::Text => data.set_text(&dragvalue),
-                };
-            }));
+            controller_data.borrow_mut().dragvalue = dragvalue;
         }
 
         // onclick - command to run when the widget is clicked
@@ -1075,14 +1106,14 @@ pub(super) fn build_gtk_image(
         if path.ends_with(".gif") {
             let pixbuf_animation =
                 gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-            let iter = animation.iter(None);
+            let iter = pixbuf_animation.iter(None);
 
             let frame = iter.pixbuf().unwrap();
             let paintable = frame.to_paintable();
-            image.set_paintable(Some(&paintable));
+            widget.set_paintable(Some(&paintable));
 
-            let image_clone = image.clone();
-            let animation_clone = animation.clone();
+            let image_widget_clone = widget.clone();
+            let animation_clone = pixbuf_animation.clone();
 
             if let Some(delay) = iter.delay_time() {
                 glib::timeout_add_local(Duration::from_millis(delay as u64), move || {
@@ -1090,8 +1121,7 @@ pub(super) fn build_gtk_image(
                     let has_frame = iter.advance(30_000_000); // microsecond
                     if let Some(frame_pixbuf) = iter.pixbuf() {
                         let paintable = frame_pixbuf.to_paintable();
-                        image_clone.set_paintable(Some(&paintable));
-
+                        image_widget_clone.set_paintable(Some(&paintable));
                     }
 
                     glib::ControlFlow::Continue
@@ -1193,46 +1223,60 @@ pub(super) fn build_gtk_button(
     let key_controller = EventControllerKey::new();
     let legacy_controller = EventControllerLegacy::new();
 
-    gtk_widget.connect_clicked(glib::clone!(#[weak] gtk_widget, move |_| {
-        gtk_widget.emit_activate();
-    }));
+    gtk_widget.connect_clicked(glib::clone!(
+        #[weak]
+        gtk_widget,
+        move |_| {
+            gtk_widget.emit_activate();
+        }
+    ));
 
-    legacy_controller.connect_event(glib::clone!(#[strong] controller_data, move |_, event| {
-        if event.event_type() == gtk4::gdk::EventType::ButtonPress {
-            if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
-                let button = button_event.button();
-                let controller = controller_data.borrow();
-                match button {
-                    1 => {
-                        run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str])
+    legacy_controller.connect_event(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_, event| {
+            if event.event_type() == gtk4::gdk::EventType::ButtonPress {
+                if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
+                    let button = button_event.button();
+                    let controller = controller_data.borrow();
+                    match button {
+                        1 => run_command(
+                            controller.cmd_timeout,
+                            &controller.onclick_cmd,
+                            &[] as &[&str],
+                        ),
+                        2 => run_command(
+                            controller.cmd_timeout,
+                            &controller.onmiddleclick_cmd,
+                            &[] as &[&str],
+                        ),
+                        3 => run_command(
+                            controller.cmd_timeout,
+                            &controller.onrightclick_cmd,
+                            &[] as &[&str],
+                        ),
+                        _ => {}
                     }
-                    2 => run_command(
-                        controller.cmd_timeout,
-                        &controller.onmiddleclick_cmd,
-                        &[] as &[&str],
-                    ),
-                    3 => run_command(
-                        controller.cmd_timeout,
-                        &controller.onrightclick_cmd,
-                        &[] as &[&str],
-                    ),
-                    _ => {}
                 }
             }
+            gtk4::glib::Propagation::Proceed
         }
-        gtk4::glib::Propagation::Proceed
-    }));
+    ));
 
-    key_controller.connect_key_released(glib::clone!(#[strong] controller_data, move |_, _, code, _| {
-        let controller = controller_data.borrow();
-        match code {
-            // return
-            36 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
-            // space
-            65 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
-            _ => {}
+    key_controller.connect_key_released(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_, _, code, _| {
+            let controller = controller_data.borrow();
+            match code {
+                // return
+                36 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                // space
+                65 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                _ => {}
+            }
         }
-    }));
+    ));
 
     gtk_widget.add_controller(key_controller);
     gtk_widget.add_controller(legacy_controller);

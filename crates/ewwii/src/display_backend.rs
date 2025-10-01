@@ -240,7 +240,8 @@ mod platform_x11 {
         ) -> Result<()> {
             let monitor_rect = monitor.geometry();
             let scale_factor = monitor.scale_factor() as u32;
-            let gdk_surface = window.surface().context("Couldn't get gdk window from gtk window")?;
+            let gdk_surface =
+                window.surface().context("Couldn't get gdk window from gtk window")?;
             let win_id = gdk_surface
                 .downcast_ref::<gdk4_x11::X11Surface>()
                 .context("Failed to get x11 window for gtk window")?
@@ -336,7 +337,8 @@ mod platform_x11 {
                 self.atoms._NET_WM_STATE,
                 self.atoms.ATOM,
                 &win_states,
-            )?.check()?;
+            )?
+            .check()?;
 
             self.conn.flush().context("Failed to send requests to X server")
         }
