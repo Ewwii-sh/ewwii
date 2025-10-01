@@ -14,7 +14,7 @@ use std::{
     os::unix::io::AsRawFd,
     path::Path,
     // rc::Rc,
-    sync::{atomic::Ordering, Arc},
+    sync::{atomic::Ordering, Arc, Mutex},
 };
 use tokio::sync::mpsc::*;
 
@@ -24,6 +24,9 @@ pub fn initialize_server<B: DisplayBackend>(
     should_daemonize: bool,
 ) -> Result<ForkResult> {
     let (ui_send, mut ui_recv) = tokio::sync::mpsc::unbounded_channel();
+
+    let ui_recv = Arc::new(Mutex::new(Some(ui_recv)));
+    let action = Arc::new(Mutex::new(action));
 
     std::env::set_current_dir(paths.get_config_dir()).with_context(|| {
         format!("Failed to change working directory to {}", paths.get_config_dir().display())
@@ -87,57 +90,67 @@ pub fn initialize_server<B: DisplayBackend>(
     // allow the GTK main thread to do tokio things
     let _g = tokio_handle.enter();
 
-    gtk_app.connect_activate(move |gtk_app| {
-        let mut app: App<B> = app::App {
-            ewwii_config: ewwii_config.clone(),
-            open_windows: HashMap::new(),
-            failed_windows: HashSet::new(),
-            instance_id_to_args: HashMap::new(),
-            css_provider: gtk4::CssProvider::new(),
-            app_evt_send: ui_send.clone(),
-            window_close_timer_abort_senders: HashMap::new(),
-            widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
-            pl_handler_store: None,
-            rt_engine_config: EngineConfValues::default(),
-            paths: paths.clone(),
-            gtk_app: gtk_app.clone(),
-            phantom: PhantomData,
-        };
+    gtk_app.connect_activate({
+        let ui_recv = ui_recv.clone();
+        let action = action.clone();
+        let ui_send_clone = ui_send.clone();
+        
+        move |gtk_app| {
+            let mut app: App<B> = app::App {
+                ewwii_config: ewwii_config.clone(),
+                open_windows: HashMap::new(),
+                failed_windows: HashSet::new(),
+                instance_id_to_args: HashMap::new(),
+                css_provider: gtk4::CssProvider::new(),
+                app_evt_send: ui_send_clone.clone(),
+                window_close_timer_abort_senders: HashMap::new(),
+                widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
+                pl_handler_store: None,
+                rt_engine_config: EngineConfValues::default(),
+                paths: paths.clone(),
+                gtk_app: gtk_app.clone(),
+                phantom: PhantomData,
+            };
 
-        if let Some(display) = gtk4::gdk::Display::default() {
-            gtk4::StyleContext::add_provider_for_display(
-                &display,
-                &app.css_provider,
-                gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
-            );
-        }
-
-        if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir())
-        {
-            if let Err(e) = app.load_css(file_id, &css) {
-                error_handling_ctx::print_error(e);
-            }
-        }
-
-        gtk4::glib::MainContext::default().spawn_local(async move {
-            // if an action was given to the daemon initially, execute it first.
-            if let Some(action) = action {
-                app.handle_command(action).await;
+            if let Some(display) = gtk4::gdk::Display::default() {
+                gtk4::StyleContext::add_provider_for_display(
+                    &display,
+                    &app.css_provider,
+                    gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+                );
             }
 
-            loop {
-                tokio::select! {
-                    // Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
-                    //     app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
-                    // },
-                    Some(ui_event) = ui_recv.recv() => {
-                        app.handle_command(ui_event).await;
-                    }
-                    else => break,
+            if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir())
+            {
+                if let Err(e) = app.load_css(file_id, &css) {
+                    error_handling_ctx::print_error(e);
                 }
             }
-        });
-    });
+
+            if let Some(mut rx) = ui_recv.lock().unwrap().take() {
+                let mut app = app;
+                let action_opt = action.lock().unwrap().take();
+
+                gtk4::glib::MainContext::default().spawn_local(async move {
+                    // if an action was given to the daemon initially, execute it first.
+                    if let Some(action) = action_opt {
+                        app.handle_command(action).await;
+                    }
+
+                    loop {
+                        tokio::select! {
+                            // Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
+                            //     app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
+                            // },
+                            Some(ui_event) = rx.recv() => {
+                                app.handle_command(ui_event).await;
+                            }
+                            else => break,
+                        }
+                    }
+                });
+            }
+    }});
 
     let exit_status = gtk_app.run();
     log::info!("main application thread finished with exit status: {:#?}", exit_status);
