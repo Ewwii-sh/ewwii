@@ -868,8 +868,7 @@ fn initialize_window<B: DisplayBackend>(
 
     window.set_child(Some(&root_widget));
 
-    // i dont think its needed in gtk4
-    // window.realize();
+    gtk4::prelude::WidgetExt::realize(&window);
 
     #[cfg(feature = "x11")]
     if B::IS_X11 {
