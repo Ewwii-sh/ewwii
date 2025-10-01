@@ -114,17 +114,17 @@ impl std::fmt::Debug for EwwiiWindow {
 impl EwwiiWindow {
     /// Close the GTK window and disconnect the destroy event-handler.
     ///
-    /// You need to make sure that the scope get's properly cleaned from the state graph
-    /// and that script-vars get cleaned up properly
+    /// You need to make sure that the window gets propery cleaned from gtk4!
     pub fn close(self) {
         log::info!("Closing gtk window {}", self.name);
-        self.gtk_window.close();
 
         for handler_id_opt in [self.destroy_event_handler_id, self.delete_event_handler_id] {
             if let Some(handler_id) = handler_id_opt {
                 self.gtk_window.disconnect(handler_id);
             }
         }
+
+        self.gtk_window.close();
     }
 }
 
@@ -587,8 +587,6 @@ impl<B: DisplayBackend> App<B> {
                 // This callback is triggered in 2 cases:
                 // - When the monitor of this window gets disconnected
                 // - When the window is closed manually.
-                // We don't distinguish here and assume the window should be reopened once a monitor
-                // becomes available again
                 move |auto_reopen| {
                     let (response_sender, _) = daemon_response::create_pair();
                     let command = DaemonCommand::CloseWindows {
