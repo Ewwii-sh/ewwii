@@ -204,12 +204,6 @@ mod platform_x11 {
 
             window.set_resizable(window_init.resizable);
 
-            match window_init.stacking {
-                WindowStacking::Foreground => window.restack(None, true);,
-                WindowStacking::Background => window.restack(None, false);,
-                _ => {}
-            }
-
             Some(window)
         }
     }
@@ -246,11 +240,12 @@ mod platform_x11 {
         ) -> Result<()> {
             let monitor_rect = monitor.geometry();
             let scale_factor = monitor.scale_factor() as u32;
-            let gdk_window = window.surface().context("Couldn't get gdk window from gtk window")?;
-            let win_id = gdk_window
-                .downcast_ref::<gdk4_x11::X11Window>()
+            let gdk_surface = window.surface().context("Couldn't get gdk window from gtk window")?;
+            let win_id = gdk_surface
+                .downcast_ref::<gdk4_x11::X11Surface>()
                 .context("Failed to get x11 window for gtk window")?
                 .xid() as u32;
+
             let strut_def = window_init.backend_options.x11.struts;
             let root_window_geometry = self.conn.get_geometry(self.root_window)?.reply()?;
 
@@ -323,7 +318,7 @@ mod platform_x11 {
             )?
             .check()?;
 
-            // apply the sticky thingy of the window
+            // apply the stickiness and fg/bg thingy
             let mut win_states = vec![];
             if window_init.backend_options.x11.sticky {
                 win_states.push(self.atoms._NET_WM_STATE_STICKY);
