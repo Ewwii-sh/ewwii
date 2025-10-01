@@ -68,7 +68,7 @@ pub struct WidgetRegistry {
 pub enum PatchGtkWidget<'a> {
     Create(&'a WidgetNode, u64, u64), // node, widget_id, parent_id
     Update(u64, Map),                 // widget_id, props
-    Remove(u64, u64),                 // widget_id, parent_id
+    Remove(u64),                      // widget_id
 }
 
 impl WidgetRegistry {
@@ -89,8 +89,8 @@ impl WidgetRegistry {
                 PatchGtkWidget::Update(widget_id, new_props) => {
                     self.update_props(widget_id, new_props);
                 }
-                PatchGtkWidget::Remove(widget_id, parent_id) => {
-                    self.remove_widget(widget_id, parent_id)
+                PatchGtkWidget::Remove(widget_id) => {
+                    self.remove_widget(widget_id)
                 }
             }
         }
@@ -138,10 +138,6 @@ impl WidgetRegistry {
             if !new_map.contains_key(id) {
                 patch.push(PatchGtkWidget::Remove(
                     *id,
-                    new_info.parent_id.expect(&format!(
-                        "Parent ID must exist. Widget type: {}",
-                        &new_info.widget_type
-                    )),
                 ));
             }
         }
@@ -157,35 +153,50 @@ impl WidgetRegistry {
     ) -> Result<()> {
         log::trace!("Creating '{}'", widget_id);
         if let Some(parent) = self.widgets.get(&parent_id) {
-            let parent_widget = parent.widget.clone();
+            let parent_widget = &parent.widget.clone();
 
-            if let Some(container) = parent_widget.dynamic_cast::<gtk4::Container>().ok() {
-                // check if the widget already exists
-                let position = self.widgets.get(&widget_id).and_then(|old_entry| {
-                    container.children().iter().position(|w| w == &old_entry.widget)
-                });
+            // find old siblings if the widget already exists
+            let (prev_sibling, next_sibling) = if let Some(old_entry) = self.widgets.get(&widget_id) {
+                (
+                    old_entry.widget.prev_sibling(),
+                    old_entry.widget.next_sibling(),
+                )
+            } else {
+                (None, None)
+            };
 
+            // check if widget already exists
+            if let Some(old_entry) = self.widgets.get(&widget_id) {
                 // obliterate that widget....
                 // how dare it try to create duplication...
-                if let Some(old_entry) = self.widgets.get(&widget_id) {
-                    container.remove(&old_entry.widget);
-                }
+                old_entry.widget.unparent();
+            }
 
-                // `build_gtk_widget` also inserts info into widgetentry
-                // self is passed for that reason.
-                let gtk_widget = build_gtk_widget(&WidgetInput::BorrowedNode(widget_node), self)?;
+            // build_gtk_widget also inserts info into widgetentry
+            // self is passed for that reason.
+            let gtk_widget = build_gtk_widget(&WidgetInput::BorrowedNode(widget_node), self)?;
 
-                // insert into container
-                if let Some(box_container) = container.clone().dynamic_cast::<gtk4::Box>().ok() {
-                    box_container.add(&gtk_widget);
+            // insert into container if it's a Box
+            if let Ok(box_container) = parent_widget.clone().dynamic_cast::<gtk4::Box>() {
+                box_container.append(&gtk_widget);
 
-                    if let Some(pos) = position {
-                        log::trace!("Reordering contents of gtk4::Box. Position: '{}'", pos);
-                        box_container.reorder_child(&gtk_widget, pos as i32);
-                    }
-                } else {
-                    container.add(&gtk_widget);
-                }
+                // reordering widgets
+                if let Some(prev) = prev_sibling {
+                    box_container.reorder_child_after(&gtk_widget, Some(&prev));
+                } else if let Some(next) = next_sibling {
+                    // move before next sibling: reorder after its prev (None if first)
+                    let next_prev = next.prev_sibling();
+                    box_container.reorder_child_after(&gtk_widget, next_prev.as_ref());
+                } // else: only child, already appended, do nothing
+            } else if let Ok(overlay) = parent_widget.clone().dynamic_cast::<gtk4::Overlay>() {
+                // TODO: Handle changing main widget
+                overlay.add_overlay(&gtk_widget);
+            } else {
+                // fallback: 
+                // 
+                // Assumes that every other container like widget
+                // expects only one singular child.
+                gtk_widget.set_parent(parent_widget);
             }
         }
 
@@ -198,16 +209,10 @@ impl WidgetRegistry {
         }
     }
 
-    pub fn remove_widget(&mut self, widget_id: u64, parent_id: u64) {
-        log::trace!("Removing '{}' from '{}'", widget_id, parent_id);
+    pub fn remove_widget(&mut self, widget_id: u64) {
+        log::trace!("Removing '{}'", widget_id);
         if let Some(entry) = self.widgets.remove(&widget_id) {
-            if let Some(parent) = self.widgets.get(&parent_id) {
-                let parent_widget = parent.widget.clone();
-
-                if let Some(container) = parent_widget.dynamic_cast::<gtk4::Container>().ok() {
-                    container.remove(&entry.widget);
-                }
-            }
+            entry.widget.unparent();
         }
     }
 }
