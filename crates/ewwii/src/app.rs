@@ -4,7 +4,7 @@ use crate::{
     error_handling_ctx,
     gtk4::prelude::{
         ApplicationExt, Cast, CastNone, CellAreaExt, DisplayExt, GskRendererExt, GtkWindowExt,
-        ListModelExt, MonitorExt, ObjectExt, StyleContextExt, WidgetExt,
+        ListModelExt, MonitorExt, NativeExt, ObjectExt, StyleContextExt, WidgetExt,
     },
     paths::EwwiiPaths,
     // dynval::DynVal,
@@ -875,7 +875,10 @@ fn initialize_window<B: DisplayBackend>(
     #[cfg(feature = "x11")]
     if B::IS_X11 {
         if let Some(geometry) = window_init.geometry {
-            let _ = apply_window_position(geometry, monitor_geometry, &window);
+            let (conn, screen_num) = x11rb::rust_connection::RustConnection::connect(None)?;
+            let x11_conn = Rc::new(conn);
+
+            let _ = apply_window_position(x11_conn.clone(), geometry, monitor_geometry, &window);
             if window_init.backend_options.x11.window_type
                 != crate::window::backend_window_options::X11WindowType::Normal
             {
@@ -889,7 +892,12 @@ fn initialize_window<B: DisplayBackend>(
                         let mut last = last_pos.borrow_mut();
                         if Some((current_origin.1, current_origin.2)) != *last {
                             *last = Some((current_origin.1, current_origin.2));
-                            let _ = apply_window_position(geometry, monitor_geometry, window);
+                            let _ = apply_window_position(
+                                x11_conn.clone(),
+                                geometry,
+                                monitor_geometry,
+                                window,
+                            );
                         }
 
                         false
@@ -955,22 +963,28 @@ fn get_opt_level_from(n: u8) -> rhai::OptimizationLevel {
 /// Apply the provided window-positioning rules to the window.
 #[cfg(feature = "x11")]
 fn apply_window_position(
+    conn: Rc<x11rb::rust_connection::RustConnection>,
     mut window_geometry: WindowGeometry,
     monitor_geometry: gdk::Rectangle,
     window: &Window,
 ) -> Result<()> {
-    let gdk_window = window.surface().context("Failed to get gdk surface from gtk window")?;
+    use x11rb::connection::Connection;
+    use x11rb::protocol::xproto::{ConfigureWindowAux, ConnectionExt, Window as XWindow};
 
-    if let Some(x11_surface) = gdk_window.downcast_ref::<gdk4_x11::X11Surface>() {
+    let gdk_surface = window.surface().context("Failed to get gdk surface from gtk window")?;
+
+    if let Some(x11_surface) = gdk_surface.downcast_ref::<gdk4_x11::X11Surface>() {
         window_geometry.size =
             crate::window::window_geometry::Coords::from_pixels(window.default_size());
         let actual_window_rect = get_window_rectangle(window_geometry, monitor_geometry);
 
-        let (origin_x, origin_y) = x11_surface.position();
+        let xid = x11_surface.xid();
 
-        if actual_window_rect.x() != origin_x || actual_window_rect.y() != origin_y {
-            x11_surface.move_(actual_window_rect.x(), actual_window_rect.y());
-        }
+        let aux = ConfigureWindowAux::new()
+            .x(actual_window_rect.x() as i32)
+            .y(actual_window_rect.y() as i32);
+
+        conn.configure_window(xid as XWindow, &aux)?;
     }
 
     Ok(())
