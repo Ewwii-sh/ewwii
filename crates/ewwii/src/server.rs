@@ -25,9 +25,6 @@ pub fn initialize_server<B: DisplayBackend>(
 ) -> Result<ForkResult> {
     let (ui_send, mut ui_recv) = tokio::sync::mpsc::unbounded_channel();
 
-    let ui_recv = Arc::new(Mutex::new(Some(ui_recv)));
-    let action = Arc::new(Mutex::new(action));
-
     std::env::set_current_dir(paths.get_config_dir()).with_context(|| {
         format!("Failed to change working directory to {}", paths.get_config_dir().display())
     })?;
@@ -80,97 +77,83 @@ pub fn initialize_server<B: DisplayBackend>(
         std::env::set_var("GDK_BACKEND", "wayland")
     }
 
-    let gtk_app = gtk4::Application::builder().application_id("com.widgetsystem.ewwii").build();
+    gtk4::init()?;
+
+    let main_loop = gtk4::glib::MainLoop::new(None, false);
+
+    let mut app: App<B> = app::App {
+        ewwii_config,
+        open_windows: HashMap::new(),
+        failed_windows: HashSet::new(),
+        instance_id_to_args: HashMap::new(),
+        css_provider: gtk4::CssProvider::new(),
+        app_evt_send: ui_send.clone(),
+        window_close_timer_abort_senders: HashMap::new(),
+        widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
+        pl_handler_store: None,
+        rt_engine_config: EngineConfValues::default(),
+        paths,
+        gtk_main_loop: main_loop.clone(),
+        phantom: PhantomData,
+    };
+
+    if let Some(display) = gtk4::gdk::Display::default() {
+        gtk4::style_context_add_provider_for_display(
+            &display,
+            &app.css_provider,
+            gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
+    }
+
+    if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
+        if let Err(e) = app.load_css(file_id, &css) {
+            error_handling_ctx::print_error(e);
+        }
+    }
 
     connect_monitor_added(ui_send.clone());
 
     // initialize all the handlers and tasks running asyncronously
-    let tokio_handle = init_async_part(paths.clone(), ui_send.clone());
+    let tokio_handle = init_async_part(app.paths.clone(), ui_send);
 
-    // allow the GTK main thread to do tokio things
-    let _g = tokio_handle.enter();
+    gtk4::glib::MainContext::default().spawn_local(async move {
+        // if an action was given to the daemon initially, execute it first.
+        if let Some(action) = action {
+            app.handle_command(action).await;
+        }
 
-    gtk_app.connect_activate({
-        let ui_recv = ui_recv.clone();
-        let action = action.clone();
-        let ui_send_clone = ui_send.clone();
-
-        move |gtk_app| {
-            let mut app: App<B> = app::App {
-                ewwii_config: ewwii_config.clone(),
-                open_windows: HashMap::new(),
-                failed_windows: HashSet::new(),
-                instance_id_to_args: HashMap::new(),
-                css_provider: gtk4::CssProvider::new(),
-                app_evt_send: ui_send_clone.clone(),
-                window_close_timer_abort_senders: HashMap::new(),
-                widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
-                pl_handler_store: None,
-                rt_engine_config: EngineConfValues::default(),
-                paths: paths.clone(),
-                gtk_app: gtk_app.clone(),
-                phantom: PhantomData,
-            };
-
-            if let Some(display) = gtk4::gdk::Display::default() {
-                gtk4::style_context_add_provider_for_display(
-                    &display,
-                    &app.css_provider,
-                    gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
-                );
-            }
-
-            if let Ok((file_id, css)) =
-                config::scss::parse_scss_from_config(app.paths.get_config_dir())
-            {
-                if let Err(e) = app.load_css(file_id, &css) {
-                    error_handling_ctx::print_error(e);
+        loop {
+            tokio::select! {
+                // Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
+                //     app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
+                // },
+                Some(ui_event) = ui_recv.recv() => {
+                    app.handle_command(ui_event).await;
                 }
-            }
-
-            if let Some(mut rx) = ui_recv.lock().unwrap().take() {
-                let mut app = app;
-                let action_opt = action.lock().unwrap().take();
-
-                gtk4::glib::MainContext::default().spawn_local(async move {
-                    // if an action was given to the daemon initially, execute it first.
-                    if let Some(action) = action_opt {
-                        app.handle_command(action).await;
-                    }
-
-                    loop {
-                        tokio::select! {
-                            // Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
-                            //     app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
-                            // },
-                            Some(ui_event) = rx.recv() => {
-                                app.handle_command(ui_event).await;
-                            }
-                            else => break,
-                        }
-                    }
-                });
+                else => break,
             }
         }
     });
 
-    let exit_status = gtk_app.run();
-    log::info!("main application thread finished with exit status: {:#?}", exit_status);
+    // allow the GTK main thread to do tokio things
+    let _g = tokio_handle.enter();
+
+    main_loop.run();
+    log::info!("main application thread finished");
 
     Ok(ForkResult::Child)
 }
 
 fn connect_monitor_added(ui_send: UnboundedSender<DaemonCommand>) {
-    let display = gtk4::gdk::Display::default().expect("could not get default display");
-    let monitors = display.monitors();
-    monitors.connect_items_changed(gtk4::glib::clone!(
-        #[strong]
-        ui_send,
-        move |_, _, _, _| {
-            log::info!("Monitor list changed, reloading configuration");
+    if let Some(display) = gtk4::gdk::Display::default() {
+        let monitors = display.monitors();
+
+        monitors.connect_items_changed(gtk4::glib::clone!(#[strong] ui_send, move |_, _, _, _| {
             let _ = reload_config_and_css(&ui_send);
-        }
-    ));
+        }));
+    } else {
+        log::warn!("Cannot access GDK Display on this session (likely Wayland)");
+    }
 }
 
 fn reload_config_and_css(ui_send: &UnboundedSender<DaemonCommand>) -> Result<()> {

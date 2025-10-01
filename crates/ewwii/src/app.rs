@@ -156,7 +156,7 @@ pub struct App<B: DisplayBackend> {
     pub rt_engine_config: EngineConfValues,
 
     pub paths: EwwiiPaths,
-    pub gtk_app: gtk4::Application,
+    pub gtk_main_loop: gtk4::glib::MainLoop,
     pub phantom: PhantomData<B>,
 }
 
@@ -371,7 +371,7 @@ impl<B: DisplayBackend> App<B> {
         for (_, window) in self.open_windows.drain() {
             window.close();
         }
-        self.gtk_app.quit();
+        self.gtk_main_loop.quit();
         let _ = crate::application_lifecycle::send_exit();
     }
 
