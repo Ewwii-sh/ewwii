@@ -38,7 +38,7 @@ impl DisplayBackend for NoBackend {
     ) -> Option<Window> {
         // top level
         let window = Window::new();
-        
+
         // window.move_(x, y);
 
         Some(window)
