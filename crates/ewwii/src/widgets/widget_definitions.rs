@@ -241,7 +241,7 @@ pub(super) fn build_gtk_box(
 
     for child in children {
         let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
-        gtk_widget.add(&child_widget);
+        gtk_widget.append(&child_widget);
     }
 
     let gtk_widget_clone = gtk_widget.clone();
@@ -336,7 +336,7 @@ pub(super) fn build_tooltip(
 
     // The visible child immediately
     let content_widget = build_gtk_widget(&WidgetInput::Node(content_node), widget_registry)?;
-    gtk_widget.add(&content_widget);
+    gtk_widget.append(&content_widget);
 
     let tooltip_node = Rc::new(tooltip_node);
     let tooltip_widget = build_gtk_widget(
@@ -463,7 +463,7 @@ pub(super) fn build_event_box(
     // controllers
     let hover_controller = EventControllerMotion::new();
     let gesture_controller = GestureClick::new();
-    let scroll_controller = EventControllerScroll::new(gtk4::Orientation::Both, Some(20.0));
+    let scroll_controller = EventControllerScroll::new(gtk4::Orientation::Both);
     let legacy_controller = EventControllerLegacy::new();
 
     let drop_text_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
@@ -485,6 +485,7 @@ pub(super) fn build_event_box(
     hover_controller.connect_enter(glib::clone!(
         #[weak]
         gtk_widget,
+        #[strong] controller_data,
         move |_, x, y| {
             let controller = controller_data.borrow();
 
@@ -507,6 +508,7 @@ pub(super) fn build_event_box(
     hover_controller.connect_leave(glib::clone!(
         #[weak]
         gtk_widget,
+        #[strong] controller_data,
         move |_| {
             let controller = controller_data.borrow();
 
@@ -534,18 +536,27 @@ pub(super) fn build_event_box(
     ));
 
     // Scroll event handler to run command
-    scroll_controller.connect_scroll(move |_, _, dy| {
+    scroll_controller.connect_scroll(glib::clone!(#[strong] controller_data, move |_, _, dy| {
         let controller = controller_data.borrow();
 
         if dy != 0.0 {
-            // Ignore the first event https://bugzilla.gnome.org/show_bug.cgi?id=675959
             run_command(
                 controller.cmd_timeout,
                 &controller.onscroll_cmd,
                 &[if dy < 0.0 { "up" } else { "down" }],
             );
         }
-    });
+
+        if dx != 0.0 {
+            run_command(
+                controller.cmd_timeout,
+                &controller.onscroll_cmd,
+                &[if dy < 0.0 { "left" } else { "right" }],
+            );
+        }
+
+        glib::Propagation::Proceed
+    }));
 
     gesture_controller.connect_released(glib::clone!(
         #[weak]
@@ -555,7 +566,7 @@ pub(super) fn build_event_box(
         }
     ));
 
-    legacy_controller.connect_event(|_, event| {
+    legacy_controller.connect_event(glib::clone!(#[strong] controller_data, move |_, event| {
         if event.event_type() == gtk4::gdk::EventType::ButtonPress {
             if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
                 let button = button_event.button();
@@ -580,8 +591,8 @@ pub(super) fn build_event_box(
                 }
             }
         }
-        gtk4::glib::Propagation::Proceed
-    });
+        glib::Propagation::Proceed
+    }));
 
     gtk_widget.add_controller(gesture_controller);
     gtk_widget.add_controller(hover_controller);
@@ -688,12 +699,11 @@ pub(super) fn build_event_box(
         Ok(())
     };
 
-    apply_props(&props, &gtk_widget, controller_data)?;
+    apply_props(&props, &gtk_widget, controller_data.clone())?;
 
     let gtk_widget_clone = gtk_widget.clone();
-    let controller_data_clone = controller_data.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &gtk_widget_clone, controller_data_clone);
+        let _ = apply_props(props, &gtk_widget_clone, controller_data.clone());
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -1183,11 +1193,11 @@ pub(super) fn build_gtk_button(
     let key_controller = EventControllerKey::new();
     let legacy_controller = EventControllerLegacy::new();
 
-    gtk_widget.connect_clicked(move |button, _, _, _| {
-        button.emit_activate();
-    });
+    gtk_widget.connect_clicked(glib::clone!(#[weak] gtk_widget, move |_| {
+        gtk_widget.emit_activate();
+    }));
 
-    legacy_controller.connect_event(|_, event| {
+    legacy_controller.connect_event(glib::clone!(#[strong] controller_data, move |_, event| {
         if event.event_type() == gtk4::gdk::EventType::ButtonPress {
             if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
                 let button = button_event.button();
@@ -1211,9 +1221,9 @@ pub(super) fn build_gtk_button(
             }
         }
         gtk4::glib::Propagation::Proceed
-    });
+    }));
 
-    key_controller.connect_key_released(move |_, _, code, _| {
+    key_controller.connect_key_released(glib::clone!(#[strong] controller_data, move |_, _, code, _| {
         let controller = controller_data.borrow();
         match code {
             // return
@@ -1222,10 +1232,10 @@ pub(super) fn build_gtk_button(
             65 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
             _ => {}
         }
-    });
+    }));
 
     gtk_widget.add_controller(key_controller);
-    gtk_widget.add_controller(key_controller);
+    gtk_widget.add_controller(legacy_controller);
 
     let apply_props = |props: &Map,
                        widget: &gtk4::Button,
@@ -1251,12 +1261,11 @@ pub(super) fn build_gtk_button(
         Ok(())
     };
 
-    apply_props(&props, &gtk_widget, controller_data)?;
+    apply_props(&props, &gtk_widget, controller_data.clone())?;
 
     let gtk_widget_clone = gtk_widget.clone();
-    let controller_data_clone = controller_data.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &gtk_widget_clone, controller_data_clone);
+        let _ = apply_props(props, &gtk_widget_clone, controller_data.clone());
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -1621,7 +1630,7 @@ pub(super) fn build_gtk_expander(
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
     let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
-    expander.set_child(Some(&child_widget));
+    gtk_widget.set_child(Some(&child_widget));
     child_widget.show();
 
     let apply_props = |props: &Map, widget: &gtk4::Expander| -> Result<()> {

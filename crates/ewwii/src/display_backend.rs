@@ -204,25 +204,12 @@ mod platform_x11 {
 
             window.set_resizable(window_init.resizable);
 
-            let gdk_surface = window.surface()?;
-
-            let x11_surface = gdk_surface.downcast::<gdk4_x11::X11Surface>().ok()?;
-
             match window_init.stacking {
-                WindowStacking::Foreground => x11_surface.set_keep_above(true),
-                WindowStacking::Background => x11_surface.set_keep_below(true),
+                WindowStacking::Foreground => window.restack(None, true);,
+                WindowStacking::Background => window.restack(None, false);,
                 _ => {}
             }
 
-            if let Some(gdk_x11_window) =
-                gtk_window.window().and_then(|w| w.downcast::<gdk4_x11::X11Window>().ok())
-            {
-                if window_init.backend_options.x11.sticky {
-                    gdk_x11_window.stick();
-                } else {
-                    gdk_x11_window.unstick();
-                }
-            }
             Some(window)
         }
     }
@@ -335,6 +322,26 @@ mod platform_x11 {
                 }],
             )?
             .check()?;
+
+            // apply the sticky thingy of the window
+            let mut win_states = vec![];
+            if window_init.backend_options.x11.sticky {
+                win_states.push(self.atoms._NET_WM_STATE_STICKY);
+            }
+            if matches!(window_init.stacking, WindowStacking::Foreground) {
+                win_states.push(self.atoms._NET_WM_STATE_ABOVE);
+            } else if matches!(window_init.stacking, WindowStacking::Background) {
+                win_states.push(self.atoms._NET_WM_STATE_BELOW);
+            }
+
+            x11rb::wrapper::ConnectionExt::change_property32(
+                &self.conn,
+                PropMode::REPLACE,
+                win_id,
+                self.atoms._NET_WM_STATE,
+                self.atoms.ATOM,
+                &win_states,
+            )?.check()?;
 
             self.conn.flush().context("Failed to send requests to X server")
         }
