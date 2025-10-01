@@ -4,15 +4,15 @@ use crate::util;
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use anyhow::{anyhow, bail, Result};
 use gdk::{ModifierType, NotifyType};
+use gtk4::gdk::DragAction;
 use gtk4::glib::translate::FromGlib;
 use gtk4::glib::Type;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
 use gtk4::{
-    DropTarget, EventControllerKey, EventControllerLegacy, EventControllerMotion,
-    EventControllerScroll, GestureClick, DragSource
+    DragSource, DropTarget, EventControllerKey, EventControllerLegacy, EventControllerMotion,
+    EventControllerScroll, GestureClick,
 };
-use gtk4::gdk::{DragAction};
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 
@@ -438,7 +438,6 @@ pub(super) fn build_center_box(
     Ok(gtk_widget)
 }
 
-#[derive(Clone)]
 struct EventBoxCtrlData {
     // hover controller data
     onhover_cmd: String,
@@ -456,7 +455,7 @@ struct EventBoxCtrlData {
     // drop controller data
     ondropped_cmd: String,
     dragvalue: String,
-    dragtype: String,
+    dragtype: DragEntryType,
 
     // other
     cmd_timeout: Duration,
@@ -472,7 +471,7 @@ pub(super) fn build_event_box(
     // controllers
     let hover_controller = EventControllerMotion::new();
     let gesture_controller = GestureClick::new();
-    let scroll_controller = EventControllerScroll::new(gtk4::Orientation::Both);
+    let scroll_controller = EventControllerScroll::new(gtk4::EventControllerScrollFlags::BOTH_AXES);
     let legacy_controller = EventControllerLegacy::new();
     let drag_source_ctl = DragSource::new();
 
@@ -490,7 +489,7 @@ pub(super) fn build_event_box(
         onscroll_cmd: String::new(),
         ondropped_cmd: String::new(),
         dragvalue: String::new(),
-        dragtype: String::new(),
+        dragtype: DragEntryType::File,
         cmd_timeout: Duration::from_millis(200),
     }));
 
@@ -547,7 +546,7 @@ pub(super) fn build_event_box(
     gesture_controller.connect_pressed(glib::clone!(
         #[weak]
         gtk_widget,
-        move |_, bi, x, y| {
+        move |_, _, _, _| {
             gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
         }
     ));
@@ -582,7 +581,7 @@ pub(super) fn build_event_box(
     gesture_controller.connect_released(glib::clone!(
         #[weak]
         gtk_widget,
-        move |_, id, _, _| {
+        move |_, _, _, _| {
             gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
         }
     ));
@@ -622,11 +621,15 @@ pub(super) fn build_event_box(
     drop_uri_target.connect_drop(glib::clone!(
         #[strong]
         controller_data,
-        move |_target, value, _position| {
+        move |_, value, _, _| {
             let controller = controller_data.borrow();
-            if let Some(uris) = value.get::<String>() {
+            if let Ok(uris) = value.get::<String>() {
                 if let Some(first_uri) = uris.split_whitespace().next() {
-                    run_command(controller.cmd_timeout, &controller.ondropped_cmd, &[first_uri.to_string(), "file".to_string()]);
+                    run_command(
+                        controller.cmd_timeout,
+                        &controller.ondropped_cmd,
+                        &[first_uri.to_string(), "file".to_string()],
+                    );
                 }
             }
             true
@@ -636,9 +639,9 @@ pub(super) fn build_event_box(
     drop_text_target.connect_drop(glib::clone!(
         #[strong]
         controller_data,
-        move |_target, value, _position| {
+        move |_, value, _, _| {
             let controller = controller_data.borrow();
-            if let Some(text) = value.get::<String>() {
+            if let Ok(text) = value.get::<String>() {
                 run_command(
                     controller.cmd_timeout,
                     &controller.ondropped_cmd,
@@ -652,16 +655,23 @@ pub(super) fn build_event_box(
     // drag source settings
     let drag_source = DragSource::new();
     drag_source.set_actions(DragAction::COPY | DragAction::MOVE);
-    drag_source.connect_prepare(|_, _| true);
 
-    drag_source.connect_data_get(glib::clone!(#[strong] controller_data, move |_, _, data, _| {
-        let controller = controller_data.borrow();
+    drag_source.connect_prepare(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_, _, _| {
+            let controller = controller_data.borrow();
 
-        match controller.dragtype {
-            DragEntryType::File => data.set_uris(&[&controller.dragvalue]),
-            DragEntryType::Text => data.set_text(&controller.dragvalue),
-        };
-    }));
+            match controller.dragtype {
+                DragEntryType::File => Some(gdk::ContentProvider::for_value(&glib::Value::from(
+                    &[controller.dragvalue.as_str()][..],
+                ))),
+                DragEntryType::Text => {
+                    Some(gdk::ContentProvider::for_value(&glib::Value::from(&controller.dragvalue)))
+                }
+            }
+        }
+    ));
 
     gtk_widget.add_controller(gesture_controller);
     gtk_widget.add_controller(hover_controller);
@@ -669,7 +679,7 @@ pub(super) fn build_event_box(
     gtk_widget.add_controller(legacy_controller);
     gtk_widget.add_controller(drop_text_target);
     gtk_widget.add_controller(drop_uri_target);
-    gtk_widget.add_controller(&drag_source_ctl);
+    gtk_widget.add_controller(drag_source_ctl);
 
     let apply_props = |props: &Map,
                        widget: &gtk4::Box,
@@ -705,8 +715,8 @@ pub(super) fn build_event_box(
         }
 
         // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
-        if let dragtype = get_string_prop(&props, "drag_type", Some("file")) {
-            controller_data.borrow_mut().dragtype = dragtype;
+        if let Ok(dragtype) = get_string_prop(&props, "drag_type", Some("file")) {
+            controller_data.borrow_mut().dragtype = parse_dragtype(&dragtype)?;
         }
 
         // dragvalue - URI that will be provided when dragging from this widget
@@ -1108,21 +1118,16 @@ pub(super) fn build_gtk_image(
                 gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
             let iter = pixbuf_animation.iter(None);
 
-            let frame = iter.pixbuf().unwrap();
-            let paintable = frame.to_paintable();
-            widget.set_paintable(Some(&paintable));
+            let frame_pixbuf = iter.pixbuf();
+            widget.set_from_pixbuf(Some(&frame_pixbuf));
 
-            let image_widget_clone = widget.clone();
+            let widget_clone = widget.clone();
             let animation_clone = pixbuf_animation.clone();
 
             if let Some(delay) = iter.delay_time() {
-                glib::timeout_add_local(Duration::from_millis(delay as u64), move || {
-                    // Advance frame
-                    let has_frame = iter.advance(30_000_000); // microsecond
-                    if let Some(frame_pixbuf) = iter.pixbuf() {
-                        let paintable = frame_pixbuf.to_paintable();
-                        image_widget_clone.set_paintable(Some(&paintable));
-                    }
+                glib::timeout_add_local(delay, move || {
+                    let frame_pixbuf = iter.pixbuf();
+                    widget_clone.set_from_pixbuf(Some(&frame_pixbuf));
 
                     glib::ControlFlow::Continue
                 });
