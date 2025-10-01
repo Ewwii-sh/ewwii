@@ -854,23 +854,24 @@ fn initialize_window<B: DisplayBackend>(
 
     window.set_title(Some(&format!("Ewwii - {}", window_init.name)));
     // window.set_position(gtk4::WindowPosition::None);
-    window.set_gravity(gdk::Gravity::Center);
+    // window.set_gravity(gdk::Gravity::Center);
 
     if let Some(actual_window_rect) = actual_window_rect {
         window.set_size_request(actual_window_rect.width(), actual_window_rect.height());
         window.set_default_size(actual_window_rect.width(), actual_window_rect.height());
     }
     window.set_decorated(false);
-    window.set_skip_taskbar_hint(true);
-    window.set_skip_pager_hint(true);
+    // window.set_skip_taskbar_hint(true);
+    // window.set_skip_pager_hint(true);
 
     // run on_screen_changed to set the visual correctly initially.
-    on_screen_changed(&window, None);
-    window.connect_screen_changed(on_screen_changed);
+    // on_screen_changed(&window, None);
+    // window.connect_screen_changed(on_screen_changed);
 
-    window.add(&root_widget);
+    window.set_child(Some(&root_widget));
 
-    window.realize();
+    // i dont think its needed in gtk4
+    // window.realize();
 
     #[cfg(feature = "x11")]
     if B::IS_X11 {
@@ -908,7 +909,7 @@ fn initialize_window<B: DisplayBackend>(
         display_backend::set_xprops(&window, monitor, window_init)?;
     }
 
-    window.show_all();
+    window.show();
 
     Ok(EwwiiWindow {
         name: window_init.name.clone(),
@@ -968,7 +969,6 @@ fn apply_window_position(
     monitor_geometry: gdk::Rectangle,
     window: &Window,
 ) -> Result<()> {
-    use x11rb::connection::Connection;
     use x11rb::protocol::xproto::{ConfigureWindowAux, ConnectionExt, Window as XWindow};
 
     let gdk_surface = window.surface().context("Failed to get gdk surface from gtk window")?;
@@ -990,12 +990,12 @@ fn apply_window_position(
     Ok(())
 }
 
-fn on_screen_changed(window: &Window, _old_screen: Option<&gdk::Screen>) {
-    let visual = window.screen().and_then(|screen| {
-        screen.rgba_visual().filter(|_| screen.is_composited()).or_else(|| screen.system_visual())
-    });
-    window.set_visual(visual.as_ref());
-}
+// fn on_screen_changed(window: &Window, _old_screen: Option<&gdk::Screen>) {
+//     let visual = window.screen().and_then(|screen| {
+//         screen.rgba_visual().filter(|_| screen.is_composited()).or_else(|| screen.system_visual())
+//     });
+//     window.set_visual(visual.as_ref());
+// }
 
 /// Get the monitor geometry of a given monitor, or the default if none is given
 fn get_gdk_monitor(identifier: Option<MonitorIdentifier>) -> Result<Monitor> {
