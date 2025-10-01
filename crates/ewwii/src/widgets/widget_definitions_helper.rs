@@ -187,16 +187,6 @@ pub(super) fn parse_revealer_transition(t: &str) -> Result<gtk4::RevealerTransit
     }
 }
 
-/// Gtk Image
-// icon-size - "normal", "large"
-pub(super) fn parse_icon_size(o: &str) -> Result<gtk4::IconSize> {
-    match o.to_ascii_lowercase().as_str() {
-        "normal" => Ok(gtk4::IconSize::Normal),
-        "large" => Ok(gtk4::IconSize::Large),
-        _ => Err(anyhow!("Invalid icon size: '{}'", o)),
-    }
-}
-
 /// Event box
 // dragtype - "file", "text"
 pub(super) enum DragEntryType {

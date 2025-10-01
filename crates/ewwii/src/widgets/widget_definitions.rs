@@ -198,16 +198,6 @@ impl WidgetRegistry {
         }
     }
 
-    // pub fn remove_widget(&mut self, widget_id: u64) {
-    //     if let Some(entry) = self.widgets.remove(&widget_id) {
-    //         if let Some(parent) = entry.widget.parent() {
-    //             if let Ok(container) = parent.downcast::<gtk4::Container>() {
-    //                 container.remove(&entry.widget);
-    //             }
-    //         }
-    //     }
-    // }
-
     pub fn remove_widget(&mut self, widget_id: u64, parent_id: u64) {
         log::trace!("Removing '{}' from '{}'", widget_id, parent_id);
         if let Some(entry) = self.widgets.remove(&widget_id) {
@@ -305,13 +295,10 @@ pub(super) fn build_gtk_overlay(
 
     // we have more than one child, we can unwrap
     let first = children.next().unwrap()?;
-    gtk_widget.add(&first);
-    first.show();
+    gtk_widget.set_child(Some(&first));
     for child in children {
         let child = child?;
         gtk_widget.add_overlay(&child);
-        gtk_widget.set_overlay_pass_through(&child, true);
-        child.show();
     }
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
@@ -393,13 +380,19 @@ pub(super) fn build_center_box(
     )?;
 
     let gtk_widget = gtk4::Box::new(orientation, 0);
-    gtk_widget.pack_start(&first, true, true, 0);
-    gtk_widget.set_center_widget(Some(&center));
-    gtk_widget.pack_end(&end, true, true, 0);
 
-    first.show();
-    center.show();
-    end.show();
+    first.set_hexpand(true);
+    first.set_halign(gtk4::Align::Start);
+
+    center.set_hexpand(true);
+    center.set_halign(gtk4::Align::Center);
+
+    end.set_hexpand(true);
+    end.set_halign(gtk4::Align::End);
+
+    gtk_widget.append(&first);
+    gtk_widget.append(&center);
+    gtk_widget.append(&end);
 
     let gtk_widget_clone = gtk_widget.clone();
 
@@ -682,7 +675,6 @@ pub(super) fn build_event_box(
     gtk_widget.add_controller(drag_source_ctl);
 
     let apply_props = |props: &Map,
-                       widget: &gtk4::Box,
                        controller_data: Rc<RefCell<EventBoxCtrlData>>|
      -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
@@ -740,11 +732,11 @@ pub(super) fn build_event_box(
         Ok(())
     };
 
-    apply_props(&props, &gtk_widget, controller_data.clone())?;
+    apply_props(&props, controller_data.clone())?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &gtk_widget_clone, controller_data.clone());
+        let _ = apply_props(props, controller_data.clone());
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -757,9 +749,9 @@ pub(super) fn build_event_box(
     let count = children.len();
 
     if count < 1 {
-        bail!("expander must contain exactly one element");
+        bail!("event box must contain exactly one element");
     } else if count > 1 {
-        bail!("expander must contain exactly one element, but got more");
+        bail!("event box must contain exactly one element, but got more");
     }
 
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
@@ -808,8 +800,8 @@ pub(super) fn build_gtk_stack(
         let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
         widget.set_transition_type(parse_stack_transition(&transition)?);
 
-        let same_size = get_bool_prop(&props, "same_size", Some(false))?;
-        widget.set_homogeneous(same_size);
+        // let same_size = get_bool_prop(&props, "same_size", Some(false))?;
+        // widget.set_homogeneous(same_size);
 
         Ok(())
     };
@@ -1122,7 +1114,6 @@ pub(super) fn build_gtk_image(
             widget.set_from_pixbuf(Some(&frame_pixbuf));
 
             let widget_clone = widget.clone();
-            let animation_clone = pixbuf_animation.clone();
 
             if let Some(delay) = iter.delay_time() {
                 glib::timeout_add_local(delay, move || {
@@ -1168,9 +1159,7 @@ pub(super) fn build_gtk_image(
         }
 
         if let Ok(icon_name) = get_string_prop(&props, "icon", None) {
-            let icon_size = get_string_prop(&props, "icon-size", Some("button"))?;
-            widget.set_from_icon_name(Some(&icon_name), parse_icon_size(&icon_size)?);
-            // return Ok(widget);
+            widget.set_icon_name(Some(&icon_name));
         }
 
         Ok(())
@@ -2145,6 +2134,10 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
 
     if let Ok(tooltip) = get_string_prop(&props, "tooltip", None) {
         gtk_widget.set_tooltip_text(Some(&tooltip));
+    }
+
+    if let Ok(can_target) = get_bool_prop(&props, "can_target", None) {
+        gtk_widget.set_can_target(can_target);
     }
 
     Ok(())
