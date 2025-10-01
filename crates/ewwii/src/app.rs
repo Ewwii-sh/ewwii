@@ -879,29 +879,45 @@ fn initialize_window<B: DisplayBackend>(
             let (conn, screen_num) = x11rb::rust_connection::RustConnection::connect(None)?;
             let x11_conn = Rc::new(conn);
 
+            let gdk_surface =
+                window.surface().context("Couldn't get gdk window from gtk window")?;
+
+            let win_xid = gdk_surface
+                .downcast_ref::<gdk4_x11::X11Surface>()
+                .context("Failed to get x11 window for gtk window")?
+                .xid() as u32;
+
+            use x11rb::protocol::xproto::*;
+            x11_conn
+                .clone()
+                .change_window_attributes(
+                    win_xid,
+                    &ChangeWindowAttributesAux::new().event_mask(EventMask::STRUCTURE_NOTIFY),
+                )
+                .unwrap();
+
             let _ = apply_window_position(x11_conn.clone(), geometry, monitor_geometry, &window);
             if window_init.backend_options.x11.window_type
                 != crate::window::backend_window_options::X11WindowType::Normal
             {
-                let last_pos = Rc::new(RefCell::new(None));
-                window.connect_configure_event({
-                    let last_pos = last_pos.clone();
-                    move |window, _| {
-                        let gdk_window = window.window().unwrap();
-                        let current_origin = gdk_window.origin();
+                let window_clone = window.clone();
+                let conn_clone = x11_conn.clone();
 
-                        let mut last = last_pos.borrow_mut();
-                        if Some((current_origin.1, current_origin.2)) != *last {
-                            *last = Some((current_origin.1, current_origin.2));
-                            let _ = apply_window_position(
-                                x11_conn.clone(),
-                                geometry,
-                                monitor_geometry,
-                                window,
-                            );
+                use x11rb::connection::Connection;
+
+                glib::MainContext::default().spawn_local(async move {
+                    loop {
+                        if let Ok(event) = conn_clone.poll_for_event() {
+                            if let Some(x11rb::protocol::Event::ConfigureNotify(_ev)) = event {
+                                let _ = apply_window_position(
+                                    conn_clone.clone(),
+                                    geometry,
+                                    monitor_geometry,
+                                    &window_clone,
+                                );
+                            }
                         }
-
-                        false
+                        glib::timeout_future(std::time::Duration::from_millis(10)).await;
                     }
                 });
             }
