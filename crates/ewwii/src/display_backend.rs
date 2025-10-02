@@ -33,8 +33,8 @@ impl DisplayBackend for NoBackend {
     fn initialize_window(
         _window_init: &WindowInitiator,
         _monitor: gdk::Rectangle,
-        x: i32,
-        y: i32,
+        _x: i32,
+        _y: i32,
     ) -> Option<Window> {
         // top level
         let window = Window::new();
@@ -66,8 +66,8 @@ mod platform_wayland {
         fn initialize_window(
             window_init: &WindowInitiator,
             monitor: gdk::Rectangle,
-            x: i32,
-            y: i32,
+            _x: i32,
+            _y: i32,
         ) -> Option<Window> {
             let window = Window::new();
             // window.move_(x, y);
@@ -192,11 +192,11 @@ mod platform_x11 {
         fn initialize_window(
             window_init: &WindowInitiator,
             _monitor: gdk::Rectangle,
-            x: i32,
-            y: i32,
+            _x: i32,
+            _y: i32,
         ) -> Option<Window> {
             let window = Window::new();
-            let window_type = if window_init.backend_options.x11.wm_ignore {
+            if window_init.backend_options.x11.wm_ignore {
                 // popup
                 window.set_decorated(false);
                 window.set_modal(true);

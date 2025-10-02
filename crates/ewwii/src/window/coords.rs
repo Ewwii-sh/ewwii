@@ -33,12 +33,13 @@ impl NumWithUnit {
         }
     }
 
-    pub fn perc_relative_to(&self, max: i32) -> f32 {
-        match *self {
-            NumWithUnit::Percent(n) => n,
-            NumWithUnit::Pixels(n) => ((n as f64 / max as f64) * 100.0) as f32,
-        }
-    }
+    // add back when needed
+    // pub fn perc_relative_to(&self, max: i32) -> f32 {
+    //     match *self {
+    //         NumWithUnit::Percent(n) => n,
+    //         NumWithUnit::Pixels(n) => ((n as f64 / max as f64) * 100.0) as f32,
+    //     }
+    // }
 }
 
 impl FromStr for NumWithUnit {
