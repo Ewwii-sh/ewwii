@@ -465,7 +465,6 @@ impl<B: DisplayBackend> App<B> {
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
-            ewwii_window.gtk_window.style_context().add_class(window_name);
 
             // Start the poll/listen only once per startup
             // at the start, the open_windows will be empty because
