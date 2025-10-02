@@ -133,7 +133,7 @@ impl WidgetRegistry {
         }
 
         // Removals
-        for (id, new_info) in &old_map {
+        for (id, _) in &old_map {
             if !new_map.contains_key(id) {
                 patch.push(PatchGtkWidget::Remove(
                     *id,
