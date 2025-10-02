@@ -5,6 +5,39 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0-alpha] - [UNRELEASED]
+
+### Added
+
+-   GTK4 support.
+-   `can_target` boolean property for all widgets.
+-   `icon` widget which always preserves a scaling of 1:1.
+-   Full native wayland compatibility (x11 compatibility has decreased).
+
+### Changed
+
+-   The way dynamic updates are handled.
+-   Window positioning logic.
+-   X11 communication and x11 based window handling.
+-   Daemon GTK main loop.
+-   Application of sticky and stacking propery of window on X11.
+-   Centerbox widget rendering logic.
+-   The full implementation of eventbox widget.
+-   GTK controller/signal handling.
+-   Initialization logic of window.
+-   Overlay widget dynamic post-creation re-creation logic (bugs are expected).
+
+### Removed
+
+-   `show_details` property of calendar.
+-   `angle` property from label.
+-   `icon_size` property from image widget.
+-   `same_size` property from stack widget (box is a replacement).
+-   `icon_name` from `image` widget as a result of the introduction of `icon` widget.
+-   `transform`, `graph`, and `circular_progress` widget (temporarily).
+-   Application of css class on the window.
+-   Legacy GTK3 related code.
+
 ## [0.2.0] - 2025-09-29
 
 ### Added

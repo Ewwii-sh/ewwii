@@ -1,6 +1,6 @@
 [package]
 name = "ewwii"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 description = "Widgets for everyone made better!"
 license = "GPL-3.0-or-later"
