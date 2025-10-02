@@ -11,6 +11,7 @@ pub enum WidgetNode {
     CenterBox { props: Map, children: Vec<WidgetNode> },
     Button { props: Map },
     Image { props: Map },
+    Icon { props: Map },
     Input { props: Map },
     Progress { props: Map },
     ComboBoxText { props: Map },
@@ -116,6 +117,10 @@ pub fn get_id_to_widget_info<'a>(
         WidgetNode::Image { props } => {
             // let id = hash_props_and_type(props, "Image");
             insert_wdgt_info(node, props, "Image", &[], parent_id, id_to_props)?;
+        }
+        WidgetNode::Icon { props } => {
+            // let id = hash_props_and_type(props, "Icon");
+            insert_wdgt_info(node, props, "Icon", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Button { props } => {
             // let id = hash_props_and_type(props, "Button");
