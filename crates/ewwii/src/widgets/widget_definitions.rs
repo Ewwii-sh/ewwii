@@ -1117,8 +1117,12 @@ pub(super) fn build_image(
 
             if let Some(delay) = iter.delay_time() {
                 glib::timeout_add_local(delay, move || {
-                    let frame_pixbuf = iter.pixbuf();
-                    widget_clone.set_pixbuf(Some(&frame_pixbuf));
+                    let now = std::time::SystemTime::now();
+
+                    if iter.advance(now) {
+                        let frame_pixbuf = iter.pixbuf();
+                        widget_clone.set_pixbuf(Some(&frame_pixbuf));
+                    }
 
                     glib::ControlFlow::Continue
                 });
