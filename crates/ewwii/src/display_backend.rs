@@ -356,7 +356,7 @@ mod platform_x11 {
                     sequence: 0,
                     window: win,
                     type_: atoms._NET_WM_STATE,
-                    data: ClientMessageData::from([state, 0, 0, 0, 0])
+                    data: ClientMessageData::from([state, 0, 0, 0, 0]),
                 };
 
                 conn.send_event(
