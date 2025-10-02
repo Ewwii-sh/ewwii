@@ -321,27 +321,54 @@ mod platform_x11 {
             .check()?;
 
             // apply the stickiness and fg/bg thingy
-            let mut win_states = vec![];
-            if window_init.backend_options.x11.sticky {
-                win_states.push(self.atoms._NET_WM_STATE_STICKY);
-            }
-            if matches!(window_init.stacking, WindowStacking::Foreground) {
-                win_states.push(self.atoms._NET_WM_STATE_ABOVE);
-            } else if matches!(window_init.stacking, WindowStacking::Background) {
-                win_states.push(self.atoms._NET_WM_STATE_BELOW);
-            }
-
-            x11rb::wrapper::ConnectionExt::change_property32(
+            Self::set_window_states(
                 &self.conn,
-                PropMode::REPLACE,
                 win_id,
-                self.atoms._NET_WM_STATE,
-                self.atoms.ATOM,
-                &win_states,
-            )?
-            .check()?;
+                &self.atoms,
+                window_init.backend_options.x11.sticky,
+                window_init.stacking,
+            )?;
 
             self.conn.flush().context("Failed to send requests to X server")
+        }
+
+        fn set_window_states(
+            conn: &impl Connection,
+            win: u32,
+            atoms: &AtomCollection,
+            sticky: bool,
+            stacking: WindowStacking,
+        ) -> Result<()> {
+            let mut states = Vec::new();
+            if sticky {
+                states.push(atoms._NET_WM_STATE_STICKY);
+            }
+            match stacking {
+                WindowStacking::Foreground => states.push(atoms._NET_WM_STATE_ABOVE),
+                WindowStacking::Background => states.push(atoms._NET_WM_STATE_BELOW),
+                _ => {}
+            }
+
+            for state in states {
+                let event = ClientMessageEvent {
+                    response_type: CLIENT_MESSAGE_EVENT,
+                    format: 32,
+                    sequence: 0,
+                    window: win,
+                    type_: atoms._NET_WM_STATE,
+                    data: ClientMessageData::from([state, 0, 0, 0, 0])
+                };
+
+                conn.send_event(
+                    false,
+                    conn.setup().roots[0].root,
+                    EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
+                    event,
+                )?;
+            }
+
+            conn.flush()?;
+            Ok(())
         }
     }
 

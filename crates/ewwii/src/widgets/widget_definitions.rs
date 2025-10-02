@@ -3,7 +3,6 @@
 use crate::util;
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use anyhow::{anyhow, bail, Result};
-use gdk::{ModifierType, NotifyType};
 use gtk4::gdk::DragAction;
 use gtk4::glib::translate::FromGlib;
 use gtk4::glib::Type;
