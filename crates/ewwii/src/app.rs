@@ -3,7 +3,7 @@ use crate::{
     display_backend::DisplayBackend,
     error_handling_ctx,
     gtk4::prelude::{
-        ApplicationExt, Cast, CastNone, CellAreaExt, DisplayExt, GskRendererExt, GtkWindowExt,
+        Cast, CastNone, DisplayExt, GtkWindowExt,
         ListModelExt, MonitorExt, NativeExt, ObjectExt, StyleContextExt, WidgetExt,
     },
     paths::EwwiiPaths,
@@ -30,7 +30,7 @@ use rhai::Dynamic;
 use rhai_impl::ast::WidgetNode;
 use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use std::{
-    cell::{Cell, RefCell},
+    cell::{Cell},
     collections::{HashMap, HashSet},
     marker::PhantomData,
     rc::Rc,
@@ -873,7 +873,7 @@ fn initialize_window<B: DisplayBackend>(
     #[cfg(feature = "x11")]
     if B::IS_X11 {
         if let Some(geometry) = window_init.geometry {
-            let (conn, screen_num) = x11rb::rust_connection::RustConnection::connect(None)?;
+            let (conn, _) = x11rb::rust_connection::RustConnection::connect(None)?;
             let x11_conn = Rc::new(conn);
 
             let gdk_surface =
@@ -983,6 +983,7 @@ fn apply_window_position(
     window: &Window,
 ) -> Result<()> {
     use x11rb::protocol::xproto::{ConfigureWindowAux, ConnectionExt, Window as XWindow};
+    use x11rb::connection::Connection;
 
     let gdk_surface = window.surface().context("Failed to get gdk surface from gtk window")?;
 
@@ -997,7 +998,8 @@ fn apply_window_position(
             .x(actual_window_rect.x() as i32)
             .y(actual_window_rect.y() as i32);
 
-        conn.configure_window(xid as XWindow, &aux)?;
+        conn.as_ref().configure_window(xid as XWindow, &aux)?;
+        conn.as_ref().flush()?;
     }
 
     Ok(())

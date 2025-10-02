@@ -5,7 +5,7 @@ use crate::{
     error_handling_ctx, ipc_server, EwwiiPaths,
 };
 use anyhow::{Context, Result};
-use gtk4::prelude::{ApplicationExt, ApplicationExtManual, DisplayExt, ListModelExt};
+use gtk4::prelude::{DisplayExt, ListModelExt};
 use std::{
     // cell::RefCell,
     collections::{HashMap, HashSet},
@@ -14,7 +14,7 @@ use std::{
     os::unix::io::AsRawFd,
     path::Path,
     // rc::Rc,
-    sync::{atomic::Ordering, Arc, Mutex},
+    sync::{atomic::Ordering, Arc},
 };
 use tokio::sync::mpsc::*;
 
