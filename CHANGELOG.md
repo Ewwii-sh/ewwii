@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   Application of css class on the window.
 -   Legacy GTK3 related code.
 
+### Deprecated
+
+-   Centerbox widget.
+
 ## [0.2.0] - 2025-09-29
 
 ### Added
