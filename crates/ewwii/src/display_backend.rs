@@ -173,6 +173,7 @@ mod platform_x11 {
     use gtk4::gdk;
     use gtk4::Window;
     use gtk4::{self, prelude::*};
+    use std::rc::Rc;
     use x11rb::protocol::xproto::ConnectionExt;
 
     use x11rb::{
@@ -220,9 +221,9 @@ mod platform_x11 {
     }
 
     struct X11BackendConnection {
-        conn: RustConnection<DefaultStream>,
+        conn: Rc<RustConnection<DefaultStream>>,
         root_window: u32,
-        atoms: AtomCollection,
+        atoms: Rc<AtomCollection>,
     }
 
     impl X11BackendConnection {
@@ -230,7 +231,11 @@ mod platform_x11 {
             let (conn, screen_num) = RustConnection::connect(None)?;
             let screen = conn.setup().roots[screen_num].clone();
             let atoms = AtomCollection::new(&conn)?.reply()?;
-            Ok(X11BackendConnection { conn, root_window: screen.root, atoms })
+            Ok(X11BackendConnection {
+                conn: Rc::new(conn),
+                root_window: screen.root,
+                atoms: Rc::new(atoms),
+            })
         }
 
         fn set_xprops_for(
@@ -321,13 +326,24 @@ mod platform_x11 {
             .check()?;
 
             // apply the stickiness and fg/bg thingy
-            Self::set_window_states(
-                &self.conn,
-                win_id,
-                &self.atoms,
-                window_init.backend_options.x11.sticky,
-                window_init.stacking,
-            )?;
+            let sticky_clone = window_init.backend_options.x11.sticky.clone();
+            let stacking_clone = window_init.stacking.clone();
+            let root_window = self.root_window;
+            let conn = Rc::clone(&self.conn);
+            let atoms = Rc::clone(&self.atoms);
+
+            window.connect_show(move |_| {
+                if let Err(err) = Self::set_window_states(
+                    &*conn,
+                    win_id,
+                    &*atoms,
+                    sticky_clone,
+                    stacking_clone,
+                    root_window,
+                ) {
+                    log::error!("Failed to set window state: {}", err);
+                }
+            });
 
             self.conn.flush().context("Failed to send requests to X server")
         }
@@ -338,6 +354,7 @@ mod platform_x11 {
             atoms: &AtomCollection,
             sticky: bool,
             stacking: WindowStacking,
+            root_window: u32,
         ) -> Result<()> {
             let mut states = Vec::new();
             if sticky {
@@ -356,15 +373,10 @@ mod platform_x11 {
                     sequence: 0,
                     window: win,
                     type_: atoms._NET_WM_STATE,
-                    data: ClientMessageData::from([state, 0, 0, 0, 0]),
+                    data: ClientMessageData::from([1, state, 0, 0, 0]),
                 };
 
-                conn.send_event(
-                    false,
-                    conn.setup().roots[0].root,
-                    EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
-                    event,
-                )?;
+                conn.send_event(true, root_window, EventMask::PROPERTY_CHANGE, event)?;
             }
 
             conn.flush()?;
