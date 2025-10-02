@@ -37,6 +37,7 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     register_primitive!("label", Label);
     register_primitive!("button", Button);
     register_primitive!("image", Image);
+    register_primitive!("icon", Icon);
     register_primitive!("input", Input);
     register_primitive!("progress", Progress);
     register_primitive!("combo_box_text", ComboBoxText);

@@ -91,6 +91,7 @@ impl WidgetNode {
             node @ WidgetNode::Label { props }
             | node @ WidgetNode::Button { props }
             | node @ WidgetNode::Image { props }
+            | node @ WidgetNode::Icon { props }
             | node @ WidgetNode::Input { props }
             | node @ WidgetNode::Progress { props }
             | node @ WidgetNode::ComboBoxText { props }
@@ -107,6 +108,7 @@ impl WidgetNode {
                     WidgetNode::Label { .. } => WidgetNode::Label { props: new_props },
                     WidgetNode::Button { .. } => WidgetNode::Button { props: new_props },
                     WidgetNode::Image { .. } => WidgetNode::Image { props: new_props },
+                    WidgetNode::Icon { .. } => WidgetNode::Icon { props: new_props },
                     WidgetNode::Input { .. } => WidgetNode::Input { props: new_props },
                     WidgetNode::Progress { .. } => WidgetNode::Progress { props: new_props },
                     WidgetNode::ComboBoxText { .. } => {

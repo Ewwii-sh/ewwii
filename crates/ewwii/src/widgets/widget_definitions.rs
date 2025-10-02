@@ -1092,7 +1092,105 @@ pub(super) fn build_gtk_progress(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_image(
+pub(super) fn build_image(
+    props: &Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk4::Picture> {
+    let gtk_widget = gtk4::Picture::new();
+
+    let apply_props = |props: &Map, widget: &gtk4::Picture| -> Result<()> {
+        let path = get_string_prop(&props, "path", None)?;
+        let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
+        let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
+        let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
+        let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
+
+        if !path.ends_with(".svg") && !fill_svg.is_empty() {
+            log::warn!("Fill attribute ignored, file is not an svg image");
+        }
+
+        if path.ends_with(".gif") {
+            let pixbuf_animation =
+                gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
+            let iter = pixbuf_animation.iter(None);
+
+            let frame_pixbuf = iter.pixbuf();
+            widget.set_pixbuf(Some(&frame_pixbuf));
+
+            let widget_clone = widget.clone();
+
+            if let Some(delay) = iter.delay_time() {
+                glib::timeout_add_local(delay, move || {
+                    let frame_pixbuf = iter.pixbuf();
+                    widget_clone.set_pixbuf(Some(&frame_pixbuf));
+
+                    glib::ControlFlow::Continue
+                });
+            }
+        } else {
+            let pixbuf;
+            // populate the pixel buffer
+            if path.ends_with(".svg") && !fill_svg.is_empty() {
+                let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
+                // The fastest way to add/change fill color
+                let svg_data = if svg_data.contains("fill=") {
+                    let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
+                    reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
+                } else {
+                    let reg = regex::Regex::new(r"<svg")?;
+                    reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
+                };
+                let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
+                    svg_data.as_bytes(),
+                ));
+                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                    &stream,
+                    image_width,
+                    image_height,
+                    preserve_aspect_ratio,
+                    None::<&gtk4::gio::Cancellable>,
+                )?;
+                stream.close(None::<&gtk4::gio::Cancellable>)?;
+            } else {
+                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
+                    std::path::PathBuf::from(path),
+                    image_width,
+                    image_height,
+                    preserve_aspect_ratio,
+                )?;
+            }
+            widget.set_pixbuf(Some(&pixbuf));
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+        {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
+
+    let id = hash_props_and_type(&props, "Image");
+
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+
+    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+
+    Ok(gtk_widget)
+}
+
+pub(super) fn build_icon(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Image> {
