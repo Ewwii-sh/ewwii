@@ -2299,7 +2299,6 @@ pub(super) fn resolve_range_attrs(
     // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler
     // and only run on_change when it's caused by manual user input
     if let Ok(value) = get_f64_prop(&props, "value", None) {
-        println!("{}", range_dat.borrow().is_being_dragged);
         if !range_dat.borrow().is_being_dragged {
             range_dat.borrow_mut().last_set_value = Some(value);
             gtk_widget.set_value(value);
