@@ -3,8 +3,8 @@ use crate::{
     display_backend::DisplayBackend,
     error_handling_ctx,
     gtk4::prelude::{
-        Cast, CastNone, DisplayExt, GtkWindowExt,
-        ListModelExt, MonitorExt, NativeExt, ObjectExt, StyleContextExt, WidgetExt,
+        Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt,
+        StyleContextExt, WidgetExt,
     },
     paths::EwwiiPaths,
     // dynval::DynVal,
@@ -30,7 +30,7 @@ use rhai::Dynamic;
 use rhai_impl::ast::WidgetNode;
 use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use std::{
-    cell::{Cell},
+    cell::Cell,
     collections::{HashMap, HashSet},
     marker::PhantomData,
     rc::Rc,
@@ -981,8 +981,8 @@ fn apply_window_position(
     monitor_geometry: gdk::Rectangle,
     window: &Window,
 ) -> Result<()> {
-    use x11rb::protocol::xproto::{ConfigureWindowAux, ConnectionExt, Window as XWindow};
     use x11rb::connection::Connection;
+    use x11rb::protocol::xproto::{ConfigureWindowAux, ConnectionExt, Window as XWindow};
 
     let gdk_surface = window.surface().context("Failed to get gdk surface from gtk window")?;
 

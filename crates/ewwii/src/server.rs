@@ -148,9 +148,13 @@ fn connect_monitor_added(ui_send: UnboundedSender<DaemonCommand>) {
     if let Some(display) = gtk4::gdk::Display::default() {
         let monitors = display.monitors();
 
-        monitors.connect_items_changed(gtk4::glib::clone!(#[strong] ui_send, move |_, _, _, _| {
-            let _ = reload_config_and_css(&ui_send);
-        }));
+        monitors.connect_items_changed(gtk4::glib::clone!(
+            #[strong]
+            ui_send,
+            move |_, _, _, _| {
+                let _ = reload_config_and_css(&ui_send);
+            }
+        ));
     } else {
         log::warn!("Cannot access GDK Display on this session (likely Wayland)");
     }

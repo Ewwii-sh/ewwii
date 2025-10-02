@@ -34,6 +34,10 @@ use std::{
 /// If the condition is false, we disconnect the handler without running the connect_expr,
 /// thus not connecting a new handler unless the condition is met.
 macro_rules! connect_signal_handler {
+    // TODO:
+    // Fully replace all of the places that uses this with a singular
+    // controller. The property inside that controller can be updated
+    // through interior mutability similar to have they are working in eventbox.
     ($widget:ident, if $cond:expr, $connect_expr:expr) => {{
         const KEY:&str = std::concat!("signal-handler:", std::line!());
         unsafe {
@@ -88,9 +92,7 @@ impl WidgetRegistry {
                 PatchGtkWidget::Update(widget_id, new_props) => {
                     self.update_props(widget_id, new_props);
                 }
-                PatchGtkWidget::Remove(widget_id) => {
-                    self.remove_widget(widget_id)
-                }
+                PatchGtkWidget::Remove(widget_id) => self.remove_widget(widget_id),
             }
         }
 
@@ -135,9 +137,7 @@ impl WidgetRegistry {
         // Removals
         for (id, _) in &old_map {
             if !new_map.contains_key(id) {
-                patch.push(PatchGtkWidget::Remove(
-                    *id,
-                ));
+                patch.push(PatchGtkWidget::Remove(*id));
             }
         }
 
@@ -155,11 +155,9 @@ impl WidgetRegistry {
             let parent_widget = &parent.widget.clone();
 
             // find old siblings if the widget already exists
-            let (prev_sibling, next_sibling) = if let Some(old_entry) = self.widgets.get(&widget_id) {
-                (
-                    old_entry.widget.prev_sibling(),
-                    old_entry.widget.next_sibling(),
-                )
+            let (prev_sibling, next_sibling) = if let Some(old_entry) = self.widgets.get(&widget_id)
+            {
+                (old_entry.widget.prev_sibling(), old_entry.widget.next_sibling())
             } else {
                 (None, None)
             };
@@ -191,8 +189,8 @@ impl WidgetRegistry {
                 // TODO: Handle changing main widget
                 overlay.add_overlay(&gtk_widget);
             } else {
-                // fallback: 
-                // 
+                // fallback:
+                //
                 // Assumes that every other container like widget
                 // expects only one singular child.
                 gtk_widget.set_parent(parent_widget);
@@ -678,9 +676,7 @@ pub(super) fn build_event_box(
     gtk_widget.add_controller(drop_uri_target);
     gtk_widget.add_controller(drag_source_ctl);
 
-    let apply_props = |props: &Map,
-                       controller_data: Rc<RefCell<EventBoxCtrlData>>|
-     -> Result<()> {
+    let apply_props = |props: &Map, controller_data: Rc<RefCell<EventBoxCtrlData>>| -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
         controller_data.borrow_mut().cmd_timeout =
             get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
@@ -1190,10 +1186,7 @@ pub(super) fn build_image(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_icon(
-    props: &Map,
-    widget_registry: &mut WidgetRegistry,
-) -> Result<gtk4::Image> {
+pub(super) fn build_icon(props: &Map, widget_registry: &mut WidgetRegistry) -> Result<gtk4::Image> {
     let gtk_widget = gtk4::Image::new();
 
     let apply_props = |props: &Map, widget: &gtk4::Image| -> Result<()> {
@@ -2028,6 +2021,13 @@ pub(super) fn build_gtk_color_chooser(
     Ok(gtk_widget)
 }
 
+pub(super) struct RangeCtrlData {
+    onchange_cmd: String,
+    cmd_timeout: Duration,
+    is_being_dragged: bool,
+    last_set_value: Option<f64>,
+}
+
 pub(super) fn build_gtk_scale(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
@@ -2038,11 +2038,51 @@ pub(super) fn build_gtk_scale(
     );
 
     // only allow changing the value via the value property if the user isn't currently dragging
-    let is_being_dragged = Rc::new(RefCell::new(false));
+    let scale_dat = Rc::new(RefCell::new(RangeCtrlData {
+        onchange_cmd: String::new(),
+        cmd_timeout: Duration::from_millis(16),
+        is_being_dragged: false,
+        last_set_value: None,
+    }));
+    let legacy_controller = EventControllerLegacy::new();
+
+    // there might be better implementation but
+    // this seems to be the one that works well.
+    legacy_controller.connect_event(glib::clone!(
+        #[strong]
+        scale_dat,
+        move |ctrl, event| {
+            match event.event_type() {
+                gtk4::gdk::EventType::ButtonPress => {
+                    scale_dat.borrow_mut().is_being_dragged = true;
+                }
+                gtk4::gdk::EventType::ButtonRelease => {
+                    let mut scale_dat_mut = scale_dat.borrow_mut();
+                    scale_dat_mut.is_being_dragged = false;
+
+                    if let Some(widget) = ctrl.widget() {
+                        let value = widget.downcast_ref::<gtk4::Scale>().unwrap().value();
+
+                        if scale_dat_mut.last_set_value.take() != Some(value) {
+                            let cmd_timeout = scale_dat_mut.cmd_timeout;
+                            let onchange_cmd = scale_dat_mut.onchange_cmd.clone();
+                            drop(scale_dat_mut);
+
+                            run_command(cmd_timeout, &onchange_cmd, &[value]);
+                        }
+                    }
+                }
+                _ => {}
+            }
+            glib::Propagation::Proceed
+        }
+    ));
+
+    gtk_widget.add_controller(legacy_controller);
 
     // Reusable closure for applying props
     let apply_props =
-        |props: &Map, widget: &gtk4::Scale, is_being_dragged: Rc<RefCell<bool>>| -> Result<()> {
+        |props: &Map, widget: &gtk4::Scale, scale_dat: Rc<RefCell<RangeCtrlData>>| -> Result<()> {
             widget.set_inverted(get_bool_prop(props, "flipped", Some(false))?);
 
             if let Ok(marks) = get_string_prop(props, "marks", None) {
@@ -2060,16 +2100,16 @@ pub(super) fn build_gtk_scale(
 
             widget.set_round_digits(get_i32_prop(props, "round_digits", Some(0))?);
 
-            resolve_range_attrs(props, widget.upcast_ref::<gtk4::Range>(), is_being_dragged)?;
+            resolve_range_attrs(props, widget.upcast_ref::<gtk4::Range>(), scale_dat)?;
             Ok(())
         };
 
-    apply_props(&props, &gtk_widget, is_being_dragged.clone())?;
+    apply_props(&props, &gtk_widget, scale_dat.clone())?;
 
     let gtk_widget_clone = gtk_widget.clone();
-    let is_being_dragged_clone = is_being_dragged.clone();
+    let scale_dat_clone = scale_dat.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &gtk_widget_clone, is_being_dragged_clone.clone());
+        let _ = apply_props(props, &gtk_widget_clone, scale_dat_clone.clone());
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -2249,37 +2289,15 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
 pub(super) fn resolve_range_attrs(
     props: &Map,
     gtk_widget: &gtk4::Range,
-    is_being_dragged: Rc<RefCell<bool>>,
+    range_dat: Rc<RefCell<RangeCtrlData>>,
 ) -> Result<()> {
-    let gesture = GestureClick::new();
-
-    gesture.connect_pressed(glib::clone!(
-        #[strong]
-        is_being_dragged,
-        move |_, _, _, _| {
-            *is_being_dragged.borrow_mut() = true;
-        }
-    ));
-
-    gesture.connect_released(glib::clone!(
-        #[strong]
-        is_being_dragged,
-        move |_, _, _, _| {
-            *is_being_dragged.borrow_mut() = false;
-        }
-    ));
-
-    gtk_widget.add_controller(gesture);
-
     // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
     // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler
     // and only run on_change when it's caused by manual user input
-    let last_set_value = Rc::new(RefCell::new(None));
-    let last_set_value_clone = last_set_value.clone();
-
     if let Ok(value) = get_f64_prop(&props, "value", None) {
-        if !*is_being_dragged.borrow() {
-            *last_set_value.borrow_mut() = Some(value);
+        println!("{}", range_dat.borrow().is_being_dragged);
+        if !range_dat.borrow().is_being_dragged {
+            range_dat.borrow_mut().last_set_value = Some(value);
             gtk_widget.set_value(value);
         }
     }
@@ -2296,16 +2314,8 @@ pub(super) fn resolve_range_attrs(
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
     if let Some(onchange) = onchange {
-        let last_set_value = last_set_value_clone.clone();
-        connect_signal_handler!(
-            gtk_widget,
-            gtk_widget.connect_value_changed(move |gtk_widget| {
-                let value = gtk_widget.value();
-                if last_set_value.borrow_mut().take() != Some(value) {
-                    run_command(timeout, &onchange, &[value]);
-                }
-            })
-        );
+        range_dat.borrow_mut().onchange_cmd = onchange;
+        range_dat.borrow_mut().cmd_timeout = timeout;
     }
 
     Ok(())
