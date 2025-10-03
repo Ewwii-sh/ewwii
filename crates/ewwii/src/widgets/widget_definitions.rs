@@ -383,8 +383,6 @@ pub(super) fn build_event_box(
     let gesture_controller = GestureClick::new();
     let scroll_controller = EventControllerScroll::new(gtk4::EventControllerScrollFlags::BOTH_AXES);
     let legacy_controller = EventControllerLegacy::new();
-    let drag_source_ctl = DragSource::new();
-
     let drop_text_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
     let drop_uri_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
 
@@ -589,7 +587,7 @@ pub(super) fn build_event_box(
     gtk_widget.add_controller(legacy_controller);
     gtk_widget.add_controller(drop_text_target);
     gtk_widget.add_controller(drop_uri_target);
-    gtk_widget.add_controller(drag_source_ctl);
+    gtk_widget.add_controller(drag_source);
 
     let apply_props = |props: &Map, controller_data: Rc<RefCell<EventBoxCtrlData>>| -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
@@ -612,7 +610,7 @@ pub(super) fn build_event_box(
         }
 
         // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
-        if let Ok(cursor) = get_string_prop(&props, "cursor", None) {
+        if let Ok(cursor) = get_string_prop(&props, "cursor", Some("default")) {
             controller_data.borrow_mut().hover_cursor = cursor;
         }
 
