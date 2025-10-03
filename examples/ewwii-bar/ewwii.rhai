@@ -1,5 +1,5 @@
 fn bar(music_var, volume, time) {
-  return centerbox(#{ orientation: "h" }, [
+  return box(#{ orientation: "h" }, [
     workspaces(), 
     music(music_var), 
     sidestuff(volume, time),
