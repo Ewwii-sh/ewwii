@@ -39,10 +39,6 @@ impl WidgetNode {
                 props: with_dyn_id(props.clone(), parent_path),
                 children: process_children(children, parent_path, "box"),
             },
-            WidgetNode::CenterBox { props, children } => WidgetNode::CenterBox {
-                props: with_dyn_id(props.clone(), parent_path),
-                children: process_children(children, parent_path, "centerbox"),
-            },
             WidgetNode::Expander { props, children } => WidgetNode::Expander {
                 props: with_dyn_id(props.clone(), parent_path),
                 children: process_children(children, parent_path, "expander"),

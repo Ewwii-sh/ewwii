@@ -21,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   X11 communication and x11 based window handling.
 -   Daemon GTK main loop.
 -   Application of sticky and stacking propery of window on X11.
--   Centerbox widget rendering logic.
 -   The full implementation of eventbox widget.
 -   GTK controller/signal handling.
 -   Initialization logic of window.
@@ -37,9 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 -   `transform`, `graph`, and `circular_progress` widget (temporarily).
 -   Application of css class on the window.
 -   Legacy GTK3 related code.
-
-### Deprecated
-
 -   Centerbox widget.
 
 ## [0.2.0] - 2025-09-29
