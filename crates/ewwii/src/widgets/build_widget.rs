@@ -41,9 +41,6 @@ fn build_gtk_widget_from_node(
 
     let gtk_widget = match root_node {
         WidgetNode::Box { props, children } => build_gtk_box(props, children, widget_reg)?.upcast(),
-        WidgetNode::CenterBox { props, children } => {
-            build_center_box(props, children, widget_reg)?.upcast()
-        }
         WidgetNode::EventBox { props, children } => {
             build_event_box(props, children, widget_reg)?.upcast()
         }
