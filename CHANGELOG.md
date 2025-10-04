@@ -5,7 +5,7 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.3.0-alpha] - [UNRELEASED]
+## [0.3.0-alpha] - 2025-10-04
 
 ### Added
 
