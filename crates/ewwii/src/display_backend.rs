@@ -72,13 +72,6 @@ mod platform_wayland {
             let window = Window::new();
             // window.move_(x, y);
 
-            // Sets the keyboard interactivity
-            match window_init.backend_options.wayland.focusable {
-                WlWindowFocusable::None => window.set_keyboard_mode(KeyboardMode::None),
-                WlWindowFocusable::Exclusive => window.set_keyboard_mode(KeyboardMode::Exclusive),
-                WlWindowFocusable::OnDemand => window.set_keyboard_mode(KeyboardMode::OnDemand),
-            }
-
             window.set_resizable(window_init.resizable);
 
             if !window_init.backend_options.wayland.force_normal {
@@ -155,6 +148,13 @@ mod platform_wayland {
                 if window_init.backend_options.wayland.exclusive {
                     window.auto_exclusive_zone_enable();
                 }
+            }
+
+            // Sets the keyboard interactivity
+            match window_init.backend_options.wayland.focusable {
+                WlWindowFocusable::None => window.set_keyboard_mode(KeyboardMode::None),
+                WlWindowFocusable::Exclusive => window.set_keyboard_mode(KeyboardMode::Exclusive),
+                WlWindowFocusable::OnDemand => window.set_keyboard_mode(KeyboardMode::OnDemand),
             }
 
             Some(window)
