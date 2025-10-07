@@ -6,6 +6,7 @@ resolver = "2"
 
 shared_utils = { version = "0.1.0", path = "crates/shared_utils" }
 rhai_impl = { version = "0.1.0", path = "crates/rhai_impl" }
+ewwii_plugin_api = { version = "0.1.0", path = "crates/ewwii_plugin_api" }
 
 anyhow = "1.0.86"
 ahash = "0.8.12"

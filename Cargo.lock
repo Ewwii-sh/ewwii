@@ -494,6 +494,7 @@ dependencies = [
  "clap_complete",
  "codespan-reporting",
  "derive_more",
+ "ewwii_plugin_api",
  "extend",
  "futures",
  "gdk4-x11",
@@ -521,6 +522,13 @@ dependencies = [
  "unescape",
  "wait-timeout",
  "x11rb",
+]
+
+[[package]]
+name = "ewwii_plugin_api"
+version = "0.1.0"
+dependencies = [
+ "rhai",
 ]
 
 [[package]]
