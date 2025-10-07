@@ -98,7 +98,7 @@ pub fn initialize_server<B: DisplayBackend>(
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
         pl_handler_store: None,
         rt_engine_config: EngineConfValues::default(),
-        config_parser: config_parser,
+        config_parser,
         paths,
         gtk_main_loop: main_loop.clone(),
         phantom: PhantomData,

@@ -21,14 +21,15 @@ use crate::{
     window_initiator::WindowInitiator,
     *,
 };
-use rhai_impl::parser::ParseConfig;
 use anyhow::{anyhow, bail};
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
 use itertools::Itertools;
+use once_cell::sync::OnceCell;
 use rhai::Dynamic;
 use rhai_impl::ast::WidgetNode;
+use rhai_impl::parser::ParseConfig;
 use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use std::{
     cell::{Cell, RefCell},
@@ -38,6 +39,13 @@ use std::{
     sync::Mutex,
 };
 use tokio::sync::mpsc::UnboundedSender;
+
+static ACTIVE_PLUGIN: OnceCell<libloading::Library> = OnceCell::new();
+
+fn set_active_plugin(lib: libloading::Library) {
+    // will panic if called more than once
+    ACTIVE_PLUGIN.set(lib).unwrap();
+}
 
 /// A command for the ewwii daemon.
 /// While these are mostly generated from ewwii CLI commands (see [`opts::ActionWithServer`]),
@@ -88,6 +96,10 @@ pub enum DaemonCommand {
     EngineOverride {
         config: String,
         print: bool,
+        sender: DaemonResponseSender,
+    },
+    SetPlugin {
+        file_path: String,
         sender: DaemonResponseSender,
     },
 }
@@ -366,6 +378,12 @@ impl<B: DisplayBackend> App<B> {
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
+            DaemonCommand::SetPlugin { file_path, sender } => {
+                match self.set_ewwii_plugin(file_path) {
+                    Ok(_) => sender.send_success(String::new())?,
+                    Err(e) => sender.send_failure(e.to_string())?,
+                }
+            }
         }
         Ok(())
     }
@@ -483,7 +501,7 @@ impl<B: DisplayBackend> App<B> {
             // so I guess that I will just let it stay right here.
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-            
+
             {
                 let mut stored_parser = self.config_parser.borrow_mut();
                 stored_parser.set_opt_level(get_opt_level_from(
@@ -796,6 +814,30 @@ impl<B: DisplayBackend> App<B> {
     pub fn set_engine_overrides(&mut self, config: String) -> Result<()> {
         let parsed_config: EngineConfValues = serde_json::from_str(&config)?;
         self.rt_engine_config = self.rt_engine_config.merge(parsed_config);
+
+        Ok(())
+    }
+
+    pub fn set_ewwii_plugin(&mut self, file_path: String) -> Result<()> {
+        let lib = unsafe {
+            libloading::Library::new(file_path)
+                .map_err(|e| anyhow!("Failed to load plugin: {}", e))?
+        };
+
+        unsafe {
+            // Each plugin exposes: extern "C" fn create_plugin() -> Box<dyn Plugin>
+            let constructor: libloading::Symbol<
+                unsafe extern "C" fn() -> Box<dyn ewwii_plugin_api::Plugin>,
+            > = lib
+                .get(b"create_plugin")
+                .map_err(|e| anyhow!("Failed to find create_plugin: {}", e))?;
+
+            let plugin = constructor(); // instantiate plugin
+            let host = crate::plugin::EwwiiImpl;
+            plugin.init(&host); // call init immediately
+
+            set_active_plugin(lib); // keep library alive
+        }
 
         Ok(())
     }
