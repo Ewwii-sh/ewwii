@@ -7,13 +7,13 @@ use crate::{
 use anyhow::{Context, Result};
 use gtk4::prelude::{DisplayExt, ListModelExt};
 use std::{
-    // cell::RefCell,
+    cell::RefCell,
     collections::{HashMap, HashSet},
     io::Write,
     marker::PhantomData,
     os::unix::io::AsRawFd,
     path::Path,
-    // rc::Rc,
+    rc::Rc,
     sync::{atomic::Ordering, Arc},
 };
 use tokio::sync::mpsc::*;
@@ -31,7 +31,13 @@ pub fn initialize_server<B: DisplayBackend>(
 
     log::info!("Loading paths: {}", &paths);
 
-    let read_config = config::read_from_ewwii_paths(&paths);
+    let config_parser = Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new()));
+    let mut config_parser_mut = config_parser.borrow_mut();
+
+    let read_config = config::read_from_ewwii_paths(&paths, &mut *config_parser_mut);
+
+    // free the temporary parser borrow
+    drop(config_parser_mut);
 
     let ewwii_config = match read_config {
         Ok(config) => config,
@@ -92,6 +98,7 @@ pub fn initialize_server<B: DisplayBackend>(
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
         pl_handler_store: None,
         rt_engine_config: EngineConfValues::default(),
+        config_parser: config_parser,
         paths,
         gtk_main_loop: main_loop.clone(),
         phantom: PhantomData,
