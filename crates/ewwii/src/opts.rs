@@ -217,6 +217,14 @@ pub enum ActionWithServer {
         #[arg(long = "sprint", short = 'p')]
         print: bool,
     },
+
+    /// Set a plugin (.so) to the ewwii binary
+    #[command(name = "set-plugin")]
+    SetPlugin {
+        /// The .so file to load
+        #[arg(value_parser = absolute_file_path_parser)]
+        file_path: String,
+    },
 }
 
 impl Opt {
@@ -355,6 +363,12 @@ impl ActionWithServer {
                     sender,
                 })
             }
+            ActionWithServer::SetPlugin { file_path } => {
+                return with_response_channel(|sender| app::DaemonCommand::SetPlugin {
+                    file_path,
+                    sender,
+                })
+            }
         };
         (command, None)
     }
@@ -430,4 +444,11 @@ fn parse_inject_var_map(s: &str) -> Result<HashMap<String, String>, String> {
         map.insert(key.trim().to_string(), val.trim().to_string());
     }
     Ok(map)
+}
+
+fn absolute_file_path_parser(s: &str) -> Result<String, String> {
+    let p = std::path::Path::new(s);
+    std::fs::canonicalize(p)
+        .map_err(|e| format!("Failed to canonicalize '{}': {}", s, e))
+        .map(|abs_path| abs_path.to_string_lossy().into_owned())
 }

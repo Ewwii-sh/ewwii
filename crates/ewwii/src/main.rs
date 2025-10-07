@@ -48,6 +48,7 @@ mod gen_diagnostic_macro;
 mod ipc_server;
 mod opts;
 mod paths;
+mod plugin;
 mod server;
 mod util;
 mod widgets;
