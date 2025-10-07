@@ -15,8 +15,8 @@ use rhai_impl::{ast::WidgetNode, parser::ParseConfig};
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_ewwii_paths(eww_paths: &EwwiiPaths) -> Result<EwwiiConfig> {
-    EwwiiConfig::read_from_dir(eww_paths)
+pub fn read_from_ewwii_paths(eww_paths: &EwwiiPaths, parser: &mut ParseConfig) -> Result<EwwiiConfig> {
+    EwwiiConfig::read_from_dir(eww_paths, parser)
 }
 
 /// Ewwii configuration structure.
@@ -37,14 +37,11 @@ pub struct WindowDefinition {
 
 impl EwwiiConfig {
     /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`], reading the main config file.
-    pub fn read_from_dir(eww_paths: &EwwiiPaths) -> Result<Self> {
+    pub fn read_from_dir(eww_paths: &EwwiiPaths, config_parser: &mut ParseConfig) -> Result<Self> {
         let rhai_path = eww_paths.get_rhai_path();
         if !rhai_path.exists() {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
         }
-
-        // initialize configuration parser
-        let mut config_parser = ParseConfig::new();
 
         // get code from file
         let rhai_code = config_parser.code_from_file(&rhai_path)?;
