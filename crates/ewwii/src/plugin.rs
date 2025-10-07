@@ -1,19 +1,13 @@
-use ewwii_plugin_api::{EwwiiAPI, Plugin};
+use ewwii_plugin_api::EwwiiAPI;
+use rhai::Engine;
+use rhai_impl::parser::ParseConfig;
+use std::sync::{Arc, RwLock};
 
 pub struct EwwiiImpl;
 
-impl HostAPI for EwwiiImpl {
-	// General
+impl EwwiiAPI for EwwiiImpl {
+    // General
     fn log(&self, msg: &str) {
         println!("[HOST LOG] {}", msg);
-    }
-
-    // Rhai Engine Stuff
-    fn get_rhai_engine(&self) {
-
-    }
-
-    fn set_rhai_engine(&self, engine: &Engine) {
-
     }
 }
