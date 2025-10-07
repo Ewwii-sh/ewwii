@@ -21,6 +21,7 @@ use crate::{
     window_initiator::WindowInitiator,
     *,
 };
+use rhai_impl::parser::ParseConfig;
 use anyhow::{anyhow, bail};
 use gdk::Monitor;
 use gtk4::Window;
@@ -30,7 +31,7 @@ use rhai::Dynamic;
 use rhai_impl::ast::WidgetNode;
 use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use std::{
-    cell::Cell,
+    cell::{Cell, RefCell},
     collections::{HashMap, HashSet},
     marker::PhantomData,
     rc::Rc,
@@ -154,6 +155,7 @@ pub struct App<B: DisplayBackend> {
     pub pl_handler_store: Option<rhai_impl::updates::ReactiveVarStore>,
 
     pub rt_engine_config: EngineConfValues,
+    pub config_parser: Rc<RefCell<ParseConfig>>,
 
     pub paths: EwwiiPaths,
     pub gtk_main_loop: gtk4::glib::MainLoop,
@@ -223,7 +225,11 @@ impl<B: DisplayBackend> App<B> {
                 wait_for_monitor_model().await;
                 let mut errors = Vec::new();
 
-                let config_result = config::read_from_ewwii_paths(&self.paths);
+                let mut parser_ref = self.config_parser.borrow_mut();
+                let config_result = config::read_from_ewwii_paths(&self.paths, &mut *parser_ref);
+
+                drop(parser_ref);
+
                 if let Err(e) = config_result.and_then(|new_config| self.load_config(new_config)) {
                     errors.push(e)
                 }
@@ -477,11 +483,15 @@ impl<B: DisplayBackend> App<B> {
             // so I guess that I will just let it stay right here.
             let config_path = self.paths.get_rhai_path();
             let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-            let mut stored_parser = rhai_impl::parser::ParseConfig::new();
-            stored_parser.set_opt_level(get_opt_level_from(
-                self.rt_engine_config.optimization_level.unwrap_or(1),
-            ));
+            
+            {
+                let mut stored_parser = self.config_parser.borrow_mut();
+                stored_parser.set_opt_level(get_opt_level_from(
+                    self.rt_engine_config.optimization_level.unwrap_or(1),
+                ));
+            }
 
+            let stored_parser_clone = self.config_parser.clone();
             if self.open_windows.is_empty() {
                 let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
                 let widget_reg_store = self.widget_reg_store.clone();
@@ -513,11 +523,12 @@ impl<B: DisplayBackend> App<B> {
                         }
 
                         let vars = store.read().unwrap().clone();
+                        let mut parser_rc = stored_parser_clone.borrow_mut();
                         match generate_new_widgetnode(
                             &vars,
                             &config_path,
                             compiled_ast.as_deref(),
-                            Some(&mut stored_parser),
+                            &mut *parser_rc,
                         )
                         .await
                         {
@@ -552,11 +563,12 @@ impl<B: DisplayBackend> App<B> {
 
                 glib::MainContext::default().spawn_local(async move {
                     let vars = store.read().unwrap().clone();
+                    let mut parser_rc = stored_parser_clone.borrow_mut();
                     match generate_new_widgetnode(
                         &vars,
                         &config_path,
                         compiled_ast.as_deref(),
-                        Some(&mut stored_parser),
+                        &mut *parser_rc,
                     )
                     .await
                     {
@@ -712,7 +724,7 @@ impl<B: DisplayBackend> App<B> {
             bail!("The configuration file `{}` does not exist", config_path.display());
         }
 
-        let mut reeval_parser = ParseConfig::new();
+        let mut reeval_parser = self.config_parser.borrow_mut();
         let rhai_code = reeval_parser.code_from_file(&config_path)?;
 
         let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
@@ -765,7 +777,7 @@ impl<B: DisplayBackend> App<B> {
         let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
         let config_path = self.paths.get_rhai_path();
 
-        let mut reeval_parser = ParseConfig::new();
+        let mut reeval_parser = self.config_parser.borrow_mut();
         let rhai_code = reeval_parser.code_from_file(&config_path)?;
 
         let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
@@ -931,23 +943,13 @@ fn initialize_window<B: DisplayBackend>(
     })
 }
 
-use rhai_impl::parser::ParseConfig;
-
 async fn generate_new_widgetnode(
     all_vars: &HashMap<String, String>,
     code_path: &Path,
     compiled_ast: Option<&rhai::AST>,
-    parser: Option<&mut ParseConfig>,
+    parser: &mut ParseConfig,
 ) -> Result<WidgetNode> {
-    let mut owned_parser;
-    let reeval_parser: &mut ParseConfig = match parser {
-        Some(p) => p,
-        None => {
-            owned_parser = ParseConfig::new();
-            &mut owned_parser
-        }
-    };
-    let rhai_code = reeval_parser.code_from_file(&code_path)?;
+    let rhai_code = parser.code_from_file(&code_path)?;
 
     let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
     for (name, val) in all_vars {
@@ -959,7 +961,7 @@ async fn generate_new_widgetnode(
     }
 
     let new_root_widget =
-        reeval_parser.eval_code_with(&rhai_code, Some(scope), compiled_ast, code_path.to_str())?;
+        parser.eval_code_with(&rhai_code, Some(scope), compiled_ast, code_path.to_str())?;
 
     Ok(new_root_widget)
 }
