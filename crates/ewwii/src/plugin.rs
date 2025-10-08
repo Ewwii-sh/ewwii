@@ -1,6 +1,6 @@
 use ewwii_plugin_api::EwwiiAPI;
 use rhai::Engine;
-use std::sync::mpsc::{Sender};
+use std::sync::mpsc::Sender;
 
 pub(crate) struct EwwiiImpl {
     pub(crate) requestor: Sender<PluginRequest>,
