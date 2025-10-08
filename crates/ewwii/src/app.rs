@@ -1,3 +1,4 @@
+use crate::plugin::PluginRequest;
 use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
@@ -22,7 +23,6 @@ use crate::{
     *,
 };
 use anyhow::{anyhow, bail};
-use crate::plugin::PluginRequest;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
