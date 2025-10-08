@@ -1,7 +1,12 @@
 [package]
 name = "ewwii_plugin_api"
 version = "0.1.0"
-edition = "2024"
+authors = ["byson94 <byson94wastaken@gmail.com>"]
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "The full ewwii plugin API shared library"
+repository = "https://github.com/byson94/ewwii"
+homepage = "https://github.com/byson94/ewwii"
 
 [dependencies]
-rhai.workspace = true
+rhai = { workspace = true }
