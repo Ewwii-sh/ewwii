@@ -15,7 +15,7 @@ impl EwwiiAPI for EwwiiImpl {
     // Rhai Manipulation Stuff
     fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut Engine) + Send>) -> Result<(), String> {
         self.requestor
-            .send(PluginRequest::SetRhaiEngine(f))
+            .send(PluginRequest::RhaiEngineAct(f))
             .map_err(|_| "Failed to send request to host".to_string())?;
         Ok(())
     }
