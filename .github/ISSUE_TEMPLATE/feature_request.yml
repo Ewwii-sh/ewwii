@@ -12,7 +12,7 @@ body:
   - type: textarea
     attributes:
       label: "Proposed configuration syntax"
-      description: "If the feature you are requesting would add or change something to the Eww configuration, please provide an example for how the feature could be used."
+      description: "If the feature you are requesting would add or change something to the Ewwii configuration, please provide an example for how the feature could be used."
     validations:
       required: false
   - type: textarea
