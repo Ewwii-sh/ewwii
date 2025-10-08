@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+### Added
+
+- Support for binary level plugins.
+
+### Changed
+
+- The name of `slider` widget to `scale`.
+
 ### Fixed
 
 -   `focusable` property not working issue.
