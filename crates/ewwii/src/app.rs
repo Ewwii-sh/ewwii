@@ -22,6 +22,7 @@ use crate::{
     *,
 };
 use anyhow::{anyhow, bail};
+use crate::plugin::PluginRequest;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
@@ -819,10 +820,19 @@ impl<B: DisplayBackend> App<B> {
     }
 
     pub fn set_ewwii_plugin(&mut self, file_path: String) -> Result<()> {
+        if ACTIVE_PLUGIN.get().is_some() {
+            anyhow::bail!("A plugin is already loaded");
+        }
+
         let lib = unsafe {
             libloading::Library::new(file_path)
                 .map_err(|e| anyhow!("Failed to load plugin: {}", e))?
         };
+
+        let (tx, rx): (
+            std::sync::mpsc::Sender<PluginRequest>,
+            std::sync::mpsc::Receiver<PluginRequest>,
+        ) = std::sync::mpsc::channel();
 
         unsafe {
             // Each plugin exposes: extern "C" fn create_plugin() -> Box<dyn Plugin>
@@ -833,11 +843,23 @@ impl<B: DisplayBackend> App<B> {
                 .map_err(|e| anyhow!("Failed to find create_plugin: {}", e))?;
 
             let plugin = constructor(); // instantiate plugin
-            let host = crate::plugin::EwwiiImpl;
+            let host = crate::plugin::EwwiiImpl { requestor: tx.clone() };
             plugin.init(&host); // call init immediately
 
             set_active_plugin(lib); // keep library alive
         }
+
+        while let Ok(req) = rx.recv() {
+            match req {
+                PluginRequest::RhaiEngineAct(func) => {
+                    let mut cp = self.config_parser.borrow_mut();
+                    cp.action_with_engine(func);
+                }
+            }
+        }
+
+        // use tokio::task::spawn_blocking()
+        // when more plugin requests are being handled.
 
         Ok(())
     }
