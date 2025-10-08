@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - Support for binary level plugins.
+- `set-plugin` command 
 
 ### Changed
 
