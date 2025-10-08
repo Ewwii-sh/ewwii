@@ -43,9 +43,8 @@ use tokio::sync::mpsc::UnboundedSender;
 
 static ACTIVE_PLUGIN: OnceCell<libloading::Library> = OnceCell::new();
 
-fn set_active_plugin(lib: libloading::Library) {
-    // will panic if called more than once
-    ACTIVE_PLUGIN.set(lib).unwrap();
+fn set_active_plugin(lib: libloading::Library) -> Result<()> {
+    ACTIVE_PLUGIN.set(lib).map_err(|_| anyhow!("Plugin already set"))
 }
 
 /// A command for the ewwii daemon.
@@ -381,7 +380,7 @@ impl<B: DisplayBackend> App<B> {
             }
             DaemonCommand::SetPlugin { file_path, sender } => {
                 match self.set_ewwii_plugin(file_path) {
-                    Ok(_) => sender.send_success(String::new())?,
+                    Ok(_) => sender.send_success(String::from("OK"))?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 }
             }
@@ -846,20 +845,21 @@ impl<B: DisplayBackend> App<B> {
             let host = crate::plugin::EwwiiImpl { requestor: tx.clone() };
             plugin.init(&host); // call init immediately
 
-            set_active_plugin(lib); // keep library alive
+            set_active_plugin(lib)?; // keep library alive
         }
 
-        while let Ok(req) = rx.recv() {
-            match req {
-                PluginRequest::RhaiEngineAct(func) => {
-                    let mut cp = self.config_parser.borrow_mut();
-                    cp.action_with_engine(func);
+        let cp = self.config_parser.clone();
+
+        glib::MainContext::default().spawn_local(async move {
+            while let Ok(req) = rx.recv() {
+                match req {
+                    PluginRequest::RhaiEngineAct(func) => {
+                        let mut cp = cp.borrow_mut();
+                        cp.action_with_engine(func);
+                    }
                 }
             }
-        }
-
-        // use tokio::task::spawn_blocking()
-        // when more plugin requests are being handled.
+        });
 
         Ok(())
     }
