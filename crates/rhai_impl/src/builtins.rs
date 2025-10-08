@@ -41,7 +41,7 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     register_primitive!("input", Input);
     register_primitive!("progress", Progress);
     register_primitive!("combo_box_text", ComboBoxText);
-    register_primitive!("slider", Slider);
+    register_primitive!("scale", Slider);
     register_primitive!("checkbox", Checkbox);
     register_primitive!("calendar", Calendar);
     register_primitive!("graph", Graph);
