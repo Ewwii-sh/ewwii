@@ -146,4 +146,11 @@ impl ParseConfig {
     pub fn set_opt_level(&mut self, opt_lvl: OptimizationLevel) {
         self.engine.set_optimization_level(opt_lvl);
     }
+
+    pub fn action_with_engine<F, R>(&mut self, f: F) -> R
+    where
+        F: FnOnce(&mut Engine) -> R,
+    {
+        f(&mut self.engine)
+    }
 }
