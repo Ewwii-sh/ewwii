@@ -9,4 +9,4 @@ repository = "https://github.com/byson94/ewwii"
 homepage = "https://github.com/byson94/ewwii"
 
 [dependencies]
-rhai = { workspace = true }
+rhai.workspace = true

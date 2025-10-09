@@ -8,6 +8,7 @@ A simple example showing how to use this interface is provided below:
 
 ```rust
 use ewwii_plugin_api::{EwwiiAPI, Plugin};
+use ewwii_plugin_api::export::export_plugin;
 
 pub struct DummyStructure;
 
@@ -24,8 +25,5 @@ impl Plugin for DummyStructure {
 }
 
 // Critical for ewwii to see the plugin
-#[unsafe(no_mangle)]
-pub extern "C" fn create_plugin() -> Box<dyn Plugin> {
-    Box::new(DummyStructure)
-}
+export_plugin!(DummyStructure);
 ```

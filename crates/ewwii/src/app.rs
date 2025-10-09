@@ -860,11 +860,12 @@ impl<B: DisplayBackend> App<B> {
                     }
                     PluginRequest::ListWidgetIds(res_tx) => {
                         let wgs_guard = wgs.lock().unwrap();
-                        let wgs_brw = wgs_guard.as_ref().unwrap();
-                        let output: Vec<u64> = wgs_brw.widgets.keys().cloned().collect();
+                        if let Some(wgs_brw) = wgs_guard.as_ref() {
+                            let output: Vec<u64> = wgs_brw.widgets.keys().cloned().collect();
 
-                        if let Err(e) = res_tx.send(output) {
-                            log::error!("Failed to send window list to host: {}", e);
+                            if let Err(e) = res_tx.send(output) {
+                                log::error!("Failed to send window list to host: {}", e);
+                            }
                         }
                     }
                 }
