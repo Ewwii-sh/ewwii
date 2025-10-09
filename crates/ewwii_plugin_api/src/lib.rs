@@ -33,7 +33,13 @@ use rhai::Engine;
 pub trait EwwiiAPI: Send + Sync {
     // == General Stuff == //
     /// Print a message from the host
+    fn print(&self, msg: &str);
+    /// Log a message from the host
     fn log(&self, msg: &str);
+    /// Log a warning from the host
+    fn warn(&self, msg: &str);
+    /// Log an error from the host
+    fn error(&self, msg: &str);
 
     // == Rhai Manipulation Stuff == //
     /// Perform an action on the current real-time rhai engine
