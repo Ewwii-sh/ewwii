@@ -9,6 +9,7 @@
 //!
 //! ```rust
 //! use ewwii_plugin_api::{EwwiiAPI, Plugin};
+//! use ewwii_plugin_api::export::export_plugin;
 //!
 //! pub struct DummyStructure;
 //!
@@ -21,11 +22,10 @@
 //! }
 //!
 //! // Critical for ewwii to load the plugin
-//! #[unsafe(no_mangle)]
-//! pub extern "C" fn create_plugin() -> Box<dyn Plugin> {
-//!     Box::new(DummyStructure)
-//! }
+//! export_plugin!(DummyStructure);
 //! ```
+
+pub mod export;
 
 use rhai::Engine;
 
