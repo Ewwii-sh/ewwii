@@ -2,7 +2,7 @@
 //! It allows fast and easy export of plugins by abstracting
 //! the FFI (Foreign Function Interface) related code needed.
 
-/// Automatically implements `create_plugin` for a given fieldless structure 
+/// Automatically implements `create_plugin` for a given fieldless structure
 #[macro_export]
 macro_rules! export_plugin {
     ($plugin_struct:ty) => {
