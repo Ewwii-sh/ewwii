@@ -6,7 +6,7 @@
 //! ## Example
 //!
 //! The following example shows how this crate shall be used to build ewwii plugins:
-//! 
+//!
 //! ```rust
 //! use ewwii_plugin_api::{EwwiiAPI, Plugin};
 //!
@@ -31,13 +31,17 @@ use rhai::Engine;
 
 /// The shared trait defining the Ewwii plugin API
 pub trait EwwiiAPI: Send + Sync {
-    // == General stuff == //
+    // == General Stuff == //
     /// Print a message from the host
     fn log(&self, msg: &str);
 
     // == Rhai Manipulation Stuff == //
     /// Perform an action on the current real-time rhai engine
     fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut Engine) + Send>) -> Result<(), String>;
+
+    // == Widget Rendering & Logic == //
+    /// Get the list of all widget id's
+    fn list_widget_ids(&self) -> Result<Vec<u64>, String>;
 }
 
 /// The API format that the plugin should follow

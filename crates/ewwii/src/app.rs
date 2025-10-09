@@ -849,6 +849,7 @@ impl<B: DisplayBackend> App<B> {
         }
 
         let cp = self.config_parser.clone();
+        let wgs = self.widget_reg_store.clone();
 
         glib::MainContext::default().spawn_local(async move {
             while let Ok(req) = rx.recv() {
@@ -856,6 +857,15 @@ impl<B: DisplayBackend> App<B> {
                     PluginRequest::RhaiEngineAct(func) => {
                         let mut cp = cp.borrow_mut();
                         cp.action_with_engine(func);
+                    }
+                    PluginRequest::ListWidgetIds(res_tx) => {
+                        let wgs_guard = wgs.lock().unwrap();
+                        let wgs_brw = wgs_guard.as_ref().unwrap();
+                        let output: Vec<u64> = wgs_brw.widgets.keys().cloned().collect();
+
+                        if let Err(e) = res_tx.send(output) {
+                            log::error!("Failed to send window list to host: {}", e);
+                        }
                     }
                 }
             }
