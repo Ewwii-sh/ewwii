@@ -1,3 +1,32 @@
+//! `ewwii_plguin_api` is a shared list of traits
+//! that both ewwii and its plugins can use.
+//! This is a **must-have** for building plugins for ewwii
+//! as this explicit layout is what ewwii requires a plugin to have.
+//!
+//! ## Example
+//!
+//! The following example shows how this crate shall be used to build ewwii plugins:
+//! 
+//! ```rust
+//! use ewwii_plugin_api::{EwwiiAPI, Plugin};
+//!
+//! pub struct DummyStructure;
+//!
+//! impl Plugin for DummyStructure {
+//!     // critical for ewwii to launch the plugin
+//!     fn init(&self, host: &dyn EwwiiAPI) {
+//!         // will be printed by the host
+//!         host.log("Plugin says Hello!");
+//!     }
+//! }
+//!
+//! // Critical for ewwii to load the plugin
+//! #[unsafe(no_mangle)]
+//! pub extern "C" fn create_plugin() -> Box<dyn Plugin> {
+//!     Box::new(DummyStructure)
+//! }
+//! ```
+
 use rhai::Engine;
 
 /// The shared trait defining the Ewwii plugin API
