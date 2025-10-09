@@ -8,8 +8,21 @@ pub(crate) struct EwwiiImpl {
 
 impl EwwiiAPI for EwwiiImpl {
     // General
+    // "PCL = Plugin Controlled Log"
+    fn print(&self, msg: &str) {
+        println!("[PCL] {}", msg);
+    }
+
     fn log(&self, msg: &str) {
-        println!("[HOST LOG] {}", msg);
+        log::info!("[PCL] {}", msg);
+    }
+
+    fn warn(&self, msg: &str) {
+        log::warn!("[PCL] {}", msg);
+    }
+
+    fn error(&self, msg: &str) {
+        log::error!("[PCL] {}", msg);
     }
 
     // Rhai Manipulation Stuff
