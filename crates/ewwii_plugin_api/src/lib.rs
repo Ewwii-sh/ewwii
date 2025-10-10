@@ -26,6 +26,7 @@
 //! ```
 
 pub mod export;
+pub mod widget_backend;
 
 use rhai::Engine;
 
@@ -42,12 +43,18 @@ pub trait EwwiiAPI: Send + Sync {
     fn error(&self, msg: &str);
 
     // == Rhai Manipulation Stuff == //
-    /// Perform an action on the current real-time rhai engine
+    /// Perform actions on the latest rhai engine
     fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut Engine) + Send>) -> Result<(), String>;
 
     // == Widget Rendering & Logic == //
     /// Get the list of all widget id's
     fn list_widget_ids(&self) -> Result<Vec<u64>, String>;
+
+    /// Perform actions on the latest widget registry
+    fn widget_reg_action(
+        &self,
+        f: Box<dyn FnOnce(&mut widget_backend::WidgetRegistryRepr) + Send>,
+    ) -> Result<(), String>;
 }
 
 /// The API format that the plugin should follow
