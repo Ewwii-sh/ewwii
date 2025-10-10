@@ -23,7 +23,9 @@
 //! export_plugin!(DummyStructure);
 //! ```
 
-pub mod export;
+mod export_macros;
+
+pub mod example;
 pub mod widget_backend;
 
 use rhai::Engine;
