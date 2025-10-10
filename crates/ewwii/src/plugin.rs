@@ -1,4 +1,4 @@
-use ewwii_plugin_api::EwwiiAPI;
+use ewwii_plugin_api::{widget_backend, EwwiiAPI};
 use rhai::Engine;
 use std::sync::mpsc::{channel as mpsc_channel, Receiver, Sender};
 
@@ -46,9 +46,20 @@ impl EwwiiAPI for EwwiiImpl {
             Err(e) => Err(e.to_string()),
         }
     }
+
+    fn widget_reg_action(
+        &self,
+        f: Box<dyn FnOnce(&mut widget_backend::WidgetRegistryRepr) + Send>,
+    ) -> Result<(), String> {
+        self.requestor
+            .send(PluginRequest::WidgetRegistryAct(f))
+            .map_err(|_| "Failed to send request to host".to_string())?;
+        Ok(())
+    }
 }
 
 pub(crate) enum PluginRequest {
     RhaiEngineAct(Box<dyn FnOnce(&mut Engine) + Send>),
     ListWidgetIds(Sender<Vec<u64>>),
+    WidgetRegistryAct(Box<dyn FnOnce(&mut widget_backend::WidgetRegistryRepr) + Send>),
 }
