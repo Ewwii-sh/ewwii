@@ -11,19 +11,23 @@ mod apilib;
 mod stdlib;
 
 use crate::module_resolver::{ChainedResolver, SimpleFileResolver};
+use crate::updates::ReactiveVarStore;
 use rhai::module_resolvers::StaticModuleResolver;
 
 // expose the api's publically
 pub use apilib::register_apilib;
 pub use stdlib::register_stdlib;
 
-pub fn register_all_providers(engine: &mut rhai::Engine) {
+pub fn register_all_providers(engine: &mut rhai::Engine, plhs: Option<ReactiveVarStore>) {
     let mut resolver = StaticModuleResolver::new();
 
     // modules
     register_stdlib(&mut resolver);
     register_apilib(&mut resolver);
 
-    let chained = ChainedResolver { first: SimpleFileResolver, second: resolver.clone() };
+    let chained = ChainedResolver {
+        first: SimpleFileResolver { pl_handler_store: plhs.clone() },
+        second: resolver.clone(),
+    };
     engine.set_module_resolver(chained);
 }
