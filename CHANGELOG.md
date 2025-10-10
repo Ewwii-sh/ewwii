@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
--   `focusable` property not working issue.
+- `focusable` property not working issue.
+- Poll/Listen variable scope not accessable to all modules.
 
 ## [0.3.0-alpha] - 2025-10-04
 
