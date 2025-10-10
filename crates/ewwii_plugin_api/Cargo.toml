@@ -1,12 +1,13 @@
 [package]
 name = "ewwii_plugin_api"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
-description = "The full ewwii plugin API shared library for building plugins"
+description = "A shared library for building plugins for ewwii"
 repository = "https://github.com/byson94/ewwii"
 homepage = "https://github.com/byson94/ewwii"
 
 [dependencies]
 rhai.workspace = true
+gtk4.workspace = true

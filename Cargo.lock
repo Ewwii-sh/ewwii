@@ -529,6 +529,7 @@ dependencies = [
 name = "ewwii_plugin_api"
 version = "0.2.0"
 dependencies = [
+ "gtk4",
  "rhai",
 ]
 
