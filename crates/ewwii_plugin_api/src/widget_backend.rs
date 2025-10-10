@@ -7,7 +7,7 @@ use std::collections::HashMap;
 /// A representation of widget registry which holds all the
 /// information needed for the dynamic runtime engine in ewwii.
 ///
-/// Not every change in this structure will be represented in the 
+/// Not every change in this structure will be represented in the
 /// original WidgetRegistry in ewwii. Only the change on gtk4::Widget
 /// is reflected back.
 pub struct WidgetRegistryRepr<'a> {
