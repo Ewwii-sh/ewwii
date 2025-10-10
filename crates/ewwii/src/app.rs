@@ -857,6 +857,20 @@ impl<B: DisplayBackend> App<B> {
                             }
                         }
                     }
+                    PluginRequest::WidgetRegistryAct(func) => {
+                        let mut wgs_guard = wgs.lock().unwrap();
+                        if let Some(ref mut registry) = *wgs_guard {
+                            let repr_map: HashMap<u64, &mut gtk4::Widget> = registry
+                                .widgets
+                                .iter_mut()
+                                .map(|(id, entry)| (*id, &mut entry.widget))
+                                .collect();
+
+                            func(&mut ewwii_plugin_api::widget_backend::WidgetRegistryRepr {
+                                widgets: repr_map,
+                            });
+                        }
+                    }
                 }
             }
         });
