@@ -8,9 +8,7 @@
 //! The following example shows how this crate shall be used to build ewwii plugins:
 //!
 //! ```rust
-//! use ewwii_plugin_api::{EwwiiAPI, Plugin};
-//! use ewwii_plugin_api::export::export_plugin;
-//!
+//! use ewwii_plugin_api::{EwwiiAPI, Plugin, export_plugin};
 //! pub struct DummyStructure;
 //!
 //! impl Plugin for DummyStructure {
