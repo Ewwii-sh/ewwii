@@ -14,7 +14,7 @@ use std::{
     os::unix::io::AsRawFd,
     path::Path,
     rc::Rc,
-    sync::{atomic::Ordering, Arc},
+    sync::{atomic::Ordering, Arc, RwLock},
 };
 use tokio::sync::mpsc::*;
 
@@ -31,7 +31,11 @@ pub fn initialize_server<B: DisplayBackend>(
 
     log::info!("Loading paths: {}", &paths);
 
-    let config_parser = Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new()));
+    let pl_handler_store: rhai_impl::updates::ReactiveVarStore =
+        Arc::new(RwLock::new(HashMap::new()));
+
+    let config_parser =
+        Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new(Some(pl_handler_store.clone()))));
     let mut config_parser_mut = config_parser.borrow_mut();
 
     let read_config = config::read_from_ewwii_paths(&paths, &mut *config_parser_mut);
@@ -96,7 +100,7 @@ pub fn initialize_server<B: DisplayBackend>(
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
-        pl_handler_store: None,
+        pl_handler_store,
         rt_engine_config: EngineConfValues::default(),
         config_parser,
         paths,

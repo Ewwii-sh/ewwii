@@ -5,6 +5,7 @@ use crate::{
     helper::extract_poll_and_listen_vars,
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
+    updates::ReactiveVarStore,
 };
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, OptimizationLevel, Scope, AST};
@@ -19,15 +20,16 @@ pub struct ParseConfig {
 }
 
 impl ParseConfig {
-    pub fn new() -> Self {
+    pub fn new(pl_handler_store: Option<ReactiveVarStore>) -> Self {
         let mut engine = Engine::new();
         let all_nodes = Rc::new(RefCell::new(Vec::new()));
 
         engine.set_max_expr_depths(128, 128);
-        engine.set_module_resolver(SimpleFileResolver);
+        engine
+            .set_module_resolver(SimpleFileResolver { pl_handler_store: pl_handler_store.clone() });
 
         register_all_widgets(&mut engine, &all_nodes);
-        register_all_providers(&mut engine);
+        register_all_providers(&mut engine, pl_handler_store);
 
         Self { engine, all_nodes }
     }

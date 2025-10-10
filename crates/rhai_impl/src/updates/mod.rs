@@ -33,11 +33,8 @@ pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
 pub fn handle_state_changes(
     root_node: &WidgetNode,
     tx: UnboundedSender<String>,
-) -> ReactiveVarStore {
-    // Enter node is the WidgetNode of Enter()
-    // it is the very root of every config.
-    let store: ReactiveVarStore = Arc::new(RwLock::new(HashMap::new()));
-
+    store: ReactiveVarStore,
+) {
     if let WidgetNode::Enter(children) = root_node {
         for child in children {
             match child {
@@ -53,8 +50,6 @@ pub fn handle_state_changes(
     } else {
         log::warn!("Expected Enter() as root node for config");
     }
-
-    store
 }
 
 pub fn kill_state_change_handler() {

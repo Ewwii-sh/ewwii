@@ -164,7 +164,7 @@ pub struct App<B: DisplayBackend> {
     pub widget_reg_store: Rc<Mutex<Option<WidgetRegistry>>>,
 
     // The cached store of poll/listen handlers
-    pub pl_handler_store: Option<rhai_impl::updates::ReactiveVarStore>,
+    pub pl_handler_store: rhai_impl::updates::ReactiveVarStore,
 
     pub rt_engine_config: EngineConfValues,
     pub config_parser: Rc<RefCell<ParseConfig>>,
@@ -345,14 +345,8 @@ impl<B: DisplayBackend> App<B> {
                 sender.send_success(output)?
             }
             DaemonCommand::ShowState(sender) => {
-                if let Some(maybe_store) = &self.pl_handler_store {
-                    let output = format!("{:#?}", maybe_store.read().unwrap());
-                    sender.send_success(output)?
-                } else {
-                    sender.send_failure(
-                        "The poll/listen handler store doesn't exist or is empty".to_string(),
-                    )?
-                }
+                let output = format!("{:#?}", &self.pl_handler_store.read().unwrap());
+                sender.send_success(output)?
             }
             DaemonCommand::TriggerUpdateUI { inject_vars, should_preserve_state, sender } => {
                 match self.trigger_ui_update_with(inject_vars, should_preserve_state) {
@@ -514,12 +508,14 @@ impl<B: DisplayBackend> App<B> {
                 let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
                 let widget_reg_store = self.widget_reg_store.clone();
 
-                let store = rhai_impl::updates::handle_state_changes(
+                // Will automatically mutate pl_handler_store
+                rhai_impl::updates::handle_state_changes(
                     self.ewwii_config.get_root_node()?.as_ref(),
                     tx,
+                    self.pl_handler_store.clone(),
                 );
 
-                self.pl_handler_store = Some(store.clone());
+                let store = self.pl_handler_store.clone();
                 let b_interval = self.rt_engine_config.batching_interval;
 
                 glib::MainContext::default().spawn_local(async move {
@@ -574,10 +570,7 @@ impl<B: DisplayBackend> App<B> {
             } else {
                 // else, just update the window from the current store.
                 let widget_reg_store = self.widget_reg_store.clone();
-                let store = self
-                    .pl_handler_store
-                    .clone()
-                    .expect("Failed to clone poll listen handler store");
+                let store = self.pl_handler_store.clone();
 
                 glib::MainContext::default().spawn_local(async move {
                     let vars = store.read().unwrap().clone();
@@ -747,12 +740,10 @@ impl<B: DisplayBackend> App<B> {
 
         let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
 
-        if let Some(maybe_all_vars) = &self.pl_handler_store {
-            let all_vars = maybe_all_vars.read().unwrap().clone();
+        let all_vars = self.pl_handler_store.read().unwrap().clone();
 
-            for (name, val) in all_vars {
-                scope.set_value(name.clone(), Dynamic::from(val.clone()));
-            }
+        for (name, val) in all_vars {
+            scope.set_value(name.clone(), Dynamic::from(val.clone()));
         }
 
         if let Some(vars) = inject_vars {
@@ -764,9 +755,7 @@ impl<B: DisplayBackend> App<B> {
                 // This is esstentially storing the inject variables
                 // in the poll/listen variable store (or the `pl_handler_store` in self)
                 if should_preserve_state {
-                    if let Some(maybe_store) = &self.pl_handler_store {
-                        maybe_store.write().unwrap().insert(name, val);
-                    }
+                    self.pl_handler_store.write().unwrap().insert(name, val);
                 }
             }
         }
