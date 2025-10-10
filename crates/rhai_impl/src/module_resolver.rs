@@ -1,11 +1,15 @@
 use crate::error::{format_eval_error, format_parse_error};
 use crate::parser::ParseConfig;
-use rhai::{Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
+use crate::updates::ReactiveVarStore;
+use rhai::{Dynamic, Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-pub struct SimpleFileResolver;
+pub struct SimpleFileResolver {
+    pub pl_handler_store: Option<ReactiveVarStore>,
+}
 
 impl ModuleResolver for SimpleFileResolver {
     fn resolve(
@@ -50,12 +54,26 @@ impl ModuleResolver for SimpleFileResolver {
                 format_parse_error(&e, &script, full_path.to_str()).into(),
             ))
         })?;
-        let scope = ParseConfig::initial_poll_listen_scope(&script).map_err(|e| {
+
+        let mut scope = ParseConfig::initial_poll_listen_scope(&script).map_err(|e| {
             EvalAltResult::ErrorSystem(
                 format!("error setting up default variables: {full_path:?}"),
                 e.into(),
             )
         })?;
+
+        match &self.pl_handler_store {
+            Some(val) => {
+                println!("VALBEF: {:#?}", val);
+                let name_to_val: &HashMap<String, String> = &*val.read().unwrap();
+
+                for (name, val) in name_to_val {
+                    scope.set_value(name.clone(), Dynamic::from(val.clone()));
+                }
+            }
+            None => {}
+        }
+
         let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {
             Box::new(EvalAltResult::ErrorSystem(
                 "module_eval_failed".into(),
