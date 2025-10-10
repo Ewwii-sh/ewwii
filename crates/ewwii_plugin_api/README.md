@@ -7,8 +7,7 @@ A shared interface providing traits for building plugins for ewwii.
 A simple example showing how to use this interface is provided below:
 
 ```rust
-use ewwii_plugin_api::{EwwiiAPI, Plugin};
-use ewwii_plugin_api::export::export_plugin;
+use ewwii_plugin_api::{EwwiiAPI, Plugin, export_plugin};
 
 pub struct DummyStructure;
 
