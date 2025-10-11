@@ -1,6 +1,6 @@
 [package]
 name = "ewwii_plugin_api"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -10,8 +10,12 @@ homepage = "https://github.com/byson94/ewwii"
 
 [features]
 default = ["include-gtk4", "include-rhai"]
-include-gtk4 = ["gtk4"]
-include-rhai = ["rhai"]
+
+## Include the gtk4 dependency
+include-gtk4 = ["dep:gtk4"]
+
+## Include the rhai dependency
+include-rhai = ["dep:rhai"]
 
 [dependencies]
 rhai = { workspace = true, optional = true }
