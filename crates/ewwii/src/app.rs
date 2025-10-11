@@ -538,10 +538,11 @@ impl<B: DisplayBackend> App<B> {
 
                         let vars = store.read().unwrap().clone();
                         let mut parser_rc = stored_parser_clone.borrow_mut();
+                        let compiled_ast_ref = compiled_ast.as_ref().map(|rc| rc.borrow());
                         match generate_new_widgetnode(
                             &vars,
                             &config_path,
-                            compiled_ast.as_deref(),
+                            compiled_ast_ref.as_deref(),
                             &mut *parser_rc,
                         )
                         .await
@@ -575,10 +576,11 @@ impl<B: DisplayBackend> App<B> {
                 glib::MainContext::default().spawn_local(async move {
                     let vars = store.read().unwrap().clone();
                     let mut parser_rc = stored_parser_clone.borrow_mut();
+                    let compiled_ast_ref = compiled_ast.as_ref().map(|rc| rc.borrow());
                     match generate_new_widgetnode(
                         &vars,
                         &config_path,
-                        compiled_ast.as_deref(),
+                        compiled_ast_ref.as_deref(),
                         &mut *parser_rc,
                     )
                     .await
@@ -696,7 +698,7 @@ impl<B: DisplayBackend> App<B> {
         log::info!("Reloading windows");
         log::trace!("loading config: {:#?}", config);
 
-        self.ewwii_config = config;
+        self.ewwii_config.replace_data(config);
 
         let open_window_ids: Vec<String> = self
             .open_windows
@@ -760,10 +762,12 @@ impl<B: DisplayBackend> App<B> {
             }
         }
 
+        let compiled_ast_ref = compiled_ast.as_ref().map(|rc| rc.borrow());
+
         let new_root_widget = reeval_parser.eval_code_with(
             &rhai_code,
             Some(scope),
-            compiled_ast.as_deref(),
+            compiled_ast_ref.as_deref(),
             config_path.to_str(),
         )?;
 
@@ -789,9 +793,9 @@ impl<B: DisplayBackend> App<B> {
 
         let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
 
-        // unwrap Rc<AST>
+        // unwrap Rc<RefCell<AST>>
         let ast_ref: &rhai::AST =
-            compiled_ast.as_ref().ok_or_else(|| anyhow!("AST not compiled yet"))?.as_ref();
+            &*compiled_ast.as_ref().ok_or_else(|| anyhow!("AST not compiled yet"))?.borrow();
 
         for fn_call in calls {
             reeval_parser.call_rhai_fn(ast_ref, &fn_call, Some(&mut scope))?;
@@ -1027,15 +1031,15 @@ async fn generate_new_widgetnode(
     compiled_ast: Option<&rhai::AST>,
     parser: &mut ParseConfig,
 ) -> Result<WidgetNode> {
+    if !code_path.exists() {
+        bail!("The configuration file `{}` does not exist", code_path.display());
+    }
+
     let rhai_code = parser.code_from_file(&code_path)?;
 
     let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
     for (name, val) in all_vars {
         scope.set_value(name.clone(), Dynamic::from(val.clone()));
-    }
-
-    if !code_path.exists() {
-        bail!("The configuration file `{}` does not exist", code_path.display());
     }
 
     let new_root_widget =

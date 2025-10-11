@@ -163,7 +163,7 @@ impl WidgetRegistry {
             };
 
             // check if widget already exists
-            if let Some(old_entry) = self.widgets.get(&widget_id) {
+            if let Some(old_entry) = self.widgets.remove(&widget_id) {
                 // obliterate that widget....
                 // how dare it try to create duplication...
                 old_entry.widget.unparent();
