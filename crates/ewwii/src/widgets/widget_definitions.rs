@@ -367,6 +367,10 @@ struct EventBoxCtrlData {
     dragvalue: String,
     dragtype: DragEntryType,
 
+    // key controller data
+    onkeypress_cmd: Option<String>,
+    onkeyrelease_cmd: Option<String>,
+
     // other
     cmd_timeout: Duration,
 }
@@ -385,6 +389,7 @@ pub(super) fn build_event_box(
     let legacy_controller = EventControllerLegacy::new();
     let drop_text_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
     let drop_uri_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
+    let key_controller = EventControllerKey::new();
 
     // properties that can be updated
     let controller_data = Rc::new(RefCell::new(EventBoxCtrlData {
@@ -398,6 +403,8 @@ pub(super) fn build_event_box(
         ondropped_cmd: String::new(),
         dragvalue: String::new(),
         dragtype: DragEntryType::File,
+        onkeypress_cmd: None,
+        onkeyrelease_cmd: None,
         cmd_timeout: Duration::from_millis(200),
     }));
 
@@ -581,6 +588,30 @@ pub(super) fn build_event_box(
         }
     ));
 
+    // key controller events
+    key_controller.connect_key_pressed(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_, _, code, _| {
+            let controller = controller_data.borrow();
+            if let Some(cmd) = &controller.onkeypress_cmd {
+                run_command(controller.cmd_timeout, cmd, &[code]);
+            }
+            glib::Propagation::Proceed
+        }
+    ));
+
+    key_controller.connect_key_released(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_, _, code, _| {
+            let controller = controller_data.borrow();
+            if let Some(cmd) = &controller.onkeyrelease_cmd {
+                run_command(controller.cmd_timeout, cmd, &[code]);
+            }
+        }
+    ));
+
     gtk_widget.add_controller(gesture_controller);
     gtk_widget.add_controller(hover_controller);
     gtk_widget.add_controller(scroll_controller);
@@ -588,6 +619,7 @@ pub(super) fn build_event_box(
     gtk_widget.add_controller(drop_text_target);
     gtk_widget.add_controller(drop_uri_target);
     gtk_widget.add_controller(drag_source);
+    gtk_widget.add_controller(key_controller);
 
     let apply_props = |props: &Map, controller_data: Rc<RefCell<EventBoxCtrlData>>| -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
@@ -640,6 +672,16 @@ pub(super) fn build_event_box(
         // onrightclick - command to run when the widget is rightclicked
         if let Ok(onrightclick) = get_string_prop(&props, "onrightclick", None) {
             controller_data.borrow_mut().onrightclick_cmd = onrightclick;
+        }
+
+        // onkeypress - command to to run when a key is pressed
+        if let Ok(onkeypress) = get_string_prop(&props, "onkeypress", None) {
+            controller_data.borrow_mut().onkeypress_cmd = Some(onkeypress);
+        }
+
+        // onkeyrelease - command to run when a key is released
+        if let Ok(onkeyrelease) = get_string_prop(&props, "onkeyrelease", None) {
+            controller_data.borrow_mut().onkeyrelease_cmd = Some(onkeyrelease);
         }
 
         Ok(())
