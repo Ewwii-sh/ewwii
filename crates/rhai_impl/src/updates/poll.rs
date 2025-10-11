@@ -55,9 +55,24 @@ pub fn handle_poll(
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
+    // Check Dash and prefer if dash is installed.
+
+    let dash_installed: bool = Command::new("which")
+        .arg("dash")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    let shell = if dash_installed {
+        "/bin/sh"
+    } else {
+        "/bin/dash"
+    };
+
+
     tokio::spawn(async move {
         // Spawn a persistent shell
-        let mut child = match Command::new("/bin/sh")
+        let mut child = match Command::new(shell)
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
             .spawn()

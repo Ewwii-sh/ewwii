@@ -55,7 +55,22 @@ pub fn handle_listen(
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
+    // Check Dash and prefer if dash is installed.
+
+    let dash_installed: bool = Command::new("which")
+        .arg("dash")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    let shell = if dash_installed {
+        "/bin/sh"
+    } else {
+        "/bin/dash"
+    };
+
     // Task to catch SIGINT and SIGTERM
+
     tokio::spawn({
         let shutdown_tx = shutdown_tx.clone();
         async move {
@@ -76,7 +91,7 @@ pub fn handle_listen(
 
     tokio::spawn(async move {
         let mut child = unsafe {
-            Command::new("/bin/sh")
+            Command::new(shell)
                 .arg("-c")
                 .arg(&cmd)
                 // .kill_on_drop(true)
