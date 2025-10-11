@@ -9,6 +9,7 @@
 //!
 //! ```rust
 //! use ewwii_plugin_api::{EwwiiAPI, Plugin, export_plugin};
+//!
 //! pub struct DummyStructure;
 //!
 //! impl Plugin for DummyStructure {
@@ -44,7 +45,16 @@ pub trait EwwiiAPI: Send + Sync {
     fn error(&self, msg: &str);
 
     // == Rhai Manipulation Stuff == //
-    /// Perform actions on the latest rhai engine
+    /// _(include-rhai)_ Perform actions on the latest rhai engine.
+    ///
+    /// # Example
+    /// 
+    /// ```rust
+    /// host.rhai_engine_action(Box::new(|eng| {
+    ///     // eng = rhai::Engine
+    ///     eng.set_max_expr_depths(128, 128);
+    /// }));
+    /// ```
     #[cfg(feature = "include-rhai")]
     fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut Engine) + Send>) -> Result<(), String>;
 
@@ -52,7 +62,16 @@ pub trait EwwiiAPI: Send + Sync {
     /// Get the list of all widget id's
     fn list_widget_ids(&self) -> Result<Vec<u64>, String>;
 
-    /// Perform actions on the latest widget registry
+    /// _(include-gtk4)_ Perform actions on the latest widget registry.
+    ///
+    /// # Example
+    /// 
+    /// ```rust
+    /// host.widget_reg_action(Box::new(|wrg| {
+    ///     // wrg = widget_backend::WidgetRegistryRepr
+    ///     // The gtk4::Widget can be modified here.
+    /// }));
+    /// ```
     #[cfg(feature = "include-gtk4")]
     fn widget_reg_action(
         &self,
@@ -60,7 +79,24 @@ pub trait EwwiiAPI: Send + Sync {
     ) -> Result<(), String>;
 }
 
-/// The API format that the plugin should follow
+/// The API format that the plugin should follow.
+/// This trait should be implemented for a structure and
+/// that structure should be exported via FFI.
+///
+/// ## Example
+///
+/// ```rust
+/// use ewwii_plugin_api::{Plugin, export_plugin};
+///
+/// sturct MyStruct;
+/// 
+/// impl Plugin for MyStruct {
+///     /* Implementation Skipped */   
+/// }
+///
+/// // Automatically does all the FFI related exports
+/// export_plugin!(MyStruct);
+/// ```
 pub trait Plugin: Send + Sync {
     /// Function ran by host to startup plugin (and its a must-have for plugin loading)
     fn init(&self, host: &dyn EwwiiAPI);

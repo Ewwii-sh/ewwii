@@ -6,7 +6,7 @@ mod gtk4_included {
     use gtk4::Widget as GtkWidget;
     use std::collections::HashMap;
 
-    /// A representation of widget registry which holds all the
+    /// _(include-gtk4)_ A representation of widget registry which holds all the
     /// information needed for the dynamic runtime engine in ewwii.
     ///
     /// Not every change in this structure will be represented in the
