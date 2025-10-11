@@ -14,5 +14,5 @@ include-gtk4 = ["gtk4"]
 include-rhai = ["rhai"]
 
 [dependencies]
-rhai = {workspace = true, optional = true }
+rhai = { workspace = true, optional = true }
 gtk4 = { workspace = true, optional = true }
