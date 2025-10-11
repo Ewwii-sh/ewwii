@@ -66,7 +66,7 @@ fn metric(props) {
     space_evenly: false,
   }, [
     box(#{ class: "label" }, [ label(#{ text: label_prop }) ]),
-    slider(#{
+    scale(#{
       min: 0,
       max: 101,
       active: onchange_prop != "",
