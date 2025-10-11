@@ -1,6 +1,6 @@
 [package]
 name = "ewwii_plugin_api"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -8,6 +8,11 @@ description = "A shared library for building plugins for ewwii"
 repository = "https://github.com/byson94/ewwii"
 homepage = "https://github.com/byson94/ewwii"
 
+[features]
+default = ["include-gtk4", "include-rhai"]
+include-gtk4 = ["gtk4"]
+include-rhai = ["rhai"]
+
 [dependencies]
-rhai.workspace = true
-gtk4.workspace = true
+rhai = {workspace = true, optional = true }
+gtk4 = { workspace = true, optional = true }
