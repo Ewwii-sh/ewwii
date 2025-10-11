@@ -5,6 +5,7 @@ use crate::{
     window::backend_window_options::BackendWindowOptionsDef,
 };
 use anyhow::{bail, Context, Result};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -27,7 +28,7 @@ pub fn read_from_ewwii_paths(
 pub struct EwwiiConfig {
     windows: HashMap<String, WindowDefinition>,
     root_node: Option<Rc<WidgetNode>>,
-    compiled_ast: Option<Rc<AST>>,
+    compiled_ast: Option<Rc<RefCell<AST>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -87,7 +88,7 @@ impl EwwiiConfig {
         Ok(EwwiiConfig {
             windows: window_definitions,
             root_node: Some(Rc::new(config_tree)),
-            compiled_ast: Some(Rc::new(compiled_ast)),
+            compiled_ast: Some(Rc::new(RefCell::new(compiled_ast))),
         })
     }
 
@@ -109,7 +110,18 @@ impl EwwiiConfig {
         self.root_node.clone().ok_or_else(|| anyhow::anyhow!("root_node is missing"))
     }
 
-    pub fn get_owned_compiled_ast(&self) -> Option<Rc<AST>> {
+    pub fn get_owned_compiled_ast(&self) -> Option<Rc<RefCell<AST>>> {
         self.compiled_ast.clone()
+    }
+
+    pub fn replace_data(&mut self, new_dat: Self) {
+        if let (Some(old_ast_rc), Some(new_ast_rc)) =
+            (self.compiled_ast.as_ref(), new_dat.compiled_ast.as_ref())
+        {
+            *old_ast_rc.borrow_mut() = new_ast_rc.borrow().clone();
+        }
+
+        self.windows = new_dat.windows;
+        self.root_node = new_dat.root_node;
     }
 }
