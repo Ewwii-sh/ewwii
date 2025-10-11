@@ -28,6 +28,7 @@ mod export_macros;
 pub mod example;
 pub mod widget_backend;
 
+#[cfg(feature = "include-rhai")]
 use rhai::Engine;
 
 /// The shared trait defining the Ewwii plugin API
@@ -44,6 +45,7 @@ pub trait EwwiiAPI: Send + Sync {
 
     // == Rhai Manipulation Stuff == //
     /// Perform actions on the latest rhai engine
+    #[cfg(feature = "include-rhai")]
     fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut Engine) + Send>) -> Result<(), String>;
 
     // == Widget Rendering & Logic == //
@@ -51,6 +53,7 @@ pub trait EwwiiAPI: Send + Sync {
     fn list_widget_ids(&self) -> Result<Vec<u64>, String>;
 
     /// Perform actions on the latest widget registry
+    #[cfg(feature = "include-gtk4")]
     fn widget_reg_action(
         &self,
         f: Box<dyn FnOnce(&mut widget_backend::WidgetRegistryRepr) + Send>,
