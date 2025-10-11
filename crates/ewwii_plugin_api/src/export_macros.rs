@@ -20,7 +20,7 @@
 /// That's it! The plugin is ready.
 ///
 /// ## When not to use it
-/// 
+///
 /// This macro shall not be used if you want to have
 /// fields in your plugin.
 ///
