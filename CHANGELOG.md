@@ -5,12 +5,13 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [UNRELEASED]
+## [0.3.0-beta] - 2025-10-11
 
 ### Added
 
 - Support for binary level plugins.
 - `set-plugin` command to load shared libraries (i.e plugins).
+- `ewwii_plugin_api` crate for building ewwii plugins easily.
 
 ### Changed
 
