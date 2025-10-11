@@ -48,7 +48,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// _(include-rhai)_ Perform actions on the latest rhai engine.
     ///
     /// # Example
-    /// 
+    ///
     /// ```rust
     /// host.rhai_engine_action(Box::new(|eng| {
     ///     // eng = rhai::Engine
@@ -65,7 +65,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// _(include-gtk4)_ Perform actions on the latest widget registry.
     ///
     /// # Example
-    /// 
+    ///
     /// ```rust
     /// host.widget_reg_action(Box::new(|wrg| {
     ///     // wrg = widget_backend::WidgetRegistryRepr
@@ -89,7 +89,7 @@ pub trait EwwiiAPI: Send + Sync {
 /// use ewwii_plugin_api::{Plugin, export_plugin};
 ///
 /// sturct MyStruct;
-/// 
+///
 /// impl Plugin for MyStruct {
 ///     /* Implementation Skipped */   
 /// }
