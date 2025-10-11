@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+## Added
+
+- `onkeypress` property to eventbox.
+- `onkeyrelease` property to eventbox.
+
 ### Fixed
 
 - Old widget creeping into new ones after hot reload.
