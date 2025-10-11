@@ -1,6 +1,6 @@
 [package]
 name = "ewwii_plugin_api"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
