@@ -17,4 +17,5 @@ mod gtk4_included {
     }
 }
 
+#[cfg(feature = "include-gtk4")]
 pub use gtk4_included::*;
