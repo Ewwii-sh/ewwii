@@ -15,8 +15,7 @@
 /// auto_plugin!(MyPluginName, {
 ///     // host variable is passed in automatically
 ///     host.log("Easy, huh?");
-/// })
-///
+/// });
 /// ```
 ///
 /// ## When not to use it
