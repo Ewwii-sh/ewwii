@@ -53,4 +53,4 @@ jobs:
         run: cargo check --no-default-features --features=wayland
 
       - name: Check no-backend
-        run: carg
+        run: cargo check --no-default-features 
