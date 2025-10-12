@@ -9,7 +9,7 @@
 /// The following example shows how you can use this macro to
 /// easily make plugins in a single step.
 ///
-/// ```rust
+/// ```rust,no_run
 /// use ewwii_plugin_api::auto_plugin;
 ///
 /// auto_plugin!(MyPluginName, {
@@ -34,7 +34,7 @@ macro_rules! auto_plugin {
             }
         }
 
-        export_plugin!($struct_name);
+        crate::export_plugin!($struct_name);
     };
 }
 
