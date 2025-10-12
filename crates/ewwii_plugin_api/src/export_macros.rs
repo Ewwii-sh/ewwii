@@ -10,6 +10,8 @@
 /// easily make plugins in a single step.
 ///
 /// ```rust
+/// use ewwii_plugin_api::auto_plugin;
+///
 /// auto_plugin!(MyPluginName, {
 ///     // host variable is passed in automatically
 ///     host.log("Easy, huh?");
@@ -17,37 +19,10 @@
 ///
 /// ```
 ///
-/// That's it! The plugin is ready.
-///
 /// ## When not to use it
 ///
-/// This macro shall not be used if you want to have
-/// fields in your plugin.
-///
-/// ```rust
-/// struct MyPluginName {
-///     awesome_field: String
-/// }
-/// ```
-///
-/// For a structure like the above, you should do this instead:
-///
-/// ```rust
-/// use ewwii_plugin_api::{EwwiiAPI, Plugin, export_plugin};
-///
-/// pub struct DummyStructure;
-///
-/// impl Plugin for DummyStructure {
-///     // critical for ewwii to launch the plugin
-///     fn init(&self, host: &dyn EwwiiAPI) {
-///         // will be printed by the host
-///         host.log("Plugin says Hello!");
-///     }
-/// }
-///
-/// // Critical for ewwii to load the plugin
-/// export_plugin!(DummyStructure);
-/// ```
+/// This macro shall not be used if you prefer flexibility and safety.
+/// The manual approach is verbose, but is way safer and flexible than using this macro.
 #[macro_export]
 macro_rules! auto_plugin {
     ($struct_name:ident, $init_block:block) => {
