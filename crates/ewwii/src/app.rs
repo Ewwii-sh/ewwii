@@ -849,7 +849,13 @@ impl<B: DisplayBackend> App<B> {
                 match req {
                     PluginRequest::RhaiEngineAct(func) => {
                         let mut cp = cp.borrow_mut();
-                        cp.action_with_engine(func);
+                        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                            cp.action_with_engine(func)
+                        }));
+
+                        if let Err(e) = result {
+                            log::error!("Panic in Rhai closure: {:?}", e);
+                        }
                     }
                     PluginRequest::ListWidgetIds(res_tx) => {
                         let wgs_guard = wgs.lock().unwrap();
