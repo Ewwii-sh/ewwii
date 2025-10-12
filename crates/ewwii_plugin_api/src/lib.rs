@@ -50,11 +50,17 @@ pub trait EwwiiAPI: Send + Sync {
     /// # Example
     ///
     /// ```rust
-    /// fn init(&self, host: &dyn EwwiiAPI) {
-    ///     host.rhai_engine_action(Box::new(|eng| {
-    ///         // eng = rhai::Engine
-    ///         eng.set_max_expr_depths(128, 128);
-    ///     }));
+    /// use ewwii_plugin_api::{EwwiiAPI, Plugin};
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         host.rhai_engine_action(Box::new(|eng| {
+    ///             // eng = rhai::Engine
+    ///             eng.set_max_expr_depths(128, 128);
+    ///         }));
+    ///     }
     /// }
     /// ```
     #[cfg(feature = "include-rhai")]
@@ -69,11 +75,17 @@ pub trait EwwiiAPI: Send + Sync {
     /// # Example
     ///
     /// ```rust
-    /// fn init(&self, host: &dyn EwwiiAPI) {
-    ///     host.widget_reg_action(Box::new(|wrg| {
-    ///         // wrg = widget_backend::WidgetRegistryRepr
-    ///         // The gtk4::Widget can be modified here.
-    ///     }));
+    /// use ewwii_plugin_api::{EwwiiAPI, Plugin};
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         host.widget_reg_action(Box::new(|wrg| {
+    ///             // wrg = widget_backend::WidgetRegistryRepr
+    ///             // The gtk4::Widget can be modified here.
+    ///         }));
+    ///     }
     /// }
     /// ```
     #[cfg(feature = "include-gtk4")]
@@ -92,7 +104,7 @@ pub trait EwwiiAPI: Send + Sync {
 /// ```rust
 /// use ewwii_plugin_api::{Plugin, export_plugin};
 ///
-/// sturct MyStruct;
+/// struct MyStruct;
 ///
 /// impl Plugin for MyStruct {
 ///     /* Implementation Skipped */   
