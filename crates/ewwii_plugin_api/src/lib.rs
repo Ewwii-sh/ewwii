@@ -102,12 +102,14 @@ pub trait EwwiiAPI: Send + Sync {
 /// ## Example
 ///
 /// ```rust
-/// use ewwii_plugin_api::{Plugin, export_plugin};
+/// use ewwii_plugin_api::{Plugin, EwwiiAPI, export_plugin};
 ///
 /// struct MyStruct;
 ///
 /// impl Plugin for MyStruct {
-///     /* Implementation Skipped */   
+///     fn init(&self, host: &dyn EwwiiAPI) {
+///         /* Implementation Skipped */   
+//      }
 /// }
 ///
 /// // Automatically does all the FFI related exports
