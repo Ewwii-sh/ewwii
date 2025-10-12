@@ -109,7 +109,7 @@ pub trait EwwiiAPI: Send + Sync {
 /// impl Plugin for MyStruct {
 ///     fn init(&self, host: &dyn EwwiiAPI) {
 ///         /* Implementation Skipped */   
-//      }
+///      }
 /// }
 ///
 /// // Automatically does all the FFI related exports
