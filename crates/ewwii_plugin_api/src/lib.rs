@@ -30,7 +30,10 @@ pub mod example;
 pub mod widget_backend;
 
 #[cfg(feature = "include-rhai")]
-use rhai::Engine;
+pub use rhai;
+
+#[cfg(feature = "include-gtk4")]
+pub use gtk4;
 
 /// The shared trait defining the Ewwii plugin API
 pub trait EwwiiAPI: Send + Sync {
@@ -64,7 +67,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// }
     /// ```
     #[cfg(feature = "include-rhai")]
-    fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut Engine) + Send>) -> Result<(), String>;
+    fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut rhai::Engine) + Send>) -> Result<(), String>;
 
     // == Widget Rendering & Logic == //
     /// Get the list of all widget id's
