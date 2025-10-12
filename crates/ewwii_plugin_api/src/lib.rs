@@ -50,10 +50,12 @@ pub trait EwwiiAPI: Send + Sync {
     /// # Example
     ///
     /// ```rust
-    /// host.rhai_engine_action(Box::new(|eng| {
-    ///     // eng = rhai::Engine
-    ///     eng.set_max_expr_depths(128, 128);
-    /// }));
+    /// fn init(&self, host: &dyn EwwiiAPI) {
+    ///     host.rhai_engine_action(Box::new(|eng| {
+    ///         // eng = rhai::Engine
+    ///         eng.set_max_expr_depths(128, 128);
+    ///     }));
+    /// }
     /// ```
     #[cfg(feature = "include-rhai")]
     fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut Engine) + Send>) -> Result<(), String>;
@@ -67,10 +69,12 @@ pub trait EwwiiAPI: Send + Sync {
     /// # Example
     ///
     /// ```rust
-    /// host.widget_reg_action(Box::new(|wrg| {
-    ///     // wrg = widget_backend::WidgetRegistryRepr
-    ///     // The gtk4::Widget can be modified here.
-    /// }));
+    /// fn init(&self, host: &dyn EwwiiAPI) {
+    ///     host.widget_reg_action(Box::new(|wrg| {
+    ///         // wrg = widget_backend::WidgetRegistryRepr
+    ///         // The gtk4::Widget can be modified here.
+    ///     }));
+    /// }
     /// ```
     #[cfg(feature = "include-gtk4")]
     fn widget_reg_action(
