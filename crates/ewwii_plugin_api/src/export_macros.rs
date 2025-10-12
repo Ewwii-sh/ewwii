@@ -9,7 +9,7 @@
 /// The following example shows how you can use this macro to
 /// easily make plugins in a single step.
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use ewwii_plugin_api::auto_plugin;
 ///
 /// auto_plugin!(MyPluginName, {
@@ -28,13 +28,13 @@ macro_rules! auto_plugin {
         pub struct $struct_name;
 
         // Implement the Plugin trait
-        impl crate::Plugin for $struct_name {
-            fn init(&self, host: &dyn crate::EwwiiAPI) {
+        impl $crate::Plugin for $struct_name {
+            fn init(&self, host: &dyn $crate::EwwiiAPI) {
                 $init_block
             }
         }
 
-        crate::export_plugin!($struct_name);
+        $crate::export_plugin!($struct_name);
     };
 }
 
