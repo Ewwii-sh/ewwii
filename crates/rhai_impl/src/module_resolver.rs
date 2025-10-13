@@ -64,7 +64,6 @@ impl ModuleResolver for SimpleFileResolver {
 
         match &self.pl_handler_store {
             Some(val) => {
-                println!("VALBEF: {:#?}", val);
                 let name_to_val: &HashMap<String, String> = &*val.read().unwrap();
 
                 for (name, val) in name_to_val {
