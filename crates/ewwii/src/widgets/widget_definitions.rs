@@ -2193,17 +2193,13 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         let css_provider = gtk4::CssProvider::new();
         let scss = format!("* {{ {} }}", style_str);
         css_provider.load_from_data(&grass::from_string(scss, &grass::Options::default())?);
-        gtk_widget
-            .style_context()
-            .add_provider(&css_provider, gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk_widget.style_context().add_provider(&css_provider, 950);
     }
 
     if let Ok(css_str) = get_string_prop(&props, "css", None) {
         let css_provider = gtk4::CssProvider::new();
         css_provider.load_from_data(&grass::from_string(css_str, &grass::Options::default())?);
-        gtk_widget
-            .style_context()
-            .add_provider(&css_provider, gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk_widget.style_context().add_provider(&css_provider, 950);
     }
 
     if let Ok(valign) = get_string_prop(&props, "valign", None) {
