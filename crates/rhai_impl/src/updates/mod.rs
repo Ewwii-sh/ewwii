@@ -25,6 +25,7 @@ use std::sync::Mutex;
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::watch;
+use std::process::Command;
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
@@ -35,14 +36,23 @@ pub fn handle_state_changes(
     tx: UnboundedSender<String>,
     store: ReactiveVarStore,
 ) {
+    // Check Dash and prefer if dash is installed.
+    let dash_installed: bool = Command::new("which")
+        .arg("dash")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    let shell = if dash_installed { String::from("/bin/dash") } else { String::from("/bin/sh") };
+
     if let WidgetNode::Enter(children) = root_node {
         for child in children {
             match child {
                 WidgetNode::Poll { var, props } => {
-                    handle_poll(var.to_string(), props, store.clone(), tx.clone());
+                    handle_poll(var.to_string(), props, shell.clone(), store.clone(), tx.clone());
                 }
                 WidgetNode::Listen { var, props } => {
-                    handle_listen(var.to_string(), props, store.clone(), tx.clone());
+                    handle_listen(var.to_string(), props, shell.clone(), store.clone(), tx.clone());
                 }
                 _ => {}
             }
