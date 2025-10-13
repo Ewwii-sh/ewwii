@@ -67,7 +67,10 @@ pub trait EwwiiAPI: Send + Sync {
     /// }
     /// ```
     #[cfg(feature = "include-rhai")]
-    fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut rhai::Engine) + Send>) -> Result<(), String>;
+    fn rhai_engine_action(
+        &self,
+        f: Box<dyn FnOnce(&mut rhai::Engine) + Send>,
+    ) -> Result<(), String>;
 
     // == Widget Rendering & Logic == //
     /// Get the list of all widget id's

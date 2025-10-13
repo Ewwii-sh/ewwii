@@ -21,11 +21,11 @@ use crate::ast::WidgetNode;
 use listen::handle_listen;
 use once_cell::sync::Lazy;
 use poll::handle_poll;
+use std::process::Command;
 use std::sync::Mutex;
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::watch;
-use std::process::Command;
 
 pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
@@ -37,11 +37,8 @@ pub fn handle_state_changes(
     store: ReactiveVarStore,
 ) {
     // Check Dash and prefer if dash is installed.
-    let dash_installed: bool = Command::new("which")
-        .arg("dash")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false);
+    let dash_installed: bool =
+        Command::new("which").arg("dash").output().map(|o| o.status.success()).unwrap_or(false);
 
     let shell = if dash_installed { String::from("/bin/dash") } else { String::from("/bin/sh") };
 

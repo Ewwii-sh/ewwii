@@ -843,7 +843,7 @@ impl<B: DisplayBackend> App<B> {
 
         let cp = self.config_parser.clone();
         let wgs = self.widget_reg_store.clone();
-                
+
         glib::MainContext::default().spawn_local(async move {
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 while let Ok(req) = rx.recv() {
@@ -883,7 +883,6 @@ impl<B: DisplayBackend> App<B> {
                 log::error!("Uncaught panic in GLib task: {:?}", e);
             }
         });
-
 
         Ok(())
     }
