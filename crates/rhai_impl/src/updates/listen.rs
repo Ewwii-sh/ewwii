@@ -20,7 +20,7 @@ use nix::{
 };
 use rhai::Map;
 use shared_utils::extract_props::*;
-use std::process::{Command as synced_command, Stdio};
+use std::process::Stdio;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;
 use tokio::process::Command;
@@ -30,6 +30,7 @@ use tokio::sync::watch;
 pub fn handle_listen(
     var_name: String,
     props: &Map,
+    shell: String,
     store: ReactiveVarStore,
     tx: tokio::sync::mpsc::UnboundedSender<String>,
 ) {
@@ -55,18 +56,7 @@ pub fn handle_listen(
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
-    // Check Dash and prefer if dash is installed.
-
-    let dash_installed: bool = synced_command::new("which")
-        .arg("dash")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false);
-
-    let shell: &str = if dash_installed { "/bin/dash" } else { "/bin/sh" };
-
     // Task to catch SIGINT and SIGTERM
-
     tokio::spawn({
         let shutdown_tx = shutdown_tx.clone();
         async move {
@@ -87,7 +77,7 @@ pub fn handle_listen(
 
     tokio::spawn(async move {
         let mut child = unsafe {
-            Command::new(shell)
+            Command::new(&shell)
                 .arg("-c")
                 .arg(&cmd)
                 // .kill_on_drop(true)

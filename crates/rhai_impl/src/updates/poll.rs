@@ -23,11 +23,10 @@ use tokio::process::Command;
 use tokio::sync::watch;
 use tokio::time::sleep;
 
-use std::process::Command as synced_command;
-
 pub fn handle_poll(
     var_name: String,
     props: &Map,
+    shell: String,
     store: ReactiveVarStore,
     tx: tokio::sync::mpsc::UnboundedSender<String>,
 ) {
@@ -57,19 +56,9 @@ pub fn handle_poll(
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
-    // Check Dash and prefer if dash is installed.
-
-    let dash_installed: bool = synced_command::new("which")
-        .arg("dash")
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false);
-
-    let shell: &str = if dash_installed { "/bin/dash" } else { "/bin/sh" };
-
     tokio::spawn(async move {
         // Spawn a persistent shell
-        let mut child = match Command::new(shell)
+        let mut child = match Command::new(&shell)
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
             .spawn()
