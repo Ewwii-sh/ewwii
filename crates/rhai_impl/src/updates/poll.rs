@@ -26,6 +26,7 @@ use tokio::time::sleep;
 pub fn handle_poll(
     var_name: String,
     props: &Map,
+    shell: String,
     store: ReactiveVarStore,
     tx: tokio::sync::mpsc::UnboundedSender<String>,
 ) {
@@ -57,7 +58,7 @@ pub fn handle_poll(
 
     tokio::spawn(async move {
         // Spawn a persistent shell
-        let mut child = match Command::new("/bin/sh")
+        let mut child = match Command::new(&shell)
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
             .spawn()

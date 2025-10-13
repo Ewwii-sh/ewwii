@@ -30,6 +30,7 @@ use tokio::sync::watch;
 pub fn handle_listen(
     var_name: String,
     props: &Map,
+    shell: String,
     store: ReactiveVarStore,
     tx: tokio::sync::mpsc::UnboundedSender<String>,
 ) {
@@ -76,7 +77,7 @@ pub fn handle_listen(
 
     tokio::spawn(async move {
         let mut child = unsafe {
-            Command::new("/bin/sh")
+            Command::new(&shell)
                 .arg("-c")
                 .arg(&cmd)
                 // .kill_on_drop(true)
