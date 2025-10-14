@@ -22,6 +22,7 @@ pub fn initialize_server<B: DisplayBackend>(
     paths: EwwiiPaths,
     action: Option<DaemonCommand>,
     should_daemonize: bool,
+    ewwii_plugin_path: Option<String>
 ) -> Result<ForkResult> {
     let (ui_send, mut ui_recv) = tokio::sync::mpsc::unbounded_channel();
 
@@ -36,23 +37,6 @@ pub fn initialize_server<B: DisplayBackend>(
 
     let config_parser =
         Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new(Some(pl_handler_store.clone()))));
-    let mut config_parser_mut = config_parser.borrow_mut();
-
-    let read_config = config::read_from_ewwii_paths(&paths, &mut *config_parser_mut);
-
-    // free the temporary parser borrow
-    drop(config_parser_mut);
-
-    let ewwii_config = match read_config {
-        Ok(config) => config,
-        Err(err) => {
-            error_handling_ctx::print_error(err);
-            config::EwwiiConfig::default()
-
-            // TODO: Maybe do something so that we can exit if user wants.
-            // std::process::exit(1);
-        }
-    };
 
     cleanup_log_dir(paths.get_log_dir())?;
 
@@ -92,7 +76,7 @@ pub fn initialize_server<B: DisplayBackend>(
     let main_loop = gtk4::glib::MainLoop::new(None, false);
 
     let mut app: App<B> = app::App {
-        ewwii_config,
+        ewwii_config: config::EwwiiConfig::default(),
         open_windows: HashMap::new(),
         failed_windows: HashSet::new(),
         instance_id_to_args: HashMap::new(),
@@ -106,6 +90,31 @@ pub fn initialize_server<B: DisplayBackend>(
         paths,
         gtk_main_loop: main_loop.clone(),
         phantom: PhantomData,
+    };
+
+    // start up plugins
+    if let Some(ewwii_plugin) = ewwii_plugin_path {
+        if let Err(e) = app.set_ewwii_plugin(ewwii_plugin) {
+            error_handling_ctx::print_error(e);
+        }
+    }
+
+    let mut config_parser_mut = app.config_parser.borrow_mut();
+    let read_config = config::read_from_ewwii_paths(&app.paths, &mut *config_parser_mut);
+
+    // free the temporary parser borrow
+    drop(config_parser_mut);
+
+    match read_config {
+        Ok(new_config) => {
+            app.ewwii_config = new_config;
+        }
+        Err(err) => {
+            error_handling_ctx::print_error(err);
+
+            // TODO: Maybe do something so that we can exit if user wants.
+            // std::process::exit(1);
+        }
     };
 
     if let Some(display) = gtk4::gdk::Display::default() {

@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `onkeypress` property to eventbox.
 - `onkeyrelease` property to eventbox.
+- Selection of dash as shell if it installed.
+- `--with-plugin` flag for `daemon` command.
 
 ### Fixed
 
 - Old widget creeping into new ones after hot reload.
+- Ewwii defaulting to default gtk4 theme. #9
 
 ## [0.3.0-beta] - 2025-10-11
 
