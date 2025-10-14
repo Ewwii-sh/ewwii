@@ -109,11 +109,7 @@ pub fn initialize_server<B: DisplayBackend>(
     };
 
     if let Some(display) = gtk4::gdk::Display::default() {
-        gtk4::style_context_add_provider_for_display(
-            &display,
-            &app.css_provider,
-            gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
+        gtk4::style_context_add_provider_for_display(&display, &app.css_provider, 900);
     }
 
     if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
