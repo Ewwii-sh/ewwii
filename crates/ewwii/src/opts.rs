@@ -67,7 +67,10 @@ pub enum Action {
 
     /// Start the Ewwii daemon.
     #[command(name = "daemon", alias = "d")]
-    Daemon,
+    Daemon {
+        #[arg(long)]
+        with_plugin: Option<String>
+    },
 
     #[command(flatten)]
     ClientOnly(ActionClientOnly),
