@@ -1,7 +1,9 @@
+//! # ewwii_plugin_api - A plugin interface for ewwii
+//! 
 //! `ewwii_plguin_api` is a shared list of traits
 //! that both ewwii and its plugins can use.
-//! This is a **must-have** for building plugins for ewwii
-//! as this explicit layout is what ewwii requires a plugin to have.
+//! This crate simplifies and provides a safe way for building
+//! plugins for ewwii.
 //!
 //! ## Example
 //!
