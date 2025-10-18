@@ -387,8 +387,8 @@ pub(super) fn build_event_box(
     let gesture_controller = GestureClick::new();
     let scroll_controller = EventControllerScroll::new(gtk4::EventControllerScrollFlags::BOTH_AXES);
     let legacy_controller = EventControllerLegacy::new();
-    let drop_text_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
-    let drop_uri_target = DropTarget::new(Type::STRING, gdk::DragAction::COPY);
+    let drop_text_target = DropTarget::new(String::static_type(), gdk::DragAction::COPY);
+    let drop_uri_target = DropTarget::new(String::static_type(), gdk::DragAction::COPY);
     let key_controller = EventControllerKey::new();
 
     // properties that can be updated
