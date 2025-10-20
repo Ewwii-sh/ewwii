@@ -716,7 +716,7 @@ impl<B: DisplayBackend> App<B> {
         Ok(())
     }
 
-    /// Load a given CSS string into the gtk css provider, returning a nicely formatted [`DiagError`] when GTK errors out
+    /// Load a given CSS string into the gtk css provider
     pub fn load_css(&mut self, _file_id: usize, css: &str) -> Result<()> {
         self.css_provider.load_from_data(&css);
 
