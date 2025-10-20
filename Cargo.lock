@@ -527,7 +527,7 @@ dependencies = [
 
 [[package]]
 name = "ewwii_plugin_api"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "gtk4",
  "rhai",

@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `onkeyrelease` property to eventbox.
 - Selection of dash as shell if it installed.
 - `--with-plugin` flag for `daemon` command.
+- `register_function` API in ewwii_plugin_api for registering functions that rhai can call to.
+- `slib` rhai module for calling functions registered via `register_function`.
 
 ### Fixed
 
