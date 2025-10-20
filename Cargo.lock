@@ -527,7 +527,7 @@ dependencies = [
 
 [[package]]
 name = "ewwii_plugin_api"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "gtk4",
  "rhai",
@@ -1909,6 +1909,7 @@ name = "shared_utils"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "once_cell",
  "rhai",
  "serde",
 ]

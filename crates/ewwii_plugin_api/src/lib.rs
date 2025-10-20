@@ -74,6 +74,35 @@ pub trait EwwiiAPI: Send + Sync {
         f: Box<dyn FnOnce(&mut rhai::Engine) + Send>,
     ) -> Result<(), String>;
 
+    /// _(include-rhai)_ Expose a function that rhai configuration can call.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{EwwiiAPI, Plugin};
+    /// use rhai::Dynamic;
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         host.register_function(Box::new(|args| {
+    ///             // Do stuff
+    ///             // - Perform things on the args (if needed)
+    ///             // - And return a value
+    ///             
+    ///             Dynamic::new() // return empty
+    ///         }));
+    ///     }
+    /// }
+    /// ```
+    #[cfg(feature = "include-rhai")]
+    fn register_function(
+        &self, 
+        name: String,
+        f: Box<dyn FnOnce(rhai::Array) -> rhai::Dynamic + Send>,
+    ) -> Result<(), String>;
+
     // == Widget Rendering & Logic == //
     /// Get the list of all widget id's
     fn list_widget_ids(&self) -> Result<Vec<u64>, String>;
