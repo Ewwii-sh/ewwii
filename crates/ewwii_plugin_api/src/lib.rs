@@ -86,7 +86,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// impl Plugin for DummyStructure {
     ///     fn init(&self, host: &dyn EwwiiAPI) {
-    ///         host.register_function(Box::new(|args| {
+    ///         host.register_function("my_func".to_string(), Box::new(|args| {
     ///             // Do stuff
     ///             // - Perform things on the args (if needed)
     ///             // - And return a value
@@ -100,7 +100,7 @@ pub trait EwwiiAPI: Send + Sync {
     fn register_function(
         &self, 
         name: String,
-        f: Box<dyn FnOnce(rhai::Array) -> rhai::Dynamic + Send>,
+        f: Box<dyn Fn(rhai::Array) -> rhai::Dynamic + Send + Sync>,
     ) -> Result<(), String>;
 
     // == Widget Rendering & Logic == //

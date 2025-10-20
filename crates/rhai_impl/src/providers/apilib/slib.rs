@@ -20,17 +20,17 @@ pub mod slib {
     /// ```javascript
     /// import "api::slib" as slib;
     ///
-    /// let eg_output = slib::call("my_func", ["foo", 80, true]);
+    /// let eg_output = slib::call_fn("my_func", ["foo", 80, true]);
     /// ```
-    pub fn call(fn_name: String, args: Array) -> Dynamic {
-        // TODO:
-        // 
-        // - Find the function with the name
-        // - Call that function the args (pass it directly)
-
+    pub fn call_fn(fn_name: String, args: Array) -> Dynamic {
         match shared_utils::slib_store::call_registered(&fn_name, args) {
-            Some(d) => d,
-            None => Dynamic::default()
+            Ok(Some(d)) => d,
+            Ok(None) => Dynamic::default(),
+            Err(e) => {
+                log::error!("Error calling function: {}", e);
+
+                Dynamic::default()
+            }
         }
     }
 }
