@@ -852,6 +852,11 @@ impl<B: DisplayBackend> App<B> {
                             let mut cp = cp.borrow_mut();
                             cp.action_with_engine(func);
                         }
+                        PluginRequest::RegisterFunc((name, func)) => {
+                            if let Err(e) = shared_utils::slib_store::register_functions(name, func) {
+                                log::error!("Error registering function: {}", e);
+                            }
+                        }
                         PluginRequest::ListWidgetIds(res_tx) => {
                             let wgs_guard = wgs.lock().unwrap();
                             if let Some(wgs_brw) = wgs_guard.as_ref() {

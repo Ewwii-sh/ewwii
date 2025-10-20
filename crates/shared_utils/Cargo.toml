@@ -12,3 +12,4 @@ homepage = "https://github.com/ewwii-sh/ewwii"
 serde.workspace = true
 rhai.workspace = true
 anyhow.workspace = true
+once_cell.workspace = true

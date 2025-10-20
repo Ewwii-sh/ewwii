@@ -5,7 +5,6 @@ use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use anyhow::{anyhow, bail, Result};
 use gtk4::gdk::DragAction;
 use gtk4::glib::translate::FromGlib;
-use gtk4::glib::Type;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
 use gtk4::{
