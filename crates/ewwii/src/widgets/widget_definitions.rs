@@ -379,7 +379,20 @@ pub(super) fn build_event_box(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
-    let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+    let orientation = props
+        .get("orientation")
+        .and_then(|v| v.clone().try_cast::<String>())
+        .map(|s| parse_orientation(&s))
+        .transpose()?
+        .unwrap_or(gtk4::Orientation::Horizontal);
+
+    let spacing =
+        props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()).unwrap_or(0) as i32;
+
+    let space_evenly = get_bool_prop(&props, "space_evenly", Some(true))?;
+
+    let gtk_widget = gtk4::Box::new(orientation, spacing);
+    gtk_widget.set_homogeneous(space_evenly);
 
     // controllers
     let hover_controller = EventControllerMotion::new();
@@ -620,7 +633,7 @@ pub(super) fn build_event_box(
     gtk_widget.add_controller(drag_source);
     gtk_widget.add_controller(key_controller);
 
-    let apply_props = |props: &Map, controller_data: Rc<RefCell<EventBoxCtrlData>>| -> Result<()> {
+    let apply_props = |props: &Map, controller_data: Rc<RefCell<EventBoxCtrlData>>, gtk_widget: &gtk4::Box| -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
         controller_data.borrow_mut().cmd_timeout =
             get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
@@ -683,14 +696,30 @@ pub(super) fn build_event_box(
             controller_data.borrow_mut().onkeyrelease_cmd = Some(onkeyrelease);
         }
 
+        if let Some(orientation_str) =
+            props.get("orientation").and_then(|v| v.clone().try_cast::<String>())
+        {
+            if let Ok(orientation) = parse_orientation(&orientation_str) {
+                gtk_widget.set_orientation(orientation);
+            }
+        }
+
+        if let Some(spacing_val) = props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()) {
+            gtk_widget.set_spacing(spacing_val as i32);
+        }
+
+        if let Ok(space_evenly) = get_bool_prop(props, "space_evenly", None) {
+            gtk_widget.set_homogeneous(space_evenly);
+        }
+
         Ok(())
     };
 
-    apply_props(&props, controller_data.clone())?;
+    apply_props(&props, controller_data.clone(), &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, controller_data.clone());
+        let _ = apply_props(props, controller_data.clone(), &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
