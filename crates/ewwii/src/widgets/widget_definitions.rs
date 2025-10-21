@@ -633,7 +633,10 @@ pub(super) fn build_event_box(
     gtk_widget.add_controller(drag_source);
     gtk_widget.add_controller(key_controller);
 
-    let apply_props = |props: &Map, controller_data: Rc<RefCell<EventBoxCtrlData>>, gtk_widget: &gtk4::Box| -> Result<()> {
+    let apply_props = |props: &Map,
+                       controller_data: Rc<RefCell<EventBoxCtrlData>>,
+                       gtk_widget: &gtk4::Box|
+     -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
         controller_data.borrow_mut().cmd_timeout =
             get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;

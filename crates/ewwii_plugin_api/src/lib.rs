@@ -1,5 +1,5 @@
 //! # ewwii_plugin_api - A plugin interface for ewwii
-//! 
+//!
 //! `ewwii_plguin_api` is a shared list of traits
 //! that both ewwii and its plugins can use.
 //! This crate simplifies and provides a safe way for building
@@ -98,7 +98,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```
     #[cfg(feature = "include-rhai")]
     fn register_function(
-        &self, 
+        &self,
         name: String,
         f: Box<dyn Fn(rhai::Array) -> rhai::Dynamic + Send + Sync>,
     ) -> Result<(), String>;

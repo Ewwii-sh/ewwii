@@ -1,12 +1,12 @@
 pub mod linux;
-pub mod wifi;
 pub mod slib;
+pub mod wifi;
 
 use rhai::exported_module;
 use rhai::module_resolvers::StaticModuleResolver;
 
 pub fn register_apilib(resolver: &mut StaticModuleResolver) {
-    use crate::providers::apilib::{linux::linux, wifi::wifi, slib::slib};
+    use crate::providers::apilib::{linux::linux, slib::slib, wifi::wifi};
 
     // adding modules
     let wifi_mod = exported_module!(wifi);

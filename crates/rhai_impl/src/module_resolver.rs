@@ -1,6 +1,7 @@
 use crate::error::{format_eval_error, format_parse_error};
 use crate::parser::ParseConfig;
 use crate::updates::ReactiveVarStore;
+use rhai::Scope;
 use rhai::{Dynamic, Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
 use std::collections::HashMap;
 use std::fs;
@@ -55,12 +56,28 @@ impl ModuleResolver for SimpleFileResolver {
             ))
         })?;
 
-        let mut scope = ParseConfig::initial_poll_listen_scope(&script).map_err(|e| {
-            EvalAltResult::ErrorSystem(
-                format!("error setting up default variables: {full_path:?}"),
-                e.into(),
-            )
-        })?;
+        let parent_script: Option<String> = if let Some(parent_path) = source_path {
+            match fs::read_to_string(parent_path) {
+                Ok(s) => Some(s),
+                Err(err) => {
+                    log::error!("Could not read parent script {parent_path:?}: {err}");
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        let mut scope = if let Some(ref script) = parent_script {
+            ParseConfig::initial_poll_listen_scope(script).map_err(|e| {
+                EvalAltResult::ErrorSystem(
+                    format!("error setting up default variables from {source_path:?}"),
+                    e.into(),
+                )
+            })?
+        } else {
+            Scope::new()
+        };
 
         match &self.pl_handler_store {
             Some(val) => {

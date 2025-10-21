@@ -69,7 +69,7 @@ pub enum Action {
     #[command(name = "daemon", alias = "d")]
     Daemon {
         #[arg(long)]
-        with_plugin: Option<String>
+        with_plugin: Option<String>,
     },
 
     #[command(flatten)]
