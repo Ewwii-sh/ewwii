@@ -1,5 +1,5 @@
 use ewwii_plugin_api::{widget_backend, EwwiiAPI};
-use rhai::{Engine, Dynamic, Array};
+use rhai::{Array, Dynamic, Engine};
 use std::sync::mpsc::{channel as mpsc_channel, Receiver, Sender};
 
 pub(crate) struct EwwiiImpl {
@@ -34,12 +34,12 @@ impl EwwiiAPI for EwwiiImpl {
     }
 
     fn register_function(
-        &self, 
+        &self,
         name: String,
         f: Box<dyn Fn(Array) -> Dynamic + Send + Sync>,
     ) -> Result<(), String> {
         let func_info = (name, f);
-        
+
         self.requestor
             .send(PluginRequest::RegisterFunc(func_info))
             .map_err(|_| "Failed to send request to host".to_string())?;

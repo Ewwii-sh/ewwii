@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Old widget creeping into new ones after hot reload.
 - Ewwii defaulting to default gtk4 theme. #9
 - Few issues with eventbox drop target.
+- Poll/Listen variables not exposed in other modules on first launch.
 
 ## [0.3.0-beta] - 2025-10-11
 

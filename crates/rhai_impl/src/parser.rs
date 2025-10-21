@@ -8,7 +8,7 @@ use crate::{
     updates::ReactiveVarStore,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, OptimizationLevel, Scope, AST};
+use rhai::{Dynamic, Engine, ImmutableString, OptimizationLevel, Scope, AST};
 use std::cell::RefCell;
 use std::fs;
 use std::path::Path;
@@ -35,9 +35,13 @@ impl ParseConfig {
     }
 
     pub fn compile_code(&mut self, code: &str, file_path: &str) -> Result<AST> {
-        self.engine
+        let mut ast = self
+            .engine
             .compile(code)
-            .map_err(|e| anyhow!(format_parse_error(&e, code, Some(file_path))))
+            .map_err(|e| anyhow!(format_parse_error(&e, code, Some(file_path))))?;
+
+        ast.set_source(ImmutableString::from(file_path));
+        Ok(ast)
     }
 
     pub fn eval_code_with(

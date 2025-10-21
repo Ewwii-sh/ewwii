@@ -853,7 +853,8 @@ impl<B: DisplayBackend> App<B> {
                             cp.action_with_engine(func);
                         }
                         PluginRequest::RegisterFunc((name, func)) => {
-                            if let Err(e) = shared_utils::slib_store::register_functions(name, func) {
+                            if let Err(e) = shared_utils::slib_store::register_functions(name, func)
+                            {
                                 log::error!("Error registering function: {}", e);
                             }
                         }

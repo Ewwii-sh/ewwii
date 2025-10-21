@@ -22,7 +22,7 @@ pub fn initialize_server<B: DisplayBackend>(
     paths: EwwiiPaths,
     action: Option<DaemonCommand>,
     should_daemonize: bool,
-    ewwii_plugin_path: Option<String>
+    ewwii_plugin_path: Option<String>,
 ) -> Result<ForkResult> {
     let (ui_send, mut ui_recv) = tokio::sync::mpsc::unbounded_channel();
 

@@ -168,7 +168,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, ewwii_binary_name: String) -> Result<
         }
 
         // make sure that there isn't already a Ewwii daemon running.
-        opts::Action::Daemon {..} if check_server_running(paths.get_ipc_socket_file()) => {
+        opts::Action::Daemon { .. } if check_server_running(paths.get_ipc_socket_file()) => {
             eprintln!("Ewwii server already running.");
             true
         }
@@ -182,8 +182,12 @@ fn run<B: DisplayBackend>(opts: opts::Opt, ewwii_binary_name: String) -> Result<
                     ewwii_binary_name
                 );
             }
-            let fork_result =
-                server::initialize_server::<B>(paths.clone(), None, !opts.no_daemonize, with_plugin)?;
+            let fork_result = server::initialize_server::<B>(
+                paths.clone(),
+                None,
+                !opts.no_daemonize,
+                with_plugin,
+            )?;
             opts.no_daemonize || fork_result == ForkResult::Parent
         }
 
