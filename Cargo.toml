@@ -1,11 +1,12 @@
 [workspace]
-members = ["crates/*", "tools/*"]
+members = ["crates/*", "tools/*", "proc_macros/*"]
 resolver = "2"
 
 [workspace.dependencies]
 
 shared_utils = { version = "0.1.0", path = "crates/shared_utils" }
 rhai_impl = { version = "0.1.0", path = "crates/rhai_impl" }
+scan_prop_proc = { version = "0.1.0", path = "proc_macros/scan_prop_proc" }
 ewwii_plugin_api = { version = "0.6.1", path = "crates/ewwii_plugin_api" }
 
 anyhow = "1.0.86"
@@ -45,6 +46,9 @@ thiserror = "1.0"
 tokio = { version = "1.39.2", features = ["full"] }
 unescape = "0.1"
 wait-timeout = "0.2"
+syn = "2.0.107"
+quote = "1.0.41"
+proc-macro2 = "1.0.101"
 
 [profile.dev]
 split-debuginfo = "unpacked"

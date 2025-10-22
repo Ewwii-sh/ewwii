@@ -159,6 +159,17 @@ pub(super) fn parse_position_type(s: &str) -> Result<gtk4::PositionType> {
     }
 }
 
+/// Gtk flow box
+pub(super) fn parse_selection_model(s: &str) -> Result<gtk4::SelectionMode> {
+    match s.to_ascii_lowercase().as_str() {
+        "none" => Ok(gtk4::SelectionMode::None),
+        "single" => Ok(gtk4::SelectionMode::Single),
+        "browse" => Ok(gtk4::SelectionMode::Browse),
+        "multiple" => Ok(gtk4::SelectionMode::Multiple),
+        _ => Err(anyhow!("Invalid position type: '{}'", s)),
+    }
+}
+
 /// Helper of helpers
 fn replace_placeholders<T>(cmd: &str, args: &[T]) -> String
 where

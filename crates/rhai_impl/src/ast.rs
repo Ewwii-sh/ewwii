@@ -3,11 +3,14 @@ use anyhow::Result;
 use rhai::Map;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+use scan_prop_proc::scan_prop;
 
 #[derive(Debug, Clone)]
+#[scan_prop]
 pub enum WidgetNode {
     Label { props: Map },
     Box { props: Map, children: Vec<WidgetNode> },
+    FlowBox { props: Map, children: Vec<WidgetNode> },
     Button { props: Map },
     Image { props: Map },
     Icon { props: Map },
@@ -68,6 +71,13 @@ pub fn get_id_to_widget_info<'a>(
         WidgetNode::Box { props, children } => {
             let id = hash_props_and_type(props, "Box");
             insert_wdgt_info(node, props, "Box", children.as_slice(), parent_id, id_to_props)?;
+            for child in children {
+                get_id_to_widget_info(child, id_to_props, Some(id))?;
+            }
+        }
+        WidgetNode::FlowBox { props, children } => {
+            let id = hash_props_and_type(props, "FlowBox");
+            insert_wdgt_info(node, props, "FlowBox", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }

@@ -756,6 +756,98 @@ pub(super) fn build_event_box(
     Ok(gtk_widget)
 }
 
+struct FlowBoxCtrlData {
+    onaccept_cmd: String,
+    cmd_timeout: Duration,
+}
+
+pub(crate) fn build_gtk_flowbox(
+    props: &Map,
+    children: &Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk4::FlowBox> {
+    let gtk_widget = gtk4::FlowBox::new();
+
+    let controller_data = Rc::new(RefCell::new(FlowBoxCtrlData {
+        onaccept_cmd: String::new(),
+        cmd_timeout: Duration::from_millis(200)
+    }));
+
+    gtk_widget.connect_child_activated(glib::clone!(#[strong] controller_data, move |_: &gtk4::FlowBox, child: &gtk4::FlowBoxChild| {
+        let controller = controller_data.borrow();
+
+        let index = child.index();
+        if index != -1 {
+            run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[index as usize]);
+        } else {
+            log::error!("Failed to get child index.");
+        }
+    }));
+
+    for child in children {
+        let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
+        if let Some(props) = child.props() {
+            if let Ok(id) = get_i32_prop(&props, "child_index", None) {
+                gtk_widget.insert(&child_widget, id);
+            } else {
+                log::error!("Every child of a flowbox MUST have a property named `child_index`.");
+            }
+        } else {
+            log::error!("Failed to extract properties from the child.");
+        }
+    }
+
+    let apply_props = |props: &Map, gtk_widget: &gtk4::FlowBox, controller_data: Rc<RefCell<FlowBoxCtrlData>>| -> Result<()> {
+        if let Ok(space_evenly) = get_bool_prop(&props, "space_evenly", Some(true)) {
+            gtk_widget.set_homogeneous(space_evenly);
+        }
+
+        let orientation = props
+            .get("orientation")
+            .and_then(|v| v.clone().try_cast::<String>())
+            .map(|s| parse_orientation(&s))
+            .transpose()?
+            .unwrap_or(gtk4::Orientation::Horizontal);
+
+        gtk_widget.set_orientation(orientation);
+
+        if let Ok(selection_model_raw) = get_string_prop(&props, "selection_model", None) {
+            let selection_model = parse_selection_model(&selection_model_raw)?;
+            gtk_widget.set_selection_mode(selection_model);
+        }
+
+        if let Ok(onaccept) = get_string_prop(&props, "onaccept", None) {
+            controller_data.borrow_mut().onaccept_cmd = onaccept;
+        }
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget, controller_data.clone())?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &gtk_widget_clone, controller_data.clone());
+
+        // now re-apply generic widget attrs
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+        {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
+
+    let id = hash_props_and_type(&props, "FlowBox");
+
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
+
+    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+
+    Ok(gtk_widget)
+}
+
 pub(super) fn build_gtk_stack(
     props: &Map,
     children: &Vec<WidgetNode>,

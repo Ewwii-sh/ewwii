@@ -10,6 +10,7 @@ homepage = "https://github.com/byson94/ewwii"
 
 [dependencies]
 shared_utils.workspace = true
+scan_prop_proc.workspace = true
 
 rhai = { workspace = true, features = ["internals"] }
 anyhow.workspace = true
