@@ -1,0 +1,17 @@
+[package]
+name = "scan_prop_proc"
+version = "0.1.0"
+authors = ["byson94 <byson94wastaken@gmail.com>"]
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "A procedual macro for generating properties on a WidgetNode"
+repository = "https://github.com/byson94/ewwii"
+homepage = "https://github.com/byson94/ewwii"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn.workspace = true
+quote.workspace = true
+proc-macro2.workspace = true

@@ -67,6 +67,7 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     }
 
     register_with_children!("box", Box);
+    register_with_children!("flowbox", FlowBox);
     register_with_children!("expander", Expander);
     register_with_children!("revealer", Revealer);
     register_with_children!("scroll", Scroll);
