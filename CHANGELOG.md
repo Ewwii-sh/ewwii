@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `space_evenly` property to eventbox.
 - An advanced widget named `flowbox`.
 - `focusable` property to all widget.
+- `widget_name` property to all widget.
 
 ### Fixed
 
