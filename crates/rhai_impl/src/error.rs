@@ -14,7 +14,7 @@ pub fn format_eval_error(
     let error_str = error.to_string();
 
     if error_str == "" || error_str == "module_eval_failed" || error_str == "module_parse_failed" {
-        return String::new()
+        return String::new();
     }
 
     let better_error =
@@ -33,7 +33,7 @@ pub fn format_parse_error(error: &ParseError, code: &str, file_id: Option<&str>)
     let error_str = error.to_string();
 
     if error_str == "" || error_str == "module_eval_failed" || error_str == "module_parse_failed" {
-        return String::new()
+        return String::new();
     }
 
     let better_error = BetterError::improve_parse_error(error, code).unwrap_or(BetterError {
@@ -67,15 +67,12 @@ pub fn format_codespan_error(be: BetterError, code: &str, file_id: Option<&str>)
     let mut labels = Vec::new();
     if be.span.start() != be.span.end() {
         labels.push(
-            Label::primary(file_id, be.span.start()..be.span.end())
-                .with_message(&be.message),
+            Label::primary(file_id, be.span.start()..be.span.end()).with_message(&be.message),
         );
     }
 
-    let diagnostic = Diagnostic::error()
-        .with_message(&be.message)
-        .with_labels(labels)
-        .with_notes(notes);
+    let diagnostic =
+        Diagnostic::error().with_message(&be.message).with_labels(labels).with_notes(notes);
 
     let mut buffer = Buffer::ansi();
     let config = term::Config::default();

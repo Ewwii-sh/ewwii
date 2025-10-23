@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Data, Fields};
+use syn::{parse_macro_input, Data, DeriveInput, Fields};
 
 #[proc_macro_attribute]
 pub fn scan_prop(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -8,8 +8,10 @@ pub fn scan_prop(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     let props_matches = if let Data::Enum(data_enum) = &input.data {
-        data_enum.variants.iter().filter_map(|v| {
-            match &v.fields {
+        data_enum
+            .variants
+            .iter()
+            .filter_map(|v| match &v.fields {
                 Fields::Named(fields) => {
                     for f in &fields.named {
                         if f.ident.as_ref().map(|id| id == "props").unwrap_or(false) {
@@ -22,8 +24,8 @@ pub fn scan_prop(_attr: TokenStream, item: TokenStream) -> TokenStream {
                     None
                 }
                 _ => None,
-            }
-        }).collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>()
     } else {
         vec![]
     };

@@ -770,19 +770,23 @@ pub(crate) fn build_gtk_flowbox(
 
     let controller_data = Rc::new(RefCell::new(FlowBoxCtrlData {
         onaccept_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200)
+        cmd_timeout: Duration::from_millis(200),
     }));
 
-    gtk_widget.connect_child_activated(glib::clone!(#[strong] controller_data, move |_: &gtk4::FlowBox, child: &gtk4::FlowBoxChild| {
-        let controller = controller_data.borrow();
+    gtk_widget.connect_child_activated(glib::clone!(
+        #[strong]
+        controller_data,
+        move |_: &gtk4::FlowBox, child: &gtk4::FlowBoxChild| {
+            let controller = controller_data.borrow();
 
-        let index = child.index();
-        if index != -1 {
-            run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[index as usize]);
-        } else {
-            log::error!("Failed to get child index.");
+            let index = child.index();
+            if index != -1 {
+                run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[index as usize]);
+            } else {
+                log::error!("Failed to get child index.");
+            }
         }
-    }));
+    ));
 
     for child in children {
         let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
@@ -797,7 +801,10 @@ pub(crate) fn build_gtk_flowbox(
         }
     }
 
-    let apply_props = |props: &Map, gtk_widget: &gtk4::FlowBox, controller_data: Rc<RefCell<FlowBoxCtrlData>>| -> Result<()> {
+    let apply_props = |props: &Map,
+                       gtk_widget: &gtk4::FlowBox,
+                       controller_data: Rc<RefCell<FlowBoxCtrlData>>|
+     -> Result<()> {
         if let Ok(space_evenly) = get_bool_prop(&props, "space_evenly", Some(true)) {
             gtk_widget.set_homogeneous(space_evenly);
         }
