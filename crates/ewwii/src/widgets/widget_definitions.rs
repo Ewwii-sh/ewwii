@@ -2367,6 +2367,10 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         gtk_widget.set_can_target(can_target);
     }
 
+    if let Ok(focusable) = get_bool_prop(&props, "focusable", Some(true)) {
+        gtk_widget.set_focusable(focusable);
+    }
+
     Ok(())
 }
 
