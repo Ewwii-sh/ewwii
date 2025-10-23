@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `spacing` property to eventbox.
 - `space_evenly` property to eventbox.
 - An advanced widget named `flowbox`.
+- `focusable` property to all widget.
 
 ### Fixed
 
