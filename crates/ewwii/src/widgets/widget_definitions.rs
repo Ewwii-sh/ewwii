@@ -779,12 +779,8 @@ pub(crate) fn build_gtk_flowbox(
         move |_: &gtk4::FlowBox, child: &gtk4::FlowBoxChild| {
             let controller = controller_data.borrow();
 
-            let index = child.index();
-            if index != -1 {
-                run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[index as usize]);
-            } else {
-                log::error!("Failed to get child index.");
-            }
+            let widget_name = child.widget_name();
+            run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[widget_name]);
         }
     ));
 
@@ -2369,6 +2365,10 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
 
     if let Ok(focusable) = get_bool_prop(&props, "focusable", Some(true)) {
         gtk_widget.set_focusable(focusable);
+    }
+
+    if let Ok(name) = get_string_prop(&props, "widget_name", None) {
+        gtk_widget.set_widget_name(&name);
     }
 
     Ok(())
