@@ -776,25 +776,25 @@ pub(crate) fn build_gtk_flowbox(
     gtk_widget.connect_child_activated(glib::clone!(
         #[strong]
         controller_data,
-        move |_: &gtk4::FlowBox, child: &gtk4::FlowBoxChild| {
+        move |_, flow_child: &gtk4::FlowBoxChild| {
             let controller = controller_data.borrow();
 
-            let widget_name = child.widget_name();
-            run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[widget_name]);
+            if let Some(child) = flow_child.child() {
+                let widget_name = child.widget_name();
+                run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[widget_name]);
+            } else {
+                log::error!("Failed to get the child of FlowBoxChild.");
+            }
         }
     ));
 
+    let mut index = 0;
+
     for child in children {
         let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
-        if let Some(props) = child.props() {
-            if let Ok(id) = get_i32_prop(&props, "child_index", None) {
-                gtk_widget.insert(&child_widget, id);
-            } else {
-                log::error!("Every child of a flowbox MUST have a property named `child_index`.");
-            }
-        } else {
-            log::error!("Failed to extract properties from the child.");
-        }
+        child_widget.show();
+        gtk_widget.insert(&child_widget, index);
+        index += 1;
     }
 
     let apply_props = |props: &Map,
@@ -2347,9 +2347,15 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
 
     match (width, height) {
         (Some(w), Some(h)) => gtk_widget.set_size_request(w, h),
-        (Some(w), None) => gtk_widget.set_size_request(w, gtk_widget.allocated_height()),
-        (None, Some(h)) => gtk_widget.set_size_request(gtk_widget.allocated_width(), h),
-        (None, None) => {} // do nothing
+        (Some(w), None) => {
+            let h = gtk_widget.allocated_height();
+            if h > 0 { gtk_widget.set_size_request(w, h); }
+        },
+        (None, Some(h)) => {
+            let w = gtk_widget.allocated_width();
+            if w > 0 { gtk_widget.set_size_request(w, h); }
+        },
+        (None, None) => {}
     }
 
     let active = get_bool_prop(&props, "active", Some(true))?;
