@@ -792,9 +792,17 @@ pub(crate) fn build_gtk_flowbox(
 
     for child in children {
         let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
-        child_widget.show();
         gtk_widget.insert(&child_widget, index);
         index += 1;
+    }
+
+    if let Ok(default_select) = get_i32_prop(&props, "default_select", None) {
+        if let Some(child) = gtk_widget.child_at_index(default_select) {
+            gtk_widget.select_child(&child); 
+            child.grab_focus();
+        } else {
+            log::error!("Failed to get child at index {} from FlowBox", default_select);
+        }
     }
 
     let apply_props = |props: &Map,
