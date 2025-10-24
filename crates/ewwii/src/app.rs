@@ -844,50 +844,52 @@ impl<B: DisplayBackend> App<B> {
         let cp = self.config_parser.clone();
         let wgs = self.widget_reg_store.clone();
 
-        glib::MainContext::default().spawn_local(async move {
-            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                while let Ok(req) = rx.recv() {
-                    match req {
-                        PluginRequest::RhaiEngineAct(func) => {
-                            let mut cp = cp.borrow_mut();
-                            cp.action_with_engine(func);
-                        }
-                        PluginRequest::RegisterFunc((name, func)) => {
-                            if let Err(e) = shared_utils::slib_store::register_functions(name, func)
-                            {
-                                log::error!("Error registering function: {}", e);
-                            }
-                        }
-                        PluginRequest::ListWidgetIds(res_tx) => {
-                            let wgs_guard = wgs.lock().unwrap();
-                            if let Some(wgs_brw) = wgs_guard.as_ref() {
-                                let output: Vec<u64> = wgs_brw.widgets.keys().cloned().collect();
-                                if let Err(e) = res_tx.send(output) {
-                                    log::error!("Failed to send window list: {}", e);
-                                }
-                            }
-                        }
-                        PluginRequest::WidgetRegistryAct(func) => {
-                            let mut wgs_guard = wgs.lock().unwrap();
-                            if let Some(ref mut registry) = *wgs_guard {
-                                let repr_map: HashMap<u64, &mut gtk4::Widget> = registry
-                                    .widgets
-                                    .iter_mut()
-                                    .map(|(id, entry)| (*id, &mut entry.widget))
-                                    .collect();
-
-                                func(&mut ewwii_plugin_api::widget_backend::WidgetRegistryRepr {
-                                    widgets: repr_map,
-                                });
-                            }
-                        }
+        let handle_request = move |req: PluginRequest| {
+            match req {
+                PluginRequest::RhaiEngineAct(func) => {
+                    cp.borrow_mut().action_with_engine(func);
+                }
+                PluginRequest::RegisterFunc((name, func)) => {
+                    if let Err(e) = shared_utils::slib_store::register_functions(name, func) {
+                        log::error!("Error registering function: {}", e);
                     }
                 }
-            }));
+                PluginRequest::ListWidgetIds(res_tx) => {
+                    let wgs_guard = wgs.lock().unwrap();
+                    if let Some(wgs_brw) = wgs_guard.as_ref() {
+                        let output: Vec<u64> = wgs_brw.widgets.keys().cloned().collect();
+                        let _ = res_tx.send(output);
+                    }
+                }
+                PluginRequest::WidgetRegistryAct(func) => {
+                    let mut wgs_guard = wgs.lock().unwrap();
+                    if let Some(ref mut registry) = *wgs_guard {
+                        let repr_map: HashMap<u64, &mut gtk4::Widget> = registry
+                            .widgets
+                            .iter_mut()
+                            .map(|(id, entry)| (*id, &mut entry.widget))
+                            .collect();
 
-            if let Err(e) = result {
-                log::error!("Uncaught panic in GLib task: {:?}", e);
+                        func(&mut ewwii_plugin_api::widget_backend::WidgetRegistryRepr {
+                            widgets: repr_map,
+                        });
+                    }
+                }
             }
+        };
+
+        // quick drain
+        while let Ok(req) = rx.try_recv() {
+            handle_request(req);
+        }
+
+        // handling requests that arrive later
+        glib::MainContext::default().spawn_local(async move {
+            let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                while let Ok(req) = rx.recv() {
+                    handle_request(req);
+                }
+            }));
         });
 
         Ok(())
