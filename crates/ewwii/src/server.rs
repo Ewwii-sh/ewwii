@@ -85,6 +85,7 @@ pub fn initialize_server<B: DisplayBackend>(
         window_close_timer_abort_senders: HashMap::new(),
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
         pl_handler_store,
+        clear_pl_onclose: HashMap::new(),
         rt_engine_config: EngineConfValues::default(),
         config_parser,
         paths,

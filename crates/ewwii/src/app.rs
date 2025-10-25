@@ -87,6 +87,7 @@ pub enum DaemonCommand {
     TriggerUpdateUI {
         inject_vars: Option<HashMap<String, String>>,
         should_preserve_state: bool,
+        lifetime: Option<String>,
         sender: DaemonResponseSender,
     },
     CallRhaiFns {
@@ -165,6 +166,7 @@ pub struct App<B: DisplayBackend> {
 
     // The cached store of poll/listen handlers
     pub pl_handler_store: rhai_impl::updates::ReactiveVarStore,
+    pub clear_pl_onclose: HashMap<String, String>,
 
     pub rt_engine_config: EngineConfValues,
     pub config_parser: Rc<RefCell<ParseConfig>>,
@@ -348,8 +350,8 @@ impl<B: DisplayBackend> App<B> {
                 let output = format!("{:#?}", &self.pl_handler_store.read().unwrap());
                 sender.send_success(output)?
             }
-            DaemonCommand::TriggerUpdateUI { inject_vars, should_preserve_state, sender } => {
-                match self.trigger_ui_update_with(inject_vars, should_preserve_state) {
+            DaemonCommand::TriggerUpdateUI { inject_vars, should_preserve_state, lifetime, sender } => {
+                match self.trigger_ui_update_with(inject_vars, should_preserve_state, lifetime) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
@@ -404,6 +406,11 @@ impl<B: DisplayBackend> App<B> {
 
         // let scope_index = ewwii_window.scope_index;
         ewwii_window.close();
+        println!("VAR: {:#?}", self.clear_pl_onclose);
+        if let Some(var_name) = self.clear_pl_onclose.remove(instance_id) {
+            println!("NAME: {}", var_name);
+            self.pl_handler_store.write().unwrap().remove(&var_name);
+        }
 
         if auto_reopen {
             self.failed_windows.insert(instance_id.to_string());
@@ -726,9 +733,10 @@ impl<B: DisplayBackend> App<B> {
     /// Trigger a UI update with the given flags.
     /// Even if there are no flags, the UI will still be updated.
     pub fn trigger_ui_update_with(
-        &self,
+        &mut self,
         inject_vars: Option<HashMap<String, String>>,
         should_preserve_state: bool,
+        lifetime: Option<String>
     ) -> Result<()> {
         let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
         let config_path = self.paths.get_rhai_path();
@@ -751,6 +759,7 @@ impl<B: DisplayBackend> App<B> {
         if let Some(vars) = inject_vars {
             for (name, val) in vars {
                 scope.set_value(name.clone(), Dynamic::from(val.clone()));
+                let name_clone = name.clone();
 
                 // Preserving the new state.
                 // ---
@@ -758,6 +767,9 @@ impl<B: DisplayBackend> App<B> {
                 // in the poll/listen variable store (or the `pl_handler_store` in self)
                 if should_preserve_state {
                     self.pl_handler_store.write().unwrap().insert(name, val);
+                    if let Some(win_name) = &lifetime {
+                        self.clear_pl_onclose.insert(win_name.clone(), name_clone);
+                    }
                 }
             }
         }
