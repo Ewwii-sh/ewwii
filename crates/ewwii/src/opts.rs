@@ -197,9 +197,13 @@ pub enum ActionWithServer {
         #[arg(long = "inject", short = 'i', value_parser = parse_inject_var_map)]
         inject_vars: Option<HashMap<String, String>>,
 
-        /// Preserve the new updates. Only meaningful if used with inject.
+        /// Preserve the new updates.
         #[arg(long = "preserve", short = 'p')]
         should_preserve_state: bool,
+
+        /// Tie the variable lifetime to a window lifetime.
+        #[arg(long = "lifetime", short = 'l')]
+        lifetime: Option<String>,
     },
 
     /// Call rhai functions. (NOTE: All poll/listen will default to their initial value)
@@ -289,10 +293,11 @@ impl ActionWithServer {
         self,
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
-            ActionWithServer::TriggerUpdateUI { inject_vars, should_preserve_state } => {
+            ActionWithServer::TriggerUpdateUI { inject_vars, should_preserve_state, lifetime } => {
                 return with_response_channel(|sender| app::DaemonCommand::TriggerUpdateUI {
                     inject_vars,
                     should_preserve_state,
+                    lifetime,
                     sender,
                 })
             }
