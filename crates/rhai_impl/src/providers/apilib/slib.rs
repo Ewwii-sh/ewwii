@@ -33,4 +33,33 @@ pub mod slib {
             }
         }
     }
+
+    /// List all the registered functions
+    ///
+    /// # Arguments
+    ///
+    /// None
+    ///
+    /// # Returns
+    ///
+    /// An array of strings containing the names
+    ///
+    /// # Example
+    ///
+    /// ```javascript
+    /// import "api::slib" as slib;
+    ///
+    /// let eg_output = slib::list_fns();
+    /// print(eg_output);
+    /// ```
+    pub fn list_fns() -> Array {
+        match shared_utils::slib_store::list_registered() {
+            Ok(a) => a.into_iter().map(Dynamic::from).collect(),
+            Err(e) => {
+                log::error!("Error calling function: {}", e);
+
+                Array::new()
+            }
+        }
+    }
 }

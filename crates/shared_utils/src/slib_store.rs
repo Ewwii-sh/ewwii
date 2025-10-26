@@ -24,3 +24,8 @@ pub fn call_registered(name: &str, args: Array) -> Result<Option<Dynamic>, Strin
         Ok(None)
     }
 }
+
+pub fn list_registered() -> Result<Vec<String>, String> {
+    let registry = FUNC_REGISTRY.lock().map_err(|e| e.to_string())?;
+    Ok(registry.keys().cloned().collect())
+}
