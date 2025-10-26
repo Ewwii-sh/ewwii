@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `focusable` property to all widget.
 - `widget_name` property to all widget.
 - `lifetime` flag for update command.
+- `circular-progress` widget back.
 
 ### Fixed
 
