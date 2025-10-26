@@ -350,7 +350,12 @@ impl<B: DisplayBackend> App<B> {
                 let output = format!("{:#?}", &self.pl_handler_store.read().unwrap());
                 sender.send_success(output)?
             }
-            DaemonCommand::TriggerUpdateUI { inject_vars, should_preserve_state, lifetime, sender } => {
+            DaemonCommand::TriggerUpdateUI {
+                inject_vars,
+                should_preserve_state,
+                lifetime,
+                sender,
+            } => {
                 match self.trigger_ui_update_with(inject_vars, should_preserve_state, lifetime) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
@@ -406,9 +411,7 @@ impl<B: DisplayBackend> App<B> {
 
         // let scope_index = ewwii_window.scope_index;
         ewwii_window.close();
-        println!("VAR: {:#?}", self.clear_pl_onclose);
         if let Some(var_name) = self.clear_pl_onclose.remove(instance_id) {
-            println!("NAME: {}", var_name);
             self.pl_handler_store.write().unwrap().remove(&var_name);
         }
 
@@ -736,7 +739,7 @@ impl<B: DisplayBackend> App<B> {
         &mut self,
         inject_vars: Option<HashMap<String, String>>,
         should_preserve_state: bool,
-        lifetime: Option<String>
+        lifetime: Option<String>,
     ) -> Result<()> {
         let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
         let config_path = self.paths.get_rhai_path();
@@ -856,36 +859,34 @@ impl<B: DisplayBackend> App<B> {
         let cp = self.config_parser.clone();
         let wgs = self.widget_reg_store.clone();
 
-        let handle_request = move |req: PluginRequest| {
-            match req {
-                PluginRequest::RhaiEngineAct(func) => {
-                    cp.borrow_mut().action_with_engine(func);
+        let handle_request = move |req: PluginRequest| match req {
+            PluginRequest::RhaiEngineAct(func) => {
+                cp.borrow_mut().action_with_engine(func);
+            }
+            PluginRequest::RegisterFunc((name, func)) => {
+                if let Err(e) = shared_utils::slib_store::register_functions(name, func) {
+                    log::error!("Error registering function: {}", e);
                 }
-                PluginRequest::RegisterFunc((name, func)) => {
-                    if let Err(e) = shared_utils::slib_store::register_functions(name, func) {
-                        log::error!("Error registering function: {}", e);
-                    }
+            }
+            PluginRequest::ListWidgetIds(res_tx) => {
+                let wgs_guard = wgs.lock().unwrap();
+                if let Some(wgs_brw) = wgs_guard.as_ref() {
+                    let output: Vec<u64> = wgs_brw.widgets.keys().cloned().collect();
+                    let _ = res_tx.send(output);
                 }
-                PluginRequest::ListWidgetIds(res_tx) => {
-                    let wgs_guard = wgs.lock().unwrap();
-                    if let Some(wgs_brw) = wgs_guard.as_ref() {
-                        let output: Vec<u64> = wgs_brw.widgets.keys().cloned().collect();
-                        let _ = res_tx.send(output);
-                    }
-                }
-                PluginRequest::WidgetRegistryAct(func) => {
-                    let mut wgs_guard = wgs.lock().unwrap();
-                    if let Some(ref mut registry) = *wgs_guard {
-                        let repr_map: HashMap<u64, &mut gtk4::Widget> = registry
-                            .widgets
-                            .iter_mut()
-                            .map(|(id, entry)| (*id, &mut entry.widget))
-                            .collect();
+            }
+            PluginRequest::WidgetRegistryAct(func) => {
+                let mut wgs_guard = wgs.lock().unwrap();
+                if let Some(ref mut registry) = *wgs_guard {
+                    let repr_map: HashMap<u64, &mut gtk4::Widget> = registry
+                        .widgets
+                        .iter_mut()
+                        .map(|(id, entry)| (*id, &mut entry.widget))
+                        .collect();
 
-                        func(&mut ewwii_plugin_api::widget_backend::WidgetRegistryRepr {
-                            widgets: repr_map,
-                        });
-                    }
+                    func(&mut ewwii_plugin_api::widget_backend::WidgetRegistryRepr {
+                        widgets: repr_map,
+                    });
                 }
             }
         };

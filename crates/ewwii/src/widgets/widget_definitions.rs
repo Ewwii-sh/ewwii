@@ -26,6 +26,7 @@ use std::{
 
 // custom widgets
 // use crate::widgets::{circular_progressbar::CircProg, transform::Transform};
+use crate::widgets::circular_progressbar::CircProg;
 
 /// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
 /// the previously connected singal handler first gets disconnected.
@@ -798,7 +799,7 @@ pub(crate) fn build_gtk_flowbox(
 
     if let Ok(default_select) = get_i32_prop(&props, "default_select", None) {
         if let Some(child) = gtk_widget.child_at_index(default_select) {
-            gtk_widget.select_child(&child); 
+            gtk_widget.select_child(&child);
             child.grab_focus();
         } else {
             log::error!("Failed to get child at index {} from FlowBox", default_select);
@@ -988,54 +989,66 @@ pub(super) fn build_gtk_stack(
 //     Ok(widget)
 // }
 
-// pub(super) fn build_circular_progress_bar(
-//     props: &Map,
-//     widget_registry: &mut WidgetRegistry,
-// ) -> Result<CircProg> {
-//     let widget = CircProg::new();
+pub(super) fn build_circular_progress_bar(
+    props: &Map,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<CircProg> {
+    let widget = CircProg::new();
 
-//     let apply_props = |props: &Map, widget: &CircProg| -> Result<()> {
-//         if let Ok(value) = get_f64_prop(&props, "value", None) {
-//             widget.set_property("value", value.clamp(0.0, 100.0));
-//         }
+    let apply_props = |props: &Map, widget: &CircProg| -> Result<()> {
+        if let Ok(value) = get_f64_prop(&props, "value", None) {
+            widget.set_property("value", value.clamp(0.0, 100.0));
+        }
 
-//         if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
-//             widget.set_property("start-at", start_at.clamp(0.0, 100.0));
-//         }
+        if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
+            widget.set_property("start-at", start_at.clamp(0.0, 100.0));
+        }
 
-//         if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
-//             widget.set_property("thickness", thickness);
-//         }
+        if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
+            widget.set_property("thickness", thickness);
+        }
 
-//         if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
-//             widget.set_property("clockwise", clockwise);
-//         }
+        if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
+            widget.set_property("clockwise", clockwise);
+        }
 
-//         Ok(())
-//     };
+        if let Ok(fg_color_str) = get_string_prop(&props, "fg_color", None) {
+            if let Ok(rgba) = gdk::RGBA::parse(fg_color_str) {
+                widget.set_property("fg-color", rgba);
+            }
+        }
 
-//     apply_props(&props, &widget)?;
+        if let Ok(bg_color_str) = get_string_prop(&props, "bg_color", None) {
+            if let Ok(rgba) = gdk::RGBA::parse(bg_color_str) {
+                widget.set_property("bg-color", rgba);
+            }
+        }
 
-//     let widget_clone = widget.clone();
-//     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-//         let _ = apply_props(props, &widget_clone);
+        Ok(())
+    };
 
-//         // now re-apply generic widget attrs
-//         if let Err(err) =
-//             resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk4::Widget>(), &props)
-//         {
-//             eprintln!("Failed to update widget attrs: {:?}", err);
-//         }
-//     });
+    apply_props(&props, &widget)?;
 
-//     let id = hash_props_and_type(&props, "CircularProgressBar");
+    let widget_clone = widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &widget_clone);
 
-//     widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
+        // now re-apply generic widget attrs
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+        {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
 
-//     resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    let id = hash_props_and_type(&props, "CircularProgressBar");
 
-//     Ok(widget)
-// }
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
+
+    resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
+
+    Ok(widget)
+}
 
 // pub(super) fn build_graph(
 //     props: &Map,
@@ -2357,12 +2370,16 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         (Some(w), Some(h)) => gtk_widget.set_size_request(w, h),
         (Some(w), None) => {
             let h = gtk_widget.allocated_height();
-            if h > 0 { gtk_widget.set_size_request(w, h); }
-        },
+            if h > 0 {
+                gtk_widget.set_size_request(w, h);
+            }
+        }
         (None, Some(h)) => {
             let w = gtk_widget.allocated_width();
-            if w > 0 { gtk_widget.set_size_request(w, h); }
-        },
+            if w > 0 {
+                gtk_widget.set_size_request(w, h);
+            }
+        }
         (None, None) => {}
     }
 
