@@ -16,6 +16,9 @@
 
 mod listen;
 mod poll;
+mod localsignal;
+
+pub use localsignal::*;
 
 use crate::ast::WidgetNode;
 use listen::handle_listen;
@@ -31,17 +34,22 @@ pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
 
-pub fn handle_state_changes(
-    root_node: &WidgetNode,
-    tx: UnboundedSender<String>,
-    store: ReactiveVarStore,
-) {
+pub fn get_prefered_shell() -> String {
     // Check Dash and prefer if dash is installed.
     let dash_installed: bool =
         Command::new("which").arg("dash").output().map(|o| o.status.success()).unwrap_or(false);
 
     let shell = if dash_installed { String::from("/bin/dash") } else { String::from("/bin/sh") };
 
+    shell
+}
+
+pub fn handle_state_changes(
+    root_node: &WidgetNode,
+    tx: UnboundedSender<String>,
+    store: ReactiveVarStore,
+) {
+    let shell = get_prefered_shell();
     if let WidgetNode::Enter(children) = root_node {
         for child in children {
             match child {
