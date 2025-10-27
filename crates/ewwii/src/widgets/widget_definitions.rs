@@ -303,6 +303,23 @@ pub(super) fn build_gtk_overlay(
         gtk_widget.add_overlay(&child);
     }
 
+    let gtk_widget_clone = gtk_widget.clone();
+
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        // now re-apply generic widget attrs
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+        {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
+
+    let id = hash_props_and_type(&props, "Overlay");
+
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { widget: gtk_widget.clone().upcast(), update_fn });
+
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
@@ -342,6 +359,23 @@ pub(super) fn build_tooltip(
         tooltip.set_custom(Some(&tooltip_widget));
         true
     });
+
+    let gtk_widget_clone = gtk_widget.clone();
+
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        // now re-apply generic widget attrs
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+        {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
+
+    let id = hash_props_and_type(&props, "Tooltip");
+
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { widget: gtk_widget.clone().upcast(), update_fn });
 
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
