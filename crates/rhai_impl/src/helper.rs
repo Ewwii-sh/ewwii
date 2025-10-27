@@ -42,19 +42,11 @@ fn extract_poll_and_listen_vars_inner(
     for expr in extract_poll_listen_exprs(code) {
         match engine.eval_expression::<TempSignal>(&expr) {
             Ok(sig) => {
-                let initial = sig
-                    .props
-                    .get("initial")
-                    .and_then(|v| v.clone().try_cast::<String>());
+                let initial = sig.props.get("initial").and_then(|v| v.clone().try_cast::<String>());
                 results.push((sig.var, initial));
             }
             Err(e) => {
-                return Err(anyhow::anyhow!(format_eval_error(
-                    &e,
-                    code,
-                    &engine,
-                    None
-                )));
+                return Err(anyhow::anyhow!(format_eval_error(&e, code, &engine, None)));
             }
         }
     }
@@ -86,17 +78,10 @@ fn extract_import_paths(code: &str) -> Result<Vec<String>> {
 /// Resolve relative and absolute import paths.
 fn resolve_import_path(import_path: &str) -> Result<PathBuf> {
     let path = Path::new(import_path);
-    let abs = if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        std::env::current_dir()?.join(path)
-    };
+    let abs =
+        if path.is_absolute() { path.to_path_buf() } else { std::env::current_dir()?.join(path) };
 
-    let abs = if abs.extension().is_none() {
-        abs.with_extension("rhai")
-    } else {
-        abs
-    };
+    let abs = if abs.extension().is_none() { abs.with_extension("rhai") } else { abs };
 
     Ok(abs)
 }
