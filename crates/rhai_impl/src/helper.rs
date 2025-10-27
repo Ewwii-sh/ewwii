@@ -70,7 +70,6 @@ fn extract_import_paths(code: &str) -> Result<Vec<String>> {
         let trimmed = line.trim_start();
 
         if trimmed.starts_with("import ") {
-            // Example: import "widgets/foo" as _foo;
             if let Some(start) = trimmed.find('"') {
                 if let Some(end_rel) = trimmed[start + 1..].find('"') {
                     let end = start + 1 + end_rel;
@@ -87,17 +86,10 @@ fn extract_import_paths(code: &str) -> Result<Vec<String>> {
 /// Resolve relative and absolute import paths.
 fn resolve_import_path(import_path: &str) -> Result<PathBuf> {
     let path = Path::new(import_path);
-    let abs = if path.is_absolute() {
-        path.to_path_buf()
-    } else {
-        std::env::current_dir()?.join(path)
-    };
+    let abs =
+        if path.is_absolute() { path.to_path_buf() } else { std::env::current_dir()?.join(path) };
 
-    let abs = if abs.extension().is_none() {
-        abs.with_extension("rhai")
-    } else {
-        abs
-    };
+    let abs = if abs.extension().is_none() { abs.with_extension("rhai") } else { abs };
 
     Ok(abs)
 }
