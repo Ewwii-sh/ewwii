@@ -42,19 +42,11 @@ fn extract_poll_and_listen_vars_inner(
     for expr in extract_poll_listen_exprs(code) {
         match engine.eval_expression::<TempSignal>(&expr) {
             Ok(sig) => {
-                let initial = sig
-                    .props
-                    .get("initial")
-                    .and_then(|v| v.clone().try_cast::<String>());
+                let initial = sig.props.get("initial").and_then(|v| v.clone().try_cast::<String>());
                 results.push((sig.var, initial));
             }
             Err(e) => {
-                return Err(anyhow::anyhow!(format_eval_error(
-                    &e,
-                    code,
-                    &engine,
-                    None
-                )));
+                return Err(anyhow::anyhow!(format_eval_error(&e, code, &engine, None)));
             }
         }
     }
