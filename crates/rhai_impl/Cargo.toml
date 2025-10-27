@@ -25,3 +25,4 @@ libc.workspace = true
 rhai_trace = "0.3.1"
 codespan-reporting.workspace = true
 regex.workspace = true
+gtk4.workspace = true
