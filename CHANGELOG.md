@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Ewwii defaulting to default gtk4 theme. #9
 - Few issues with eventbox drop target.
 - Poll/Listen variables not exposed in other modules on first launch.
+- Not able to define poll/listen variables in other files.
+- Overlay and Tooltip widgets not being reactive.
 
 ## [0.3.0-beta] - 2025-10-11
 
