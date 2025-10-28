@@ -2,6 +2,38 @@ use anyhow::{anyhow, Result};
 use gtk4::pango;
 use rhai::Map;
 use std::process::Command;
+use rhai_impl::updates::LocalSignal;
+
+pub fn get_signal_or<T, F>(props: &Map, key: &str, _fallback: F) -> anyhow::Result<LocalSignal>
+where
+    F: FnOnce(&Map, &str) -> anyhow::Result<T>,
+{
+    if let Some(value) = props.get(key) {
+        if let Some(signal) = value.clone().try_cast::<LocalSignal>() {
+            return Ok(signal);
+        }
+    }
+    Err(anyhow::anyhow!("Property `{}` is not a LocalSignal", key))
+}
+
+pub fn handle_signal_or_value<T, FGet, FSignal, FValue>(
+    props: &Map,
+    key: &str,
+    get_value: FGet,
+    on_signal: FSignal,
+    on_value: FValue,
+)
+where
+    FGet: Fn(&Map, &str) -> anyhow::Result<T>,
+    FSignal: FnOnce(LocalSignal),
+    FValue: FnOnce(T),
+{
+    if let Ok(signal) = get_signal_or(props, key, &get_value) {
+        on_signal(signal);
+    } else if let Ok(value) = get_value(props, key) {
+        on_value(value);
+    }
+}
 
 // Run a command and get the output
 pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])

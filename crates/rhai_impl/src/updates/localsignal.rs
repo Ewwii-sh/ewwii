@@ -94,6 +94,12 @@ thread_local! {
 }
 
 pub fn register_signal(id: u64, signal: Rc<LocalSignal>) {
+    if let Some(initial_dyn) = signal.props.get("initial") {
+        if let Some(initial_str) = initial_dyn.clone().try_cast::<String>() {
+            signal.data.set_value(&initial_str);
+        }
+    }
+
     LOCAL_SIGNALS.with(|registry| {
         registry.borrow_mut().insert(id, signal.clone());
     });
