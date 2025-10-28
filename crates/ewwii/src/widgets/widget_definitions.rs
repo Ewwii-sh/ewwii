@@ -938,7 +938,7 @@ pub(super) fn build_event_box(
                     .transform_to(|_, value: &glib::Value| {
                         if let Ok(s) = value.get::<String>() {
                             if let Ok(i) = s.parse::<bool>() {
-                                return Some(i);
+                                return Some(i.to_value());
                             }
                         }
                         None
@@ -1046,6 +1046,28 @@ pub(crate) fn build_gtk_flowbox(
             gtk_widget.set_homogeneous(space_evenly);
         }
 
+        handle_signal_or_value(
+            &props,
+            "space_evenly",
+            |p, k| get_bool_prop(p, k, None),
+            |signal| {
+                signal.data
+                    .bind_property("value", gtk_widget, "homogeneous")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build();
+            },
+            |value| gtk_widget.set_homogeneous(value),
+        );
+
+
         let orientation = props
             .get("orientation")
             .and_then(|v| v.clone().try_cast::<String>())
@@ -1115,12 +1137,42 @@ pub(super) fn build_gtk_stack(
 
     let apply_props = |props: &Map, widget: &gtk4::Stack| -> Result<()> {
         // parsing the properties
-        if let Ok(selected) = get_i32_prop(&props, "selected", None) {
-            widget.set_visible_child_name(&selected.to_string());
-        }
+        handle_signal_or_value(
+            &props,
+            "selected",
+            |p, k| get_i32_prop(p, k, None),
+            |signal| {
+                signal.data
+                    .bind_property("value", widget, "visible_child_name")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build();
+            },
+            |value| widget.set_visible_child_name(&value.to_string()),
+        );
 
-        let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
-        widget.set_transition_type(parse_stack_transition(&transition)?);
+        handle_signal_or_value(
+            &props,
+            "transition",
+            |p, k| get_string_prop(p, k, Some("crossfade")),
+            |signal| {
+                let widget = widget.clone();
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let value = obj.property::<String>("value");
+                    if let Ok(transition) = parse_stack_transition(&value) {
+                        widget.set_transition_type(transition);
+                    } else {
+                        log::error!("Failed to parse transition.");
+                    }
+                });
+            },
+            |value| {
+                if let Ok(transition) = parse_stack_transition(&value) {
+                    widget.set_transition_type(transition);
+                } else {
+                    log::error!("Failed to parse transition.");
+                }
+            },
+        );
 
         // let same_size = get_bool_prop(&props, "same_size", Some(false))?;
         // widget.set_homogeneous(same_size);
@@ -1377,22 +1429,67 @@ pub(super) fn build_gtk_progress(
     let gtk_widget = gtk4::ProgressBar::new();
 
     let apply_props = |props: &Map, widget: &gtk4::ProgressBar| -> Result<()> {
-        let orientation = props
-            .get("orientation")
-            .and_then(|v| v.clone().try_cast::<String>())
-            .map(|s| parse_orientation(&s))
-            .transpose()?
-            .unwrap_or(gtk4::Orientation::Horizontal);
+        handle_signal_or_value(
+            &props,
+            "orientation",
+            |p, k| get_string_prop(p, k, Some("horizontal")),
+            |signal| {
+                let widget = widget.clone();
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let value = obj.property::<String>("value");
+                    if let Ok(orientation) = parse_orientation(&value) {
+                        widget.set_orientation(orientation);
+                    }
+                });
+            },
+            |value| {
+                if let Ok(orientation) = parse_orientation(&value) {
+                    widget.set_orientation(orientation);
+                }
+            },
+        );
 
-        widget.set_orientation(orientation);
+        handle_signal_or_value(
+            &props,
+            "flipped",
+            |p, k| get_bool_prop(p, k, Some(false)),
+            |signal| {
+                signal.data
+                    .bind_property("value", widget, "inverted")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build();
+            },
+            |value| widget.set_inverted(value),
+        );
 
-        if let Ok(flipped) = get_bool_prop(&props, "flipped", Some(false)) {
-            widget.set_inverted(flipped)
-        }
-
-        if let Ok(bar_value) = get_f64_prop(&props, "value", None) {
-            widget.set_fraction(bar_value / 100f64)
-        }
+        handle_signal_or_value(
+            &props,
+            "value",
+            |p, k| get_f64_prop(p, k, None),
+            |signal| {
+                signal.data
+                    .bind_property("value", widget, "fraction")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<f64>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build();
+            },
+            |value| widget.set_fraction(value / 100f64),
+        );
 
         Ok(())
     };
@@ -2164,13 +2261,39 @@ pub(super) fn build_gtk_expander(
     child_widget.show();
 
     let apply_props = |props: &Map, widget: &gtk4::Expander| -> Result<()> {
-        if let Ok(name) = get_string_prop(&props, "name", None) {
-            widget.set_label(Some(&name));
-        }
+        handle_signal_or_value(
+            &props,
+            "name",
+            |p, k| get_string_prop(p, k, None),
+            |signal| {
+                signal.data
+                    .bind_property("value", widget, "label")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build();
+            },
+            |value| widget.set_label(Some(&value)),
+        );
 
-        if let Ok(expanded) = get_bool_prop(&props, "expanded", None) {
-            widget.set_expanded(expanded);
-        }
+        handle_signal_or_value(
+            &props,
+            "expanded",
+            |p, k| get_bool_prop(p, k, None),
+            |signal| {
+                signal.data
+                    .bind_property("value", widget, "expanded")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build();
+            },
+            |value| widget.set_expanded(value),
+        );
 
         Ok(())
     };
@@ -2208,16 +2331,70 @@ pub(super) fn build_gtk_revealer(
     let gtk_widget = gtk4::Revealer::new();
 
     let apply_props = |props: &Map, widget: &gtk4::Revealer| -> Result<()> {
-        let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
-        widget.set_transition_type(parse_revealer_transition(&transition)?);
+        handle_signal_or_value(
+            &props,
+            "transition",
+            |p, k| get_string_prop(p, k, Some("crossfade")),
+            |signal| {
+                let widget = widget.clone();
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let value = obj.property::<String>("value");
+                    if let Ok(val) = parse_revealer_transition(&value) {
+                        widget.set_transition_type(val);
+                    } else {
+                        log::error!("Failed to parse revealer transition.");
+                    }
+                });
+            },
+            |value| {
+                if let Ok(val) = parse_revealer_transition(&value) {
+                    widget.set_transition_type(val);
+                } else {
+                    log::error!("Failed to parse revealer transition.");
+                }
+            },
+        );
 
-        if let Ok(reveal) = get_bool_prop(&props, "reveal", None) {
-            widget.set_reveal_child(reveal);
-        }
+        handle_signal_or_value(
+            &props,
+            "reveal",
+            |p, k| get_bool_prop(p, k, None),
+            |signal| {
+                signal.data
+                    .bind_property("value", widget, "reveal_child")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build();
+            },
+            |value| widget.set_reveal_child(value),
+        );
 
-        let duration = get_duration_prop(&props, "duration", Some(Duration::from_millis(500)))?;
-
-        widget.set_transition_duration(duration.as_millis() as u32);
+        handle_signal_or_value(
+            &props,
+            "duration",
+            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(500))),
+            |signal| {
+                let widget = widget.clone();
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let value = obj.property::<String>("value");
+                    if let Ok(dur) = parse_duration_str(&value) {
+                        widget.set_transition_duration(dur.as_millis() as u32);
+                    } else {
+                        log::error!("Invalid duration string: {}", value);
+                    }
+                });
+            },
+            |value| {
+                widget.set_transition_duration(value.as_millis() as u32);
+            },
+        );
 
         Ok(())
     };
@@ -2747,7 +2924,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
                 .transform_to(|_, value: &glib::Value| {
                     if let Ok(s) = value.get::<String>() {
                         if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
+                            return Some(i.to_value());
                         }
                     }
                     None
@@ -2768,7 +2945,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
                 .transform_to(|_, value: &glib::Value| {
                     if let Ok(s) = value.get::<String>() {
                         if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
+                            return Some(i.to_value());
                         }
                     }
                     None
@@ -2828,7 +3005,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
                 .transform_to(|_, value: &glib::Value| {
                     if let Ok(s) = value.get::<String>() {
                         if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
+                            return Some(i.to_value());
                         }
                     }
                     None
@@ -2863,7 +3040,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
                 .transform_to(|_, value: &glib::Value| {
                     if let Ok(s) = value.get::<String>() {
                         if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
+                            return Some(i.to_value());
                         }
                     }
                     None
@@ -2884,7 +3061,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
                 .transform_to(|_, value: &glib::Value| {
                     if let Ok(s) = value.get::<String>() {
                         if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
+                            return Some(i.to_value());
                         }
                     }
                     None
