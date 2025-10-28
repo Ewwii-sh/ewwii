@@ -35,6 +35,36 @@ where
     }
 }
 
+pub fn handle_double_signal_or_value<T1, T2, FGet1, FGet2, FSignal, FValue>(
+    props: &Map,
+    key1: &str,
+    key2: &str,
+    get_value1: FGet1,
+    get_value2: FGet2,
+    on_signal: FSignal,
+    on_value: FValue,
+)
+where
+    FGet1: Fn(&Map, &str, Option<T1>) -> anyhow::Result<T1>,
+    FGet2: Fn(&Map, &str, Option<T2>) -> anyhow::Result<T2>,
+    FSignal: FnOnce(Option<LocalSignal>, Option<LocalSignal>),
+    FValue: FnOnce(Option<T1>, Option<T2>),
+{
+    let sig1 = get_signal_or(props, key1, |p, k| get_value1(p, k, None)).ok();
+    let sig2 = get_signal_or(props, key2, |p, k| get_value2(p, k, None)).ok();
+
+    match (sig1, sig2) {
+        (Some(s1), Some(s2)) => on_signal(Some(s1), Some(s2)),
+        (Some(s1), None) => on_signal(Some(s1), None),
+        (None, Some(s2)) => on_signal(None, Some(s2)),
+        (None, None) => {
+            let v1 = get_value1(props, key1, None).ok();
+            let v2 = get_value2(props, key2, None).ok();
+            on_value(v1, v2);
+        }
+    }
+}
+
 // Run a command and get the output
 pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
 where
