@@ -227,6 +227,14 @@ pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
     hasher.finish()
 }
 
+pub fn hash_props(props: &Map) -> u64 {
+    let mut hasher = AHasher::default();
+
+    props.hash(&mut hasher);
+
+    hasher.finish()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
