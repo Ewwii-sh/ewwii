@@ -56,6 +56,8 @@ impl ParseConfig {
             None => Scope::new(),
         };
 
+        crate::updates::clear_local_signals();
+
         // Just eval as node will be in `all_nodes`
         if let Some(ast) = compiled_ast {
             let _ = self
