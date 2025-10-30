@@ -215,85 +215,45 @@ pub(super) fn build_gtk_box(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
-    let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+    // Parse initial props to create the widget:
+    let orientation = props
+        .get("orientation")
+        .and_then(|v| v.clone().try_cast::<String>())
+        .map(|s| parse_orientation(&s))
+        .transpose()?
+        .unwrap_or(gtk4::Orientation::Horizontal);
+
+    let spacing =
+        props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()).unwrap_or(0) as i32;
+
+    let space_evenly = get_bool_prop(&props, "space_evenly", Some(true))?;
+
+    let gtk_widget = gtk4::Box::new(orientation, spacing);
+    gtk_widget.set_homogeneous(space_evenly);
 
     for child in children {
         let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
         gtk_widget.append(&child_widget);
     }
 
-    let apply_props = |props: &Map, widget: &gtk4::Box| -> Result<()> {
-        handle_signal_or_value(
-            &props,
-            "orientation",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        if let Ok(orientation) = parse_orientation(&obj.property::<String>("value")) {
-                            widget.set_orientation(orientation);
-                        }
-                    })
-                );
-            },
-            |value| {
-                if let Ok(orientation) = parse_orientation(&value) {
-                    widget.set_orientation(orientation);
-                }
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "spacing",
-            |p, k| get_i32_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<i32>() {
-                            widget.set_spacing(i)
-                        }
-                    })
-                );
-            },
-            |value| widget.set_spacing(value),
-        );
-
-        handle_signal_or_value(
-            &props,
-            "space_evenly",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_homogeneous(i)
-                        }
-                    })
-                );
-            },
-            |value| widget.set_homogeneous(value),
-        );
-
-        Ok(())
-    };
-
-    apply_props(&props, &gtk_widget)?;
-
     let gtk_widget_clone = gtk_widget.clone();
+
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(&props, &gtk_widget_clone);
+        if let Some(orientation_str) =
+            props.get("orientation").and_then(|v| v.clone().try_cast::<String>())
+        {
+            if let Ok(orientation) = parse_orientation(&orientation_str) {
+                gtk_widget_clone.set_orientation(orientation);
+            }
+        }
+
+        if let Some(spacing_val) = props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()) {
+            gtk_widget_clone.set_spacing(spacing_val as i32);
+        }
+
+        if let Ok(space_evenly) = get_bool_prop(props, "space_evenly", None) {
+            gtk_widget_clone.set_homogeneous(space_evenly);
+        }
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -1717,229 +1677,88 @@ pub(super) fn build_gtk_progress(
     Ok(gtk_widget)
 }
 
-struct ImageWdgtData {
-    path: String,
-    image_width: i32,
-    image_height: i32,
-    preserve_aspect_ratio: bool,
-    fill_svg: String,
-}
-
 pub(super) fn build_image(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Picture> {
     let gtk_widget = gtk4::Picture::new();
 
-    let widget_state = Rc::new(RefCell::new(ImageWdgtData {
-        path: String::new(),
-        image_width: -1,
-        image_height: -1,
-        preserve_aspect_ratio: true,
-        fill_svg: String::new(),
-    }));
+    let apply_props = |props: &Map, widget: &gtk4::Picture| -> Result<()> {
+        let path = get_string_prop(&props, "path", None)?;
+        let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
+        let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
+        let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
+        let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
 
-    let apply_props = |props: &Map, widget_state: Rc<RefCell<ImageWdgtData>>, widget: &gtk4::Picture| -> Result<()> {
-        let update_image = {
-            let widget = widget.clone();
-            let widget_state = widget_state.clone();
-            move || -> Result<()> {
-                let state = widget_state.borrow();
+        if !path.ends_with(".svg") && !fill_svg.is_empty() {
+            log::warn!("Fill attribute ignored, file is not an svg image");
+        }
 
-                let path = &state.path;
-                let image_width = state.image_width;
-                let image_height = state.image_height;
-                let preserve_aspect_ratio = state.preserve_aspect_ratio;
-                let fill_svg = &state.fill_svg;
+        if path.ends_with(".gif") {
+            let pixbuf_animation =
+                gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
+            let iter = pixbuf_animation.iter(None);
 
-                if !path.ends_with(".svg") && !fill_svg.is_empty() {
-                    log::warn!("Fill attribute ignored, file is not an svg image");
-                }
+            let frame_pixbuf = iter.pixbuf();
+            widget.set_pixbuf(Some(&frame_pixbuf));
 
-                if path.ends_with(".gif") {
-                    let pixbuf_animation =
-                        gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-                    let iter = pixbuf_animation.iter(None);
+            let widget_clone = widget.clone();
 
-                    let frame_pixbuf = iter.pixbuf();
-                    widget.set_pixbuf(Some(&frame_pixbuf));
+            if let Some(delay) = iter.delay_time() {
+                glib::timeout_add_local(delay, move || {
+                    let now = std::time::SystemTime::now();
 
-                    let widget_clone = widget.clone();
-
-                    if let Some(delay) = iter.delay_time() {
-                        glib::timeout_add_local(delay, move || {
-                            let now = std::time::SystemTime::now();
-
-                            if iter.advance(now) {
-                                let frame_pixbuf = iter.pixbuf();
-                                widget_clone.set_pixbuf(Some(&frame_pixbuf));
-                            }
-
-                            glib::ControlFlow::Continue
-                        });
+                    if iter.advance(now) {
+                        let frame_pixbuf = iter.pixbuf();
+                        widget_clone.set_pixbuf(Some(&frame_pixbuf));
                     }
-                } else {
-                    let pixbuf;
-                    // populate the pixel buffer
-                    if path.ends_with(".svg") && !fill_svg.is_empty() {
-                        let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
-                        // The fastest way to add/change fill color
-                        let svg_data = if svg_data.contains("fill=") {
-                            let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
-                            reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
-                        } else {
-                            let reg = regex::Regex::new(r"<svg")?;
-                            reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
-                        };
-                        let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
-                            svg_data.as_bytes(),
-                        ));
-                        pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                            &stream,
-                            image_width,
-                            image_height,
-                            preserve_aspect_ratio,
-                            None::<&gtk4::gio::Cancellable>,
-                        )?;
-                        stream.close(None::<&gtk4::gio::Cancellable>)?;
-                    } else {
-                        pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
-                            std::path::PathBuf::from(path),
-                            image_width,
-                            image_height,
-                            preserve_aspect_ratio,
-                        )?;
-                    }
-                    widget.set_pixbuf(Some(&pixbuf));
-                }
-                Ok(())
+
+                    glib::ControlFlow::Continue
+                });
             }
-        };
-
-        handle_signal_or_value(
-            &props,
-            "path",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget_state.borrow_mut().path = value;
-                        let _ = update_image();
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().path = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "fill_svg",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget_state.borrow_mut().fill_svg = value;
-                        let _ = update_image();
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().fill_svg = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "image_height",
-            |p, k| get_i32_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<i32>() {
-                            widget_state.borrow_mut().image_height = i;
-                            let _ = update_image();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().image_height = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "image_width",
-            |p, k| get_i32_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<i32>() {
-                            widget_state.borrow_mut().image_width = i;
-                            let _ = update_image();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().image_width = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "preserve_aspect_ratio",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget_state.borrow_mut().preserve_aspect_ratio = i;
-                            let _ = update_image();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().preserve_aspect_ratio = value;
-            },
-        );
+        } else {
+            let pixbuf;
+            // populate the pixel buffer
+            if path.ends_with(".svg") && !fill_svg.is_empty() {
+                let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
+                // The fastest way to add/change fill color
+                let svg_data = if svg_data.contains("fill=") {
+                    let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
+                    reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
+                } else {
+                    let reg = regex::Regex::new(r"<svg")?;
+                    reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
+                };
+                let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
+                    svg_data.as_bytes(),
+                ));
+                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                    &stream,
+                    image_width,
+                    image_height,
+                    preserve_aspect_ratio,
+                    None::<&gtk4::gio::Cancellable>,
+                )?;
+                stream.close(None::<&gtk4::gio::Cancellable>)?;
+            } else {
+                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
+                    std::path::PathBuf::from(path),
+                    image_width,
+                    image_height,
+                    preserve_aspect_ratio,
+                )?;
+            }
+            widget.set_pixbuf(Some(&pixbuf));
+        }
 
         Ok(())
     };
 
-    apply_props(&props, widget_state.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, widget_state.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -1963,235 +1782,82 @@ pub(super) fn build_image(
 pub(super) fn build_icon(props: &Map, widget_registry: &mut WidgetRegistry) -> Result<gtk4::Image> {
     let gtk_widget = gtk4::Image::new();
 
-    let widget_state = Rc::new(RefCell::new(ImageWdgtData {
-        path: String::new(),
-        image_width: -1,
-        image_height: -1,
-        preserve_aspect_ratio: true,
-        fill_svg: String::new(),
-    }));
+    let apply_props = |props: &Map, widget: &gtk4::Image| -> Result<()> {
+        let path = get_string_prop(&props, "path", None)?;
+        let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
+        let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
+        let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
+        let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
 
-    let apply_props = |props: &Map, widget_state: Rc<RefCell<ImageWdgtData>>, widget: &gtk4::Image| -> Result<()> {
-        let update_image = {
-            let widget = widget.clone();
-            let widget_state = widget_state.clone();
-            move || -> Result<()> {
-                let state = widget_state.borrow();
+        if !path.ends_with(".svg") && !fill_svg.is_empty() {
+            log::warn!("Fill attribute ignored, file is not an svg image");
+        }
 
-                let path = &state.path;
-                let image_width = state.image_width;
-                let image_height = state.image_height;
-                let preserve_aspect_ratio = state.preserve_aspect_ratio;
-                let fill_svg = &state.fill_svg;
+        if path.ends_with(".gif") {
+            let pixbuf_animation =
+                gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
+            let iter = pixbuf_animation.iter(None);
 
-                if !path.ends_with(".svg") && !fill_svg.is_empty() {
-                    log::warn!("Fill attribute ignored, file is not an svg image");
-                }
+            let frame_pixbuf = iter.pixbuf();
+            widget.set_from_pixbuf(Some(&frame_pixbuf));
 
-                if path.ends_with(".gif") {
-                    let pixbuf_animation =
-                        gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-                    let iter = pixbuf_animation.iter(None);
+            let widget_clone = widget.clone();
 
+            if let Some(delay) = iter.delay_time() {
+                glib::timeout_add_local(delay, move || {
                     let frame_pixbuf = iter.pixbuf();
-                    widget.set_from_pixbuf(Some(&frame_pixbuf));
+                    widget_clone.set_from_pixbuf(Some(&frame_pixbuf));
 
-                    let widget_clone = widget.clone();
-
-                    if let Some(delay) = iter.delay_time() {
-                        glib::timeout_add_local(delay, move || {
-                            let now = std::time::SystemTime::now();
-
-                            if iter.advance(now) {
-                                let frame_pixbuf = iter.pixbuf();
-                                widget_clone.set_from_pixbuf(Some(&frame_pixbuf));
-                            }
-
-                            glib::ControlFlow::Continue
-                        });
-                    }
-                } else {
-                    let pixbuf;
-                    // populate the pixel buffer
-                    if path.ends_with(".svg") && !fill_svg.is_empty() {
-                        let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
-                        // The fastest way to add/change fill color
-                        let svg_data = if svg_data.contains("fill=") {
-                            let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
-                            reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
-                        } else {
-                            let reg = regex::Regex::new(r"<svg")?;
-                            reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
-                        };
-                        let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
-                            svg_data.as_bytes(),
-                        ));
-                        pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                            &stream,
-                            image_width,
-                            image_height,
-                            preserve_aspect_ratio,
-                            None::<&gtk4::gio::Cancellable>,
-                        )?;
-                        stream.close(None::<&gtk4::gio::Cancellable>)?;
-                    } else {
-                        pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
-                            std::path::PathBuf::from(path),
-                            image_width,
-                            image_height,
-                            preserve_aspect_ratio,
-                        )?;
-                    }
-                    widget.set_from_pixbuf(Some(&pixbuf));
-                }
-                Ok(())
+                    glib::ControlFlow::Continue
+                });
             }
-        };
+        } else {
+            let pixbuf;
+            // populate the pixel buffer
+            if path.ends_with(".svg") && !fill_svg.is_empty() {
+                let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
+                // The fastest way to add/change fill color
+                let svg_data = if svg_data.contains("fill=") {
+                    let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
+                    reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
+                } else {
+                    let reg = regex::Regex::new(r"<svg")?;
+                    reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
+                };
+                let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
+                    svg_data.as_bytes(),
+                ));
+                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                    &stream,
+                    image_width,
+                    image_height,
+                    preserve_aspect_ratio,
+                    None::<&gtk4::gio::Cancellable>,
+                )?;
+                stream.close(None::<&gtk4::gio::Cancellable>)?;
+            } else {
+                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
+                    std::path::PathBuf::from(path),
+                    image_width,
+                    image_height,
+                    preserve_aspect_ratio,
+                )?;
+            }
+            widget.set_from_pixbuf(Some(&pixbuf));
+        }
 
-        handle_signal_or_value(
-            &props,
-            "path",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget_state.borrow_mut().path = value;
-                        let _ = update_image();
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().path = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "fill_svg",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget_state.borrow_mut().fill_svg = value;
-                        let _ = update_image();
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().fill_svg = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "image_height",
-            |p, k| get_i32_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<i32>() {
-                            widget_state.borrow_mut().image_height = i;
-                            let _ = update_image();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().image_height = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "image_width",
-            |p, k| get_i32_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<i32>() {
-                            widget_state.borrow_mut().image_width = i;
-                            let _ = update_image();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().image_width = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "preserve_aspect_ratio",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_image = update_image.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget_state.borrow_mut().preserve_aspect_ratio = i;
-                            let _ = update_image();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().preserve_aspect_ratio = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "icon",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let signal_widget = signal.data;
-                let widget = widget.clone();
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget.set_icon_name(Some(&value));
-                    })                               
-                );
-            },
-            |value| {
-                widget.set_icon_name(Some(&value));
-            },
-        );
+        if let Ok(icon_name) = get_string_prop(&props, "icon", None) {
+            widget.set_icon_name(Some(&icon_name));
+        }
 
         Ok(())
     };
 
-    apply_props(&props, widget_state.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, widget_state.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -2201,7 +1867,7 @@ pub(super) fn build_icon(props: &Map, widget_registry: &mut WidgetRegistry) -> R
         }
     });
 
-    let id = hash_props_and_type(&props, "Icon");
+    let id = hash_props_and_type(&props, "Image");
 
     widget_registry
         .widgets
@@ -2426,460 +2092,105 @@ pub(super) fn build_gtk_button(
     Ok(gtk_widget)
 }
 
-struct LabelWdgtState {
-    truncate: bool,
-    limit_width: i32,
-    truncate_left: bool,
-    show_truncated: bool,
-    unindent: bool,
-    text: Option<String>,
-    markup: Option<String>,
-}
-
 pub(super) fn build_gtk_label(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Label> {
     let gtk_widget = gtk4::Label::new(None);
 
-    let widget_state = Rc::new(RefCell::new(LabelWdgtState {
-        truncate: false,
-        limit_width: i32::MAX,
-        truncate_left: false,
-        show_truncated: true,
-        unindent: true,
-        text: None,
-        markup: None,
-    }));
+    let apply_props = |props: &Map, widget: &gtk4::Label| -> Result<()> {
+        let truncate = get_bool_prop(&props, "truncate", Some(false))?;
+        let limit_width = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
+        let truncate_left = get_bool_prop(&props, "truncate_left", Some(false))?;
+        let show_truncated = get_bool_prop(&props, "show_truncated", Some(true))?;
+        let unindent = get_bool_prop(&props, "unindent", Some(true))?;
 
-    let apply_props = |props: &Map, widget_state: Rc<RefCell<LabelWdgtState>>, widget: &gtk4::Label| -> Result<()> {
-        let update_label = {
-            let widget = widget.clone();
-            let widget_state = widget_state.clone();
-            move || -> Result<()> {
-                let state = widget_state.borrow();
+        let has_text = props.get("text").is_some();
+        let has_markup = props.get("markup").is_some();
 
-                let truncate = state.truncate;
-                let limit_width = state.limit_width;
-                let truncate_left = state.truncate_left;
-                let show_truncated = state.show_truncated;
-                let unindent = state.unindent;
-
-                let has_text = state.text.is_some();
-                let has_markup = state.markup.is_some();
-
-                if has_text && has_markup {
-                    bail!("Cannot set both 'text' and 'markup' for a label");
-                } else if has_text {
-                    let text = state.text.clone().unwrap();
-                    let t = if show_truncated {
-                        if limit_width == i32::MAX {
-                            widget.set_max_width_chars(-1);
-                        } else {
-                            widget.set_max_width_chars(limit_width);
-                        }
-                        apply_ellipsize_settings(
-                            &widget,
-                            truncate,
-                            limit_width,
-                            truncate_left,
-                            show_truncated,
-                        );
-                        text
-                    } else {
-                        widget.set_ellipsize(pango::EllipsizeMode::None);
-
-                        let limit_width = limit_width as usize;
-                        let char_count = text.chars().count();
-                        if char_count > limit_width {
-                            if truncate_left {
-                                text.chars().skip(char_count - limit_width).collect()
-                            } else {
-                                text.chars().take(limit_width).collect()
-                            }
-                        } else {
-                            text
-                        }
-                    };
-
-                    let unescaped =
-                        unescape::unescape(&t).ok_or_else(|| anyhow!("Failed to unescape..."))?;
-                    let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
-                    widget.set_text(&final_text);
-                } else if has_markup {
-                    let markup = state.markup.as_ref().unwrap();
-                    apply_ellipsize_settings(&widget, truncate, limit_width, truncate_left, show_truncated);
-                    widget.set_markup(markup);
+        if has_text && has_markup {
+            bail!("Cannot set both 'text' and 'markup' for a label");
+        } else if has_text {
+            let text = get_string_prop(&props, "text", None)?;
+            let t = if show_truncated {
+                if limit_width == i32::MAX {
+                    widget.set_max_width_chars(-1);
                 } else {
-                    bail!("Either 'text' or 'markup' must be set");
+                    widget.set_max_width_chars(limit_width);
                 }
-
-                Ok(())
-            }
-        };
-
-        handle_signal_or_value(
-            &props,
-            "text",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_label = update_label.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget_state.borrow_mut().text = Some(value);
-                        let _ = update_label();
-                    })                               
+                apply_ellipsize_settings(
+                    &widget,
+                    truncate,
+                    limit_width,
+                    truncate_left,
+                    show_truncated,
                 );
-            },
-            |value| {
-                widget_state.borrow_mut().text = Some(value);
-            },
-        );
+                text
+            } else {
+                widget.set_ellipsize(pango::EllipsizeMode::None);
 
-        handle_signal_or_value(
-            &props,
-            "markup",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_label = update_label.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget_state.borrow_mut().markup = Some(value);
-                        let _ = update_label();
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().markup = Some(value);
-            },
-        );
+                let limit_width = limit_width as usize;
+                let char_count = text.chars().count();
+                if char_count > limit_width {
+                    if truncate_left {
+                        text.chars().skip(char_count - limit_width).collect()
+                    } else {
+                        text.chars().take(limit_width).collect()
+                    }
+                } else {
+                    text
+                }
+            };
 
-        handle_signal_or_value(
-            &props,
-            "truncate",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_label = update_label.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget_state.borrow_mut().truncate = i;
-                            let _ = update_label();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().truncate = value;
-            },
-        );
+            let unescaped =
+                unescape::unescape(&t).ok_or_else(|| anyhow!("Failed to unescape..."))?;
+            let final_text = if unindent { util::unindent(&unescaped) } else { unescaped };
+            widget.set_text(&final_text);
+        } else if has_markup {
+            let markup = get_string_prop(&props, "markup", None)?;
+            apply_ellipsize_settings(&widget, truncate, limit_width, truncate_left, show_truncated);
+            widget.set_markup(&markup);
+        } else {
+            bail!("Either 'text' or 'markup' must be set");
+        }
 
-        handle_signal_or_value(
-            &props,
-            "limit_width",
-            |p, k| get_i32_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_label = update_label.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<i32>() {
-                            widget_state.borrow_mut().limit_width = i;
-                            let _ = update_label();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().limit_width = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "truncate_left",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_label = update_label.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget_state.borrow_mut().truncate_left = i;
-                            let _ = update_label();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().truncate_left = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "show_truncated",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_label = update_label.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget_state.borrow_mut().show_truncated = i;
-                            let _ = update_label();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().show_truncated = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "unindent",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget_state = widget_state.clone();
-                let update_label = update_label.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget_state.borrow_mut().unindent = i;
-                            let _ = update_label();
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget_state.borrow_mut().unindent = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "wrap",
-            |p, k| get_bool_prop(p, k, Some(false)),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_wrap(i);
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                widget.set_wrap(value);
-            },
-        );
+        if let Ok(wrap) = get_bool_prop(&props, "wrap", Some(false)) {
+            widget.set_wrap(wrap);
+        }
 
         // if let Ok(angle) = get_f64_prop(&props, "angle", Some(0.0)) {
         //     widget.set_angle(angle);
         // }
 
-        handle_signal_or_value(
-            &props,
-            "gravity",
-            |p, k| get_string_prop(p, k, Some("south")),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        let gravity = match parse_gravity(&value) {
-                            Ok(v) => v,
-                            Err(e) => {
-                                log::error!("Failed to parse gravity: {}", e);
-                                return;
-                            }
-                        };
-                        widget.pango_context().set_base_gravity(gravity);
-                    })                               
-                );
-            },
-            |value| {
-                let gravity = match parse_gravity(&value) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        log::error!("Failed to parse gravity: {}", e);
-                        return;
-                    }
-                };
-                widget.pango_context().set_base_gravity(gravity);
-            },
-        );
+        let gravity = get_string_prop(&props, "gravity", Some("south"))?;
+        widget.pango_context().set_base_gravity(parse_gravity(&gravity)?);
 
-        handle_signal_or_value(
-            &props,
-            "xalign",
-            |p, k| get_f64_prop(p, k, Some(0.5)),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f32>() {
-                            widget.set_xalign(i);
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_xalign(value as f32),
-        );
+        if let Ok(xalign) = get_f64_prop(&props, "xalign", Some(0.5)) {
+            widget.set_xalign(xalign as f32);
+        }
 
-        handle_signal_or_value(
-            &props,
-            "yalign",
-            |p, k| get_f64_prop(p, k, Some(0.5)),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f32>() {
-                            widget.set_yalign(i);
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_yalign(value as f32),
-        );
+        if let Ok(yalign) = get_f64_prop(&props, "yalign", Some(0.5)) {
+            widget.set_yalign(yalign as f32);
+        }
 
-        handle_signal_or_value(
-            &props,
-            "justify",
-            |p, k| get_string_prop(p, k, Some("left")),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        let justify = match parse_justification(&value) {
-                            Ok(v) => v,
-                            Err(e) => {
-                                log::error!("Failed to parse justification: {}", e);
-                                return;
-                            }
-                        };
-                        widget.set_justify(justify);
-                    })                               
-                );
-            },
-            |value| {
-                let justify = match parse_justification(&value) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        log::error!("Failed to parse justification: {}", e);
-                        return;
-                    }
-                };
-                widget.set_justify(justify);
-            },
-        );
+        let justify = get_string_prop(&props, "justify", Some("left"))?;
+        widget.set_justify(parse_justification(&justify)?);
 
-        handle_signal_or_value(
-            &props,
-            "wrap_mode",
-            |p, k| get_string_prop(p, k, Some("word")),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        let wrap_mode = match parse_wrap_mode(&value) {
-                            Ok(v) => v,
-                            Err(e) => {
-                                log::error!("Failed to parse wrap mode: {}", e);
-                                return;
-                            }
-                        };
-                        widget.set_wrap_mode(wrap_mode);
-                    })                               
-                );
-            },
-            |value| {
-                let wrap_mode = match parse_wrap_mode(&value) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        log::error!("Failed to parse wrap mode: {}", e);
-                        return;
-                    }
-                };
-                widget.set_wrap_mode(wrap_mode);
-            },
-        );
+        let wrap_mode = get_string_prop(&props, "wrap_mode", Some("word"))?;
+        widget.set_wrap_mode(parse_wrap_mode(&wrap_mode)?);
 
-        handle_signal_or_value(
-            &props,
-            "lines",
-            |p, k| get_i32_prop(p, k, Some(-1)),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<i32>() {
-                            widget.set_lines(i);
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_lines(value),
-        );
-
-        update_label()?;
+        if let Ok(lines) = get_i32_prop(&props, "lines", Some(-1)) {
+            widget.set_lines(lines);
+        }
 
         Ok(())
     };
 
-    apply_props(&props, widget_state.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, widget_state.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -2900,141 +2211,48 @@ pub(super) fn build_gtk_label(
     Ok(gtk_widget)
 }
 
-struct InputCtrlData {
-    onchange_cmd: String,
-    onaccept_cmd: String,
-    cmd_timeout: Duration,
-}
-
 pub(super) fn build_gtk_input(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Entry> {
     let gtk_widget = gtk4::Entry::new();
 
-    let controller_data = Rc::new(RefCell::new(InputCtrlData {
-        onchange_cmd: String::new(),
-        onaccept_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200)
-    }));
+    let apply_props = |props: &Map, widget: &gtk4::Entry| -> Result<()> {
+        if let Ok(value) = get_string_prop(&props, "value", None) {
+            widget.set_text(&value);
+        }
 
-    gtk_widget.connect_changed(glib::clone!(#[strong] controller_data, move |widget| {
-        let controller = controller_data.borrow();
-        run_command(controller.cmd_timeout, &controller.onchange_cmd, &[widget.text().to_string()]);
-    }));
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
-    gtk_widget.connect_activate(glib::clone!(#[strong] controller_data, move |widget| {
-        let controller = controller_data.borrow();
-        run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[widget.text().to_string()]);
-    }));
+        if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_changed(move |widget| {
+                    run_command(timeout, &onchange, &[widget.text().to_string()]);
+                })
+            );
+        }
 
-    let apply_props = |props: &Map, controller_data: Rc<RefCell<InputCtrlData>>, widget: &gtk4::Entry| -> Result<()> {
-        handle_signal_or_value(
-            &props,
-            "value",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget.set_text(&value);
-                    })                               
-                );
-            },
-            |value| widget.set_text(&value),
-        );
+        if let Ok(onaccept) = get_string_prop(&props, "onaccept", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_activate(move |widget| {
+                    run_command(timeout, &onaccept, &[widget.text().to_string()]);
+                })
+            );
+        }
 
-        handle_signal_or_value(
-            &props,
-            "timeout",
-            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            controller_data.borrow_mut().cmd_timeout = dur;
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }
-                    })
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().cmd_timeout = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "onchange",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = controller_data.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        controller_data.borrow_mut().onchange_cmd = value
-                    })                               
-                );
-            },
-            |value| controller_data.borrow_mut().onchange_cmd = value,
-        );
-
-        handle_signal_or_value(
-            &props,
-            "onaccept",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = controller_data.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        controller_data.borrow_mut().onaccept_cmd = value
-                    })                               
-                );
-            },
-            |value| controller_data.borrow_mut().onaccept_cmd = value,
-        );
-
-        handle_signal_or_value(
-            &props,
-            "password",
-            |p, k| get_bool_prop(p, k, Some(false)),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_visibility(!i);
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_visibility(!value),
-        );
+        let password: bool = get_bool_prop(&props, "password", Some(false))?;
+        widget.set_visibility(!password);
 
         Ok(())
     };
 
-    apply_props(&props, controller_data.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, controller_data.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -3055,112 +2273,35 @@ pub(super) fn build_gtk_input(
     Ok(gtk_widget)
 }
 
-struct CalendarCtrlData {
-    onclick_cmd: String,
-    cmd_timeout: Duration
-}
-
 pub(super) fn build_gtk_calendar(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Calendar> {
     let gtk_widget = gtk4::Calendar::new();
 
-    let controller_data = Rc::new(RefCell::new(CalendarCtrlData {
-        onclick_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200),
-    }));
-
-    gtk_widget.connect_day_selected(glib::clone!(#[strong] controller_data, move |w| {
-        let controller = controller_data.borrow();
-        run_command(controller.cmd_timeout, &controller.onclick_cmd, &[w.day(), w.month(), w.year()])
-    }));
-
-    let apply_props = |props: &Map, controller_data: Rc<RefCell<CalendarCtrlData>>, widget: &gtk4::Calendar| -> Result<()> {
+    let apply_props = |props: &Map, widget: &gtk4::Calendar| -> Result<()> {
         // day - the selected day
-        handle_signal_or_value(
-            &props,
-            "day",
-            |p, k| get_f64_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f64>() {
-                            if !(1f64..=31f64).contains(&i) {
-                                log::warn!("Calendar day is not a number between 1 and 31");
-                            } else {
-                                widget.set_day(i as i32)
-                            }
-                        }
-                    })                               
-                );
-            },
-            |day| {
-                if !(1f64..=31f64).contains(&day) {
-                    log::warn!("Calendar day is not a number between 1 and 31");
-                } else {
-                    widget.set_day(day as i32)
-                }
-            },
-        );
+        if let Ok(day) = get_f64_prop(&props, "day", None) {
+            if !(1f64..=31f64).contains(&day) {
+                log::warn!("Calendar day is not a number between 1 and 31");
+            } else {
+                widget.set_day(day as i32)
+            }
+        }
 
         // month - the selected month
-        handle_signal_or_value(
-            &props,
-            "month",
-            |p, k| get_f64_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f64>() {
-                            if !(1f64..=12f64).contains(&i) {
-                                log::warn!("Calendar month is not a number between 1 and 12");
-                            } else {
-                                widget.set_month(i as i32 - 1)
-                            }
-                        }
-                    })                               
-                );
-            },
-            |month| {
-                if !(1f64..=12f64).contains(&month) {
-                    log::warn!("Calendar month is not a number between 1 and 12");
-                } else {
-                    widget.set_month(month as i32 - 1)
-                }
-            },
-        );
+        if let Ok(month) = get_f64_prop(&props, "month", None) {
+            if !(1f64..=12f64).contains(&month) {
+                log::warn!("Calendar month is not a number between 1 and 12");
+            } else {
+                widget.set_month(month as i32 - 1)
+            }
+        }
 
         // year - the selected year
-        handle_signal_or_value(
-            &props,
-            "year",
-            |p, k| get_f64_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f64>() {
-                            widget.set_year(i as i32)
-                        }
-                    })                               
-                );
-            },
-            |year| {
-                widget.set_year(year as i32)
-            },
-        );
+        if let Ok(year) = get_f64_prop(&props, "year", None) {
+            widget.set_year(year as i32)
+        }
 
         // // show-details - show details
         // if let Ok(show_details) = get_bool_prop(&props, "show_details", None) {
@@ -3168,127 +2309,40 @@ pub(super) fn build_gtk_calendar(
         // }
 
         // show-heading - show heading line
-        handle_signal_or_value(
-            &props,
-            "show_heading",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_show_heading(i)
-                        }
-                    })                               
-                );
-            },
-            |show_heading| {
-                widget.set_show_heading(show_heading)
-            },
-        );
+        if let Ok(show_heading) = get_bool_prop(&props, "show_heading", None) {
+            widget.set_show_heading(show_heading)
+        }
 
         // show-day-names - show names of days
-        handle_signal_or_value(
-            &props,
-            "show_day_names",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_show_day_names(i)
-                        }
-                    })                               
-                );
-            },
-            |show_day_names| {
-                widget.set_show_day_names(show_day_names)
-            },
-        );
+        if let Ok(show_day_names) = get_bool_prop(&props, "show_day_names", None) {
+            widget.set_show_day_names(show_day_names)
+        }
 
         // show-week-numbers - show week numbers
-        handle_signal_or_value(
-            &props,
-            "show_week_numbers",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_show_week_numbers(i)
-                        }
-                    })                               
-                );
-            },
-            |show_week_numbers| {
-                widget.set_show_week_numbers(show_week_numbers)
-            },
-        );
+        if let Ok(show_week_numbers) = get_bool_prop(&props, "show_week_numbers", None) {
+            widget.set_show_week_numbers(show_week_numbers)
+        }
 
         // timeout - timeout of the command. Default: "200ms"
-        handle_signal_or_value(
-            &props,
-            "timeout",
-            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            controller_data.borrow_mut().cmd_timeout = dur;
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }
-                    })
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().cmd_timeout = value;
-            },
-        );
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
         // onclick - command to run when the user selects a date. The `{0}` placeholder will be replaced by the selected day, `{1}` will be replaced by the month, and `{2}` by the year.
-        handle_signal_or_value(
-            &props,
-            "onclick",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = controller_data.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        controller_data.borrow_mut().onclick_cmd = value;
-                    })                               
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().onclick_cmd = value;
-            },
-        );
+        if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_day_selected(move |w| {
+                    run_command(timeout, &onclick, &[w.day(), w.month(), w.year()])
+                })
+            );
+        }
         Ok(())
     };
 
-    apply_props(&props, controller_data.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, controller_data.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -4076,162 +3130,22 @@ pub(super) fn build_gtk_scale(
     // Reusable closure for applying props
     let apply_props =
         |props: &Map, widget: &gtk4::Scale, scale_dat: Rc<RefCell<RangeCtrlData>>| -> Result<()> {
-            handle_signal_or_value(
-                &props,
-                "orientation",
-                |p, k| get_string_prop(p, k, None),
-                |signal| {
-                    let widget = widget.clone();
-                    let signal_widget = signal.data;
-                    connect_signal_handler!(
-                        signal_widget,
-                        signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                            if let Ok(orientation) = parse_orientation(&obj.property::<String>("value")) {
-                                widget.set_orientation(orientation);
-                            }
-                        })
-                    );
-                },
-                |value| {
-                    if let Ok(orientation) = parse_orientation(&value) {
-                        widget.set_orientation(orientation);
-                    }
-                },
-            );
+            widget.set_inverted(get_bool_prop(props, "flipped", Some(false))?);
 
-            handle_signal_or_value(
-                &props,
-                "flipped",
-                |p, k| get_bool_prop(p, k, Some(false)),
-                |signal| {
-                    let widget = widget.clone();
-                    let signal_widget = signal.data;
-                    connect_signal_handler!(
-                        signal_widget,
-                        signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                            let value = obj.property::<String>("value");
-                            if let Ok(i) = value.parse::<bool>() {
-                                widget.set_inverted(i);
-                            }
-                        })                               
-                    );
-                },
-                |value| widget.set_inverted(value),
-            );
+            if let Ok(marks) = get_string_prop(props, "marks", None) {
+                widget.clear_marks();
+                for mark in marks.split(',') {
+                    widget.add_mark(mark.trim().parse()?, gtk4::PositionType::Bottom, None);
+                }
+            }
 
-            handle_signal_or_value(
-                &props,
-                "value_pos",
-                |p, k| get_string_prop(p, k, None),
-                |signal| {
-                    let widget = widget.clone();
-                    let signal_widget = signal.data;
-                    connect_signal_handler!(
-                        signal_widget,
-                        signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                            let marks = obj.property::<String>("value");
-                            widget.clear_marks();
-                            for mark in marks.split(',') {
-                                let value = match mark.trim().parse() {
-                                    Ok(v) => v,
-                                    Err(e) => {
-                                        log::error!("Failed to parse mark: {}", e);
-                                        return;
-                                    }
-                                };
-                                widget.add_mark(value, gtk4::PositionType::Bottom, None);
-                            }
-                        })                               
-                    );
-                },
-                |marks| {
-                    widget.clear_marks();
-                    for mark in marks.split(',') {
-                        let value = match mark.trim().parse() {
-                            Ok(v) => v,
-                            Err(e) => {
-                                log::error!("Failed to parse mark: {}", e);
-                                return;
-                            }
-                        };
-                        widget.add_mark(value, gtk4::PositionType::Bottom, None);
-                    }
-                },
-            );
+            widget.set_draw_value(get_bool_prop(props, "draw_value", Some(false))?);
 
-            handle_signal_or_value(
-                &props,
-                "draw_value",
-                |p, k| get_bool_prop(p, k, Some(false)),
-                |signal| {
-                    let widget = widget.clone();
-                    let signal_widget = signal.data;
-                    connect_signal_handler!(
-                        signal_widget,
-                        signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                            let value = obj.property::<String>("value");
-                            if let Ok(i) = value.parse::<bool>() {
-                                widget.set_draw_value(i);
-                            }
-                        })                               
-                    );
-                },
-                |value| widget.set_draw_value(value),
-            );          
+            if let Ok(value_pos) = get_string_prop(props, "value_pos", None) {
+                widget.set_value_pos(parse_position_type(&value_pos)?);
+            }
 
-            handle_signal_or_value(
-                &props,
-                "value_pos",
-                |p, k| get_string_prop(p, k, None),
-                |signal| {
-                    let widget = widget.clone();
-                    let signal_widget = signal.data;
-                    connect_signal_handler!(
-                        signal_widget,
-                        signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                            let value_pos = obj.property::<String>("value");
-                            let value = match parse_position_type(&value_pos) {
-                                Ok(v) => v,
-                                Err(e) => {
-                                    log::error!("Failed to parse position type: {}", e);
-                                    return;
-                                }
-                            };
-                            widget.set_value_pos(value);
-                        })                               
-                    );
-                },
-                |value_pos| {
-                    let value = match parse_position_type(&value_pos) {
-                        Ok(v) => v,
-                        Err(e) => {
-                            log::error!("Failed to parse position type: {}", e);
-                            return;
-                        }
-                    };
-                    widget.set_value_pos(value);
-                },
-            );
-
-            handle_signal_or_value(
-                &props,
-                "round_digits",
-                |p, k| get_i32_prop(p, k, Some(0)),
-                |signal| {
-                    let widget = widget.clone();
-                    let signal_widget = signal.data;
-                    connect_signal_handler!(
-                        signal_widget,
-                        signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                            let value = obj.property::<String>("value");
-                            if let Ok(i) = value.parse::<i32>() {
-                                widget.set_round_digits(i);
-                            }
-                        })                               
-                    );
-                },
-                |value| widget.set_round_digits(value),
-            );
+            widget.set_round_digits(get_i32_prop(props, "round_digits", Some(0))?);
 
             resolve_range_attrs(props, widget.upcast_ref::<gtk4::Range>(), scale_dat)?;
             Ok(())
@@ -4272,83 +3186,17 @@ pub(super) fn build_gtk_scrolledwindow(
     let gtk_widget = gtk4::ScrolledWindow::new();
 
     let apply_props = |props: &Map, widget: &gtk4::ScrolledWindow| -> Result<()> {
-        handle_double_signal_or_value(
-            &props,
-            "hscroll",
-            "vscroll",
-            |p, k, _| get_bool_prop(p, k, Some(true)),
-            |p, k, _| get_bool_prop(p, k, Some(true)),
-            |signal_h, signal_v| {
-                let widget = widget.clone();
-                let props = props.clone();
+        let hscroll = get_bool_prop(&props, "hscroll", Some(true))?;
+        let vscroll = get_bool_prop(&props, "vscroll", Some(true))?;
 
-                if let Some(signal) = signal_h {
-                    let widget = widget.clone();
-                    let props = props.clone();
-                    let signal_widget = signal.data;
-                    connect_signal_handler!(
-                        signal_widget,
-                        signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                            let hscroll = obj.property::<bool>("value");
-                            let vscroll = get_bool_prop(&props, "vscroll", Some(true))
-                                .ok()
-                                .unwrap_or(true);
-                            widget.set_policy(
-                                if hscroll { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never },
-                                if vscroll { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never },
-                            );
-                        })
-                    );
-                }
-
-                if let Some(signal) = signal_v {
-                    let widget = widget.clone();
-                    let props = props.clone();
-                    let signal_widget = signal.data;
-                    connect_signal_handler!(
-                        signal_widget,
-                        signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                            let vscroll = obj.property::<bool>("value");
-                            let hscroll = get_bool_prop(&props, "hscroll", Some(true))
-                                .ok()
-                                .unwrap_or(true);
-                            widget.set_policy(
-                                if hscroll { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never },
-                                if vscroll { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never },
-                            );
-                        })
-                    );
-                }
-            },
-            |h_opt, v_opt| {
-                let hscroll = h_opt.unwrap_or(true);
-                let vscroll = v_opt.unwrap_or(true);
-                widget.set_policy(
-                    if hscroll { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never },
-                    if vscroll { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never },
-                );
-            }
+        widget.set_policy(
+            if hscroll { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never },
+            if vscroll { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never },
         );
 
-        handle_signal_or_value(
-            &props,
-            "propagate_natural_height",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_propagate_natural_height(i)
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_propagate_natural_height(value),
-        );
+        if let Ok(natural_height_bool) = get_bool_prop(&props, "propagate_natural_height", None) {
+            widget.set_propagate_natural_height(natural_height_bool);
+        }
 
         Ok(())
     };
@@ -4753,78 +3601,20 @@ pub(super) fn resolve_range_attrs(
     // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
     // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler
     // and only run on_change when it's caused by manual user input
-    handle_signal_or_value(
-        &props,
-        "value",
-        |p, k| get_f64_prop(p, k, None),
-        |signal| {
-            let range_dat = range_dat.clone();
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(i) = value.parse::<f64>() {
-                        if !range_dat.borrow().is_being_dragged {
-                            range_dat.borrow_mut().last_set_value = Some(i);
-                            gtk_widget.set_value(i);
-                        }
-                    }
-                })                               
-            );
-        },
-        |value| {
-            if !range_dat.borrow().is_being_dragged {
-                range_dat.borrow_mut().last_set_value = Some(value);
-                gtk_widget.set_value(value);
-            }
-        },
-    );   
+    if let Ok(value) = get_f64_prop(&props, "value", None) {
+        if !range_dat.borrow().is_being_dragged {
+            range_dat.borrow_mut().last_set_value = Some(value);
+            gtk_widget.set_value(value);
+        }
+    }
 
-    handle_signal_or_value(
-        &props,
-        "min",
-        |p, k| get_f64_prop(p, k, None),
-        |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(i) = value.parse::<f64>() {
-                        gtk_widget.adjustment().set_lower(i)
-                    }
-                })                               
-            );
-        },
-        |value| {
-            gtk_widget.adjustment().set_lower(value)
-        },
-    );  
+    if let Ok(min) = get_f64_prop(&props, "min", None) {
+        gtk_widget.adjustment().set_lower(min)
+    }
 
-    handle_signal_or_value(
-        &props,
-        "max",
-        |p, k| get_f64_prop(p, k, None),
-        |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(i) = value.parse::<f64>() {
-                        gtk_widget.adjustment().set_upper(i)
-                    }
-                })                               
-            );
-        },
-        |value| {
-            gtk_widget.adjustment().set_upper(value)
-        },
-    ); 
+    if let Ok(max) = get_f64_prop(&props, "max", None) {
+        gtk_widget.adjustment().set_upper(max)
+    }
 
     let onchange = get_string_prop(&props, "onchange", None).ok();
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
@@ -4833,50 +3623,6 @@ pub(super) fn resolve_range_attrs(
         range_dat.borrow_mut().onchange_cmd = onchange;
         range_dat.borrow_mut().cmd_timeout = timeout;
     }
-
-    handle_signal_or_value(
-        &props,
-        "onchange",
-        |p, k| get_string_prop(p, k, None),
-        |signal| {
-            let range_dat = range_dat.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    range_dat.borrow_mut().onchange_cmd = value;
-                })                               
-            );
-        },
-        |value| {
-            range_dat.borrow_mut().onchange_cmd = value;
-        },
-    ); 
-
-    handle_signal_or_value(
-        &props,
-        "timeout",
-        |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-        |signal| {
-            let range_dat = Rc::clone(&range_dat);
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(dur) = parse_duration_str(&value) {
-                        range_dat.borrow_mut().cmd_timeout = dur;
-                    } else {
-                        log::error!("Invalid duration string: {}", value);
-                    }
-                })
-            );
-        },
-        |value| {
-            range_dat.borrow_mut().cmd_timeout = value;
-        },
-    );
 
     Ok(())
 }
