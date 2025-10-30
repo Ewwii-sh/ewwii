@@ -103,36 +103,35 @@ pub fn get_vec_string_prop(
     }
 }
 
-pub fn parse_duration_str(raw: &str) -> anyhow::Result<Duration> {
-    let key_str = raw.trim().to_ascii_lowercase();
-    if key_str.ends_with("ms") {
-        let num = &key_str[..key_str.len() - 2];
-        let ms = num.parse::<u64>().map_err(|_| anyhow!("Invalid ms value: '{}'", key_str))?;
-        Ok(Duration::from_millis(ms))
-    } else if key_str.ends_with("s") {
-        let num = &key_str[..key_str.len() - 1];
-        let s = num.parse::<u64>().map_err(|_| anyhow!("Invalid s value: '{}'", key_str))?;
-        Ok(Duration::from_secs(s))
-    } else if key_str.ends_with("min") {
-        let num = &key_str[..key_str.len() - 3];
-        let mins = num.parse::<u64>().map_err(|_| anyhow!("Invalid min value: '{}'", key_str))?;
-        Ok(Duration::from_secs(mins * 60))
-    } else if key_str.ends_with("m") {
-        let num = &key_str[..key_str.len() - 1];
-        let mins = num.parse::<u64>().map_err(|_| anyhow!("Invalid m value: '{}'", key_str))?;
-        Ok(Duration::from_secs(mins * 60))
-    } else if key_str.ends_with("h") {
-        let num = &key_str[..key_str.len() - 1];
-        let hrs = num.parse::<u64>().map_err(|_| anyhow!("Invalid h value: '{}'", key_str))?;
-        Ok(Duration::from_secs(hrs * 3600))
-    } else {
-        Err(anyhow!("Unsupported duration format: '{}'", key_str))
-    }
-}
-
 pub fn get_duration_prop(props: &Map, key: &str, default: Option<Duration>) -> Result<Duration> {
     if let Ok(raw) = get_string_prop(props, key, None) {
-        parse_duration_str(&raw).or(default.ok_or_else(|| anyhow!("No valid duration found")))
+        let key_str = raw.trim().to_ascii_lowercase();
+        if key_str.ends_with("ms") {
+            let num = &key_str[..key_str.len() - 2];
+            let ms = num.parse::<u64>().map_err(|_| anyhow!("Invalid ms value: '{}'", key_str))?;
+            Ok(Duration::from_millis(ms))
+        } else if key_str.ends_with("s") {
+            let num = &key_str[..key_str.len() - 1];
+            let s = num.parse::<u64>().map_err(|_| anyhow!("Invalid s value: '{}'", key_str))?;
+            Ok(Duration::from_secs(s))
+        } else if key_str.ends_with("min") {
+            let num = &key_str[..key_str.len() - 3];
+            let mins =
+                num.parse::<u64>().map_err(|_| anyhow!("Invalid min value: '{}'", key_str))?;
+            Ok(Duration::from_secs(mins * 60))
+        } else if key_str.ends_with("m") {
+            let num = &key_str[..key_str.len() - 1];
+            let mins = num.parse::<u64>().map_err(|_| anyhow!("Invalid m value: '{}'", key_str))?;
+            Ok(Duration::from_secs(mins * 60))
+        } else if key_str.ends_with("h") {
+            let num = &key_str[..key_str.len() - 1];
+            let hrs = num.parse::<u64>().map_err(|_| anyhow!("Invalid h value: '{}'", key_str))?;
+            Ok(Duration::from_secs(hrs * 3600))
+        } else {
+            default.ok_or_else(|| {
+                anyhow!("Unsupported duration format: '{}', and no default provided", key_str)
+            })
+        }
     } else {
         default.ok_or_else(|| anyhow!("No value for duration and no default provided"))
     }

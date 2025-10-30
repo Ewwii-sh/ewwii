@@ -1514,81 +1514,22 @@ pub(super) fn build_gtk_button(
                        widget: &gtk4::Button,
                        controller_data: Rc<RefCell<GtkButtonCtrlData>>|
      -> Result<()> {
-        handle_signal_or_value(
-            &props,
-            "timeout",
-            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(dur) = parse_duration_str(&value) {
-                        controller_data.borrow_mut().cmd_timeout = dur;
-                    } else {
-                        log::error!("Invalid duration string: {}", value);
-                    }
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().cmd_timeout = value;
-            },
-        );
+        controller_data.borrow_mut().cmd_timeout =
+            get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
-        handle_signal_or_value(
-            &props,
-            "onclick",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onclick_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onclick_cmd = value;
-            },
-        );
-        handle_signal_or_value(
-            &props,
-            "onmiddleclick",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onmiddleclick_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onmiddleclick_cmd = value;
-            },
-        );
-        handle_signal_or_value(
-            &props,
-            "onrightclick",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onrightclick_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onrightclick_cmd = value;
-            },
-        );
+        if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
+            controller_data.borrow_mut().onclick_cmd = onclick;
+        }
+        if let Ok(onmiddleclick) = get_string_prop(&props, "onmiddleclick", None) {
+            controller_data.borrow_mut().onmiddleclick_cmd = onmiddleclick;
+        }
+        if let Ok(onrightclick) = get_string_prop(&props, "onrightclick", None) {
+            controller_data.borrow_mut().onrightclick_cmd = onrightclick;
+        }
 
-        handle_signal_or_value(
-            &props,
-            "label",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                signal.data
-                    .bind_property("value", widget, "label")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .build();
-            },
-            |value| widget.set_label(&value),
-        );
+        if let Ok(button_label) = get_string_prop(&props, "label", None) {
+            widget.set_label(&button_label);
+        }
 
         Ok(())
     };
