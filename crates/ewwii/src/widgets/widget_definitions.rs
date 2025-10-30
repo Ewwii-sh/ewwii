@@ -269,7 +269,7 @@ pub(super) fn build_gtk_box(
         handle_signal_or_value(
             &props,
             "space_evenly",
-            |p, k| get_bool_prop(p, k, Some(true)),
+            |p, k| get_bool_prop(p, k, None),
             |signal| {
                 let widget = widget.clone();
                 let signal_widget = signal.data;
