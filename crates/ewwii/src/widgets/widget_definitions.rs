@@ -34,6 +34,10 @@ use crate::widgets::circular_progressbar::CircProg;
 /// If the condition is false, we disconnect the handler without running the connect_expr,
 /// thus not connecting a new handler unless the condition is met.
 macro_rules! connect_signal_handler {
+    // TODO:
+    // Fully replace all of the places that uses this with a singular
+    // controller. The property inside that controller can be updated
+    // through interior mutability similar to have they are working in eventbox.
     ($widget:ident, if $cond:expr, $connect_expr:expr) => {{
         const KEY:&str = std::concat!("signal-handler:", std::line!());
         unsafe {
@@ -1334,85 +1338,21 @@ pub(super) fn build_circular_progress_bar(
     let widget = CircProg::new();
 
     let apply_props = |props: &Map, widget: &CircProg| -> Result<()> {
-        handle_signal_or_value(
-            &props,
-            "value",
-            |p, k| get_f64_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f64>() {
-                            widget.set_property("value", i.clamp(0.0, 100.0));
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_property("value", value.clamp(0.0, 100.0)),
-        );
+        if let Ok(value) = get_f64_prop(&props, "value", None) {
+            widget.set_property("value", value.clamp(0.0, 100.0));
+        }
 
-        handle_signal_or_value(
-            &props,
-            "start_at",
-            |p, k| get_f64_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f64>() {
-                            widget.set_property("start-at", i.clamp(0.0, 100.0));
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_property("start-at", value.clamp(0.0, 100.0)),
-        );
+        if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
+            widget.set_property("start-at", start_at.clamp(0.0, 100.0));
+        }
 
-        handle_signal_or_value(
-            &props,
-            "thickness",
-            |p, k| get_f64_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f64>() {
-                            widget.set_property("thickness", i);
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_property("thickness", value),
-        );
+        if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
+            widget.set_property("thickness", thickness);
+        }
 
-        handle_signal_or_value(
-            &props,
-            "clockwise",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_property("clockwise", i);
-                        }
-                    })                               
-                );
-            },
-            |value| widget.set_property("clockwise", value),
-        );
+        if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
+            widget.set_property("clockwise", clockwise);
+        }
 
         if let Ok(fg_color_str) = get_string_prop(&props, "fg_color", None) {
             if let Ok(rgba) = gdk::RGBA::parse(fg_color_str) {
@@ -1420,53 +1360,11 @@ pub(super) fn build_circular_progress_bar(
             }
         }
 
-        handle_signal_or_value(
-            &props,
-            "fg_color",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(rgba) = gdk::RGBA::parse(value) {
-                            widget.set_property("fg-color", rgba);
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                if let Ok(rgba) = gdk::RGBA::parse(value) {
-                    widget.set_property("fg-color", rgba);
-                }
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "bg_color",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(rgba) = gdk::RGBA::parse(value) {
-                            widget.set_property("bg-color", rgba);
-                        }
-                    })                               
-                );
-            },
-            |value| {
-                if let Ok(rgba) = gdk::RGBA::parse(value) {
-                    widget.set_property("bg-color", rgba);
-                }
-            },
-        );
+        if let Ok(bg_color_str) = get_string_prop(&props, "bg_color", None) {
+            if let Ok(rgba) = gdk::RGBA::parse(bg_color_str) {
+                widget.set_property("bg-color", rgba);
+            }
+        }
 
         Ok(())
     };
@@ -2363,116 +2261,42 @@ pub(super) fn build_gtk_calendar(
     Ok(gtk_widget)
 }
 
-struct ComboBoxTextCtrlData {
-    onchange_cmd: String,
-    cmd_timeout: Duration
-}
-
 pub(super) fn build_gtk_combo_box_text(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ComboBoxText> {
     let gtk_widget = gtk4::ComboBoxText::new();
 
-    let controller_data = Rc::new(RefCell::new(ComboBoxTextCtrlData {
-        onchange_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200),
-    }));
+    let apply_props = |props: &Map, widget: &gtk4::ComboBoxText| -> Result<()> {
+        if let Ok(items) = get_vec_string_prop(&props, "items", None) {
+            widget.remove_all();
+            for i in items {
+                widget.append_text(&i);
+            }
+        }
 
-    gtk_widget.connect_changed(glib::clone!(#[strong] controller_data, move |widget| {
-        let controller = controller_data.borrow();
-        run_command(
-            controller.cmd_timeout,
-            &controller.onchange_cmd,
-            &[widget.active_text().unwrap_or_else(|| "".into())],
-        );
-    }));
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        let onchange = get_string_prop(&props, "onchange", Some(""))?;
 
-    let apply_props = |props: &Map, controller_data: Rc<RefCell<ComboBoxTextCtrlData>>, widget: &gtk4::ComboBoxText| -> Result<()> {
-        handle_signal_or_value(
-            &props,
-            "items",
-            |p, k| get_vec_string_prop(p, k, None),
-            |signal| {
-                let signal_widget = signal.data;
-                let widget = widget.clone();
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        let items: Vec<String> = value
-                            .trim_matches(&['[', ']'])
-                            .split(", ")
-                            .map(|s| s.to_string())
-                            .collect();            
-
-                        widget.remove_all();
-                        for i in items {
-                            widget.append_text(&i);
-                        }
-                    })
+        connect_signal_handler!(
+            widget,
+            widget.connect_changed(move |widget| {
+                run_command(
+                    timeout,
+                    &onchange,
+                    &[widget.active_text().unwrap_or_else(|| "".into())],
                 );
-            },
-            |items| {
-                widget.remove_all();
-                for i in items {
-                    widget.append_text(&i);
-                }
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "timeout",
-            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            controller_data.borrow_mut().cmd_timeout = dur;
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }
-                    })
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().cmd_timeout = value;
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "onchange",
-            |p, k| get_string_prop(p, k, Some("")),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        controller_data.borrow_mut().onchange_cmd = value;
-                    })
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().onchange_cmd = value;
-            },
+            })
         );
 
         Ok(())
     };
 
-    apply_props(&props, controller_data.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, controller_data.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -2700,122 +2524,39 @@ pub(super) fn build_gtk_revealer(
     Ok(gtk_widget)
 }
 
-struct CheckBoxCtrlData {
-    onchecked_cmd: String,
-    onunchecked_cmd: String,
-    cmd_timeout: Duration,
-}
-
 pub(super) fn build_gtk_checkbox(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::CheckButton> {
     let gtk_widget = gtk4::CheckButton::new();
 
-    let controller_data = Rc::new(RefCell::new(CheckBoxCtrlData {
-        onchecked_cmd: String::new(),
-        onunchecked_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200),
-    }));
+    let apply_props = |props: &Map, widget: &gtk4::CheckButton| -> Result<()> {
+        let checked = get_bool_prop(&props, "checked", Some(false))?;
+        widget.set_active(checked);
 
-    gtk_widget.connect_toggled(glib::clone!(#[strong] controller_data, move |widget| {
-        let controller = controller_data.borrow();
-        run_command(
-            controller.cmd_timeout,
-            if widget.is_active() { &controller.onchecked_cmd } else { &controller.onunchecked_cmd },
-            &[] as &[&str],
-        );
-    }));
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        let onchecked = get_string_prop(&props, "onchecked", Some(""))?;
+        let onunchecked = get_string_prop(&props, "onchecked", Some(""))?;
 
-    let apply_props = |props: &Map, controller_data: Rc<RefCell<CheckBoxCtrlData>>, widget: &gtk4::CheckButton| -> Result<()> {
-        handle_signal_or_value(
-            &props,
-            "checked",
-            |p, k| get_bool_prop(p, k, Some(false)),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(checked) = value.parse::<bool>() {
-                            widget.set_active(checked);
-                        }
-                    })
+        connect_signal_handler!(
+            widget,
+            widget.connect_toggled(move |widget| {
+                run_command(
+                    timeout,
+                    if widget.is_active() { &onchecked } else { &onunchecked },
+                    &[] as &[&str],
                 );
-            },
-            |value| {
-                widget.set_active(value);
-            },
-        );
-
-        handle_signal_or_value(
-            &props,
-            "timeout",
-            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-            |signal| {
-                let controller_data = controller_data.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            controller_data.borrow_mut().cmd_timeout = dur;
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }                        
-                    })
-                );
-            },
-            |value| controller_data.borrow_mut().cmd_timeout = value,
-        );
-
-        handle_signal_or_value(
-            &props,
-            "onchecked",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = controller_data.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        controller_data.borrow_mut().onchecked_cmd = value;
-                    })
-                );
-            },
-            |value| controller_data.borrow_mut().onchecked_cmd = value,
-        );
-
-        handle_signal_or_value(
-            &props,
-            "onunchecked",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = controller_data.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        controller_data.borrow_mut().onunchecked_cmd = value;
-                    })
-                );
-            },
-            |value| controller_data.borrow_mut().onunchecked_cmd = value,
+            })
         );
 
         Ok(())
     };
 
-    apply_props(&props, controller_data.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, controller_data.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -2836,102 +2577,39 @@ pub(super) fn build_gtk_checkbox(
     Ok(gtk_widget)
 }
 
-struct ColorButtonCtrlData {
-    onchange_cmd: String,
-    cmd_timeout: Duration
-}
-
 pub(super) fn build_gtk_color_button(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorButton> {
     let gtk_widget = gtk4::ColorButton::builder().build();
-    let controller_data = Rc::new(RefCell::new(ColorButtonCtrlData {
-        onchange_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200)
-    }));
 
-    gtk_widget.connect_color_set(glib::clone!(#[strong] controller_data, move |widget| {
-        let controller = controller_data.borrow();
-        run_command(controller.cmd_timeout, &controller.onchange_cmd, &[widget.rgba()]);
-    }));
-
-    let apply_props = |props: &Map, controller_data: Rc<RefCell<ColorButtonCtrlData>>, widget: &gtk4::ColorButton| -> Result<()> {
+    let apply_props = |props: &Map, widget: &gtk4::ColorButton| -> Result<()> {
         // use-alpha - bool to wether or not use alpha
-        handle_signal_or_value(
-            &props,
-            "use_alpha",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_use_alpha(i)
-                        }
-                    })
-                );
-            },
-            |value| widget.set_use_alpha(value),
-        );
+        if let Ok(use_alpha) = get_bool_prop(&props, "use_alpha", None) {
+            widget.set_use_alpha(use_alpha);
+        }
 
         // timeout - timeout of the command. Default: "200ms"
-        handle_signal_or_value(
-            &props,
-            "timeout",
-            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            controller_data.borrow_mut().cmd_timeout = dur;
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }
-                    })
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().cmd_timeout = value;
-            },
-        );
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
         // onchange - runs the code when the color was selected
-        handle_signal_or_value(
-            &props,
-            "onchange",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        controller_data.borrow_mut().onchange_cmd = value;
-                    })
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().onchange_cmd = value;
-            },
-        );
+        if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_color_set(move |widget| {
+                    run_command(timeout, &onchange, &[widget.rgba()]);
+                })
+            );
+        }
 
         Ok(())
     };
 
-    apply_props(&props, controller_data.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, controller_data.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
@@ -2952,102 +2630,39 @@ pub(super) fn build_gtk_color_button(
     Ok(gtk_widget)
 }
 
-struct ColorChooserCtrlData {
-    onchange_cmd: String,
-    cmd_timeout: Duration
-}
-
 pub(super) fn build_gtk_color_chooser(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorChooserWidget> {
-    let gtk_widget = gtk4::ColorChooserWidget::builder().build();
-    let controller_data = Rc::new(RefCell::new(ColorChooserCtrlData {
-        onchange_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200)
-    }));
+    let gtk_widget = gtk4::ColorChooserWidget::new();
 
-    gtk_widget.connect_color_activated(glib::clone!(#[strong] controller_data, move |_, color| {
-        let controller = controller_data.borrow();
-        run_command(controller.cmd_timeout, &controller.onchange_cmd, &[*color]);
-    }));
-
-    let apply_props = |props: &Map, controller_data: Rc<RefCell<ColorChooserCtrlData>>, widget: &gtk4::ColorChooserWidget| -> Result<()> {
+    let apply_props = |props: &Map, widget: &gtk4::ColorChooserWidget| -> Result<()> {
         // use-alpha - bool to wether or not use alpha
-        handle_signal_or_value(
-            &props,
-            "use_alpha",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_use_alpha(i)
-                        }
-                    })
-                );
-            },
-            |value| widget.set_use_alpha(value),
-        );
+        if let Ok(use_alpha) = get_bool_prop(&props, "use_alpha", None) {
+            widget.set_use_alpha(use_alpha);
+        }
 
         // timeout - timeout of the command. Default: "200ms"
-        handle_signal_or_value(
-            &props,
-            "timeout",
-            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            controller_data.borrow_mut().cmd_timeout = dur;
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }
-                    })
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().cmd_timeout = value;
-            },
-        );
+        let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
         // onchange - runs the code when the color was selected
-        handle_signal_or_value(
-            &props,
-            "onchange",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        controller_data.borrow_mut().onchange_cmd = value;
-                    })
-                );
-            },
-            |value| {
-                controller_data.borrow_mut().onchange_cmd = value;
-            },
-        );
+        if let Ok(onchange) = get_string_prop(&props, "onchange", None) {
+            connect_signal_handler!(
+                widget,
+                widget.connect_color_activated(move |_a, color| {
+                    run_command(timeout, &onchange, &[*color]);
+                })
+            );
+        }
 
         Ok(())
     };
 
-    apply_props(&props, controller_data.clone(), &gtk_widget)?;
+    apply_props(&props, &gtk_widget)?;
 
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, controller_data.clone(), &gtk_widget_clone);
+        let _ = apply_props(props, &gtk_widget_clone);
 
         // now re-apply generic widget attrs
         if let Err(err) =
