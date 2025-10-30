@@ -673,280 +673,82 @@ pub(super) fn build_event_box(
                        gtk_widget: &gtk4::Box|
      -> Result<()> {
         // timeout - timeout of the command. Default: "200ms"
-        handle_signal_or_value(
-            &props,
-            "timeout",
-            |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(dur) = parse_duration_str(&value) {
-                        controller_data.borrow_mut().cmd_timeout = dur;
-                    } else {
-                        log::error!("Invalid duration string: {}", value);
-                    }
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().cmd_timeout = value;
-            },
-        );
+        controller_data.borrow_mut().cmd_timeout =
+            get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
         // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
-        handle_signal_or_value(
-            &props,
-            "onscroll",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onscroll_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onscroll_cmd = value;
-            },
-        );
+        if let Ok(onscroll) = get_string_prop(&props, "onscroll", None) {
+            controller_data.borrow_mut().onscroll_cmd = onscroll;
+        }
 
         // onhover - event to execute when the user hovers over the widget
-        handle_signal_or_value(
-            &props,
-            "onhover",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onhover_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onhover_cmd = value;
-            },
-        );
+        if let Ok(onhover) = get_string_prop(&props, "onhover", None) {
+            controller_data.borrow_mut().onhover_cmd = onhover;
+        }
 
         // onhoverlost - event to execute when the user loses hover over the widget
-        handle_signal_or_value(
-            &props,
-            "onhoverlost",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onhoverlost_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onhoverlost_cmd = value;
-            },
-        );
+        if let Ok(onhoverlost) = get_string_prop(&props, "onhoverlost", None) {
+            controller_data.borrow_mut().onhoverlost_cmd = onhoverlost;
+        }
 
         // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
-        handle_signal_or_value(
-            &props,
-            "cursor",
-            |p, k| get_string_prop(p, k, Some("default")),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().hover_cursor = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().hover_cursor = value;
-            },
-        );
+        if let Ok(cursor) = get_string_prop(&props, "cursor", Some("default")) {
+            controller_data.borrow_mut().hover_cursor = cursor;
+        }
 
         // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
-        handle_signal_or_value(
-            &props,
-            "ondropped",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().ondropped_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().ondropped_cmd = value;
-            },
-        );
+        if let Ok(ondropped) = get_string_prop(&props, "ondropped", None) {
+            controller_data.borrow_mut().ondropped_cmd = ondropped;
+        }
 
         // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
-        handle_signal_or_value(
-            &props,
-            "drag_type",
-            |p, k| get_string_prop(p, k, Some("file")),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    if let Ok(value) = parse_dragtype(&obj.property::<String>("value")) {
-                        controller_data.borrow_mut().dragtype = value;
-                    }
-                });
-            },
-            |value| {
-                if let Ok(value) = parse_dragtype(&value) {
-                    controller_data.borrow_mut().dragtype = value;
-                }
-            },
-        );
+        if let Ok(dragtype) = get_string_prop(&props, "drag_type", Some("file")) {
+            controller_data.borrow_mut().dragtype = parse_dragtype(&dragtype)?;
+        }
 
         // dragvalue - URI that will be provided when dragging from this widget
-        handle_signal_or_value(
-            &props,
-            "dragvalue",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().dragvalue = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().dragvalue = value;
-            },
-        );
+        if let Ok(dragvalue) = get_string_prop(&props, "dragvalue", None) {
+            controller_data.borrow_mut().dragvalue = dragvalue;
+        }
 
         // onclick - command to run when the widget is clicked
-        handle_signal_or_value(
-            &props,
-            "onclick",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onclick_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onclick_cmd = value;
-            },
-        );
-        handle_signal_or_value(
-            &props,
-            "onmiddleclick",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onmiddleclick_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onmiddleclick_cmd = value;
-            },
-        );
-
+        if let Ok(onclick) = get_string_prop(&props, "onclick", None) {
+            controller_data.borrow_mut().onclick_cmd = onclick;
+        }
+        // onmiddleclick - command to run when the widget is middleclicked
+        if let Ok(onmiddleclick) = get_string_prop(&props, "onmiddleclick", None) {
+            controller_data.borrow_mut().onmiddleclick_cmd = onmiddleclick;
+        }
         // onrightclick - command to run when the widget is rightclicked
-        handle_signal_or_value(
-            &props,
-            "onrightclick",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onrightclick_cmd = obj.property::<String>("value");
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onrightclick_cmd = value;
-            },
-        );
+        if let Ok(onrightclick) = get_string_prop(&props, "onrightclick", None) {
+            controller_data.borrow_mut().onrightclick_cmd = onrightclick;
+        }
 
         // onkeypress - command to to run when a key is pressed
-        handle_signal_or_value(
-            &props,
-            "onkeypress",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onkeypress_cmd = Some( obj.property::<String>("value"));
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onkeypress_cmd = Some(value);
-            },
-        );
+        if let Ok(onkeypress) = get_string_prop(&props, "onkeypress", None) {
+            controller_data.borrow_mut().onkeypress_cmd = Some(onkeypress);
+        }
 
         // onkeyrelease - command to run when a key is released
-        handle_signal_or_value(
-            &props,
-            "onkeyrelease",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let controller_data = Rc::clone(&controller_data);
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    controller_data.borrow_mut().onkeyrelease_cmd = Some(obj.property::<String>("value"));
-                });
-            },
-            |value| {
-                controller_data.borrow_mut().onkeyrelease_cmd = Some(value);
-            },
-        );
+        if let Ok(onkeyrelease) = get_string_prop(&props, "onkeyrelease", None) {
+            controller_data.borrow_mut().onkeyrelease_cmd = Some(onkeyrelease);
+        }
 
-        handle_signal_or_value(
-            &props,
-            "orientation",
-            |p, k| get_string_prop(p, k, None),
-            |signal| {
-                let gtk_widget = gtk_widget.clone();
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    if let Ok(orientation) = parse_orientation(&obj.property::<String>("value")) {
-                        gtk_widget.set_orientation(orientation);
-                    }
-                });
-            },
-            |value| {
-                if let Ok(orientation) = parse_orientation(&value) {
-                    gtk_widget.set_orientation(orientation);
-                }
-            },
-        );
+        if let Some(orientation_str) =
+            props.get("orientation").and_then(|v| v.clone().try_cast::<String>())
+        {
+            if let Ok(orientation) = parse_orientation(&orientation_str) {
+                gtk_widget.set_orientation(orientation);
+            }
+        }
 
-        handle_signal_or_value(
-            &props,
-            "spacing",
-            |p, k| get_i32_prop(p, k, None),
-            |signal| {
-                signal.data
-                    .bind_property("value", gtk_widget, "spacing")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .transform_to(|_, value: &glib::Value| {
-                        if let Ok(s) = value.get::<String>() {
-                            if let Ok(i) = s.parse::<i32>() {
-                                return Some(i.to_value());
-                            }
-                        }
-                        None
-                    })
-                    .build();
-            },
-            |value| gtk_widget.set_spacing(value),
-        );
+        if let Some(spacing_val) = props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()) {
+            gtk_widget.set_spacing(spacing_val as i32);
+        }
 
-        handle_signal_or_value(
-            &props,
-            "space_evenly",
-            |p, k| get_bool_prop(p, k, None),
-            |signal| {
-                signal.data
-                    .bind_property("value", gtk_widget, "homogeneous")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .transform_to(|_, value: &glib::Value| {
-                        if let Ok(s) = value.get::<String>() {
-                            if let Ok(i) = s.parse::<bool>() {
-                                return Some(i);
-                            }
-                        }
-                        None
-                    })
-                    .build();
-            },
-            |value| gtk_widget.set_homogeneous(value),
-        );
+        if let Ok(space_evenly) = get_bool_prop(props, "space_evenly", None) {
+            gtk_widget.set_homogeneous(space_evenly);
+        }
 
         Ok(())
     };
