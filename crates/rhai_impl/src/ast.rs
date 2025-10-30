@@ -32,7 +32,6 @@ pub enum WidgetNode {
     Transform { props: Map },
     EventBox { props: Map, children: Vec<WidgetNode> },
     ToolTip { props: Map, children: Vec<WidgetNode> },
-    LocalBind { props: Map, children: Vec<WidgetNode> },
 
     // Top-level macros
     DefWindow { name: String, props: Map, node: Box<WidgetNode> },
@@ -148,13 +147,6 @@ pub fn get_id_to_widget_info<'a>(
         WidgetNode::ToolTip { props, children } => {
             let id = hash_props_and_type(props, "ToolTip");
             insert_wdgt_info(node, props, "ToolTip", children.as_slice(), parent_id, id_to_props)?;
-            for child in children {
-                get_id_to_widget_info(child, id_to_props, Some(id))?;
-            }
-        }
-        WidgetNode::LocalBind { props, children } => {
-            let id = hash_props_and_type(props, "LocalBind");
-            insert_wdgt_info(node, props, "LocalBind", children.as_slice(), parent_id, id_to_props)?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
