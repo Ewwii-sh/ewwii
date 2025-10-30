@@ -1,13 +1,13 @@
-use rhai::Map;
+use super::{get_prefered_shell, handle_listen, handle_poll};
 use gtk4::glib;
 use gtk4::prelude::*;
-use std::cell::RefCell;
 use gtk4::subclass::prelude::*;
-use super::{get_prefered_shell, handle_poll, handle_listen};
 use once_cell::sync::Lazy;
+use rhai::Map;
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{Arc, RwLock};
-use std::collections::HashMap;
 
 mod imp {
     use super::*;
@@ -24,36 +24,36 @@ mod imp {
         type ParentType = glib::Object;
     }
 
-	impl ObjectImpl for LocalDataBinder {
-	    fn properties() -> &'static [glib::ParamSpec] {
-	        static PROPERTIES: once_cell::sync::Lazy<Vec<glib::ParamSpec>> =
-	            once_cell::sync::Lazy::new(|| {
-	                vec![glib::ParamSpecString::builder("value")
-	                    .nick("Value")
-	                    .blurb("The bound value")
-	                    .default_value(None)
-	                    .build()]
-	            });
-	        PROPERTIES.as_ref()
-	    }
+    impl ObjectImpl for LocalDataBinder {
+        fn properties() -> &'static [glib::ParamSpec] {
+            static PROPERTIES: once_cell::sync::Lazy<Vec<glib::ParamSpec>> =
+                once_cell::sync::Lazy::new(|| {
+                    vec![glib::ParamSpecString::builder("value")
+                        .nick("Value")
+                        .blurb("The bound value")
+                        .default_value(None)
+                        .build()]
+                });
+            PROPERTIES.as_ref()
+        }
 
-	    fn property(&self, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
-	        match pspec.name() {
-	            "value" => self.value.borrow().to_value(),
-	            _ => unimplemented!(),
-	        }
-	    }
+        fn property(&self, _id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+            match pspec.name() {
+                "value" => self.value.borrow().to_value(),
+                _ => unimplemented!(),
+            }
+        }
 
-	    fn set_property(&self, _id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
-	        match pspec.name() {
-	            "value" => {
-	                let val: Option<String> = value.get().unwrap();
-	                self.set_value(&self.obj(), val.unwrap_or_default());
-	            }
-	            _ => unimplemented!(),
-	        }
-	    }
-	}
+        fn set_property(&self, _id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
+            match pspec.name() {
+                "value" => {
+                    let val: Option<String> = value.get().unwrap();
+                    self.set_value(&self.obj(), val.unwrap_or_default());
+                }
+                _ => unimplemented!(),
+            }
+        }
+    }
 
     impl LocalDataBinder {
         pub fn set_value(&self, obj: &super::LocalDataBinder, val: String) {
@@ -83,9 +83,9 @@ impl LocalDataBinder {
 
 #[derive(Debug, Clone)]
 pub struct LocalSignal {
-	pub id: u64,
-	pub props: Map,
-	pub data: Arc<LocalDataBinder>
+    pub id: u64,
+    pub props: Map,
+    pub data: Arc<LocalDataBinder>,
 }
 
 thread_local! {
@@ -106,10 +106,10 @@ pub fn clear_local_signals() {
 }
 
 pub fn handle_localsignal_changes() {
-	let shell = get_prefered_shell();
-	let get_string_fn = shared_utils::extract_props::get_string_prop;
-	let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
-	let store = Arc::new(RwLock::new(HashMap::new()));
+    let shell = get_prefered_shell();
+    let get_string_fn = shared_utils::extract_props::get_string_prop;
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+    let store = Arc::new(RwLock::new(HashMap::new()));
 
     LOCAL_SIGNALS.with(|registry| {
         let registry_ref = registry.borrow();
@@ -117,18 +117,28 @@ pub fn handle_localsignal_changes() {
         for (id, signal) in registry_ref.iter() {
             let props = &signal.props;
 
-		    if let Ok(initial_str) = get_string_fn(&props, "initial", None) {
-		    	signal.data.set_value(&initial_str);
-		    }
+            if let Ok(initial_str) = get_string_fn(&props, "initial", None) {
+                signal.data.set_value(&initial_str);
+            }
 
             match get_string_fn(&props, "type", None) {
-                Ok(signal_type) => {
-                	match signal_type.to_ascii_lowercase().as_str() {
-                		"poll" => handle_poll(id.to_string(), &props, shell.clone(), store.clone(), tx.clone()),
-                		"listen" => handle_listen(id.to_string(), &props, shell.clone(), store.clone(), tx.clone()),
-                		o => log::error!("Invalid type: '{}'", o),
-                	}
-                }
+                Ok(signal_type) => match signal_type.to_ascii_lowercase().as_str() {
+                    "poll" => handle_poll(
+                        id.to_string(),
+                        &props,
+                        shell.clone(),
+                        store.clone(),
+                        tx.clone(),
+                    ),
+                    "listen" => handle_listen(
+                        id.to_string(),
+                        &props,
+                        shell.clone(),
+                        store.clone(),
+                        tx.clone(),
+                    ),
+                    o => log::error!("Invalid type: '{}'", o),
+                },
                 Err(_) => {
                     log::error!(
                         "Unable to handle localsignal {}: 'type' property missing or invalid.",
@@ -139,30 +149,30 @@ pub fn handle_localsignal_changes() {
         }
     });
 
-	glib::MainContext::default().spawn_local(async move {
-	    while let Some(id_str) = rx.recv().await {
-	        let value_opt = {
-	            let guard = store.read().unwrap();
-	            guard.get(&id_str).cloned()
-	        };
+    glib::MainContext::default().spawn_local(async move {
+        while let Some(id_str) = rx.recv().await {
+            let value_opt = {
+                let guard = store.read().unwrap();
+                guard.get(&id_str).cloned()
+            };
 
-	        if let Some(value) = value_opt {
-	            if let Ok(id) = id_str.parse::<u64>() {
-	                LOCAL_SIGNALS.with(|registry| {
-	                    let mut registry_ref = registry.borrow_mut();
+            if let Some(value) = value_opt {
+                if let Ok(id) = id_str.parse::<u64>() {
+                    LOCAL_SIGNALS.with(|registry| {
+                        let mut registry_ref = registry.borrow_mut();
 
-	                    if let Some(signal) = registry_ref.get_mut(&id) {
-	                        signal.data.set_value(&value);
-	                    } else {
-	                        log::warn!("No LocalSignal found for id {}", id);
-	                    }
-	                });
-	            } else {
-	                log::error!("Invalid id_str '{}': cannot parse to u64", id_str);
-	            }
-	        } else {
-	            log::warn!("No value found in store for id '{}'", id_str);
-	        }
-	    }
-	});
+                        if let Some(signal) = registry_ref.get_mut(&id) {
+                            signal.data.set_value(&value);
+                        } else {
+                            log::warn!("No LocalSignal found for id {}", id);
+                        }
+                    });
+                } else {
+                    log::error!("Invalid id_str '{}': cannot parse to u64", id_str);
+                }
+            } else {
+                log::warn!("No value found in store for id '{}'", id_str);
+            }
+        }
+    });
 }

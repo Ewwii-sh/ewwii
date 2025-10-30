@@ -15,8 +15,8 @@
 */
 
 mod listen;
-mod poll;
 mod localsignal;
+mod poll;
 
 pub use localsignal::*;
 
