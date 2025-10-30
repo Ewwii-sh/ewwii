@@ -403,9 +403,7 @@ pub(super) fn build_localbind(
 
     gtk_widget.append(&child_widget);
 
-    let apply_props = |props: &Map,
-                       gtk_widget: &gtk4::Box|
-     -> Result<()> {
+    let apply_props = |props: &Map, gtk_widget: &gtk4::Box| -> Result<()> {
         let bindings_variant = props.get("bindings");
 
         if bindings_variant.is_none() {
@@ -432,13 +430,20 @@ pub(super) fn build_localbind(
             let signal_widget = localsignal.data;
             connect_signal_handler!(
                 signal_widget,
-                signal_widget.connect_notify_local(Some("value"), glib::clone!(#[weak] gtk_widget, move |obj, _| {
-                    if let Some(child) = gtk_widget.first_child() {
-                        child.set_property(&prop_name, &obj.property::<String>("value"));
-                    }
-                }))
+                signal_widget.connect_notify_local(
+                    Some("value"),
+                    glib::clone!(
+                        #[weak]
+                        gtk_widget,
+                        move |obj, _| {
+                            if let Some(child) = gtk_widget.first_child() {
+                                child.set_property(&prop_name, &obj.property::<String>("value"));
+                            }
+                        }
+                    )
+                )
             );
-        } 
+        }
 
         Ok(())
     };

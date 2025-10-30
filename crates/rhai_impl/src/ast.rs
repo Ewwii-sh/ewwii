@@ -154,7 +154,14 @@ pub fn get_id_to_widget_info<'a>(
         }
         WidgetNode::LocalBind { props, children } => {
             let id = hash_props_and_type(props, "LocalBind");
-            insert_wdgt_info(node, props, "LocalBind", children.as_slice(), parent_id, id_to_props)?;
+            insert_wdgt_info(
+                node,
+                props,
+                "LocalBind",
+                children.as_slice(),
+                parent_id,
+                id_to_props,
+            )?;
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }

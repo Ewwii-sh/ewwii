@@ -1,5 +1,5 @@
-use crate::ast::{WidgetNode, hash_props};
-use crate::updates::{LocalSignal, LocalDataBinder, register_signal};
+use crate::ast::{hash_props, WidgetNode};
+use crate::updates::{register_signal, LocalDataBinder, LocalSignal};
 use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -83,11 +83,7 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     // == Special signal
     engine.register_fn("localsignal", |props: Map| -> Result<LocalSignal, Box<EvalAltResult>> {
         let id = hash_props(&props);
-        let signal = LocalSignal {
-            id,
-            props,
-            data: Arc::new(LocalDataBinder::new()),
-        };
+        let signal = LocalSignal { id, props, data: Arc::new(LocalDataBinder::new()) };
 
         register_signal(id, Rc::new(signal.clone()));
 
