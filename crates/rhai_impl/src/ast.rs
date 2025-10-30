@@ -32,6 +32,7 @@ pub enum WidgetNode {
     Transform { props: Map },
     EventBox { props: Map, children: Vec<WidgetNode> },
     ToolTip { props: Map, children: Vec<WidgetNode> },
+    LocalBind { props: Map, children: Vec<WidgetNode> },
 
     // Top-level macros
     DefWindow { name: String, props: Map, node: Box<WidgetNode> },
@@ -151,6 +152,13 @@ pub fn get_id_to_widget_info<'a>(
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
         }
+        WidgetNode::LocalBind { props, children } => {
+            let id = hash_props_and_type(props, "LocalBind");
+            insert_wdgt_info(node, props, "LocalBind", children.as_slice(), parent_id, id_to_props)?;
+            for child in children {
+                get_id_to_widget_info(child, id_to_props, Some(id))?;
+            }
+        }
         WidgetNode::ColorChooser { props } => {
             // let id = hash_props_and_type(props, "ColorChooser");
             insert_wdgt_info(node, props, "ColorChooser", &[], parent_id, id_to_props)?;
@@ -223,6 +231,14 @@ pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
     let dyn_id = get_string_fn(&props, "dyn_id", Some("")).unwrap_or("".to_string());
 
     dyn_id.hash(&mut hasher);
+
+    hasher.finish()
+}
+
+pub fn hash_props(props: &Map) -> u64 {
+    let mut hasher = AHasher::default();
+
+    props.hash(&mut hasher);
 
     hasher.finish()
 }

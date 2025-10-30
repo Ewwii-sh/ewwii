@@ -1,16 +1,9 @@
-use crate::ast::WidgetNode;
+use crate::ast::{WidgetNode, hash_props};
 use crate::updates::{LocalSignal, LocalDataBinder, register_signal};
 use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
-
-static NEXT_ID: AtomicU64 = AtomicU64::new(1);
-
-fn unique_id() -> u64 {
-    NEXT_ID.fetch_add(1, Ordering::Relaxed)
-}
 
 /// Converts a Dynamic array into a Vec<WidgetNode>, returning proper errors with position.
 fn children_to_vec(
@@ -85,10 +78,11 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     register_with_children!("stack", Stack);
     register_with_children!("eventbox", EventBox);
     register_with_children!("tooltip", ToolTip);
+    register_with_children!("localbind", LocalBind);
 
     // == Special signal
     engine.register_fn("localsignal", |props: Map| -> Result<LocalSignal, Box<EvalAltResult>> {
-        let id = unique_id();
+        let id = hash_props(&props);
         let signal = LocalSignal {
             id,
             props,
