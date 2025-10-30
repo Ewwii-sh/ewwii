@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Added
 
 - `localsignal` signal for fast and cheap property update.
-- `localbind` widget for binding `localsignal` to a widget property.
+- `localbind` utility for binding `localsignal` to a widget property.
 - `onkeypress` property to eventbox.
 - `onkeyrelease` property to eventbox.
 - Selection of dash as shell if it installed.

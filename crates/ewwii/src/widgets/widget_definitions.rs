@@ -383,7 +383,7 @@ pub(super) fn build_tooltip(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_localbind(
+pub(super) fn build_localbind_util(
     props: &Map,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
@@ -404,20 +404,7 @@ pub(super) fn build_localbind(
     gtk_widget.append(&child_widget);
 
     let apply_props = |props: &Map, gtk_widget: &gtk4::Box| -> Result<()> {
-        let bindings_variant = props.get("bindings");
-
-        if bindings_variant.is_none() {
-            bail!("No 'bindings' map found in props.");
-        }
-
-        let bindings = match bindings_variant.and_then(|v| v.clone().try_cast::<rhai::Map>()) {
-            Some(map) => map,
-            None => {
-                bail!("'bindings' is not a valid map.");
-            }
-        };
-
-        for (prop_name, localsignal_val) in bindings {
+        for (prop_name, localsignal_val) in props {
             let prop_name = prop_name.clone();
 
             let localsignal = match localsignal_val.clone().try_cast::<LocalSignal>() {
@@ -428,6 +415,14 @@ pub(super) fn build_localbind(
             };
 
             let signal_widget = localsignal.data;
+            let current_val = signal_widget.property::<String>("value");
+
+            if !current_val.is_empty() {
+                if let Some(child) = gtk_widget.first_child() {
+                    child.set_property(&prop_name, &current_val);
+                }
+            }
+
             connect_signal_handler!(
                 signal_widget,
                 signal_widget.connect_notify_local(
@@ -453,13 +448,6 @@ pub(super) fn build_localbind(
     let gtk_widget_clone = gtk_widget.clone();
     let update_fn: UpdateFn = Box::new(move |props: &Map| {
         let _ = apply_props(&props, &gtk_widget_clone);
-
-        // now re-apply generic widget attrs
-        if let Err(err) =
-            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk4::Widget>(), &props)
-        {
-            eprintln!("Failed to update widget attrs: {:?}", err);
-        }
     });
 
     let id = hash_props_and_type(&props, "LocalBind");
@@ -467,8 +455,6 @@ pub(super) fn build_localbind(
     widget_registry
         .widgets
         .insert(id, WidgetEntry { widget: gtk_widget.clone().upcast(), update_fn });
-
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
