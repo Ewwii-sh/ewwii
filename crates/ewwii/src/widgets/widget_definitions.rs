@@ -2526,6 +2526,10 @@ pub(super) fn build_gtk_label(
                 let widget_state = widget_state.clone();
                 let update_label = update_label.clone();
                 let signal_widget = signal.data;
+
+                // initial
+                widget_state.borrow_mut().text = Some("");
+
                 connect_signal_handler!(
                     signal_widget,
                     signal_widget.connect_notify_local(Some("value"), move |obj, _| {
@@ -2548,6 +2552,10 @@ pub(super) fn build_gtk_label(
                 let widget_state = widget_state.clone();
                 let update_label = update_label.clone();
                 let signal_widget = signal.data;
+
+                // initial
+                widget_state.borrow_mut().markup = Some("");
+
                 connect_signal_handler!(
                     signal_widget,
                     signal_widget.connect_notify_local(Some("value"), move |obj, _| {
