@@ -56,29 +56,6 @@ macro_rules! connect_signal_handler {
     }};
 }
 
-macro_rules! bind_property_once {
-    ($widget:ident, if $cond:expr, $bind_expr:expr) => {{
-        const KEY: &str = std::concat!("bind-property:", std::line!());
-        unsafe {
-            if !$cond {
-                return;
-            }
-
-            if let Some(old_binding) = $widget.data::<gtk4::glib::Binding>(KEY) {
-                old_binding.as_ref().unbind();
-            }
-
-            let new_binding: gtk4::glib::Binding = $bind_expr;
-
-            $widget.set_data::<gtk4::glib::Binding>(KEY, new_binding);
-        }
-    }};
-
-    ($widget:ident, $bind_expr:expr) => {{
-        bind_property_once!($widget, if true, $bind_expr)
-    }};
-}
-
 pub type UpdateFn = Box<dyn Fn(&Map)>;
 
 pub struct WidgetEntry {
@@ -702,18 +679,14 @@ pub(super) fn build_event_box(
             |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            controller_data.borrow_mut().cmd_timeout = dur;
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let value = obj.property::<String>("value");
+                    if let Ok(dur) = parse_duration_str(&value) {
+                        controller_data.borrow_mut().cmd_timeout = dur;
+                    } else {
+                        log::error!("Invalid duration string: {}", value);
+                    }
+                });
             },
             |value| {
                 controller_data.borrow_mut().cmd_timeout = value;
@@ -727,13 +700,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onscroll_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onscroll_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onscroll_cmd = value;
@@ -747,13 +716,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onhover_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onhover_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onhover_cmd = value;
@@ -767,13 +732,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onhoverlost_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onhoverlost_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onhoverlost_cmd = value;
@@ -787,13 +748,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, Some("default")),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().hover_cursor = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().hover_cursor = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().hover_cursor = value;
@@ -807,13 +764,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().ondropped_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().ondropped_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().ondropped_cmd = value;
@@ -827,15 +780,11 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, Some("file")),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        if let Ok(value) = parse_dragtype(&obj.property::<String>("value")) {
-                            controller_data.borrow_mut().dragtype = value;
-                        }
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    if let Ok(value) = parse_dragtype(&obj.property::<String>("value")) {
+                        controller_data.borrow_mut().dragtype = value;
+                    }
+                });
             },
             |value| {
                 if let Ok(value) = parse_dragtype(&value) {
@@ -851,13 +800,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().dragvalue = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().dragvalue = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().dragvalue = value;
@@ -871,13 +816,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onclick_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onclick_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onclick_cmd = value;
@@ -889,13 +830,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onmiddleclick_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onmiddleclick_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onmiddleclick_cmd = value;
@@ -909,13 +846,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onrightclick_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onrightclick_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onrightclick_cmd = value;
@@ -929,13 +862,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onkeypress_cmd = Some( obj.property::<String>("value"));
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onkeypress_cmd = Some( obj.property::<String>("value"));
+                });
             },
             |value| {
                 controller_data.borrow_mut().onkeypress_cmd = Some(value);
@@ -949,13 +878,9 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onkeyrelease_cmd = Some(obj.property::<String>("value"));
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onkeyrelease_cmd = Some(obj.property::<String>("value"));
+                });
             },
             |value| {
                 controller_data.borrow_mut().onkeyrelease_cmd = Some(value);
@@ -968,15 +893,11 @@ pub(super) fn build_event_box(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let gtk_widget = gtk_widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        if let Ok(orientation) = parse_orientation(&obj.property::<String>("value")) {
-                            gtk_widget.set_orientation(orientation);
-                        }
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    if let Ok(orientation) = parse_orientation(&obj.property::<String>("value")) {
+                        gtk_widget.set_orientation(orientation);
+                    }
+                });
             },
             |value| {
                 if let Ok(orientation) = parse_orientation(&value) {
@@ -990,21 +911,18 @@ pub(super) fn build_event_box(
             "spacing",
             |p, k| get_i32_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    gtk_widget,
-                    signal.data
-                        .bind_property("value", gtk_widget, "spacing")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .transform_to(|_, value: &glib::Value| {
-                            if let Ok(s) = value.get::<String>() {
-                                if let Ok(i) = s.parse::<i32>() {
-                                    return Some(i.to_value());
-                                }
+                signal.data
+                    .bind_property("value", gtk_widget, "spacing")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<i32>() {
+                                return Some(i.to_value());
                             }
-                            None
-                        })
-                        .build()
-                );
+                        }
+                        None
+                    })
+                    .build();
             },
             |value| gtk_widget.set_spacing(value),
         );
@@ -1014,21 +932,18 @@ pub(super) fn build_event_box(
             "space_evenly",
             |p, k| get_bool_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    gtk_widget,
-                    signal.data
-                        .bind_property("value", gtk_widget, "homogeneous")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .transform_to(|_, value: &glib::Value| {
-                            if let Ok(s) = value.get::<String>() {
-                                if let Ok(i) = s.parse::<bool>() {
-                                    return Some(i.to_value());
-                                }
+                signal.data
+                    .bind_property("value", gtk_widget, "homogeneous")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
                             }
-                            None
-                        })
-                        .build()
-                );
+                        }
+                        None
+                    })
+                    .build();
             },
             |value| gtk_widget.set_homogeneous(value),
         );
@@ -1136,21 +1051,18 @@ pub(crate) fn build_gtk_flowbox(
             "space_evenly",
             |p, k| get_bool_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    gtk_widget,
-                    signal.data
-                        .bind_property("value", gtk_widget, "homogeneous")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .transform_to(|_, value: &glib::Value| {
-                            if let Ok(s) = value.get::<String>() {
-                                if let Ok(i) = s.parse::<bool>() {
-                                    return Some(i.to_value());
-                                }
+                signal.data
+                    .bind_property("value", gtk_widget, "homogeneous")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
                             }
-                            None
-                        })
-                        .build()
-                );
+                        }
+                        None
+                    })
+                    .build();
             },
             |value| gtk_widget.set_homogeneous(value),
         );
@@ -1230,13 +1142,10 @@ pub(super) fn build_gtk_stack(
             "selected",
             |p, k| get_i32_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    widget,
-                    signal.data
-                        .bind_property("value", widget, "visible_child_name")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .build()
-                );
+                signal.data
+                    .bind_property("value", widget, "visible_child_name")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build();
             },
             |value| widget.set_visible_child_name(&value.to_string()),
         );
@@ -1545,21 +1454,18 @@ pub(super) fn build_gtk_progress(
             "flipped",
             |p, k| get_bool_prop(p, k, Some(false)),
             |signal| {
-                bind_property_once!(
-                    widget,
-                    signal.data
-                        .bind_property("value", widget, "inverted")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .transform_to(|_, value: &glib::Value| {
-                            if let Ok(s) = value.get::<String>() {
-                                if let Ok(i) = s.parse::<bool>() {
-                                    return Some(i.to_value());
-                                }
+                signal.data
+                    .bind_property("value", widget, "inverted")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
                             }
-                            None
-                        })
-                        .build()
-                );
+                        }
+                        None
+                    })
+                    .build();
             },
             |value| widget.set_inverted(value),
         );
@@ -1569,21 +1475,18 @@ pub(super) fn build_gtk_progress(
             "value",
             |p, k| get_f64_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    widget,
-                    signal.data
-                        .bind_property("value", widget, "fraction")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .transform_to(|_, value: &glib::Value| {
-                            if let Ok(s) = value.get::<String>() {
-                                if let Ok(i) = s.parse::<f64>() {
-                                    return Some(i.to_value());
-                                }
+                signal.data
+                    .bind_property("value", widget, "fraction")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<f64>() {
+                                return Some(i.to_value());
                             }
-                            None
-                        })
-                        .build()
-                );
+                        }
+                        None
+                    })
+                    .build();
             },
             |value| widget.set_fraction(value / 100f64),
         );
@@ -1912,18 +1815,14 @@ pub(super) fn build_gtk_button(
             |p, k| get_duration_prop(p, k, Some(Duration::from_millis(200))),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            controller_data.borrow_mut().cmd_timeout = dur;
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let value = obj.property::<String>("value");
+                    if let Ok(dur) = parse_duration_str(&value) {
+                        controller_data.borrow_mut().cmd_timeout = dur;
+                    } else {
+                        log::error!("Invalid duration string: {}", value);
+                    }
+                });
             },
             |value| {
                 controller_data.borrow_mut().cmd_timeout = value;
@@ -1936,13 +1835,9 @@ pub(super) fn build_gtk_button(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onclick_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onclick_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onclick_cmd = value;
@@ -1954,13 +1849,9 @@ pub(super) fn build_gtk_button(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onmiddleclick_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onmiddleclick_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onmiddleclick_cmd = value;
@@ -1972,13 +1863,9 @@ pub(super) fn build_gtk_button(
             |p, k| get_string_prop(p, k, None),
             |signal| {
                 let controller_data = Rc::clone(&controller_data);
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        controller_data.borrow_mut().onrightclick_cmd = obj.property::<String>("value");
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    controller_data.borrow_mut().onrightclick_cmd = obj.property::<String>("value");
+                });
             },
             |value| {
                 controller_data.borrow_mut().onrightclick_cmd = value;
@@ -1990,13 +1877,10 @@ pub(super) fn build_gtk_button(
             "label",
             |p, k| get_string_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    widget,
-                    signal.data
-                        .bind_property("value", widget, "label")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .build()
-                );
+                signal.data
+                    .bind_property("value", widget, "label")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build();
             },
             |value| widget.set_label(&value),
         );
@@ -2382,13 +2266,10 @@ pub(super) fn build_gtk_expander(
             "name",
             |p, k| get_string_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    widget,
-                    signal.data
-                        .bind_property("value", widget, "label")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .build()
-                );
+                signal.data
+                    .bind_property("value", widget, "label")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build();
             },
             |value| widget.set_label(Some(&value)),
         );
@@ -2398,21 +2279,18 @@ pub(super) fn build_gtk_expander(
             "expanded",
             |p, k| get_bool_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    widget,
-                    signal.data
-                        .bind_property("value", widget, "expanded")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .transform_to(|_, value: &glib::Value| {
-                            if let Ok(s) = value.get::<String>() {
-                                if let Ok(i) = s.parse::<bool>() {
-                                    return Some(i.to_value());
-                                }
+                signal.data
+                    .bind_property("value", widget, "expanded")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
                             }
-                            None
-                        })
-                        .build()
-                );
+                        }
+                        None
+                    })
+                    .build();
             },
             |value| widget.set_expanded(value),
         );
@@ -2459,18 +2337,14 @@ pub(super) fn build_gtk_revealer(
             |p, k| get_string_prop(p, k, Some("crossfade")),
             |signal| {
                 let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget, 
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(val) = parse_revealer_transition(&value) {
-                            widget.set_transition_type(val);
-                        } else {
-                            log::error!("Failed to parse revealer transition.");
-                        }
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let value = obj.property::<String>("value");
+                    if let Ok(val) = parse_revealer_transition(&value) {
+                        widget.set_transition_type(val);
+                    } else {
+                        log::error!("Failed to parse revealer transition.");
+                    }
+                });
             },
             |value| {
                 if let Ok(val) = parse_revealer_transition(&value) {
@@ -2486,21 +2360,18 @@ pub(super) fn build_gtk_revealer(
             "reveal",
             |p, k| get_bool_prop(p, k, None),
             |signal| {
-                bind_property_once!(
-                    widget, 
-                    signal.data
-                        .bind_property("value", widget, "reveal_child")
-                        .flags(glib::BindingFlags::SYNC_CREATE)
-                        .transform_to(|_, value: &glib::Value| {
-                            if let Ok(s) = value.get::<String>() {
-                                if let Ok(i) = s.parse::<bool>() {
-                                    return Some(i.to_value());
-                                }
+                signal.data
+                    .bind_property("value", widget, "reveal_child")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
                             }
-                            None
-                        })
-                        .build()
-                );
+                        }
+                        None
+                    })
+                    .build();
             },
             |value| widget.set_reveal_child(value),
         );
@@ -2511,18 +2382,14 @@ pub(super) fn build_gtk_revealer(
             |p, k| get_duration_prop(p, k, Some(Duration::from_millis(500))),
             |signal| {
                 let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(dur) = parse_duration_str(&value) {
-                            widget.set_transition_duration(dur.as_millis() as u32);
-                        } else {
-                            log::error!("Invalid duration string: {}", value);
-                        }
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let value = obj.property::<String>("value");
+                    if let Ok(dur) = parse_duration_str(&value) {
+                        widget.set_transition_duration(dur.as_millis() as u32);
+                    } else {
+                        log::error!("Invalid duration string: {}", value);
+                    }
+                });
             },
             |value| {
                 widget.set_transition_duration(value.as_millis() as u32);
@@ -2921,17 +2788,13 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         |p, k| get_bool_prop(p, k, Some(true)),
         |signal| {
             let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    if obj.property::<bool>("value") {
-                        gtk_widget.show();
-                    } else {
-                        gtk_widget.hide();
-                    }
-                })
-            );
+            signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                if obj.property::<bool>("value") {
+                    gtk_widget.show();
+                } else {
+                    gtk_widget.hide();
+                }
+            });
         },
         |value| {
             if value {
@@ -2949,21 +2812,17 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         |p, k| get_string_prop(p, k, None),
         |signal| {
             let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let class_str = obj.property::<String>("value");
-                    let style_context = gtk_widget.style_context();
+            signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                let class_str = obj.property::<String>("value");
+                let style_context = gtk_widget.style_context();
 
-                    for class in gtk_widget.css_classes() {
-                        style_context.remove_class(&class);
-                    }
-                    for class in class_str.split_whitespace() {
-                        style_context.add_class(class);
-                    }
-                })
-            );
+                for class in gtk_widget.css_classes() {
+                    style_context.remove_class(&class);
+                }
+                for class in class_str.split_whitespace() {
+                    style_context.add_class(class);
+                }
+            });
         },
         |value| {
             let style_context = gtk_widget.style_context();
@@ -2983,23 +2842,19 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         |p, k| get_string_prop(p, k, None),
         |signal| {
             let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let style_str = obj.property::<String>("value");
-                    let css_provider = gtk4::CssProvider::new();
-                    let scss = format!("* {{ {} }}", style_str);
+            signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                let style_str = obj.property::<String>("value");
+                let css_provider = gtk4::CssProvider::new();
+                let scss = format!("* {{ {} }}", style_str);
 
-                    match grass::from_string(scss, &grass::Options::default()) {
-                        Ok(css) => {
-                            css_provider.load_from_data(&css);
-                            gtk_widget.style_context().add_provider(&css_provider, 950);
-                        }
-                        Err(e) => log::error!("Failed to parse SCSS style: {}", e),
+                match grass::from_string(scss, &grass::Options::default()) {
+                    Ok(css) => {
+                        css_provider.load_from_data(&css);
+                        gtk_widget.style_context().add_provider(&css_provider, 950);
                     }
-                })
-            );
+                    Err(e) => log::error!("Failed to parse SCSS style: {}", e),
+                }
+            });
         },
         |value| {
             let css_provider = gtk4::CssProvider::new();
@@ -3022,17 +2877,13 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         |p, k| get_string_prop(p, k, None),
         |signal| {
             let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    match parse_align(&value) {
-                        Ok(a) => gtk_widget.set_valign(a),
-                        Err(e) => log::error!("Failed to parse valign '{}': {}", value, e),
-                    }
-                })
-            );
+            signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                let value = obj.property::<String>("value");
+                match parse_align(&value) {
+                    Ok(a) => gtk_widget.set_valign(a),
+                    Err(e) => log::error!("Failed to parse valign '{}': {}", value, e),
+                }
+            });
         },
         |value| match parse_align(&value) {
             Ok(a) => gtk_widget.set_valign(a),
@@ -3047,17 +2898,13 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         |p, k| get_string_prop(p, k, None),
         |signal| {
             let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    match parse_align(&value) {
-                        Ok(a) => gtk_widget.set_halign(a),
-                        Err(e) => log::error!("Failed to parse halign '{}': {}", value, e),
-                    }
-                })
-            );
+            signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                let value = obj.property::<String>("value");
+                match parse_align(&value) {
+                    Ok(a) => gtk_widget.set_halign(a),
+                    Err(e) => log::error!("Failed to parse halign '{}': {}", value, e),
+                }
+            });
         },
         |value| match parse_align(&value) {
             Ok(a) => gtk_widget.set_halign(a),
@@ -3071,21 +2918,18 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "vexpand",
         |p, k| get_bool_prop(p, k, Some(false)),
         |signal| {
-            bind_property_once!(
-                gtk_widget,
-                signal.data
-                    .bind_property("value", gtk_widget, "vexpand")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .transform_to(|_, value: &glib::Value| {
-                        if let Ok(s) = value.get::<String>() {
-                            if let Ok(i) = s.parse::<bool>() {
-                                return Some(i.to_value());
-                            }
+            signal.data
+                .bind_property("value", gtk_widget, "vexpand")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .transform_to(|_, value: &glib::Value| {
+                    if let Ok(s) = value.get::<String>() {
+                        if let Ok(i) = s.parse::<bool>() {
+                            return Some(i.to_value());
                         }
-                        None
-                    })
-                    .build()
-            );
+                    }
+                    None
+                })
+                .build();
         },
         |value| gtk_widget.set_vexpand(value),
     );
@@ -3095,21 +2939,18 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "hexpand",
         |p, k| get_bool_prop(p, k, Some(false)),
         |signal| {
-            bind_property_once!(
-                gtk_widget,
-                signal.data
-                    .bind_property("value", gtk_widget, "hexpand")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .transform_to(|_, value: &glib::Value| {
-                        if let Ok(s) = value.get::<String>() {
-                            if let Ok(i) = s.parse::<bool>() {
-                                return Some(i.to_value());
-                            }
+            signal.data
+                .bind_property("value", gtk_widget, "hexpand")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .transform_to(|_, value: &glib::Value| {
+                    if let Ok(s) = value.get::<String>() {
+                        if let Ok(i) = s.parse::<bool>() {
+                            return Some(i.to_value());
                         }
-                        None
-                    })
-                    .build()
-                );
+                    }
+                    None
+                })
+                .build();
         },
         |value| gtk_widget.set_hexpand(value),
     );
@@ -3127,29 +2968,21 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
             if let Some(signal) = signal_w {
                 let gtk_widget = gtk_widget.clone();
                 let props = props.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let w = obj.property::<i32>("value");
-                        let h = get_i32_prop(&props, "height", None).ok()
-                            .unwrap_or_else(|| gtk_widget.allocated_height());
-                        gtk_widget.set_size_request(w, h);
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let w = obj.property::<i32>("value");
+                    let h = get_i32_prop(&props, "height", None).ok()
+                        .unwrap_or_else(|| gtk_widget.allocated_height());
+                    gtk_widget.set_size_request(w, h);
+                });
             }
 
             if let Some(signal) = signal_h {
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let h = obj.property::<i32>("value");
-                        let w = get_i32_prop(&props, "width", None).ok()
-                            .unwrap_or_else(|| gtk_widget.allocated_width());
-                        gtk_widget.set_size_request(w, h);
-                    })
-                );
+                signal.data.connect_notify_local(Some("value"), move |obj, _| {
+                    let h = obj.property::<i32>("value");
+                    let w = get_i32_prop(&props, "width", None).ok()
+                        .unwrap_or_else(|| gtk_widget.allocated_width());
+                    gtk_widget.set_size_request(w, h);
+                });
             }
         },
         |w_opt, h_opt| {
@@ -3166,21 +2999,18 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "active",
         |p, k| get_bool_prop(p, k, Some(true)),
         |signal| {
-            bind_property_once!(
-                gtk_widget,
-                signal.data
-                    .bind_property("value", gtk_widget, "sensitive")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .transform_to(|_, value: &glib::Value| {
-                        if let Ok(s) = value.get::<String>() {
-                            if let Ok(i) = s.parse::<bool>() {
-                                return Some(i.to_value());
-                            }
+            signal.data
+                .bind_property("value", gtk_widget, "sensitive")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .transform_to(|_, value: &glib::Value| {
+                    if let Ok(s) = value.get::<String>() {
+                        if let Ok(i) = s.parse::<bool>() {
+                            return Some(i.to_value());
                         }
-                        None
-                    })
-                    .build()
-            );
+                    }
+                    None
+                })
+                .build();
         },
         |value| gtk_widget.set_sensitive(value),
     );
@@ -3190,14 +3020,11 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "tooltip",
         |p, k| get_string_prop(p, k, None),
         |signal| {
-            bind_property_once!(
-                gtk_widget,
-                signal
-                    .data
-                    .bind_property("value", gtk_widget, "tooltip_text")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .build()
-            );
+            signal
+                .data
+                .bind_property("value", gtk_widget, "tooltip_text")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .build();
         },
         |value| gtk_widget.set_tooltip_text(Some(&value)),
     );
@@ -3207,21 +3034,18 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "can_target",
         |p, k| get_bool_prop(p, k, None),
         |signal| {
-            bind_property_once!(
-                gtk_widget,
-                signal.data
-                    .bind_property("value", gtk_widget, "can_target")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .transform_to(|_, value: &glib::Value| {
-                        if let Ok(s) = value.get::<String>() {
-                            if let Ok(i) = s.parse::<bool>() {
-                                return Some(i.to_value());
-                            }
+            signal.data
+                .bind_property("value", gtk_widget, "can_target")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .transform_to(|_, value: &glib::Value| {
+                    if let Ok(s) = value.get::<String>() {
+                        if let Ok(i) = s.parse::<bool>() {
+                            return Some(i.to_value());
                         }
-                        None
-                    })
-                    .build()
-            );
+                    }
+                    None
+                })
+                .build();
         },
         |value| gtk_widget.set_can_target(value),
     );
@@ -3231,21 +3055,18 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "focusable",
         |p, k| get_bool_prop(p, k, Some(true)),
         |signal| {
-            bind_property_once!(
-                gtk_widget,
-                signal.data
-                    .bind_property("value", gtk_widget, "focusable")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .transform_to(|_, value: &glib::Value| {
-                        if let Ok(s) = value.get::<String>() {
-                            if let Ok(i) = s.parse::<bool>() {
-                                return Some(i.to_value());
-                            }
+            signal.data
+                .bind_property("value", gtk_widget, "focusable")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .transform_to(|_, value: &glib::Value| {
+                    if let Ok(s) = value.get::<String>() {
+                        if let Ok(i) = s.parse::<bool>() {
+                            return Some(i.to_value());
                         }
-                        None
-                    })
-                    .build()
-            );
+                    }
+                    None
+                })
+                .build();
         },
         |value| gtk_widget.set_focusable(value),
     );
@@ -3255,14 +3076,11 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "widget_name",
         |p, k| get_string_prop(p, k, None),
         |signal| {
-            bind_property_once!(
-                gtk_widget,
-                signal
-                    .data
-                    .bind_property("value", gtk_widget, "widget_name")
-                    .flags(glib::BindingFlags::SYNC_CREATE)
-                    .build()
-            );
+            signal
+                .data
+                .bind_property("value", gtk_widget, "widget_name")
+                .flags(glib::BindingFlags::SYNC_CREATE)
+                .build();
         },
         |value| gtk_widget.set_widget_name(&value),
     );
