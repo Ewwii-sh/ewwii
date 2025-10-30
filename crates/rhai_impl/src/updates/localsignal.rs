@@ -99,12 +99,6 @@ pub fn register_signal(id: u64, signal: Rc<LocalSignal>) {
     });
 }
 
-pub fn clear_local_signals() {
-    LOCAL_SIGNALS.with(|registry| {
-        registry.borrow_mut().clear();
-    });
-}
-
 pub fn handle_localsignal_changes() {
 	let shell = get_prefered_shell();
 	let get_string_fn = shared_utils::extract_props::get_string_prop;
@@ -117,8 +111,12 @@ pub fn handle_localsignal_changes() {
         for (id, signal) in registry_ref.iter() {
             let props = &signal.props;
 
-		    if let Ok(initial_str) = get_string_fn(&props, "initial", None) {
-		    	signal.data.set_value(&initial_str);
+		    if let Some(initial_dyn) = props.get("initial") {
+		        if let Some(initial_str) = initial_dyn.clone().try_cast::<String>() {
+		            signal.data.set_value(&initial_str);
+		        } else {
+		        	log::error!("Failed to set initial falue for localsignal.");
+		        }
 		    }
 
             match get_string_fn(&props, "type", None) {
