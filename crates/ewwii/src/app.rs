@@ -528,6 +528,9 @@ impl<B: DisplayBackend> App<B> {
                 let store = self.pl_handler_store.clone();
                 let b_interval = self.rt_engine_config.batching_interval;
 
+                // kick start the localsignal
+                rhai_impl::updates::handle_localsignal_changes();
+
                 glib::MainContext::default().spawn_local(async move {
                     let mut pending_updates = HashSet::new();
 
