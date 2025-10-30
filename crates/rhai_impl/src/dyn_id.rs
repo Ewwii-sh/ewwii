@@ -71,10 +71,6 @@ impl WidgetNode {
                 props: with_dyn_id(props.clone(), parent_path),
                 children: process_children(children, parent_path, "tooltip"),
             },
-            WidgetNode::LocalBind { props, children } => WidgetNode::LocalBind {
-                props: with_dyn_id(props.clone(), parent_path),
-                children: process_children(children, parent_path, "localbind"),
-            },
 
             // == Top-level container for multiple widgets ==
             WidgetNode::Enter(children) => {
