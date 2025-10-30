@@ -13,6 +13,7 @@ use gtk4::{
 };
 use rhai::Map;
 use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
+use rhai_impl::updates::LocalSignal;
 
 use super::widget_definitions_helper::*;
 use shared_utils::extract_props::*;
@@ -417,6 +418,78 @@ pub(super) fn build_tooltip(
 
     Ok(gtk_widget)
 }
+
+pub(super) fn build_localbind(
+    props: &Map,
+    children: &Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk4::Box> {
+    let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+
+    let count = children.len();
+
+    if count < 1 {
+        bail!("localbind must contain exactly 1 child");
+    } else if count > 1 {
+        bail!("localbind must contain exactly 1 child, but got more");
+    }
+
+    let child_node = children.get(0).cloned().ok_or_else(|| anyhow!("missing child"))?;
+    let child_widget = build_gtk_widget(&WidgetInput::Node(child_node), widget_registry)?;
+    gtk_widget.append(&child_widget);
+
+    let bindings_variant = props.get("bindings");
+
+    if bindings_variant.is_none() {
+        bail!("No 'bindings' map found in props.");
+    }
+
+    let bindings = match bindings_variant.and_then(|v| v.clone().try_cast::<rhai::Map>()) {
+        Some(map) => map,
+        None => {
+            bail!("'bindings' is not a valid map.");
+        }
+    };
+
+    for (prop_name, localsignal_val) in bindings {
+        let prop_name = prop_name.clone();
+
+        let localsignal = match localsignal_val.clone().try_cast::<LocalSignal>() {
+            Some(sig) => sig,
+            None => {
+                bail!("Invalid localsignal for property '{}'", prop_name);
+            }
+        };
+
+        let data_obj: glib::Object = localsignal.data.as_ref().clone().upcast();
+
+        data_obj
+            .bind_property("value", &child_widget, &prop_name)
+            .flags(glib::BindingFlags::SYNC_CREATE)
+            .build();
+    }
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        // now re-apply generic widget attrs
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+        {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
+
+    let id = hash_props_and_type(&props, "LocalBind");
+
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { widget: gtk_widget.clone().upcast(), update_fn });
+
+    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+
+    Ok(gtk_widget)
+}
+
 
 struct EventBoxCtrlData {
     // hover controller data

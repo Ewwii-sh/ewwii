@@ -50,6 +50,9 @@ fn build_gtk_widget_from_node(
         WidgetNode::ToolTip { props, children } => {
             build_tooltip(props, children, widget_reg)?.upcast()
         }
+        WidgetNode::LocalBind { props, children } => {
+            build_localbind(props, children, widget_reg)?.upcast()
+        }
         WidgetNode::CircularProgress { props } => {
             build_circular_progress_bar(props, widget_reg)?.upcast()
         }

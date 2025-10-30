@@ -78,6 +78,7 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     register_with_children!("stack", Stack);
     register_with_children!("eventbox", EventBox);
     register_with_children!("tooltip", ToolTip);
+    register_with_children!("localbind", LocalBind);
 
     // == Special signal
     engine.register_fn("localsignal", |props: Map| -> Result<LocalSignal, Box<EvalAltResult>> {
