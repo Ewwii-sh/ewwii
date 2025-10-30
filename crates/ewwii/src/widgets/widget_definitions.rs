@@ -2605,308 +2605,93 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
     // }
 
     // Handle visibility
-    handle_signal_or_value(
-        &props,
-        "visible",
-        |p, k| get_bool_prop(p, k, Some(true)),
-        |signal| {
-            let gtk_widget = gtk_widget.clone();
-            signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                if obj.property::<bool>("value") {
-                    gtk_widget.show();
-                } else {
-                    gtk_widget.hide();
-                }
-            });
-        },
-        |value| {
-            if value {
-                gtk_widget.show();
-            } else {
-                gtk_widget.hide();
-            }
-        },
-    );
+    let visible = get_bool_prop(&props, "visible", Some(true))?;
+    if visible {
+        gtk_widget.show();
+    } else {
+        gtk_widget.hide();
+    }
 
     // Handle classes
-    handle_signal_or_value(
-        &props,
-        "class",
-        |p, k| get_string_prop(p, k, None),
-        |signal| {
-            let gtk_widget = gtk_widget.clone();
-            signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                let class_str = obj.property::<String>("value");
-                let style_context = gtk_widget.style_context();
+    if let Ok(class_str) = get_string_prop(&props, "class", None) {
+        let style_context = gtk_widget.style_context();
 
-                for class in gtk_widget.css_classes() {
-                    style_context.remove_class(&class);
-                }
-                for class in class_str.split_whitespace() {
-                    style_context.add_class(class);
-                }
-            });
-        },
-        |value| {
-            let style_context = gtk_widget.style_context();
-            for class in gtk_widget.css_classes() {
-                style_context.remove_class(&class);
-            }
-            for class in value.split_whitespace() {
-                style_context.add_class(class);
-            }
-        },
-    );
+        // remove all classes
+        for class in gtk_widget.css_classes() {
+            style_context.remove_class(&class);
+        }
 
-    // Handle style
-    handle_signal_or_value(
-        &props,
-        "style",
-        |p, k| get_string_prop(p, k, None),
-        |signal| {
-            let gtk_widget = gtk_widget.clone();
-            signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                let style_str = obj.property::<String>("value");
-                let css_provider = gtk4::CssProvider::new();
-                let scss = format!("* {{ {} }}", style_str);
+        // then apply the classes
+        for class in class_str.split_whitespace() {
+            style_context.add_class(class);
+        }
+    }
 
-                match grass::from_string(scss, &grass::Options::default()) {
-                    Ok(css) => {
-                        css_provider.load_from_data(&css);
-                        gtk_widget.style_context().add_provider(&css_provider, 950);
-                    }
-                    Err(e) => log::error!("Failed to parse SCSS style: {}", e),
-                }
-            });
-        },
-        |value| {
-            let css_provider = gtk4::CssProvider::new();
-            let scss = format!("* {{ {} }}", value);
+    if let Ok(style_str) = get_string_prop(&props, "style", None) {
+        let css_provider = gtk4::CssProvider::new();
+        let scss = format!("* {{ {} }}", style_str);
+        css_provider.load_from_data(&grass::from_string(scss, &grass::Options::default())?);
+        gtk_widget.style_context().add_provider(&css_provider, 950);
+    }
 
-            match grass::from_string(scss, &grass::Options::default()) {
-                Ok(css) => {
-                    css_provider.load_from_data(&css);
-                    gtk_widget.style_context().add_provider(&css_provider, 950);
-                }
-                Err(e) => log::error!("Failed to parse SCSS style: {}", e),
-            }
-        },
-    );
+    if let Ok(css_str) = get_string_prop(&props, "css", None) {
+        let css_provider = gtk4::CssProvider::new();
+        css_provider.load_from_data(&grass::from_string(css_str, &grass::Options::default())?);
+        gtk_widget.style_context().add_provider(&css_provider, 950);
+    }
 
-    // Handle valign
-    handle_signal_or_value(
-        &props,
-        "valign",
-        |p, k| get_string_prop(p, k, None),
-        |signal| {
-            let gtk_widget = gtk_widget.clone();
-            signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                let value = obj.property::<String>("value");
-                match parse_align(&value) {
-                    Ok(a) => gtk_widget.set_valign(a),
-                    Err(e) => log::error!("Failed to parse valign '{}': {}", value, e),
-                }
-            });
-        },
-        |value| match parse_align(&value) {
-            Ok(a) => gtk_widget.set_valign(a),
-            Err(e) => log::error!("Failed to parse valign '{}': {}", value, e),
-        },
-    );
+    if let Ok(valign) = get_string_prop(&props, "valign", None) {
+        gtk_widget.set_valign(parse_align(&valign)?)
+    }
 
-    // Handle halign
-    handle_signal_or_value(
-        &props,
-        "halign",
-        |p, k| get_string_prop(p, k, None),
-        |signal| {
-            let gtk_widget = gtk_widget.clone();
-            signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                let value = obj.property::<String>("value");
-                match parse_align(&value) {
-                    Ok(a) => gtk_widget.set_halign(a),
-                    Err(e) => log::error!("Failed to parse halign '{}': {}", value, e),
-                }
-            });
-        },
-        |value| match parse_align(&value) {
-            Ok(a) => gtk_widget.set_halign(a),
-            Err(e) => log::error!("Failed to parse halign '{}': {}", value, e),
-        },
-    );
+    if let Ok(halign) = get_string_prop(&props, "halign", None) {
+        gtk_widget.set_halign(parse_align(&halign)?)
+    }
 
-    // Other signal/value handlers unchanged
-    handle_signal_or_value(
-        &props,
-        "vexpand",
-        |p, k| get_bool_prop(p, k, Some(false)),
-        |signal| {
-            signal.data
-                .bind_property("value", gtk_widget, "vexpand")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .transform_to(|_, value: &glib::Value| {
-                    if let Ok(s) = value.get::<String>() {
-                        if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
-                        }
-                    }
-                    None
-                })
-                .build();
-        },
-        |value| gtk_widget.set_vexpand(value),
-    );
+    let vexpand = get_bool_prop(&props, "vexpand", Some(false))?;
+    gtk_widget.set_vexpand(vexpand);
 
-    handle_signal_or_value(
-        &props,
-        "hexpand",
-        |p, k| get_bool_prop(p, k, Some(false)),
-        |signal| {
-            signal.data
-                .bind_property("value", gtk_widget, "hexpand")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .transform_to(|_, value: &glib::Value| {
-                    if let Ok(s) = value.get::<String>() {
-                        if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
-                        }
-                    }
-                    None
-                })
-                .build();
-        },
-        |value| gtk_widget.set_hexpand(value),
-    );
+    let hexpand = get_bool_prop(&props, "hexpand", Some(false))?;
+    gtk_widget.set_hexpand(hexpand);
 
-    handle_double_signal_or_value(
-        &props,
-        "width",
-        "height",
-        get_i32_prop,
-        get_i32_prop,
-        |signal_w, signal_h| {
-            let gtk_widget = gtk_widget.clone();
-            let props = props.clone();
+    let width = get_i32_prop(&props, "width", None).ok();
+    let height = get_i32_prop(&props, "height", None).ok();
 
-            if let Some(signal) = signal_w {
-                let gtk_widget = gtk_widget.clone();
-                let props = props.clone();
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    let w = obj.property::<i32>("value");
-                    let h = get_i32_prop(&props, "height", None).ok()
-                        .unwrap_or_else(|| gtk_widget.allocated_height());
-                    gtk_widget.set_size_request(w, h);
-                });
-            }
-
-            if let Some(signal) = signal_h {
-                signal.data.connect_notify_local(Some("value"), move |obj, _| {
-                    let h = obj.property::<i32>("value");
-                    let w = get_i32_prop(&props, "width", None).ok()
-                        .unwrap_or_else(|| gtk_widget.allocated_width());
-                    gtk_widget.set_size_request(w, h);
-                });
-            }
-        },
-        |w_opt, h_opt| {
-            let w = w_opt.unwrap_or_else(|| gtk_widget.allocated_width());
-            let h = h_opt.unwrap_or_else(|| gtk_widget.allocated_height());
-            if w > 0 && h > 0 {
+    match (width, height) {
+        (Some(w), Some(h)) => gtk_widget.set_size_request(w, h),
+        (Some(w), None) => {
+            let h = gtk_widget.allocated_height();
+            if h > 0 {
                 gtk_widget.set_size_request(w, h);
             }
-        },
-    );
+        }
+        (None, Some(h)) => {
+            let w = gtk_widget.allocated_width();
+            if w > 0 {
+                gtk_widget.set_size_request(w, h);
+            }
+        }
+        (None, None) => {}
+    }
 
-    handle_signal_or_value(
-        &props,
-        "active",
-        |p, k| get_bool_prop(p, k, Some(true)),
-        |signal| {
-            signal.data
-                .bind_property("value", gtk_widget, "sensitive")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .transform_to(|_, value: &glib::Value| {
-                    if let Ok(s) = value.get::<String>() {
-                        if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
-                        }
-                    }
-                    None
-                })
-                .build();
-        },
-        |value| gtk_widget.set_sensitive(value),
-    );
+    let active = get_bool_prop(&props, "active", Some(true))?;
+    gtk_widget.set_sensitive(active);
 
-    handle_signal_or_value(
-        &props,
-        "tooltip",
-        |p, k| get_string_prop(p, k, None),
-        |signal| {
-            signal
-                .data
-                .bind_property("value", gtk_widget, "tooltip_text")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .build();
-        },
-        |value| gtk_widget.set_tooltip_text(Some(&value)),
-    );
+    if let Ok(tooltip) = get_string_prop(&props, "tooltip", None) {
+        gtk_widget.set_tooltip_text(Some(&tooltip));
+    }
 
-    handle_signal_or_value(
-        &props,
-        "can_target",
-        |p, k| get_bool_prop(p, k, None),
-        |signal| {
-            signal.data
-                .bind_property("value", gtk_widget, "can_target")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .transform_to(|_, value: &glib::Value| {
-                    if let Ok(s) = value.get::<String>() {
-                        if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
-                        }
-                    }
-                    None
-                })
-                .build();
-        },
-        |value| gtk_widget.set_can_target(value),
-    );
+    if let Ok(can_target) = get_bool_prop(&props, "can_target", None) {
+        gtk_widget.set_can_target(can_target);
+    }
 
-    handle_signal_or_value(
-        &props,
-        "focusable",
-        |p, k| get_bool_prop(p, k, Some(true)),
-        |signal| {
-            signal.data
-                .bind_property("value", gtk_widget, "focusable")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .transform_to(|_, value: &glib::Value| {
-                    if let Ok(s) = value.get::<String>() {
-                        if let Ok(i) = s.parse::<bool>() {
-                            return Some(i);
-                        }
-                    }
-                    None
-                })
-                .build();
-        },
-        |value| gtk_widget.set_focusable(value),
-    );
+    if let Ok(focusable) = get_bool_prop(&props, "focusable", Some(true)) {
+        gtk_widget.set_focusable(focusable);
+    }
 
-    handle_signal_or_value(
-        &props,
-        "widget_name",
-        |p, k| get_string_prop(p, k, None),
-        |signal| {
-            signal
-                .data
-                .bind_property("value", gtk_widget, "widget_name")
-                .flags(glib::BindingFlags::SYNC_CREATE)
-                .build();
-        },
-        |value| gtk_widget.set_widget_name(&value),
-    );
+    if let Ok(name) = get_string_prop(&props, "widget_name", None) {
+        gtk_widget.set_widget_name(&name);
+    }
 
     Ok(())
 }
