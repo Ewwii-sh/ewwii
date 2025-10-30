@@ -2528,7 +2528,7 @@ pub(super) fn build_gtk_label(
                 let signal_widget = signal.data;
 
                 // initial
-                widget_state.borrow_mut().text = Some("");
+                widget_state.borrow_mut().text = Some(String::new());
 
                 connect_signal_handler!(
                     signal_widget,
@@ -2554,7 +2554,7 @@ pub(super) fn build_gtk_label(
                 let signal_widget = signal.data;
 
                 // initial
-                widget_state.borrow_mut().markup = Some("");
+                widget_state.borrow_mut().markup = Some(String::new());
 
                 connect_signal_handler!(
                     signal_widget,
