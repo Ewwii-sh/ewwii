@@ -56,6 +56,29 @@ macro_rules! connect_signal_handler {
     }};
 }
 
+macro_rules! bind_property_once {
+    ($widget:ident, if $cond:expr, $bind_expr:expr) => {{
+        const KEY: &str = std::concat!("bind-property:", std::line!());
+        unsafe {
+            if !$cond {
+                return;
+            }
+
+            if let Some(old_binding) = $widget.data::<gtk4::glib::Binding>(KEY) {
+                old_binding.as_ref().unbind();
+            }
+
+            let new_binding: gtk4::glib::Binding = $bind_expr;
+
+            $widget.set_data::<gtk4::glib::Binding>(KEY, new_binding);
+        }
+    }};
+
+    ($widget:ident, $bind_expr:expr) => {{
+        bind_property_once!($widget, if true, $bind_expr)
+    }};
+}
+
 pub type UpdateFn = Box<dyn Fn(&Map)>;
 
 pub struct WidgetEntry {
@@ -967,16 +990,20 @@ pub(super) fn build_event_box(
             "spacing",
             |p, k| get_i32_prop(p, k, None),
             |signal| {
-                let gtk_widget = gtk_widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = &obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<i32>() {
-                            gtk_widget.set_spacing(i);
-                        }
-                    })
+                bind_property_once!(
+                    gtk_widget,
+                    signal.data
+                        .bind_property("value", gtk_widget, "spacing")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .transform_to(|_, value: &glib::Value| {
+                            if let Ok(s) = value.get::<String>() {
+                                if let Ok(i) = s.parse::<i32>() {
+                                    return Some(i.to_value());
+                                }
+                            }
+                            None
+                        })
+                        .build()
                 );
             },
             |value| gtk_widget.set_spacing(value),
@@ -987,16 +1014,20 @@ pub(super) fn build_event_box(
             "space_evenly",
             |p, k| get_bool_prop(p, k, None),
             |signal| {
-                let gtk_widget = gtk_widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = &obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            gtk_widget.set_homogeneous(i);
-                        }
-                    })
+                bind_property_once!(
+                    gtk_widget,
+                    signal.data
+                        .bind_property("value", gtk_widget, "homogeneous")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .transform_to(|_, value: &glib::Value| {
+                            if let Ok(s) = value.get::<String>() {
+                                if let Ok(i) = s.parse::<bool>() {
+                                    return Some(i.to_value());
+                                }
+                            }
+                            None
+                        })
+                        .build()
                 );
             },
             |value| gtk_widget.set_homogeneous(value),
@@ -1105,16 +1136,20 @@ pub(crate) fn build_gtk_flowbox(
             "space_evenly",
             |p, k| get_bool_prop(p, k, None),
             |signal| {
-                let gtk_widget = gtk_widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            return gtk_widget.set_homogeneous(i);
-                        }
-                    })
+                bind_property_once!(
+                    gtk_widget,
+                    signal.data
+                        .bind_property("value", gtk_widget, "homogeneous")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .transform_to(|_, value: &glib::Value| {
+                            if let Ok(s) = value.get::<String>() {
+                                if let Ok(i) = s.parse::<bool>() {
+                                    return Some(i.to_value());
+                                }
+                            }
+                            None
+                        })
+                        .build()
                 );
             },
             |value| gtk_widget.set_homogeneous(value),
@@ -1195,14 +1230,12 @@ pub(super) fn build_gtk_stack(
             "selected",
             |p, k| get_i32_prop(p, k, None),
             |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget.set_visible_child_name(&value);
-                    })
+                bind_property_once!(
+                    widget,
+                    signal.data
+                        .bind_property("value", widget, "visible_child_name")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .build()
                 );
             },
             |value| widget.set_visible_child_name(&value.to_string()),
@@ -1512,16 +1545,20 @@ pub(super) fn build_gtk_progress(
             "flipped",
             |p, k| get_bool_prop(p, k, Some(false)),
             |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_inverted(i);
-                        }
-                    })                            
+                bind_property_once!(
+                    widget,
+                    signal.data
+                        .bind_property("value", widget, "inverted")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .transform_to(|_, value: &glib::Value| {
+                            if let Ok(s) = value.get::<String>() {
+                                if let Ok(i) = s.parse::<bool>() {
+                                    return Some(i.to_value());
+                                }
+                            }
+                            None
+                        })
+                        .build()
                 );
             },
             |value| widget.set_inverted(value),
@@ -1532,16 +1569,20 @@ pub(super) fn build_gtk_progress(
             "value",
             |p, k| get_f64_prop(p, k, None),
             |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<f64>() {
-                            widget.set_fraction(i / 100f64);
-                        }
-                    })                         
+                bind_property_once!(
+                    widget,
+                    signal.data
+                        .bind_property("value", widget, "fraction")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .transform_to(|_, value: &glib::Value| {
+                            if let Ok(s) = value.get::<String>() {
+                                if let Ok(i) = s.parse::<f64>() {
+                                    return Some(i.to_value());
+                                }
+                            }
+                            None
+                        })
+                        .build()
                 );
             },
             |value| widget.set_fraction(value / 100f64),
@@ -1949,14 +1990,12 @@ pub(super) fn build_gtk_button(
             "label",
             |p, k| get_string_prop(p, k, None),
             |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget.set_label(&value);
-                    })                               
+                bind_property_once!(
+                    widget,
+                    signal.data
+                        .bind_property("value", widget, "label")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .build()
                 );
             },
             |value| widget.set_label(&value),
@@ -2343,14 +2382,12 @@ pub(super) fn build_gtk_expander(
             "name",
             |p, k| get_string_prop(p, k, None),
             |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        widget.set_label(Some(&value));
-                    })                               
+                bind_property_once!(
+                    widget,
+                    signal.data
+                        .bind_property("value", widget, "label")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .build()
                 );
             },
             |value| widget.set_label(Some(&value)),
@@ -2361,16 +2398,20 @@ pub(super) fn build_gtk_expander(
             "expanded",
             |p, k| get_bool_prop(p, k, None),
             |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_expanded(i);
-                        }
-                    })                               
+                bind_property_once!(
+                    widget,
+                    signal.data
+                        .bind_property("value", widget, "expanded")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .transform_to(|_, value: &glib::Value| {
+                            if let Ok(s) = value.get::<String>() {
+                                if let Ok(i) = s.parse::<bool>() {
+                                    return Some(i.to_value());
+                                }
+                            }
+                            None
+                        })
+                        .build()
                 );
             },
             |value| widget.set_expanded(value),
@@ -2445,16 +2486,20 @@ pub(super) fn build_gtk_revealer(
             "reveal",
             |p, k| get_bool_prop(p, k, None),
             |signal| {
-                let widget = widget.clone();
-                let signal_widget = signal.data;
-                connect_signal_handler!(
-                    signal_widget,
-                    signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                        let value = obj.property::<String>("value");
-                        if let Ok(i) = value.parse::<bool>() {
-                            widget.set_reveal_child(i);
-                        }
-                    })                       
+                bind_property_once!(
+                    widget, 
+                    signal.data
+                        .bind_property("value", widget, "reveal_child")
+                        .flags(glib::BindingFlags::SYNC_CREATE)
+                        .transform_to(|_, value: &glib::Value| {
+                            if let Ok(s) = value.get::<String>() {
+                                if let Ok(i) = s.parse::<bool>() {
+                                    return Some(i.to_value());
+                                }
+                            }
+                            None
+                        })
+                        .build()
                 );
             },
             |value| widget.set_reveal_child(value),
@@ -3026,16 +3071,20 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "vexpand",
         |p, k| get_bool_prop(p, k, Some(false)),
         |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(i) = value.parse::<bool>() {
-                        gtk_widget.set_vexpand(i);
-                    }
-                })                       
+            bind_property_once!(
+                gtk_widget,
+                signal.data
+                    .bind_property("value", gtk_widget, "vexpand")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build()
             );
         },
         |value| gtk_widget.set_vexpand(value),
@@ -3046,17 +3095,21 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "hexpand",
         |p, k| get_bool_prop(p, k, Some(false)),
         |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(i) = value.parse::<bool>() {
-                        gtk_widget.set_hexpand(i);
-                    }
-                })                       
-            );
+            bind_property_once!(
+                gtk_widget,
+                signal.data
+                    .bind_property("value", gtk_widget, "hexpand")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build()
+                );
         },
         |value| gtk_widget.set_hexpand(value),
     );
@@ -3113,16 +3166,20 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "active",
         |p, k| get_bool_prop(p, k, Some(true)),
         |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(i) = value.parse::<bool>() {
-                        gtk_widget.set_sensitive(i);
-                    }
-                })   
+            bind_property_once!(
+                gtk_widget,
+                signal.data
+                    .bind_property("value", gtk_widget, "sensitive")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build()
             );
         },
         |value| gtk_widget.set_sensitive(value),
@@ -3133,14 +3190,13 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "tooltip",
         |p, k| get_string_prop(p, k, None),
         |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    gtk_widget.set_tooltip_text(Some(&value));
-                })                       
+            bind_property_once!(
+                gtk_widget,
+                signal
+                    .data
+                    .bind_property("value", gtk_widget, "tooltip_text")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build()
             );
         },
         |value| gtk_widget.set_tooltip_text(Some(&value)),
@@ -3151,16 +3207,20 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "can_target",
         |p, k| get_bool_prop(p, k, None),
         |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(i) = value.parse::<bool>() {
-                        gtk_widget.set_can_target(i);
-                    }
-                })   
+            bind_property_once!(
+                gtk_widget,
+                signal.data
+                    .bind_property("value", gtk_widget, "can_target")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build()
             );
         },
         |value| gtk_widget.set_can_target(value),
@@ -3171,16 +3231,20 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "focusable",
         |p, k| get_bool_prop(p, k, Some(true)),
         |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    if let Ok(i) = value.parse::<bool>() {
-                        gtk_widget.set_focusable(i);
-                    }
-                })                       
+            bind_property_once!(
+                gtk_widget,
+                signal.data
+                    .bind_property("value", gtk_widget, "focusable")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .transform_to(|_, value: &glib::Value| {
+                        if let Ok(s) = value.get::<String>() {
+                            if let Ok(i) = s.parse::<bool>() {
+                                return Some(i.to_value());
+                            }
+                        }
+                        None
+                    })
+                    .build()
             );
         },
         |value| gtk_widget.set_focusable(value),
@@ -3191,14 +3255,13 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         "widget_name",
         |p, k| get_string_prop(p, k, None),
         |signal| {
-            let gtk_widget = gtk_widget.clone();
-            let signal_widget = signal.data;
-            connect_signal_handler!(
-                signal_widget,
-                signal_widget.connect_notify_local(Some("value"), move |obj, _| {
-                    let value = obj.property::<String>("value");
-                    gtk_widget.set_widget_name(&value);
-                })   
+            bind_property_once!(
+                gtk_widget,
+                signal
+                    .data
+                    .bind_property("value", gtk_widget, "widget_name")
+                    .flags(glib::BindingFlags::SYNC_CREATE)
+                    .build()
             );
         },
         |value| gtk_widget.set_widget_name(&value),
