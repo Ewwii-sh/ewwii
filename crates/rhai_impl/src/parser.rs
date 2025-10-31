@@ -17,21 +17,23 @@ use std::rc::Rc;
 pub struct ParseConfig {
     engine: Engine,
     all_nodes: Rc<RefCell<Vec<WidgetNode>>>,
+    keep_signal: Rc<RefCell<Vec<u64>>>
 }
 
 impl ParseConfig {
     pub fn new(pl_handler_store: Option<ReactiveVarStore>) -> Self {
         let mut engine = Engine::new();
         let all_nodes = Rc::new(RefCell::new(Vec::new()));
+        let keep_signal = Rc::new(RefCell::new(Vec::new()));
 
         engine.set_max_expr_depths(128, 128);
         engine
             .set_module_resolver(SimpleFileResolver { pl_handler_store: pl_handler_store.clone() });
 
-        register_all_widgets(&mut engine, &all_nodes);
+        register_all_widgets(&mut engine, &all_nodes, &keep_signal);
         register_all_providers(&mut engine, pl_handler_store);
 
-        Self { engine, all_nodes }
+        Self { engine, all_nodes, keep_signal }
     }
 
     pub fn compile_code(&mut self, code: &str, file_path: &str) -> Result<AST> {
@@ -56,8 +58,6 @@ impl ParseConfig {
             None => Scope::new(),
         };
 
-        crate::updates::clear_local_signals();
-
         // Just eval as node will be in `all_nodes`
         if let Some(ast) = compiled_ast {
             let _ = self
@@ -70,6 +70,9 @@ impl ParseConfig {
                 .eval_with_scope::<Dynamic>(&mut scope, code)
                 .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, file_id)))?;
         };
+
+        // Retain signals
+        crate::updates::retain_signals(&self.keep_signal.borrow());
 
         // Merge all nodes in all_nodes (`enter([])`) into a single root node
         let merged_node = {

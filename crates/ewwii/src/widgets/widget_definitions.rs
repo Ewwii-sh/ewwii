@@ -405,6 +405,10 @@ pub(super) fn build_localbind_util(
 
     let apply_props = |props: &Map, gtk_widget: &gtk4::Box| -> Result<()> {
         for (prop_name, localsignal_val) in props {
+            if prop_name == "dyn_id" {
+                continue;
+            }
+
             let prop_name = prop_name.clone();
 
             let localsignal = match localsignal_val.clone().try_cast::<LocalSignal>() {

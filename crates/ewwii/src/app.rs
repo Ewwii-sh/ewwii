@@ -586,6 +586,9 @@ impl<B: DisplayBackend> App<B> {
                 let widget_reg_store = self.widget_reg_store.clone();
                 let store = self.pl_handler_store.clone();
 
+                // notifiy localsignals
+                rhai_impl::updates::notify_all_localsignals();
+
                 glib::MainContext::default().spawn_local(async move {
                     let vars = store.read().unwrap().clone();
                     let mut parser_rc = stored_parser_clone.borrow_mut();
