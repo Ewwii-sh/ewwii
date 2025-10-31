@@ -93,15 +93,29 @@ thread_local! {
         Lazy::new(|| RefCell::new(HashMap::new()));
 }
 
-pub fn register_signal(id: u64, signal: Rc<LocalSignal>) {
+pub fn register_signal(id: u64, signal: Rc<LocalSignal>) -> Rc<LocalSignal> {
     LOCAL_SIGNALS.with(|registry| {
-        registry.borrow_mut().insert(id, signal.clone());
+        let mut map = registry.borrow_mut();
+        map.entry(id)
+            .or_insert_with(|| signal.clone())
+            .clone()
+    })
+}
+
+pub fn retain_signals(ids: &Vec<u64>) {
+    LOCAL_SIGNALS.with(|registry| {
+        let mut map = registry.borrow_mut();
+        map.retain(|id, _| ids.contains(id));
     });
 }
 
-pub fn clear_local_signals() {
+pub fn notify_all_localsignals() {
     LOCAL_SIGNALS.with(|registry| {
-        registry.borrow_mut().clear();
+        let registry_ref = registry.borrow();
+
+        for (id, signal) in registry_ref.iter() {
+            signal.data.notify("value");
+        }
     });
 }
 
