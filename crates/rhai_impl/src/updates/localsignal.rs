@@ -96,9 +96,7 @@ thread_local! {
 pub fn register_signal(id: u64, signal: Rc<LocalSignal>) -> Rc<LocalSignal> {
     LOCAL_SIGNALS.with(|registry| {
         let mut map = registry.borrow_mut();
-        map.entry(id)
-            .or_insert_with(|| signal.clone())
-            .clone()
+        map.entry(id).or_insert_with(|| signal.clone()).clone()
     })
 }
 

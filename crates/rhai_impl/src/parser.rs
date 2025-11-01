@@ -17,7 +17,7 @@ use std::rc::Rc;
 pub struct ParseConfig {
     engine: Engine,
     all_nodes: Rc<RefCell<Vec<WidgetNode>>>,
-    keep_signal: Rc<RefCell<Vec<u64>>>
+    keep_signal: Rc<RefCell<Vec<u64>>>,
 }
 
 impl ParseConfig {
