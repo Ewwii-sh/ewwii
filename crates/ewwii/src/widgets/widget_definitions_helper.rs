@@ -2,6 +2,8 @@ use anyhow::{anyhow, Result};
 use gtk4::pango;
 use rhai::Map;
 use std::process::Command;
+use gtk4::glib::Value;
+use gtk4::prelude::{ObjectExt, StaticType, ToValue};
 
 // Run a command and get the output
 pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
@@ -224,5 +226,35 @@ pub(super) fn parse_stack_transition(t: &str) -> Result<gtk4::StackTransitionTyp
         "fade" | "crossfade" => Ok(gtk4::StackTransitionType::Crossfade),
         "none" => Ok(gtk4::StackTransitionType::None),
         _ => Err(anyhow!("Invalid stack transition: '{}'", t)),
+    }
+}
+
+// For localbind
+pub(super) fn set_property_from_string(widget: &gtk4::Widget, prop_name: &str, value_str: &str) {
+    if let Some(pspec) = widget.find_property(prop_name) {
+        let value_type = pspec.value_type();
+
+        let gvalue: Option<Value> = if value_type == f64::static_type() {
+            value_str.parse::<f64>().ok().map(|v| v.to_value())
+        } else if value_type == i32::static_type() {
+            value_str.parse::<i32>().ok().map(|v| v.to_value())
+        } else if value_type == bool::static_type() {
+            value_str.parse::<bool>().ok().map(|v| v.to_value())
+        } else if value_type == String::static_type() {
+            Some(value_str.to_value())
+        } else {
+            None
+        };
+
+        if let Some(v) = gvalue {
+            widget.set_property(prop_name, &v);
+        } else {
+            log::error!(
+                "Cannot convert '{}' to type {:?} for property '{}'",
+                value_str, value_type, prop_name
+            );
+        }
+    } else {
+        log::error!("Property '{}' not found on widget {:?}", prop_name, widget);
     }
 }
