@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
+use gtk4::glib::Value;
 use gtk4::pango;
+use gtk4::prelude::{ObjectExt, StaticType, ToValue};
 use rhai::Map;
 use std::process::Command;
-use gtk4::glib::Value;
-use gtk4::prelude::{ObjectExt, StaticType, ToValue};
 
 // Run a command and get the output
 pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
@@ -251,7 +251,9 @@ pub(super) fn set_property_from_string(widget: &gtk4::Widget, prop_name: &str, v
         } else {
             log::error!(
                 "Cannot convert '{}' to type {:?} for property '{}'",
-                value_str, value_type, prop_name
+                value_str,
+                value_type,
+                prop_name
             );
         }
     } else {
