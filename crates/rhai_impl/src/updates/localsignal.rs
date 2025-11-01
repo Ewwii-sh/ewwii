@@ -113,7 +113,7 @@ pub fn notify_all_localsignals() {
     LOCAL_SIGNALS.with(|registry| {
         let registry_ref = registry.borrow();
 
-        for (id, signal) in registry_ref.iter() {
+        for (_, signal) in registry_ref.iter() {
             signal.data.notify("value");
         }
     });

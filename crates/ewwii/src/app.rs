@@ -154,6 +154,7 @@ pub struct App<B: DisplayBackend> {
     /// When reloading the config, these should be opened again.
     pub failed_windows: HashSet<String>,
     pub css_provider: gtk4::CssProvider,
+    pub reloading: bool,
 
     /// Sender to send [`DaemonCommand`]s
     pub app_evt_send: UnboundedSender<DaemonCommand>,
@@ -428,7 +429,7 @@ impl<B: DisplayBackend> App<B> {
         }
 
         // stop poll/listen handlers if no windows are open
-        if self.open_windows.is_empty() {
+        if self.open_windows.is_empty() || self.reloading {
             rhai_impl::updates::kill_state_change_handler();
         }
 
@@ -514,7 +515,7 @@ impl<B: DisplayBackend> App<B> {
             }
 
             let stored_parser_clone = self.config_parser.clone();
-            if self.open_windows.is_empty() {
+            if self.open_windows.is_empty() || self.reloading {
                 let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
                 let widget_reg_store = self.widget_reg_store.clone();
 
@@ -714,22 +715,30 @@ impl<B: DisplayBackend> App<B> {
         log::info!("Reloading windows");
         log::trace!("loading config: {:#?}", config);
 
-        self.ewwii_config.replace_data(config);
+        self.reloading = true;
+        let result = (|| -> Result<()> {
+            self.ewwii_config.replace_data(config);
 
-        let open_window_ids: Vec<String> = self
-            .open_windows
-            .keys()
-            .cloned()
-            .chain(self.failed_windows.iter().cloned())
-            .dedup()
-            .collect();
-        for instance_id in &open_window_ids {
-            let window_arguments = self.instance_id_to_args.get(instance_id).with_context(|| {
-                format!("Cannot reopen window, initial parameters were not saved correctly for {instance_id}")
-            })?;
-            self.open_window(&window_arguments.clone())?;
-        }
-        Ok(())
+            let open_window_ids: Vec<String> = self
+                .open_windows
+                .keys()
+                .cloned()
+                .chain(self.failed_windows.iter().cloned())
+                .dedup()
+                .collect();
+
+            for instance_id in &open_window_ids {
+                let window_arguments = self.instance_id_to_args.get(instance_id).with_context(|| {
+                    format!("Cannot reopen window, initial parameters were not saved correctly for {instance_id}")
+                })?;
+                self.open_window(&window_arguments.clone())?;
+            }
+
+            Ok(())
+        })();
+        self.reloading = false;
+
+        result
     }
 
     /// Load a given CSS string into the gtk css provider

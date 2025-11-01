@@ -81,6 +81,7 @@ pub fn initialize_server<B: DisplayBackend>(
         failed_windows: HashSet::new(),
         instance_id_to_args: HashMap::new(),
         css_provider: gtk4::CssProvider::new(),
+        reloading: false,
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
