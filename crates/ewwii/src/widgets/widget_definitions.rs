@@ -436,7 +436,11 @@ pub(super) fn build_localbind_util(
                         gtk_widget,
                         move |obj, _| {
                             if let Some(child) = gtk_widget.first_child() {
-                                set_property_from_string(&child, &prop_name, &obj.property::<String>("value"));
+                                set_property_from_string(
+                                    &child,
+                                    &prop_name,
+                                    &obj.property::<String>("value"),
+                                );
                             }
                         }
                     )
