@@ -1156,7 +1156,7 @@ pub(super) fn build_circular_progress_bar(
         }
     });
 
-    let id = hash_props_and_type(&props, "CircularProgressBar");
+    let id = hash_props_and_type(&props, "CircularProgress");
 
     widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
 
