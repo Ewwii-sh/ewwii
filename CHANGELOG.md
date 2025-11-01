@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Fixed
 
 - Circular progress bar not updating dynamically.
+- LocalSignal values not getting transformed to suite property type.
 
 ## [0.3.0] - 2025-11-01
 
