@@ -24,7 +24,11 @@ fn children_to_vec(
         .collect()
 }
 
-pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<WidgetNode>>>, keep_signal: &Rc<RefCell<Vec<u64>>>) {
+pub fn register_all_widgets(
+    engine: &mut Engine,
+    all_nodes: &Rc<RefCell<Vec<WidgetNode>>>,
+    keep_signal: &Rc<RefCell<Vec<u64>>>,
+) {
     engine.register_type::<WidgetNode>();
     engine.register_type::<LocalSignal>();
 
@@ -82,16 +86,19 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
 
     // == Special signal
     let keep_signal_clone = keep_signal.clone();
-    engine.register_fn("localsignal", move |props: Map| -> Result<LocalSignal, Box<EvalAltResult>> {
-        let id = hash_props(&props);
-        let signal = Rc::new(LocalSignal { id, props, data: Arc::new(LocalDataBinder::new()) });
+    engine.register_fn(
+        "localsignal",
+        move |props: Map| -> Result<LocalSignal, Box<EvalAltResult>> {
+            let id = hash_props(&props);
+            let signal = Rc::new(LocalSignal { id, props, data: Arc::new(LocalDataBinder::new()) });
 
-        let signal_rc = register_signal(id, signal);
+            let signal_rc = register_signal(id, signal);
 
-        keep_signal_clone.borrow_mut().push(id);
+            keep_signal_clone.borrow_mut().push(id);
 
-        Ok((*signal_rc).clone())
-    });
+            Ok((*signal_rc).clone())
+        },
+    );
 
     // == Top-level macros ==
     engine.register_fn(
