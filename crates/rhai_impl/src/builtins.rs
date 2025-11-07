@@ -84,6 +84,17 @@ pub fn register_all_widgets(
     register_with_children!("tooltip", ToolTip);
     register_with_children!("localbind", LocalBind);
 
+    // == Special widget
+    engine.register_fn(
+        "gtk_ui",
+        |path: &str, load: &str| -> Result<WidgetNode, Box<EvalAltResult>> {
+            let mut props = Map::new();
+            props.insert("file".into(), path.into());
+            props.insert("id".into(), load.into());
+            Ok(WidgetNode::GtkUI { props })
+        },
+    );
+
     // == Special signal
     let keep_signal_clone = keep_signal.clone();
     engine.register_fn(

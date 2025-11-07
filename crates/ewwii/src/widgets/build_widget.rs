@@ -56,6 +56,9 @@ fn build_gtk_widget_from_node(
         WidgetNode::CircularProgress { props } => {
             build_circular_progress_bar(props, widget_reg)?.upcast()
         }
+        WidgetNode::GtkUI { props } => {
+            build_gtk_ui_file(props)?.upcast()
+        }
         // WidgetNode::Graph { props } => build_graph(props, widget_reg)?.upcast(),
         // WidgetNode::Transform { props } => build_transform(props, widget_reg)?.upcast(),
         WidgetNode::Slider { props } => build_gtk_scale(props, widget_reg)?.upcast(),
