@@ -1971,6 +1971,25 @@ pub(super) fn build_gtk_combo_box_text(
     Ok(gtk_widget)
 }
 
+pub(super) fn build_gtk_ui_file(
+    props: &Map,
+) -> Result<gtk4::Widget> {
+    let path = get_string_prop(&props, "file", None)?;
+    let main_id = get_string_prop(&props, "id", None)?;
+
+    if !std::path::Path::new(&path).exists() {
+        return Err(anyhow::anyhow!("UI file not found: {}", path));
+    }
+
+    let builder = gtk4::Builder::from_file(&path);
+
+    let gtk_widget = builder
+        .object(&main_id)
+        .ok_or_else(|| anyhow::anyhow!("No widget with id '{}' in {}", main_id, path))?;
+
+    Ok(gtk_widget)
+}
+
 pub(super) fn build_gtk_expander(
     props: &Map,
     children: &Vec<WidgetNode>,

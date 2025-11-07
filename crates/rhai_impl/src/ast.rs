@@ -32,7 +32,10 @@ pub enum WidgetNode {
     Transform { props: Map },
     EventBox { props: Map, children: Vec<WidgetNode> },
     ToolTip { props: Map, children: Vec<WidgetNode> },
+
+    // Special
     LocalBind { props: Map, children: Vec<WidgetNode> },
+    GtkUI { props: Map },
 
     // Top-level macros
     DefWindow { name: String, props: Map, node: Box<WidgetNode> },
@@ -165,6 +168,9 @@ pub fn get_id_to_widget_info<'a>(
             for child in children {
                 get_id_to_widget_info(child, id_to_props, Some(id))?;
             }
+        }
+        WidgetNode::GtkUI { props } => {
+            insert_wdgt_info(node, props, "GtkUI", &[], parent_id, id_to_props)?;
         }
         WidgetNode::ColorChooser { props } => {
             // let id = hash_props_and_type(props, "ColorChooser");

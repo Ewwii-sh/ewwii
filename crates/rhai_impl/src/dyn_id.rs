@@ -106,6 +106,7 @@ impl WidgetNode {
             | node @ WidgetNode::ColorChooser { props }
             | node @ WidgetNode::CircularProgress { props }
             | node @ WidgetNode::Graph { props }
+            | node @ WidgetNode::GtkUI { props }
             | node @ WidgetNode::Transform { props } => {
                 let new_props = with_dyn_id(props.clone(), parent_path);
                 match node {
@@ -129,6 +130,7 @@ impl WidgetNode {
                         WidgetNode::CircularProgress { props: new_props }
                     }
                     WidgetNode::Graph { .. } => WidgetNode::Graph { props: new_props },
+                    WidgetNode::GtkUI { .. } => WidgetNode::GtkUI { props: new_props },
                     WidgetNode::Transform { .. } => WidgetNode::Transform { props: new_props },
                     _ => unreachable!(),
                 }
