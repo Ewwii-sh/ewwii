@@ -95,6 +95,24 @@ impl ParseConfig {
         Ok(merged_node.setup_dyn_ids("root"))
     }
 
+    pub fn eval_code_snippet(&mut self, code: &str) -> Result<WidgetNode> {
+        let mut scope = Scope::new();
+
+        // Just eval as node will be in `all_nodes`
+        let node = self
+            .engine
+            .eval_with_scope::<WidgetNode>(&mut scope, code)
+            .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, Some("<dyn eval>"))))?;
+
+        // Retain signals
+        crate::updates::retain_signals(&self.keep_signal.borrow());
+
+        // Clear all nodes
+        self.all_nodes.borrow_mut().clear();
+
+        Ok(node)
+    }
+
     pub fn code_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<String> {
         Ok(fs::read_to_string(&file_path)
             .map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)

@@ -187,7 +187,6 @@ pub enum ActionWithServer {
     // /// Print out the scope graph structure in graphviz dot format.
     // #[command(name = "graph")]
     // ShowGraph,
-
     /// Control widgets through CLI.
     #[command(name = "widget-control", alias = "wc")]
     WidgetControl {
@@ -253,17 +252,13 @@ pub enum WidgetControlAction {
 
     /// Create a widget
     Create {
-        /// Path of .ui file to get widget from.
-        ui_file: String,
-
-        /// ID of the widget to use as child.
-        #[arg(long = "id", short = 'i')]
-        widget_id: String,
+        /// Rhai code to create widget from.
+        rhai_code: String,
 
         /// Name of the widget to add this widget as a child to.
         #[arg(long = "parent", short = 'p')]
         parent_name: String,
-    }
+    },
 }
 
 impl Opt {
