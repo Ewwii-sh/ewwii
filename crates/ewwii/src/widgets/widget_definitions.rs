@@ -215,8 +215,8 @@ impl WidgetRegistry {
     }
 
     pub fn remove_widget_by_name(&mut self, name: &str) -> bool {
-        if let Some((&id, _)) = self.widgets.iter()
-            .find(|(_, entry)| entry.widget.widget_name().as_str() == name)
+        if let Some((&id, _)) =
+            self.widgets.iter().find(|(_, entry)| entry.widget.widget_name().as_str() == name)
         {
             if let Some(entry) = self.widgets.remove(&id) {
                 entry.widget.unparent();
@@ -1993,9 +1993,7 @@ pub(super) fn build_gtk_combo_box_text(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_ui_file(
-    props: &Map,
-) -> Result<gtk4::Widget> {
+pub(super) fn build_gtk_ui_file(props: &Map) -> Result<gtk4::Widget> {
     let path = get_string_prop(&props, "file", None)?;
     let main_id = get_string_prop(&props, "id", None)?;
 

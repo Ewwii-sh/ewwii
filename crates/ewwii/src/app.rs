@@ -86,7 +86,7 @@ pub enum DaemonCommand {
     ListActiveWindows(DaemonResponseSender),
     WidgetControl {
         action: crate::opts::WidgetControlAction,
-        sender: DaemonResponseSender
+        sender: DaemonResponseSender,
     },
     TriggerUpdateUI {
         inject_vars: Option<HashMap<String, String>>,
@@ -759,7 +759,10 @@ impl<B: DisplayBackend> App<B> {
     }
 
     /// Perform widget control based on the action
-    pub fn perform_widget_control(&mut self, action: crate::opts::WidgetControlAction) -> Result<()> {
+    pub fn perform_widget_control(
+        &mut self,
+        action: crate::opts::WidgetControlAction,
+    ) -> Result<()> {
         match action {
             crate::opts::WidgetControlAction::Remove { name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
@@ -772,13 +775,12 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::Create { ui_file, widget_id, parent_name } => {
-                let mut props = rhai::Map::new();
-                props.insert("file".into(), ui_file.into());
-                props.insert("id".into(), widget_id.into());
-
-                let wid = rhai_impl::ast::hash_props(&props);
-                let widget_node = rhai_impl::ast::WidgetNode::GtkUI { props };
+            crate::opts::WidgetControlAction::Create { rhai_code, parent_name } => {
+                let mut parser = self.config_parser.borrow_mut();
+                let widget_node = parser.eval_code_snippet(&rhai_code)?;
+                let wid = rhai_impl::ast::hash_props(widget_node.props().ok_or_else(|| {
+                    anyhow::anyhow!("Failed to retreive the properties of this widget.")
+                })?);
 
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
