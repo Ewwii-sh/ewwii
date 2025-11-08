@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Added
 
 - `gtk_ui` function for loading .ui files.
+- `widget-control` (`wc` in short) command for controlling widgets.
 
 ## [0.3.1] - 2025-11-01
 

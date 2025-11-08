@@ -213,6 +213,28 @@ impl WidgetRegistry {
             entry.widget.unparent();
         }
     }
+
+    pub fn remove_widget_by_name(&mut self, name: &str) -> bool {
+        if let Some((&id, _)) = self.widgets.iter()
+            .find(|(_, entry)| entry.widget.widget_name().as_str() == name)
+        {
+            if let Some(entry) = self.widgets.remove(&id) {
+                entry.widget.unparent();
+                log::info!("Deleted widget '{}' on command.", name);
+                return true;
+            }
+        }
+
+        log::warn!("Widget '{}' not found", name);
+        false
+    }
+
+    pub fn get_widget_id_by_name(&self, name: &str) -> Option<u64> {
+        self.widgets
+            .iter()
+            .find(|(_, entry)| entry.widget.widget_name().as_str() == name)
+            .map(|(&id, _)| id)
+    }
 }
 
 pub(super) fn build_gtk_box(
