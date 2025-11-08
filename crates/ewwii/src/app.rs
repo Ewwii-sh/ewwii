@@ -84,6 +84,10 @@ pub enum DaemonCommand {
     ShowState(DaemonResponseSender),
     ListWindows(DaemonResponseSender),
     ListActiveWindows(DaemonResponseSender),
+    WidgetControl {
+        action: crate::opts::WidgetControlAction,
+        sender: DaemonResponseSender
+    },
     TriggerUpdateUI {
         inject_vars: Option<HashMap<String, String>>,
         should_preserve_state: bool,
@@ -358,6 +362,12 @@ impl<B: DisplayBackend> App<B> {
                 sender,
             } => {
                 match self.trigger_ui_update_with(inject_vars, should_preserve_state, lifetime) {
+                    Ok(_) => sender.send_success(String::new())?,
+                    Err(e) => sender.send_failure(e.to_string())?,
+                };
+            }
+            DaemonCommand::WidgetControl { action, sender } => {
+                match self.perform_widget_control(action) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
@@ -744,6 +754,46 @@ impl<B: DisplayBackend> App<B> {
     /// Load a given CSS string into the gtk css provider
     pub fn load_css(&mut self, _file_id: usize, css: &str) -> Result<()> {
         self.css_provider.load_from_data(&css);
+
+        Ok(())
+    }
+
+    /// Perform widget control based on the action
+    pub fn perform_widget_control(&mut self, action: crate::opts::WidgetControlAction) -> Result<()> {
+        match action {
+            crate::opts::WidgetControlAction::Remove { name } => {
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        widget_registry.remove_widget_by_name(&name);
+                    } else {
+                        log::error!("Widget registry is empty");
+                    }
+                } else {
+                    log::error!("Failed to acquire lock on widget registry");
+                }
+            }
+            crate::opts::WidgetControlAction::Create { ui_file, widget_id, parent_name } => {
+                let mut props = rhai::Map::new();
+                props.insert("file".into(), ui_file.into());
+                props.insert("id".into(), widget_id.into());
+
+                let wid = rhai_impl::ast::hash_props(&props);
+                let widget_node = rhai_impl::ast::WidgetNode::GtkUI { props };
+
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        let pid = widget_registry
+                            .get_widget_id_by_name(&parent_name)
+                            .ok_or_else(|| anyhow::anyhow!("Widget '{}' not found", parent_name))?;
+                        widget_registry.create_widget(&widget_node, wid, pid)?;
+                    } else {
+                        log::error!("Widget registry is empty");
+                    }
+                } else {
+                    log::error!("Failed to acquire lock on widget registry");
+                }
+            }
+        }
 
         Ok(())
     }

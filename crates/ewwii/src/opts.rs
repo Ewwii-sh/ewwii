@@ -187,6 +187,14 @@ pub enum ActionWithServer {
     // /// Print out the scope graph structure in graphviz dot format.
     // #[command(name = "graph")]
     // ShowGraph,
+
+    /// Control widgets through CLI.
+    #[command(name = "widget-control", alias = "wc")]
+    WidgetControl {
+        #[command(subcommand)]
+        action: WidgetControlAction,
+    },
+
     /// Update the widgets of a particular window. Poll/Listen variables will be cleared
     #[command(name = "update", alias = "u")]
     TriggerUpdateUI {
@@ -232,6 +240,30 @@ pub enum ActionWithServer {
         #[arg(value_parser = absolute_file_path_parser)]
         file_path: String,
     },
+}
+
+/// Subcommands for widget control
+#[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq)]
+pub enum WidgetControlAction {
+    /// Remove a widget by name
+    Remove {
+        /// Name of the widget to remove
+        name: String,
+    },
+
+    /// Create a widget
+    Create {
+        /// Path of .ui file to get widget from.
+        ui_file: String,
+
+        /// ID of the widget to use as child.
+        #[arg(long = "id", short = 'i')]
+        widget_id: String,
+
+        /// Name of the widget to add this widget as a child to.
+        #[arg(long = "parent", short = 'p')]
+        parent_name: String,
+    }
 }
 
 impl Opt {
@@ -293,6 +325,12 @@ impl ActionWithServer {
         self,
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
+            ActionWithServer::WidgetControl { action } => {
+                return with_response_channel(|sender| app::DaemonCommand::WidgetControl {
+                    action,
+                    sender,
+                })
+            }
             ActionWithServer::TriggerUpdateUI { inject_vars, should_preserve_state, lifetime } => {
                 return with_response_channel(|sender| app::DaemonCommand::TriggerUpdateUI {
                     inject_vars,
