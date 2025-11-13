@@ -764,10 +764,12 @@ impl<B: DisplayBackend> App<B> {
         action: crate::opts::WidgetControlAction,
     ) -> Result<()> {
         match action {
-            crate::opts::WidgetControlAction::Remove { name } => {
+            crate::opts::WidgetControlAction::Remove { names } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
-                        widget_registry.remove_widget_by_name(&name);
+                        for name in names {
+                            widget_registry.remove_widget_by_name(&name);
+                        }
                     } else {
                         log::error!("Widget registry is empty");
                     }
@@ -775,24 +777,26 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::Create { rhai_code, parent_name } => {
+            crate::opts::WidgetControlAction::Create { rhai_codes, parent_name } => {
                 let mut parser = self.config_parser.borrow_mut();
-                let widget_node = parser.eval_code_snippet(&rhai_code)?;
-                let wid = rhai_impl::ast::hash_props(widget_node.props().ok_or_else(|| {
-                    anyhow::anyhow!("Failed to retreive the properties of this widget.")
-                })?);
+                for rhai_code in rhai_codes {
+                    let widget_node = parser.eval_code_snippet(&rhai_code)?;
+                    let wid = rhai_impl::ast::hash_props(widget_node.props().ok_or_else(|| {
+                        anyhow::anyhow!("Failed to retreive the properties of this widget.")
+                    })?);
 
-                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                    if let Some(widget_registry) = maybe_registry.as_mut() {
-                        let pid = widget_registry
-                            .get_widget_id_by_name(&parent_name)
-                            .ok_or_else(|| anyhow::anyhow!("Widget '{}' not found", parent_name))?;
-                        widget_registry.create_widget(&widget_node, wid, pid)?;
+                    if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                        if let Some(widget_registry) = maybe_registry.as_mut() {
+                            let pid = widget_registry
+                                .get_widget_id_by_name(&parent_name)
+                                .ok_or_else(|| anyhow::anyhow!("Widget '{}' not found", parent_name))?;
+                            widget_registry.create_widget(&widget_node, wid, pid)?;
+                        } else {
+                            log::error!("Widget registry is empty");
+                        }
                     } else {
-                        log::error!("Widget registry is empty");
+                        log::error!("Failed to acquire lock on widget registry");
                     }
-                } else {
-                    log::error!("Failed to acquire lock on widget registry");
                 }
             }
         }
