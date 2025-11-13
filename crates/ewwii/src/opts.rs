@@ -244,18 +244,18 @@ pub enum ActionWithServer {
 /// Subcommands for widget control
 #[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq)]
 pub enum WidgetControlAction {
-    /// Remove a widget by name
+    /// Remove widget by name
     Remove {
-        /// Name of the widget to remove
-        name: String,
+        /// Names of the widgets to remove
+        names: Vec<String>,
     },
 
-    /// Create a widget
+    /// Create widgets
     Create {
-        /// Rhai code to create widget from.
-        rhai_code: String,
+        /// Rhai code to create widgets from.
+        rhai_codes: Vec<String>,
 
-        /// Name of the widget to add this widget as a child to.
+        /// Name of the widget to add these widgets as a child to.
         #[arg(long = "parent", short = 'p')]
         parent_name: String,
     },
