@@ -180,6 +180,11 @@ impl ParseConfig {
     where
         F: FnOnce(&mut Engine) -> R,
     {
-        f(&mut self.engine)
+        let result = f(&mut self.engine);
+
+        let engine_ptr: *const Engine = &self.engine as *const Engine;
+        log::trace!("Engine pointer after closure: {:p}", engine_ptr);
+
+        result
     }
 }
