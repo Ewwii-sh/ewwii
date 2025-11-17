@@ -921,10 +921,11 @@ impl<B: DisplayBackend> App<B> {
                 .map_err(|e| anyhow!("Failed to find create_plugin: {}", e))?;
 
             let plugin = constructor(); // instantiate plugin
-            let host = crate::plugin::EwwiiImpl { requestor: tx.clone() };
-            plugin.init(&host); // call init immediately
 
             set_active_plugin(lib)?; // keep library alive
+
+            let host = crate::plugin::EwwiiImpl { requestor: tx.clone() };
+            plugin.init(&host); // call init immediately
         }
 
         let cp = self.config_parser.clone();
