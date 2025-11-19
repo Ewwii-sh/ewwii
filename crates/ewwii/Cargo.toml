@@ -17,7 +17,7 @@ wayland = ["gtk4-layer-shell"]
 [dependencies]
 shared_utils.workspace = true
 rhai_impl.workspace = true
-ewwii_plugin_api = { workspace = true }
+ewwii_plugin_api.workspace = true
 
 gtk4-layer-shell = { version = "0.6.3", optional = true }
 gdk4-x11 = { version = "0.10.1", optional = true }
@@ -49,7 +49,7 @@ simple-signal.workspace = true
 tokio = { workspace = true, features = ["full"] }
 unescape.workspace = true
 wait-timeout.workspace = true
-rhai.workspace = true
+rhai = { workspace = true, features = ["internals"] }
 # Plugin loading
 libloading = "0.8.9"
 
