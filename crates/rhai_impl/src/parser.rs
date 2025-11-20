@@ -15,7 +15,7 @@ use std::path::Path;
 use std::rc::Rc;
 
 pub struct ParseConfig {
-    engine: Engine,
+    pub engine: Engine,
     all_nodes: Rc<RefCell<Vec<WidgetNode>>>,
     keep_signal: Rc<RefCell<Vec<u64>>>,
 }
@@ -180,11 +180,6 @@ impl ParseConfig {
     where
         F: FnOnce(&mut Engine) -> R,
     {
-        let result = f(&mut self.engine);
-
-        let engine_ptr: *const Engine = &self.engine as *const Engine;
-        log::trace!("Engine pointer after closure: {:p}", engine_ptr);
-
-        result
+        f(&mut self.engine)
     }
 }

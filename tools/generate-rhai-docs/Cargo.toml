@@ -5,5 +5,5 @@ edition = "2024"
 
 [dependencies]
 rhai_impl.workspace = true
-rhai = "1.22.2"
+rhai.workspace = true
 rhai-autodocs = "0.9.0"

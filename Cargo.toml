@@ -7,7 +7,7 @@ resolver = "2"
 shared_utils = { version = "0.1.0", path = "crates/shared_utils" }
 rhai_impl = { version = "0.1.0", path = "crates/rhai_impl" }
 scan_prop_proc = { version = "0.1.0", path = "proc_macros/scan_prop_proc" }
-ewwii_plugin_api = { version = "0.6.1", path = "crates/ewwii_plugin_api" }
+ewwii_plugin_api = { version = "0.6.7", path = "crates/ewwii_plugin_api" }
 
 anyhow = "1.0.86"
 ahash = "0.8.12"
@@ -36,7 +36,7 @@ once_cell = "1.19"
 pretty_assertions = "1.4.0"
 pretty_env_logger = "0.5.0"
 regex = "1.10.5"
-rhai = { version = "1.22.2" }
+rhai = "1.23.6"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 simple-signal = "1.1"
