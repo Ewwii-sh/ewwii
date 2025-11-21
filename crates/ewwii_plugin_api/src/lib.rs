@@ -107,7 +107,7 @@ pub trait EwwiiAPI: Send + Sync {
     fn register_function(
         &self,
         name: String,
-        f: Box<dyn Fn(rhai::Array) -> rhai::Dynamic + Send + Sync>,
+        f: Box<dyn Fn(rhai::Array) -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> + Send + Sync>,
     ) -> Result<(), String>;
 
     // == Widget Rendering & Logic == //

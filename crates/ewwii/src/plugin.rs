@@ -1,5 +1,5 @@
 use ewwii_plugin_api::{widget_backend, EwwiiAPI};
-use rhai::{Array, Dynamic, Engine};
+use rhai::{Array, Dynamic, Engine, EvalAltResult};
 use std::sync::mpsc::{channel as mpsc_channel, Receiver, Sender};
 
 pub(crate) struct EwwiiImpl {
@@ -36,7 +36,7 @@ impl EwwiiAPI for EwwiiImpl {
     fn register_function(
         &self,
         name: String,
-        f: Box<dyn Fn(Array) -> Dynamic + Send + Sync>,
+        f: Box<dyn Fn(Array) -> Result<Dynamic, Box<EvalAltResult>> + Send + Sync>,
     ) -> Result<(), String> {
         let func_info = (name, f);
 
@@ -73,7 +73,7 @@ impl EwwiiAPI for EwwiiImpl {
 
 pub(crate) enum PluginRequest {
     RhaiEngineAct(Box<dyn FnOnce(&mut Engine) + Send>),
-    RegisterFunc((String, Box<dyn Fn(Array) -> Dynamic + Send + Sync>)),
+    RegisterFunc((String, Box<dyn Fn(Array) -> Result<Dynamic, Box<EvalAltResult>> + Send + Sync>)),
     ListWidgetIds(Sender<Vec<u64>>),
     WidgetRegistryAct(Box<dyn FnOnce(&mut widget_backend::WidgetRegistryRepr) + Send>),
 }
