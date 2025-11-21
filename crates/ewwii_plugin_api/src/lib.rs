@@ -76,6 +76,13 @@ pub trait EwwiiAPI: Send + Sync {
 
     /// _(include-rhai)_ Expose a function that rhai configuration can call.
     ///
+    /// **NOTE:***
+    ///
+    /// Due to TypeID mismatches, methods like `register_type`, `register_fn`,
+    /// etc. won't work on the engine and may cause a crash. It is recommended 
+    /// to use the `register_function` API to register a funtion which `api::slib`
+    /// can call to in rhai.
+    ///
     /// # Example
     ///
     /// ```rust
