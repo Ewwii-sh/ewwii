@@ -1,4 +1,5 @@
 [![dependency status](https://deps.rs/repo/github/byson94/ewwii/status.svg)](https://deps.rs/repo/github/byson94/ewwii)
+[![docs link](https://img.shields.io/badge/documentation-link-blue)](https://ewwii-sh.github.io/docs)
 
 # Ewwii
 
