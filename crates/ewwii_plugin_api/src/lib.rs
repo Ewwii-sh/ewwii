@@ -79,7 +79,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// **NOTE:***
     ///
     /// Due to TypeID mismatches, methods like `register_type`, `register_fn`,
-    /// etc. won't work on the engine and may cause a crash. It is recommended 
+    /// etc. won't work on the engine and may cause a crash. It is recommended
     /// to use the `register_function` API to register a funtion which `api::slib`
     /// can call to in rhai.
     ///
@@ -107,7 +107,9 @@ pub trait EwwiiAPI: Send + Sync {
     fn register_function(
         &self,
         name: String,
-        f: Box<dyn Fn(rhai::Array) -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> + Send + Sync>,
+        f: Box<
+            dyn Fn(rhai::Array) -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> + Send + Sync,
+        >,
     ) -> Result<(), String>;
 
     // == Widget Rendering & Logic == //
