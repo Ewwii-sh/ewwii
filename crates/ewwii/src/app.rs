@@ -787,9 +787,10 @@ impl<B: DisplayBackend> App<B> {
 
                     if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                         if let Some(widget_registry) = maybe_registry.as_mut() {
-                            let pid = widget_registry
-                                .get_widget_id_by_name(&parent_name)
-                                .ok_or_else(|| anyhow::anyhow!("Widget '{}' not found", parent_name))?;
+                            let pid =
+                                widget_registry.get_widget_id_by_name(&parent_name).ok_or_else(
+                                    || anyhow::anyhow!("Widget '{}' not found", parent_name),
+                                )?;
                             widget_registry.create_widget(&widget_node, wid, pid)?;
                         } else {
                             log::error!("Widget registry is empty");
