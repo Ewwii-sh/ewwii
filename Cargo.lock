@@ -526,15 +526,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "ewwii-widget-controller"
-version = "0.1.0"
-dependencies = [
- "ewwii_plugin_api",
-]
-
-[[package]]
 name = "ewwii_plugin_api"
-version = "0.6.8"
+version = "0.7.0"
 dependencies = [
  "gtk4",
  "rhai",
