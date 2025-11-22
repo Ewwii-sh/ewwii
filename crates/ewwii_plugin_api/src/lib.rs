@@ -29,6 +29,7 @@
 mod export_macros;
 
 pub mod example;
+pub mod rhai_backend;
 pub mod widget_backend;
 
 #[cfg(feature = "include-rhai")]
@@ -103,10 +104,19 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     /// }
     /// ```
+    ///
+    /// This example will register a function with signature "my_func(Array)" in rhai.
+    ///
+    /// ## Example use in rhai
+    ///
+    /// ```js
+    /// print(my_func(["param1", "param2"]));
+    /// ```
     #[cfg(feature = "include-rhai")]
     fn register_function(
         &self,
         name: String,
+        namespace: rhai_backend::RhaiFnNamespace,
         f: Box<
             dyn Fn(rhai::Array) -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> + Send + Sync,
         >,

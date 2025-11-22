@@ -23,6 +23,7 @@ use crate::{
     *,
 };
 use anyhow::{anyhow, bail};
+use ewwii_plugin_api as epapi;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
@@ -915,11 +916,9 @@ impl<B: DisplayBackend> App<B> {
 
         unsafe {
             // Each plugin exposes: extern "C" fn create_plugin() -> Box<dyn Plugin>
-            let constructor: libloading::Symbol<
-                unsafe extern "C" fn() -> Box<dyn ewwii_plugin_api::Plugin>,
-            > = lib
-                .get(b"create_plugin")
-                .map_err(|e| anyhow!("Failed to find create_plugin: {}", e))?;
+            let constructor: libloading::Symbol<unsafe extern "C" fn() -> Box<dyn epapi::Plugin>> =
+                lib.get(b"create_plugin")
+                    .map_err(|e| anyhow!("Failed to find create_plugin: {}", e))?;
 
             let plugin = constructor(); // instantiate plugin
 
@@ -934,11 +933,18 @@ impl<B: DisplayBackend> App<B> {
 
         let handle_request = move |req: PluginRequest| match req {
             PluginRequest::RhaiEngineAct(func) => {
-                cp.borrow_mut().action_with_engine(func);
+                func(&mut cp.borrow_mut().engine);
             }
-            PluginRequest::RegisterFunc((name, func)) => {
-                cp.borrow_mut().engine.register_fn(name, func);
-            }
+            PluginRequest::RegisterFunc((name, namespace, func)) => match namespace {
+                epapi::rhai_backend::RhaiFnNamespace::Custom(ns) => {
+                    let mut module = rhai::Module::new();
+                    module.set_native_fn(name, func);
+                    cp.borrow_mut().engine.register_static_module(&ns, module.into());
+                }
+                epapi::rhai_backend::RhaiFnNamespace::Global => {
+                    cp.borrow_mut().engine.register_fn(name, func);
+                }
+            },
             PluginRequest::ListWidgetIds(res_tx) => {
                 let wgs_guard = wgs.lock().unwrap();
                 if let Some(wgs_brw) = wgs_guard.as_ref() {
