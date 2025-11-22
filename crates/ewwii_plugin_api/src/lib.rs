@@ -87,14 +87,17 @@ pub trait EwwiiAPI: Send + Sync {
     /// # Example
     ///
     /// ```rust
-    /// use ewwii_plugin_api::{EwwiiAPI, Plugin};
+    /// use ewwii_plugin_api::{EwwiiAPI, Plugin, rhai_backend::RhaiFnNamespace};
     /// use rhai::Dynamic;
     ///
     /// pub struct DummyStructure;
     ///
     /// impl Plugin for DummyStructure {
     ///     fn init(&self, host: &dyn EwwiiAPI) {
-    ///         host.register_function("my_func".to_string(), Box::new(|args| {
+    ///         host.register_function(
+    ///             "my_func".to_string(), 
+    ///             RhaiFnNamespace::Global,
+    ///             Box::new(|args| {
     ///             // Do stuff
     ///             // - Perform things on the args (if needed)
     ///             // - And return a value
