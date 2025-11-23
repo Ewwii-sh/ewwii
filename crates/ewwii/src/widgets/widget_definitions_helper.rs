@@ -1,7 +1,10 @@
 use anyhow::{anyhow, Result};
+use gtk4::glib;
+use gtk4::glib::gobject_ffi;
+use gtk4::glib::translate::{FromGlibPtrNone, IntoGlib};
 use gtk4::glib::Value;
 use gtk4::pango;
-use gtk4::prelude::{ObjectExt, StaticType, ToValue};
+use gtk4::prelude::{Cast, ObjectExt, StaticType, ToValue, RangeExt};
 use rhai::Map;
 use std::process::Command;
 
@@ -230,11 +233,15 @@ pub(super) fn parse_stack_transition(t: &str) -> Result<gtk4::StackTransitionTyp
 }
 
 // For localbind
-pub(super) fn set_property_from_string(widget: &gtk4::Widget, prop_name: &str, value_str: &str) {
-    if let Some(pspec) = widget.find_property(prop_name) {
+pub(super) fn set_property_from_string_anywhere(
+    widget: &gtk4::Widget,
+    prop_name: &str,
+    value_str: &str,
+) {
+    fn convert(pspec: &glib::ParamSpec, value_str: &str) -> Option<Value> {
         let value_type = pspec.value_type();
 
-        let gvalue: Option<Value> = if value_type == f64::static_type() {
+        if value_type == f64::static_type() {
             value_str.parse::<f64>().ok().map(|v| v.to_value())
         } else if value_type == i32::static_type() {
             value_str.parse::<i32>().ok().map(|v| v.to_value())
@@ -244,19 +251,74 @@ pub(super) fn set_property_from_string(widget: &gtk4::Widget, prop_name: &str, v
             Some(value_str.to_value())
         } else {
             None
-        };
-
-        if let Some(v) = gvalue {
-            widget.set_property(prop_name, &v);
-        } else {
-            log::error!(
-                "Cannot convert '{}' to type {:?} for property '{}'",
-                value_str,
-                value_type,
-                prop_name
-            );
         }
-    } else {
-        log::error!("Property '{}' not found on widget {:?}", prop_name, widget);
     }
+
+    let obj: &glib::Object = widget.upcast_ref();
+
+    if let Some(pspec) = obj.find_property(prop_name) {
+        if let Some(gv) = convert(&pspec, value_str) {
+            obj.set_property(prop_name, &gv);
+        }
+        return;
+    }
+
+    unsafe {
+        for iface_type in obj.type_().interfaces() {
+            for pspec in list_interface_properties(iface_type) {
+                if pspec.name() == prop_name {
+                    if let Some(v) = convert(&pspec, value_str) {
+                        obj.set_property(prop_name, &v);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
+    if let Some(range) = widget.downcast_ref::<gtk4::Range>() {
+        let range_obj: &glib::Object = range.upcast_ref();
+
+        if let Some(pspec) = range_obj.find_property(prop_name) {
+            if let Some(gv) = convert(&pspec, value_str) {
+                range_obj.set_property(prop_name, &gv);
+            }
+            return;
+        }
+
+        let adj = range.adjustment();
+        let adj_obj: &glib::Object = adj.upcast_ref();
+
+        if let Some(pspec) = adj_obj.find_property(prop_name) {
+            if let Some(gv) = convert(&pspec, value_str) {
+                adj_obj.set_property(prop_name, &gv);
+            }
+            return;
+        }
+    }
+
+    log::error!("Property '{}' not found on widget {}", prop_name, obj.type_().name());
+}
+
+unsafe fn list_interface_properties(iface_type: glib::Type) -> Vec<glib::ParamSpec> {
+    let mut n_props = 0;
+
+    let iface_ptr = gobject_ffi::g_type_default_interface_ref(iface_type.into_glib());
+    if iface_ptr.is_null() {
+        return vec![];
+    }
+
+    let props_ptr =
+        gobject_ffi::g_object_interface_list_properties(iface_ptr as *mut _, &mut n_props);
+
+    let props = (0..n_props)
+        .map(|i| {
+            let p = *props_ptr.add(i as usize);
+            glib::ParamSpec::from_glib_none(p)
+        })
+        .collect::<Vec<_>>();
+
+    gobject_ffi::g_type_default_interface_unref(iface_ptr);
+
+    props
 }
