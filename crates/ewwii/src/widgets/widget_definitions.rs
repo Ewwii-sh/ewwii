@@ -445,7 +445,7 @@ pub(super) fn build_localbind_util(
 
             if !current_val.is_empty() {
                 if let Some(child) = gtk_widget.first_child() {
-                    set_property_from_string(&child, &prop_name, &current_val);
+                    set_property_from_string_anywhere(&child, &prop_name, &current_val);
                 }
             }
 
@@ -458,7 +458,7 @@ pub(super) fn build_localbind_util(
                         gtk_widget,
                         move |obj, _| {
                             if let Some(child) = gtk_widget.first_child() {
-                                set_property_from_string(
+                                set_property_from_string_anywhere(
                                     &child,
                                     &prop_name,
                                     &obj.property::<String>("value"),

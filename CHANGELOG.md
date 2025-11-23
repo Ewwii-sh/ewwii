@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Circular progress bar not updating dynamically.
 - LocalSignal values not getting transformed to suite property type.
+- LocalBind not finding properties of range subclasses.
 
 ## [0.3.0] - 2025-11-01
 

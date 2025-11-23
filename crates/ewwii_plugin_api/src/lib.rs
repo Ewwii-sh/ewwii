@@ -95,7 +95,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// impl Plugin for DummyStructure {
     ///     fn init(&self, host: &dyn EwwiiAPI) {
     ///         host.register_function(
-    ///             "my_func".to_string(), 
+    ///             "my_func".to_string(),
     ///             RhaiFnNamespace::Global,
     ///             Box::new(|args| {
     ///             // Do stuff
