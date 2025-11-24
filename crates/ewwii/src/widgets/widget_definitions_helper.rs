@@ -4,7 +4,7 @@ use gtk4::glib::gobject_ffi;
 use gtk4::glib::translate::{FromGlibPtrNone, IntoGlib};
 use gtk4::glib::Value;
 use gtk4::pango;
-use gtk4::prelude::{Cast, ObjectExt, StaticType, ToValue, RangeExt};
+use gtk4::prelude::{Cast, ObjectExt, RangeExt, StaticType, ToValue};
 use rhai::Map;
 use std::process::Command;
 
