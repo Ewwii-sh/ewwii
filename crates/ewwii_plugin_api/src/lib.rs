@@ -102,7 +102,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///             // - Perform things on the args (if needed)
     ///             // - And return a value
     ///             
-    ///             Dynamic::default() // return empty
+    ///             Ok(Dynamic::default()) // return empty
     ///         }));
     ///     }
     /// }
