@@ -271,7 +271,7 @@ pub enum WidgetControlAction {
         /// Name of the widget to update the property of
         #[arg(long = "widget", short = 'w')]
         widget_name: String,
-    }
+    },
 }
 
 impl Opt {
