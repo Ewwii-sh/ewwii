@@ -235,6 +235,28 @@ impl WidgetRegistry {
             .find(|(_, entry)| entry.widget.widget_name().as_str() == name)
             .map(|(&id, _)| id)
     }
+
+    pub fn update_property_by_name(
+        &mut self,
+        widget_name: &str,
+        property_and_value: (String, String),
+    ) -> bool {
+        if let Some((&id, _)) = self
+            .widgets
+            .iter()
+            .find(|(_, entry)| entry.widget.widget_name().as_str() == widget_name)
+        {
+            if let Some(entry) = self.widgets.get(&id) {
+                set_property_from_string_anywhere(
+                    &entry.widget,
+                    &property_and_value.0,
+                    &property_and_value.1,
+                );
+            }
+        }
+
+        false
+    }
 }
 
 pub(super) fn build_gtk_box(
