@@ -252,13 +252,26 @@ pub enum WidgetControlAction {
 
     /// Create widgets
     Create {
-        /// Rhai code to create widgets from.
+        /// Rhai code to create widgets from
         rhai_codes: Vec<String>,
 
-        /// Name of the widget to add these widgets as a child to.
+        /// Name of the widget to add these widgets as a child to
         #[arg(long = "parent", short = 'p')]
         parent_name: String,
     },
+
+    /// Update properties of a widget by name
+    PropertyUpdate {
+        /// Properties and its value
+        ///
+        /// Format: value="val1" widget_name="val2"
+        #[arg(value_parser = parse_inject_var_map)]
+        property_and_value: HashMap<String, String>,
+
+        /// Name of the widget to update the property of
+        #[arg(long = "widget", short = 'w')]
+        widget_name: String,
+    }
 }
 
 impl Opt {

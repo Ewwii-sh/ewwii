@@ -801,6 +801,25 @@ impl<B: DisplayBackend> App<B> {
                     }
                 }
             }
+            crate::opts::WidgetControlAction::PropertyUpdate {
+                property_and_value,
+                widget_name,
+            } => {
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        for (key, value) in &property_and_value {
+                            widget_registry.update_property_by_name(
+                                &widget_name,
+                                (key.clone(), value.clone()),
+                            );
+                        }
+                    } else {
+                        log::error!("Widget registry is empty");
+                    }
+                } else {
+                    log::error!("Failed to acquire lock on widget registry");
+                }
+            }
         }
 
         Ok(())
