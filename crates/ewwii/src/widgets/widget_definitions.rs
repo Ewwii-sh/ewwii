@@ -1818,6 +1818,10 @@ pub(super) fn build_gtk_input(
             widget.set_text(&value);
         }
 
+        if let Ok(value) = get_string_prop(&props, "placeholder", None) {
+            widget.set_placeholder_text(Some(&value));
+        }
+
         let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
         if let Ok(onchange) = get_string_prop(&props, "onchange", None) {

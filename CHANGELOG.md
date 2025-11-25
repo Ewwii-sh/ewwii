@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `gtk_ui` function for loading .ui files.
 - `widget-control` (`wc` in short) command for controlling widgets.
+- `placeholder` property to input widget.
 
 ## [0.3.1] - 2025-11-01
 
