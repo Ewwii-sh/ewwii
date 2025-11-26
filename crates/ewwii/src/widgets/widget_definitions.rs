@@ -1076,6 +1076,10 @@ pub(super) fn build_gtk_stack(
         let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
         widget.set_transition_type(parse_stack_transition(&transition)?);
 
+        if let Ok(transition_dur) = get_i32_prop(&props, "transition_duration", None) {
+            widget.set_transition_duration(transition_dur as u32);
+        }
+
         // let same_size = get_bool_prop(&props, "same_size", Some(false))?;
         // widget.set_homogeneous(same_size);
 
