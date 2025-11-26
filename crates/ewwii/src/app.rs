@@ -820,6 +820,36 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
+            crate::opts::WidgetControlAction::AddClass { class, widget_name } => {
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        widget_registry.update_class_of_widget_by_name(
+                            &widget_name,
+                            &class,
+                            false,
+                        );
+                    } else {
+                        log::error!("Widget registry is empty");
+                    }
+                } else {
+                    log::error!("Failed to acquire lock on widget registry");
+                }
+            }
+            crate::opts::WidgetControlAction::RemoveClass { class, widget_name } => {
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        widget_registry.update_class_of_widget_by_name(
+                            &widget_name,
+                            &class,
+                            true,
+                        );
+                    } else {
+                        log::error!("Widget registry is empty");
+                    }
+                } else {
+                    log::error!("Failed to acquire lock on widget registry");
+                }
+            }
         }
 
         Ok(())
