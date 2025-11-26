@@ -257,6 +257,29 @@ impl WidgetRegistry {
 
         false
     }
+
+    pub fn update_class_of_widget_by_name(
+        &mut self,
+        widget_name: &str,
+        class: &str,
+        remove: bool,
+    ) -> bool {
+        if let Some((&id, _)) = self
+            .widgets
+            .iter()
+            .find(|(_, entry)| entry.widget.widget_name().as_str() == widget_name)
+        {
+            if let Some(entry) = self.widgets.get(&id) {
+                if !remove {
+                    entry.widget.style_context().add_class(class);
+                } else {
+                    entry.widget.style_context().remove_class(class);
+                }
+            }
+        }
+
+        false
+    }
 }
 
 pub(super) fn build_gtk_box(

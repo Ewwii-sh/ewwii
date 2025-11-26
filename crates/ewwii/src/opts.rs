@@ -272,6 +272,26 @@ pub enum WidgetControlAction {
         #[arg(long = "widget", short = 'w')]
         widget_name: String,
     },
+
+    /// Add a class to a widget with given name
+    AddClass {
+        /// The class to add to the widget
+        class: String,
+
+        /// Name of the widget to add class to
+        #[arg(long = "widget", short = 'w')]
+        widget_name: String,
+    },
+
+    /// Remove a class to a widget with given name
+    RemoveClass {
+        /// The class to remove from the widget
+        class: String,
+
+        /// Name of the widget to remove class from
+        #[arg(long = "widget", short = 'w')]
+        widget_name: String,
+    },
 }
 
 impl Opt {
