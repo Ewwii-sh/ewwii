@@ -53,6 +53,9 @@ fn build_gtk_widget_from_node(
         WidgetNode::LocalBind { props, children } => {
             build_localbind_util(props, children, widget_reg)?.upcast()
         }
+        WidgetNode::WidgetAction { props, children } => {
+            build_widgetaction_util(props, children, widget_reg)?.upcast()
+        }
         WidgetNode::CircularProgress { props } => {
             build_circular_progress_bar(props, widget_reg)?.upcast()
         }

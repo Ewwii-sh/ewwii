@@ -83,6 +83,7 @@ pub fn register_all_widgets(
     register_with_children!("eventbox", EventBox);
     register_with_children!("tooltip", ToolTip);
     register_with_children!("localbind", LocalBind);
+    register_with_children!("widget_action", WidgetAction);
 
     // == Special widget
     engine.register_fn(

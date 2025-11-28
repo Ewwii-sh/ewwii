@@ -534,6 +534,112 @@ pub(super) fn build_localbind_util(
     Ok(gtk_widget)
 }
 
+pub(super) fn build_widgetaction_util(
+    props: &Map,
+    children: &Vec<WidgetNode>,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk4::Box> {
+    let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+
+    let count = children.len();
+
+    if count < 1 {
+        bail!("widget action must contain exactly 1 child");
+    } else if count > 1 {
+        bail!("widget action must contain exactly 1 child, but got more");
+    }
+
+    let child_node = children.get(0).cloned().ok_or_else(|| anyhow!("missing child"))?;
+    let child_widget = build_gtk_widget(&WidgetInput::Node(child_node), widget_registry)?;
+
+    gtk_widget.append(&child_widget);
+
+    let apply_props = |props: &Map, gtk_widget: &gtk4::Box| -> Result<()> {
+        let trigger = props
+            .get("trigger")
+            .ok_or_else(|| anyhow!("Expected property `trigger`"))?
+            .clone()
+            .try_cast::<LocalSignal>()
+            .ok_or_else(|| anyhow!("Invalid widget action trigger: expected LocalSignal"))?;
+        let actions = match get_vec_string_prop(&props, "actions", None) {
+            Ok(a) => a,
+            Err(e) => bail!("Invalid widget action actions: {}", e),
+        };
+
+        let signal_widget = trigger.data;
+        connect_signal_handler!(
+            signal_widget,
+            signal_widget.connect_notify_local(
+                Some("value"),
+                glib::clone!(
+                    #[weak]
+                    gtk_widget,
+                    #[strong]
+                    actions,
+                    move |_, _| {
+                        if let Some(child) = gtk_widget.first_child() {
+                            for action in &actions {
+                                let mut parts = action.split_whitespace();
+                                let cmd = parts.next();
+
+                                match cmd {
+                                    Some("remove") => {
+                                        child.unparent();
+                                    }
+
+                                    Some("add-class") => {
+                                        if let Some(class) = parts.next() {
+                                            child.add_css_class(class);
+                                        }
+                                    }
+
+                                    Some("remove-class") => {
+                                        if let Some(class) = parts.next() {
+                                            child.remove_css_class(class);
+                                        }
+                                    }
+
+                                    Some("set-property") => {
+                                        if let (Some(prop), Some(value)) = (parts.next(), parts.next()) {
+                                            set_property_from_string_anywhere(
+                                                &child,
+                                                &prop,
+                                                &value,
+                                            );
+                                        }
+                                    }
+
+                                    _ => {
+                                        eprintln!("Unknown action: {action}");
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                )
+            )
+        );
+
+        Ok(())
+    };
+
+    apply_props(&props, &gtk_widget)?;
+
+    let gtk_widget_clone = gtk_widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(&props, &gtk_widget_clone);
+    });
+
+    let id = hash_props_and_type(&props, "WidgetAction");
+
+    widget_registry
+        .widgets
+        .insert(id, WidgetEntry { widget: gtk_widget.clone().upcast(), update_fn });
+
+    Ok(gtk_widget)
+}
+
 struct EventBoxCtrlData {
     // hover controller data
     onhover_cmd: String,

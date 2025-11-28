@@ -35,6 +35,7 @@ pub enum WidgetNode {
 
     // Special
     LocalBind { props: Map, children: Vec<WidgetNode> },
+    WidgetAction { props: Map, children: Vec<WidgetNode> },
     GtkUI { props: Map },
 
     // Top-level macros
@@ -161,6 +162,20 @@ pub fn get_id_to_widget_info<'a>(
                 node,
                 props,
                 "LocalBind",
+                children.as_slice(),
+                parent_id,
+                id_to_props,
+            )?;
+            for child in children {
+                get_id_to_widget_info(child, id_to_props, Some(id))?;
+            }
+        }
+        WidgetNode::WidgetAction { props, children } => {
+            let id = hash_props_and_type(props, "WidgetAction");
+            insert_wdgt_info(
+                node,
+                props,
+                "WidgetAction",
                 children.as_slice(),
                 parent_id,
                 id_to_props,
