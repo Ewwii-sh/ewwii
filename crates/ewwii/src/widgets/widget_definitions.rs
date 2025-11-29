@@ -583,10 +583,6 @@ pub(super) fn build_widgetaction_util(
                                 let cmd = parts.next();
 
                                 match cmd {
-                                    Some("remove") => {
-                                        child.unparent();
-                                    }
-
                                     Some("add-class") => {
                                         if let Some(class) = parts.next() {
                                             child.add_css_class(class);
