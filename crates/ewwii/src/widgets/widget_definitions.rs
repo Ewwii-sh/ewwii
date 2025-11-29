@@ -596,11 +596,11 @@ pub(super) fn build_widgetaction_util(
                                     }
 
                                     Some("set-property") => {
-                                        if let (Some(prop), Some(value)) = (parts.next(), parts.next()) {
+                                        if let (Some(prop), Some(value)) =
+                                            (parts.next(), parts.next())
+                                        {
                                             set_property_from_string_anywhere(
-                                                &child,
-                                                &prop,
-                                                &value,
+                                                &child, &prop, &value,
                                             );
                                         }
                                     }
@@ -612,7 +612,6 @@ pub(super) fn build_widgetaction_util(
                             }
                         }
                     }
-
                 )
             )
         );
