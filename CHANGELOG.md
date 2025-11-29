@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `widget-control` (`wc` in short) command for controlling widgets.
 - `placeholder` property to input widget.
 - `transition_duration` property to stack widget.
+- `widget_control` utility function for dynamic widget handling.
 
 ## [0.3.1] - 2025-11-01
 
