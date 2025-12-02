@@ -20,6 +20,13 @@ Examples of projects powered by ewwii.
 | **Binary Dots by [@BinaryHarbinger](https://github.com/BinaryHarbinger)**<br>[- View on GitHub](https://github.com/BinaryHarbinger/binarydots/) | [![Binary Dots](https://raw.githubusercontent.com/BinaryHarbinger/binarydots/main/preview/desktop.png)](https://github.com/BinaryHarbinger/binarydots)
 | **Astatine Dots (Linux Rice with Ewwii)**<br>[- View on GitHub](https://github.com/Ewwii-sh/astatine-dots) | [![Astatine Dots](https://github.com/user-attachments/assets/f028ca1f-e403-476d-a7d9-cadce47691b7)](https://github.com/Ewwii-sh/astatine-dots) |
 
+## Features
+
+- Powered by Gtk4
+- Supports Hot reload
+- Extensibility via plugins and rhai modules
+- X11 + Wayland support
+
 ## Contribewwtiing
 
 If you want to contribute anything, like adding new widgets, features, or subcommands (including sample configs), you should definitely do so.
