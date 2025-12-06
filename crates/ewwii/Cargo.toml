@@ -50,6 +50,7 @@ tokio = { workspace = true, features = ["full"] }
 unescape.workspace = true
 wait-timeout.workspace = true
 rhai = { workspace = true, features = ["internals"] }
+shell-words.workspace = true
 # Plugin loading
 libloading = "0.8.9"
 

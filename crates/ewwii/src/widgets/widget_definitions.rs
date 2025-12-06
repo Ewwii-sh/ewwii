@@ -579,19 +579,27 @@ pub(super) fn build_widgetaction_util(
                     move |_, _| {
                         if let Some(child) = gtk_widget.first_child() {
                             for action in &actions {
-                                let mut parts = action.split_whitespace();
+                                let parts = match shell_words::split(action) {
+                                    Ok(v) => v,
+                                    Err(err) => {
+                                        log::error!("Failed to parse action `{action}`: {err}");
+                                        continue;
+                                    }
+                                };
+
+                                let mut parts = parts.into_iter();
                                 let cmd = parts.next();
 
-                                match cmd {
+                                match cmd.as_deref() {
                                     Some("add-class") => {
                                         if let Some(class) = parts.next() {
-                                            child.add_css_class(class);
+                                            child.add_css_class(&class);
                                         }
                                     }
 
                                     Some("remove-class") => {
                                         if let Some(class) = parts.next() {
-                                            child.remove_css_class(class);
+                                            child.remove_css_class(&class);
                                         }
                                     }
 
