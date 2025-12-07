@@ -693,8 +693,8 @@ pub(super) fn build_event_box(
     // controllers
     let hover_controller = EventControllerMotion::new();
     let gesture_controller = GestureClick::new();
+    gesture_controller.set_button(0);
     let scroll_controller = EventControllerScroll::new(gtk4::EventControllerScrollFlags::BOTH_AXES);
-    let legacy_controller = EventControllerLegacy::new();
     let drop_text_target = DropTarget::new(String::static_type(), gdk::DragAction::COPY);
     let drop_uri_target = DropTarget::new(String::static_type(), gdk::DragAction::COPY);
     let key_controller = EventControllerKey::new();
@@ -765,12 +765,40 @@ pub(super) fn build_event_box(
         }
     ));
 
-    // Support :active selector and run command
+    // Support :active selector and onclick variant commands
     gesture_controller.connect_pressed(glib::clone!(
         #[weak]
         gtk_widget,
-        move |_, _, _, _| {
+        #[strong]
+        controller_data,
+        move |gesture, _, _, _| {
             gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
+
+            let controller = controller_data.borrow();
+            let button = gesture.current_button();
+
+            match button {
+                1 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                2 => run_command(
+                    controller.cmd_timeout,
+                    &controller.onmiddleclick_cmd,
+                    &[] as &[&str],
+                ),
+                3 => run_command(
+                    controller.cmd_timeout,
+                    &controller.onrightclick_cmd,
+                    &[] as &[&str],
+                ),
+                _ => {}
+            }
+        }
+    ));
+
+    gesture_controller.connect_released(glib::clone!(
+        #[weak]
+        gtk_widget,
+        move |_, _, _, _| {
+            gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
         }
     ));
 
@@ -797,46 +825,6 @@ pub(super) fn build_event_box(
                 );
             }
 
-            glib::Propagation::Proceed
-        }
-    ));
-
-    gesture_controller.connect_released(glib::clone!(
-        #[weak]
-        gtk_widget,
-        move |_, _, _, _| {
-            gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
-        }
-    ));
-
-    legacy_controller.connect_event(glib::clone!(
-        #[strong]
-        controller_data,
-        move |_, event| {
-            if event.event_type() == gtk4::gdk::EventType::ButtonPress {
-                if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
-                    let button = button_event.button();
-                    let controller = controller_data.borrow();
-                    match button {
-                        1 => run_command(
-                            controller.cmd_timeout,
-                            &controller.onclick_cmd,
-                            &[] as &[&str],
-                        ),
-                        2 => run_command(
-                            controller.cmd_timeout,
-                            &controller.onmiddleclick_cmd,
-                            &[] as &[&str],
-                        ),
-                        3 => run_command(
-                            controller.cmd_timeout,
-                            &controller.onrightclick_cmd,
-                            &[] as &[&str],
-                        ),
-                        _ => {}
-                    }
-                }
-            }
             glib::Propagation::Proceed
         }
     ));
@@ -923,7 +911,6 @@ pub(super) fn build_event_box(
     gtk_widget.add_controller(gesture_controller);
     gtk_widget.add_controller(hover_controller);
     gtk_widget.add_controller(scroll_controller);
-    gtk_widget.add_controller(legacy_controller);
     gtk_widget.add_controller(drop_text_target);
     gtk_widget.add_controller(drop_uri_target);
     gtk_widget.add_controller(drag_source);
@@ -1715,7 +1702,9 @@ pub(super) fn build_gtk_button(
     }));
 
     let key_controller = EventControllerKey::new();
-    let legacy_controller = EventControllerLegacy::new();
+    let gesture_controller = GestureClick::new();
+    gesture_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
+    gesture_controller.set_button(0);
 
     gtk_widget.connect_clicked(glib::clone!(
         #[weak]
@@ -1725,35 +1714,26 @@ pub(super) fn build_gtk_button(
         }
     ));
 
-    legacy_controller.connect_event(glib::clone!(
+    gesture_controller.connect_pressed(glib::clone!(
         #[strong]
         controller_data,
-        move |_, event| {
-            if event.event_type() == gtk4::gdk::EventType::ButtonPress {
-                if let Some(button_event) = event.downcast_ref::<gtk4::gdk::ButtonEvent>() {
-                    let button = button_event.button();
-                    let controller = controller_data.borrow();
-                    match button {
-                        1 => run_command(
-                            controller.cmd_timeout,
-                            &controller.onclick_cmd,
-                            &[] as &[&str],
-                        ),
-                        2 => run_command(
-                            controller.cmd_timeout,
-                            &controller.onmiddleclick_cmd,
-                            &[] as &[&str],
-                        ),
-                        3 => run_command(
-                            controller.cmd_timeout,
-                            &controller.onrightclick_cmd,
-                            &[] as &[&str],
-                        ),
-                        _ => {}
-                    }
-                }
+        move |gesture, _, _, _| {
+            let button = gesture.current_button();
+            let controller = controller_data.borrow();
+            match button {
+                1 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                2 => run_command(
+                    controller.cmd_timeout,
+                    &controller.onmiddleclick_cmd,
+                    &[] as &[&str],
+                ),
+                3 => run_command(
+                    controller.cmd_timeout,
+                    &controller.onrightclick_cmd,
+                    &[] as &[&str],
+                ),
+                _ => {}
             }
-            gtk4::glib::Propagation::Proceed
         }
     ));
 
@@ -1773,7 +1753,7 @@ pub(super) fn build_gtk_button(
     ));
 
     gtk_widget.add_controller(key_controller);
-    gtk_widget.add_controller(legacy_controller);
+    gtk_widget.add_controller(gesture_controller);
 
     let apply_props = |props: &Map,
                        widget: &gtk4::Button,
