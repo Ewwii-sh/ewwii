@@ -527,6 +527,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ewwii_anims"
+version = "0.1.0"
+dependencies = [
+ "gtk4",
+]
+
+[[package]]
 name = "ewwii_plugin_api"
 version = "0.7.0"
 dependencies = [

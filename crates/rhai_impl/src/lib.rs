@@ -1,4 +1,4 @@
-//! IIRhai is a simple crate which configures rhai for the `ewwii` widget system.
+//! rhai_impl is a simple crate which configures rhai for the `ewwii` widget system.
 //!
 //! This crate supports parsing, error handling, and has a custom module_resolver.
 
