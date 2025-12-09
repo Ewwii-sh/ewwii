@@ -1445,7 +1445,15 @@ pub(super) fn build_gtk_progress(
         }
 
         if let Ok(bar_value) = get_f64_prop(&props, "value", None) {
-            widget.set_fraction(bar_value / 100f64)
+            widget.set_fraction(bar_value / 100f64);
+        }
+
+        if let Ok(bar_text) = get_string_prop(&props, "text", None) {
+            widget.set_text(Some(&bar_text));
+        }
+
+        if let Ok(show_text) = get_bool_prop(&props, "show_text", None) {
+            widget.set_show_text(show_text);
         }
 
         Ok(())
@@ -2636,17 +2644,18 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         }
     }
 
+    let css_provider = gtk4::CssProvider::new();
+    let css_provider2 = css_provider.clone();
+
     if let Ok(style_str) = get_string_prop(&props, "style", None) {
-        let css_provider = gtk4::CssProvider::new();
         let scss = format!("* {{ {} }}", style_str);
         css_provider.load_from_data(&grass::from_string(scss, &grass::Options::default())?);
         gtk_widget.style_context().add_provider(&css_provider, 950);
     }
 
     if let Ok(css_str) = get_string_prop(&props, "css", None) {
-        let css_provider = gtk4::CssProvider::new();
-        css_provider.load_from_data(&grass::from_string(css_str, &grass::Options::default())?);
-        gtk_widget.style_context().add_provider(&css_provider, 950);
+        css_provider2.load_from_data(&grass::from_string(css_str, &grass::Options::default())?);
+        gtk_widget.style_context().add_provider(&css_provider2, 950);
     }
 
     if let Ok(valign) = get_string_prop(&props, "valign", None) {
