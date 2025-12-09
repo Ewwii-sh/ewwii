@@ -62,7 +62,7 @@ fn build_gtk_widget_from_node(
         WidgetNode::GtkUI { props } => build_gtk_ui_file(props)?.upcast(),
         // WidgetNode::Graph { props } => build_graph(props, widget_reg)?.upcast(),
         // WidgetNode::Transform { props } => build_transform(props, widget_reg)?.upcast(),
-        WidgetNode::Slider { props } => build_gtk_scale(props, widget_reg)?.upcast(),
+        WidgetNode::Scale { props } => build_gtk_scale(props, widget_reg)?.upcast(),
         WidgetNode::Progress { props } => build_gtk_progress(props, widget_reg)?.upcast(),
         WidgetNode::Image { props } => build_image(props, widget_reg)?.upcast(),
         WidgetNode::Icon { props } => build_icon(props, widget_reg)?.upcast(),

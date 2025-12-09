@@ -2525,7 +2525,7 @@ pub(super) fn build_gtk_scale(
         }
     });
 
-    let id = hash_props_and_type(&props, "Slider");
+    let id = hash_props_and_type(&props, "Scale");
 
     widget_registry
         .widgets

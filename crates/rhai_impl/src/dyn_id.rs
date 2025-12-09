@@ -103,7 +103,7 @@ impl WidgetNode {
             | node @ WidgetNode::Input { props }
             | node @ WidgetNode::Progress { props }
             | node @ WidgetNode::ComboBoxText { props }
-            | node @ WidgetNode::Slider { props }
+            | node @ WidgetNode::Scale { props }
             | node @ WidgetNode::Checkbox { props }
             | node @ WidgetNode::Calendar { props }
             | node @ WidgetNode::ColorButton { props }
@@ -123,7 +123,7 @@ impl WidgetNode {
                     WidgetNode::ComboBoxText { .. } => {
                         WidgetNode::ComboBoxText { props: new_props }
                     }
-                    WidgetNode::Slider { .. } => WidgetNode::Slider { props: new_props },
+                    WidgetNode::Scale { .. } => WidgetNode::Scale { props: new_props },
                     WidgetNode::Checkbox { .. } => WidgetNode::Checkbox { props: new_props },
                     WidgetNode::Calendar { .. } => WidgetNode::Calendar { props: new_props },
                     WidgetNode::ColorButton { .. } => WidgetNode::ColorButton { props: new_props },
