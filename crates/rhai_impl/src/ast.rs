@@ -17,7 +17,7 @@ pub enum WidgetNode {
     Input { props: Map },
     Progress { props: Map },
     ComboBoxText { props: Map },
-    Slider { props: Map },
+    Scale { props: Map },
     Checkbox { props: Map },
     Expander { props: Map, children: Vec<WidgetNode> },
     Revealer { props: Map, children: Vec<WidgetNode> },
@@ -106,9 +106,9 @@ pub fn get_id_to_widget_info<'a>(
             // let id = hash_props_and_type(props, "Transform");
             insert_wdgt_info(node, props, "Transform", &[], parent_id, id_to_props)?;
         }
-        WidgetNode::Slider { props } => {
-            // let id = hash_props_and_type(props, "Slider");
-            insert_wdgt_info(node, props, "Slider", &[], parent_id, id_to_props)?;
+        WidgetNode::Scale { props } => {
+            // let id = hash_props_and_type(props, "Scale");
+            insert_wdgt_info(node, props, "Scale", &[], parent_id, id_to_props)?;
         }
         WidgetNode::Progress { props } => {
             // let id = hash_props_and_type(props, "Progress");
