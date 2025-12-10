@@ -1294,7 +1294,7 @@ pub(super) fn build_circular_progress_bar(
             widget.set_property("thickness", thickness);
         }
 
-        if let Ok(clockwise) = get_f64_prop(&props, "clockwise", None) {
+        if let Ok(clockwise) = get_bool_prop(&props, "clockwise", None) {
             widget.set_property("clockwise", clockwise);
         }
 
