@@ -74,8 +74,6 @@ pub fn handle_poll(
         let stdout = child.stdout.take().expect("Failed to open stdout");
         let mut reader = BufReader::new(stdout).lines();
 
-        let mut last_value: Option<String> = None;
-
         loop {
             // Send command
             if let Err(err) = stdin.write_all(cmd.as_bytes()).await {
@@ -95,14 +93,9 @@ pub fn handle_poll(
             let output_line = reader.next_line().await;
             if let Ok(Some(stdout_line)) = output_line {
                 let stdout_trimmed = stdout_line.trim().to_string();
-                if Some(&stdout_trimmed) != last_value.as_ref() {
-                    last_value = Some(stdout_trimmed.clone());
-                    log::debug!("[{}] polled value: {}", var_name, stdout_trimmed);
-                    store.write().unwrap().insert(var_name.clone(), stdout_trimmed);
-                    let _ = tx.send(var_name.clone());
-                } else {
-                    log::trace!("[{}] value unchanged, skipping tx", var_name);
-                }
+                log::debug!("[{}] polled value: {}", var_name, stdout_trimmed);
+                store.write().unwrap().insert(var_name.clone(), stdout_trimmed);
+                let _ = tx.send(var_name.clone());
             } else {
                 log::warn!("[{}] shell output ended or failed: {:?}", var_name, output_line);
                 break;
