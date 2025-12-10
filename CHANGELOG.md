@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
-## Added
+### Added
 
 - `gtk_ui` function for loading .ui files.
 - `widget-control` (`wc` in short) command for controlling widgets.
@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `transition_duration` property to stack widget.
 - `widget_control` utility function for dynamic widget handling.
 - `text` and `show_text` property to progressbar widget.
+
+### Fixed
+
+- `clockwise` property not working on circular_progress.
 
 ## [0.3.1] - 2025-11-01
 
@@ -26,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.3.0] - 2025-11-01
 
-## Added
+### Added
 
 - `localsignal` signal for fast and cheap property update.
 - `localbind` utility for binding `localsignal` to a widget property.
