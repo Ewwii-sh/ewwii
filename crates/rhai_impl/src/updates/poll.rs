@@ -42,6 +42,14 @@ pub fn handle_poll(
         }
     };
 
+    // Skip unchanged values?
+    const DEFAULT_SKIP: bool = true;
+    let skip_unchanged =
+        get_bool_prop(props, "skip_unchanged", Some(DEFAULT_SKIP)).unwrap_or_else(|e| {
+            log::warn!("Failed to parse skip_unchanged property of poll {}: {}", var_name, e);
+            DEFAULT_SKIP
+        });
+
     // No need to do this as we apply the initial value before parsing
     // Handle initial value
     // if let Ok(initial) = get_string_prop(&props, "initial", None) {
@@ -96,12 +104,18 @@ pub fn handle_poll(
             if let Ok(Some(stdout_line)) = output_line {
                 let stdout_trimmed = stdout_line.trim().to_string();
                 if Some(&stdout_trimmed) != last_value.as_ref() {
+                    // changed → always send
                     last_value = Some(stdout_trimmed.clone());
                     log::debug!("[{}] polled value: {}", var_name, stdout_trimmed);
                     store.write().unwrap().insert(var_name.clone(), stdout_trimmed);
                     let _ = tx.send(var_name.clone());
-                } else {
+                } else if skip_unchanged {
+                    // unchanged + skipping enabled
                     log::trace!("[{}] value unchanged, skipping tx", var_name);
+                } else {
+                    // unchanged + skipping disabled → still send
+                    log::trace!("[{}] value unchanged, skipping disabled", var_name);
+                    let _ = tx.send(var_name.clone());
                 }
             } else {
                 log::warn!("[{}] shell output ended or failed: {:?}", var_name, output_line);
