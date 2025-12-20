@@ -8,6 +8,8 @@ use gtk4::prelude::{Cast, ObjectExt, RangeExt, StaticType, ToValue};
 use rhai::Map;
 use std::process::Command;
 
+use crate::widgets::graph::{LineStyle, RenderType};
+
 // Run a command and get the output
 pub(super) fn run_command<T>(timeout: std::time::Duration, cmd: &str, args: &[T])
 where
@@ -229,6 +231,27 @@ pub(super) fn parse_stack_transition(t: &str) -> Result<gtk4::StackTransitionTyp
         "fade" | "crossfade" => Ok(gtk4::StackTransitionType::Crossfade),
         "none" => Ok(gtk4::StackTransitionType::None),
         _ => Err(anyhow!("Invalid stack transition: '{}'", t)),
+    }
+}
+
+/// Graph line style
+pub(super) fn parse_graph_line_style(t: &str) -> Result<LineStyle> {
+    match t.to_ascii_lowercase().as_str() {
+        "miter" => Ok(LineStyle::Miter),
+        "bevel" => Ok(LineStyle::Bevel),
+        "round" => Ok(LineStyle::Round),
+        _ => Err(anyhow!("Invalid graph line style: '{}'", t)),
+    }
+}
+
+/// Graph render type
+pub(super) fn parse_graph_render_type(t: &str) -> Result<RenderType> {
+    match t.to_ascii_lowercase().as_str() {
+        "line" => Ok(RenderType::Line),
+        "step-line" => Ok(RenderType::StepLine),
+        "fill" => Ok(RenderType::Fill),
+        "step-fill" => Ok(RenderType::StepFill),
+        _ => Err(anyhow!("Invalid graph render type: '{}'", t)),
     }
 }
 

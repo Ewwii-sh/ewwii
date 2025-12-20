@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+### Added
+
+- `graph` widget back.
+
 ### Fixed
 
 - A few issue related with `property-get` subcommand.
