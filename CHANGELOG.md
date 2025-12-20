@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `transition_duration` property to stack widget.
 - `widget_control` utility function for dynamic widget handling.
 - `text` and `show_text` property to progressbar widget.
+- `graph` widget back.
 
 ### Changed
 
