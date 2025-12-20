@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - A few issue related with `property-get` subcommand.
 
+### Changed
+
+- `v4_18` feature flag for to the `gtk4` crate to enable newer APIs.
+
 ## [0.4.0] - 2026-02-14
 
 ### Added
