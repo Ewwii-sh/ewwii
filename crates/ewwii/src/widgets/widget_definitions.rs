@@ -28,6 +28,7 @@ use std::{
 // custom widgets
 // use crate::widgets::{circular_progressbar::CircProg, transform::Transform};
 use crate::widgets::circular_progressbar::CircProg;
+use crate::widgets::graph::{Graph, RenderType};
 
 /// Connect a gtk signal handler inside of this macro to ensure that when the same code gets run multiple times,
 /// the previously connected singal handler first gets disconnected.
@@ -1336,93 +1337,121 @@ pub(super) fn build_circular_progress_bar(
     Ok(widget)
 }
 
-// pub(super) fn build_graph(
-//     props: &Map,
-//     widget_registry: &mut WidgetRegistry,
-// ) -> Result<super::graph::Graph> {
-//     let widget = super::graph::Graph::new();
+pub(super) fn build_graph(props: &Map, widget_registry: &mut WidgetRegistry) -> Result<Graph> {
+    let widget = Graph::new();
 
-//     let apply_props = |props: &Map, widget: &super::graph::Graph| -> Result<()> {
-//         if let Ok(value) = get_f64_prop(&props, "value", None) {
-//             if value.is_nan() || value.is_infinite() {
-//                 return Err(anyhow!("Graph's value should never be NaN or infinite"));
-//             }
-//             widget.set_property("value", value);
-//         }
+    let apply_props = |props: &Map, widget: &Graph| -> Result<()> {
+        if let Ok(value) = get_f64_prop(&props, "value", None) {
+            if value.is_nan() || value.is_infinite() {
+                return Err(anyhow!("Graph's value should never be NaN or infinite"));
+            }
+            widget.set_property("value", value);
+        }
 
-//         if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
-//             widget.set_property("thickness", thickness);
-//         }
+        if let Ok(time_range) = get_duration_prop(&props, "time_range", None) {
+            let millis = time_range.as_millis();
+            let millis_u32 = u32::try_from(millis).map_err(|_| {
+                anyhow!(
+                    "Graph's time_range ({}ms) exceeds maximum representable ({}ms)",
+                    millis,
+                    u32::MAX
+                )
+            })?;
 
-//         if let Ok(time_range) = get_duration_prop(&props, "time_range", None) {
-//             widget.set_property("time-range", time_range.as_millis() as u64);
-//         }
+            widget.set_property("time-range", millis_u32);
+        }
 
-//         let min = get_f64_prop(&props, "min", Some(0.0)).ok();
-//         let max = get_f64_prop(&props, "max", Some(100.0)).ok();
+        let min = get_f64_prop(&props, "min", Some(0.0)).ok();
+        let max = get_f64_prop(&props, "max", Some(100.0)).ok();
 
-//         if let (Some(mi), Some(ma)) = (min, max) {
-//             if mi > ma {
-//                 return Err(anyhow!("Graph's min ({mi}) should never be higher than max ({ma})"));
-//             }
-//         }
+        if let (Some(min), Some(max)) = (min, max) {
+            if min > max {
+                return Err(anyhow!("Graph's min ({min}) should never be higher than max ({max})"));
+            }
+        }
 
-//         if let Some(mi) = min {
-//             widget.set_property("min", mi);
-//         }
+        if let Ok(dynamic) = get_bool_prop(&props, "dynamic", None) {
+            widget.set_property("dynamic", dynamic);
+        }
 
-//         if let Some(ma) = max {
-//             widget.set_property("max", ma);
-//         }
+        if let Some(min) = min {
+            widget.set_property("min", min);
+        }
 
-//         if let Ok(dynamic) = get_bool_prop(&props, "dynamic", None) {
-//             widget.set_property("dynamic", dynamic);
-//         }
+        if let Some(max) = max {
+            widget.set_property("max", max);
+        }
 
-//         if let Ok(line_style) = get_string_prop(&props, "line_style", None) {
-//             widget.set_property("line-style", line_style);
-//         }
+        if let Ok(render_type) = get_string_prop(&props, "type", None) {
+            match parse_graph_render_type(render_type.as_str()) {
+                Ok(t) => widget.set_property("type", t),
+                Err(e) => return Err(anyhow!("Failed to parse graph type property: {}", e)),
+            };
+        }
 
-//         // flip-x - whether the x axis should go from high to low
-//         if let Ok(flip_x) = get_bool_prop(&props, "flip_x", None) {
-//             widget.set_property("flip-x", flip_x);
-//         }
+        if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
+            if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
+                return Err(anyhow!("Property thickness can only be used with line graphs"));
+            }
 
-//         // flip-y - whether the y axis should go from high to low
-//         if let Ok(flip_y) = get_bool_prop(&props, "flip_y", None) {
-//             widget.set_property("flip-y", flip_y);
-//         }
+            widget.set_property("thickness", thickness);
+        }
 
-//         // vertical - if set to true, the x and y axes will be exchanged
-//         if let Ok(vertical) = get_bool_prop(&props, "vertical", None) {
-//             widget.set_property("vertical", vertical);
-//         }
+        if let Ok(line_style) = get_string_prop(&props, "line_style", None) {
+            if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
+                return Err(anyhow!("Property line-style can only be used with line graphs"));
+            }
 
-//         Ok(())
-//     };
+            match parse_graph_line_style(line_style.as_str()) {
+                Ok(ls) => widget.set_property("line-style", ls),
+                Err(e) => return Err(anyhow!("Failed to parse graph line-style property: {}", e)),
+            };
+        }
 
-//     apply_props(&props, &widget)?;
+        // flip-x - whether the x axis should go from high to low
+        if let Ok(flip_x) = get_bool_prop(&props, "flip_x", None) {
+            widget.set_property("flip-x", flip_x);
+        }
 
-//     let widget_clone = widget.clone();
-//     let update_fn: UpdateFn = Box::new(move |props: &Map| {
-//         let _ = apply_props(props, &widget_clone);
+        // flip-y - whether the y axis should go from high to low
+        if let Ok(flip_y) = get_bool_prop(&props, "flip_y", None) {
+            widget.set_property("flip-y", flip_y);
+        }
 
-//         // now re-apply generic widget attrs
-//         if let Err(err) =
-//             resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk4::Widget>(), &props)
-//         {
-//             eprintln!("Failed to update widget attrs: {:?}", err);
-//         }
-//     });
+        // vertical - if set to true, the x and y axes will be exchanged
+        if let Ok(vertical) = get_bool_prop(&props, "vertical", None) {
+            widget.set_property("vertical", vertical);
+        }
 
-//     let id = hash_props_and_type(&props, "Graph");
+        if let Ok(animate) = get_bool_prop(&props, "animate", None) {
+            widget.set_property("animate", animate);
+        }
 
-//     widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
+        Ok(())
+    };
 
-//     resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    apply_props(&props, &widget)?;
 
-//     Ok(widget)
-// }
+    let widget_clone = widget.clone();
+    let update_fn: UpdateFn = Box::new(move |props: &Map| {
+        let _ = apply_props(props, &widget_clone);
+
+        // now re-apply generic widget attrs
+        if let Err(err) =
+            resolve_rhai_widget_attrs(&widget_clone.clone().upcast::<gtk4::Widget>(), &props)
+        {
+            eprintln!("Failed to update widget attrs: {:?}", err);
+        }
+    });
+
+    let id = hash_props_and_type(&props, "Graph");
+
+    widget_registry.widgets.insert(id, WidgetEntry { update_fn, widget: widget.clone().upcast() });
+
+    resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
+
+    Ok(widget)
+}
 
 pub(super) fn build_gtk_progress(
     props: &Map,
