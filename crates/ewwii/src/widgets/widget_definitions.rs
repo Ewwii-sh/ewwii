@@ -1591,8 +1591,8 @@ pub(super) fn build_icon(props: &Map, widget_registry: &mut WidgetRegistry) -> R
 
     let apply_props = |props: &Map, widget: &gtk4::Image| -> Result<()> {
         let path = get_string_prop(&props, "path", None)?;
-        let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
-        let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
+        let icon_width = get_i32_prop(&props, "icon_width", Some(-1))?;
+        let icon_height = get_i32_prop(&props, "icon_height", Some(-1))?;
         let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
         let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
 
@@ -1636,8 +1636,8 @@ pub(super) fn build_icon(props: &Map, widget_registry: &mut WidgetRegistry) -> R
                 ));
                 pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
                     &stream,
-                    image_width,
-                    image_height,
+                    icon_width,
+                    icon_height,
                     preserve_aspect_ratio,
                     None::<&gtk4::gio::Cancellable>,
                 )?;
@@ -1645,8 +1645,8 @@ pub(super) fn build_icon(props: &Map, widget_registry: &mut WidgetRegistry) -> R
             } else {
                 pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
                     std::path::PathBuf::from(path),
-                    image_width,
-                    image_height,
+                    icon_width,
+                    icon_height,
                     preserve_aspect_ratio,
                 )?;
             }
