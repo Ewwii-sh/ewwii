@@ -1492,14 +1492,14 @@ pub(super) fn build_image(
 
     let apply_props = |props: &Map, widget: &gtk4::Picture| -> Result<()> {
         let path = get_string_prop(&props, "path", None)?;
-        let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
-        let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
         let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
-        let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
 
-        if !path.ends_with(".svg") && !fill_svg.is_empty() {
-            log::warn!("Fill attribute ignored, file is not an svg image");
-        }
+        widget.set_content_fit(if preserve_aspect_ratio {
+            gtk4::ContentFit::Contain
+        } else {
+            gtk4::ContentFit::Fill
+        });
+        widget.set_can_shrink(true);
 
         if path.ends_with(".gif") {
             let pixbuf_animation =
@@ -1524,38 +1524,8 @@ pub(super) fn build_image(
                 });
             }
         } else {
-            let pixbuf;
-            // populate the pixel buffer
-            if path.ends_with(".svg") && !fill_svg.is_empty() {
-                let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
-                // The fastest way to add/change fill color
-                let svg_data = if svg_data.contains("fill=") {
-                    let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
-                    reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
-                } else {
-                    let reg = regex::Regex::new(r"<svg")?;
-                    reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
-                };
-                let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
-                    svg_data.as_bytes(),
-                ));
-                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                    &stream,
-                    image_width,
-                    image_height,
-                    preserve_aspect_ratio,
-                    None::<&gtk4::gio::Cancellable>,
-                )?;
-                stream.close(None::<&gtk4::gio::Cancellable>)?;
-            } else {
-                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
-                    std::path::PathBuf::from(path),
-                    image_width,
-                    image_height,
-                    preserve_aspect_ratio,
-                )?;
-            }
-            widget.set_pixbuf(Some(&pixbuf));
+            let file = gtk4::gio::File::for_path(&path);
+            widget.set_file(Some(&file));
         }
 
         Ok(())

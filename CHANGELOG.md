@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `transition_duration` property to stack widget.
 - `widget_control` utility function for dynamic widget handling.
 - `text` and `show_text` property to progressbar widget.
-- Improved image widget rendering.
+- Use built-in GTK image rendering feature on image widget.
 
 ### Changed
 
@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `clockwise` property not working on circular_progress.
+
+### Removed
+
+- `image_height` and `image_width` from image widget.
 
 ## [0.3.1] - 2025-11-01
 
