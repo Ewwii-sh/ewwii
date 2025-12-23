@@ -17,9 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `text` and `show_text` property to progressbar widget.
 - Use built-in GTK image rendering feature on image widget.
 
-### Changed
-
-- `image_width` and `image_height` property of icon to `icon_width` and `icon_height`.
 
 ### Fixed
 
@@ -27,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Removed
 
-- `image_height` and `image_width` from image widget.
+- icon widget.
+
 
 ## [0.3.1] - 2025-11-01
 
