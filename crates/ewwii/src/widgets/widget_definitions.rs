@@ -1492,15 +1492,12 @@ pub(super) fn build_image(
 
     let apply_props = |props: &Map, widget: &gtk4::Picture| -> Result<()> {
         let path = get_string_prop(&props, "path", None)?;
-        let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
+        let can_shrink = get_bool_prop(&props, "can_shrink", Some(true))?;
+        let content_fit_str = get_string_prop(&props, "content_fit", Some("contain"))?;
+        let content_fit = parse_content_fit(&content_fit_str)?;
 
-        widget.set_content_fit(if preserve_aspect_ratio {
-            gtk4::ContentFit::Contain
-        } else {
-            gtk4::ContentFit::Fill
-        });
-        widget.set_can_shrink(true);
-        widget.set_can_grow(true);
+        widget.set_content_fit(content_fit);
+        widget.set_can_shrink(can_shrink);
 
         if path.ends_with(".gif") {
             let pixbuf_animation =
