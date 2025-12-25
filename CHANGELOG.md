@@ -26,9 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Removed
 
 - icon widget.
-- `image_width` from image widget.
-- `image_height` from image widget.
-- `preserve_aspect_ratio` from image widget.
 
 ## [0.3.1] - 2025-11-01
 
