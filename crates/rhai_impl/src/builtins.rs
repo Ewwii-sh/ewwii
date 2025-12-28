@@ -101,7 +101,11 @@ pub fn register_all_widgets(
         "localsignal",
         move |props: Map| -> Result<LocalSignal, Box<EvalAltResult>> {
             let id = hash_props(&props);
-            let signal = Rc::new(LocalSignal { id, props, data: Arc::new(LocalDataBinder::new()) });
+            let signal = Rc::new(LocalSignal {
+                id,
+                props,
+                data: Arc::new(LocalDataBinder::new()),
+            });
 
             let signal_rc = register_signal(id, signal);
 
