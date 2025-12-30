@@ -202,6 +202,11 @@ impl WidgetRegistry {
     }
 
     pub fn update_props(&self, widget_id: u64, new_props: Map) {
+        let ei = get_bool_prop(&new_props, "eval_ignore", Some(false)).unwrap_or(false);
+        if ei {
+            return;
+        }
+
         if let Some(entry) = self.widgets.get(&widget_id) {
             (entry.update_fn)(&new_props);
         }
