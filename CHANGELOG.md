@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `text` and `show_text` property to progressbar widget.
 - `content_fit` property to image widget.
 - `can_shrink` property to image widget.
+- `mutations` property to localsignal.
+- `eval_ignore` property to all widgets.
 
 ### Fixed
 
