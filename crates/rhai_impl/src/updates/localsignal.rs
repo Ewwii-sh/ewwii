@@ -186,6 +186,7 @@ pub fn handle_localsignal_changes(
                                 Some(rc) => rc.borrow(),
                                 None => {
                                     log::warn!("No compiled AST available");
+                                    signal.data.set_value(&current);
                                     return;
                                 }
                             };
