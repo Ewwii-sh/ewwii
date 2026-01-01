@@ -181,16 +181,6 @@ pub fn handle_localsignal_changes(
                             let original = value.to_string();
                             let mut current = original.clone();
 
-                            let parser_rc = parser.borrow_mut();
-                            let compiled_ast = match ast.as_ref() {
-                                Some(rc) => rc.borrow(),
-                                None => {
-                                    log::warn!("No compiled AST available");
-                                    signal.data.set_value(&current);
-                                    return;
-                                }
-                            };
-
                             let mutations: Vec<rhai::FnPtr> = match signal.props.get("mutations") {
                                 Some(v) => {
                                     if let Ok(arr) = v.as_array_ref() {
@@ -208,6 +198,21 @@ pub fn handle_localsignal_changes(
                                     }
                                 }
                                 None => Vec::new(),
+                            };
+
+                            if mutations.is_empty() {
+                                signal.data.set_value(&current);
+                                return;
+                            }
+
+                            let parser_rc = parser.borrow_mut();
+                            let compiled_ast = match ast.as_ref() {
+                                Some(rc) => rc.borrow(),
+                                None => {
+                                    log::warn!("No compiled AST available");
+                                    signal.data.set_value(&current);
+                                    return;
+                                }
                             };
 
                             for mutation in mutations {
