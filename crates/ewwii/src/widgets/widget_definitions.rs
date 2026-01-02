@@ -2358,8 +2358,14 @@ pub(super) fn build_gtk_scale(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Scale> {
+    let orientation = props .get("orientation")
+        .and_then(|v| v.clone().try_cast::<String>())
+        .map(|s| parse_orientation(&s))
+        .transpose()? 
+        .unwrap_or(gtk4::Orientation::Horizontal); 
+
     let gtk_widget = gtk4::Scale::new(
-        gtk4::Orientation::Horizontal,
+        orientation,
         Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
     );
 
