@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `can_shrink` property to image widget.
 - `mutations` property to localsignal.
 - `eval_ignore` property to all widgets.
+- Touch support to scale widget.
 
 ### Fixed
 
