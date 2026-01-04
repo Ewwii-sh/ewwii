@@ -2385,10 +2385,12 @@ pub(super) fn build_gtk_scale(
         scale_dat,
         move |ctrl, event| {
             match event.event_type() {
-                gtk4::gdk::EventType::ButtonPress => {
+                gtk4::gdk::EventType::ButtonPress
+                | gtk4::gdk::EventType::TouchBegin => {
                     scale_dat.borrow_mut().is_being_dragged = true;
                 }
-                gtk4::gdk::EventType::ButtonRelease => {
+                gtk4::gdk::EventType::ButtonRelease
+                | gtk4::gdk::EventType::TouchEnd => {
                     let mut scale_dat_mut = scale_dat.borrow_mut();
                     scale_dat_mut.is_being_dragged = false;
 
