@@ -1,5 +1,6 @@
-use super::{get_prefered_shell, handle_listen, handle_poll};
+use super::{handle_listen, handle_poll};
 use crate::parser::ParseConfig;
+use crate::updates::SHELL_NAME;
 use gtk4::glib;
 use gtk4::prelude::*;
 use gtk4::subclass::prelude::*;
@@ -122,7 +123,7 @@ pub fn handle_localsignal_changes(
     parser: Rc<RefCell<ParseConfig>>,
     ast: Option<Rc<RefCell<rhai::AST>>>,
 ) {
-    let shell = get_prefered_shell();
+    let shell = SHELL_NAME.to_string();
     let get_string_fn = shared_utils::extract_props::get_string_prop;
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
     let store = Arc::new(RwLock::new(HashMap::new()));

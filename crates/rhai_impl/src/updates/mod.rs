@@ -24,7 +24,6 @@ use crate::ast::WidgetNode;
 use listen::handle_listen;
 use once_cell::sync::Lazy;
 use poll::handle_poll;
-use std::process::Command;
 use std::sync::Mutex;
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
 use tokio::sync::mpsc::UnboundedSender;
@@ -34,22 +33,23 @@ pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
 
-pub fn get_prefered_shell() -> String {
-    // Check Dash and prefer if dash is installed.
-    let dash_installed: bool =
-        Command::new("which").arg("dash").output().map(|o| o.status.success()).unwrap_or(false);
+// Detect dash if installed as static variable
+pub static SHELL_NAME: Lazy<String> = Lazy::new(|| {
+    let is_dash_installed = std::path::Path::new("/bin/dash").exists();
 
-    let shell = if dash_installed { String::from("/bin/dash") } else { String::from("/bin/sh") };
-
-    shell
-}
+    if is_dash_installed {
+        "/bin/dash".to_string()
+    } else {
+        "/bin/sh".to_string()
+    }
+});
 
 pub fn handle_state_changes(
     root_node: &WidgetNode,
     tx: UnboundedSender<String>,
     store: ReactiveVarStore,
 ) {
-    let shell = get_prefered_shell();
+    let shell = SHELL_NAME.to_string();
     if let WidgetNode::Enter(children) = root_node {
         for child in children {
             match child {
