@@ -5,7 +5,7 @@
 
 <img src="./.github/EwwiiLogo.png" height="100" align="left"/>
 
-Elkowars Wacky Widgets Imporved Interface is a fork of Elkowars Wacky Widgets which is a standalone widget system made in Rust that allows you to implement your own, custom widgets in any window manager.
+Elkowars Wacky Widgets Improved Interface is a fork of Elkowars Wacky Widgets which is a standalone widget system made in Rust that allows you to implement your own, custom widgets in any window manager.
 
 ## Examples
 
