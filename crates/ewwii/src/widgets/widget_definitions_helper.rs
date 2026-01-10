@@ -345,3 +345,14 @@ unsafe fn list_interface_properties(iface_type: glib::Type) -> Vec<glib::ParamSp
 
     props
 }
+
+/// Picture widget
+pub(super) fn parse_content_fit(cf: &str) -> Result<gtk4::ContentFit> {
+    match cf.to_ascii_lowercase().as_str() {
+        "fill" => Ok(gtk4::ContentFit::Fill),
+        "contain" => Ok(gtk4::ContentFit::Contain),
+        "cover" => Ok(gtk4::ContentFit::Cover),
+        "scaledown" => Ok(gtk4::ContentFit::ScaleDown),
+        _ => Err(anyhow!("Invalid content fit: '{}'", cf)),
+    }
+}

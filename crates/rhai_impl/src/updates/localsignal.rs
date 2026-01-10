@@ -1,4 +1,5 @@
 use super::{get_prefered_shell, handle_listen, handle_poll};
+use crate::parser::ParseConfig;
 use gtk4::glib;
 use gtk4::prelude::*;
 use gtk4::subclass::prelude::*;
@@ -117,7 +118,10 @@ pub fn notify_all_localsignals() {
     });
 }
 
-pub fn handle_localsignal_changes() {
+pub fn handle_localsignal_changes(
+    parser: Rc<RefCell<ParseConfig>>,
+    ast: Option<Rc<RefCell<rhai::AST>>>,
+) {
     let shell = get_prefered_shell();
     let get_string_fn = shared_utils::extract_props::get_string_prop;
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
@@ -174,7 +178,62 @@ pub fn handle_localsignal_changes() {
                         let mut registry_ref = registry.borrow_mut();
 
                         if let Some(signal) = registry_ref.get_mut(&id) {
-                            signal.data.set_value(&value);
+                            let original = value.to_string();
+                            let mut current = original.clone();
+
+                            let mutations: Vec<rhai::FnPtr> = match signal.props.get("mutations") {
+                                Some(v) => {
+                                    if let Ok(arr) = v.as_array_ref() {
+                                        arr.iter()
+                                            .filter_map(|item| {
+                                                item.clone().try_cast::<rhai::FnPtr>().or_else(|| {
+                                                    log::warn!("Non-function found in signal.props.mutations");
+                                                    None
+                                                })
+                                            })
+                                            .collect()
+                                    } else {
+                                        log::warn!("Localsignal mutations property is not an array");
+                                        Vec::new()
+                                    }
+                                }
+                                None => Vec::new(),
+                            };
+
+                            if mutations.is_empty() {
+                                signal.data.set_value(&current);
+                                return;
+                            }
+
+                            let parser_rc = parser.borrow_mut();
+                            let compiled_ast = match ast.as_ref() {
+                                Some(rc) => rc.borrow(),
+                                None => {
+                                    log::warn!("No compiled AST available");
+                                    signal.data.set_value(&current);
+                                    return;
+                                }
+                            };
+
+                            for mutation in mutations {
+                                match mutation.call::<String>(&parser_rc.engine, &compiled_ast, (current.clone(),)) {
+                                    Ok(v) => {
+                                        current = v;
+                                    }
+
+                                    Err(e) => {
+                                        log::warn!(
+                                            "Signal {} mutation failed ({}), reverting to original value",
+                                            id,
+                                            e
+                                        );
+                                        current = original.clone();
+                                        break;
+                                    }
+                                }
+                            }
+
+                            signal.data.set_value(&current);
                         } else {
                             log::warn!("No LocalSignal found for id {}", id);
                         }

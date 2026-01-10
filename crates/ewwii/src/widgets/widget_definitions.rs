@@ -203,6 +203,11 @@ impl WidgetRegistry {
     }
 
     pub fn update_props(&self, widget_id: u64, new_props: Map) {
+        let ei = get_bool_prop(&new_props, "eval_ignore", Some(false)).unwrap_or(false);
+        if ei {
+            return;
+        }
+
         if let Some(entry) = self.widgets.get(&widget_id) {
             (entry.update_fn)(&new_props);
         }
@@ -1521,6 +1526,9 @@ pub(super) fn build_image(
 
     let apply_props = |props: &Map, widget: &gtk4::Picture| -> Result<()> {
         let path = get_string_prop(&props, "path", None)?;
+        let can_shrink = get_bool_prop(&props, "can_shrink", Some(true))?;
+        let content_fit_str = get_string_prop(&props, "content_fit", Some("contain"))?;
+        let content_fit = parse_content_fit(&content_fit_str)?;
         let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
         let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
         let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
@@ -1529,6 +1537,9 @@ pub(super) fn build_image(
         if !path.ends_with(".svg") && !fill_svg.is_empty() {
             log::warn!("Fill attribute ignored, file is not an svg image");
         }
+
+        widget.set_content_fit(content_fit);
+        widget.set_can_shrink(can_shrink);
 
         if path.ends_with(".gif") {
             let pixbuf_animation =
@@ -1585,105 +1596,6 @@ pub(super) fn build_image(
                 )?;
             }
             widget.set_pixbuf(Some(&pixbuf));
-        }
-
-        Ok(())
-    };
-
-    apply_props(&props, &gtk_widget)?;
-
-    let gtk_widget_clone = gtk_widget.clone();
-    let update_fn: UpdateFn = Box::new(move |props: &Map| {
-        let _ = apply_props(props, &gtk_widget_clone);
-
-        // now re-apply generic widget attrs
-        if let Err(err) =
-            resolve_rhai_widget_attrs(&gtk_widget_clone.clone().upcast::<gtk4::Widget>(), &props)
-        {
-            eprintln!("Failed to update widget attrs: {:?}", err);
-        }
-    });
-
-    let id = hash_props_and_type(&props, "Image");
-
-    widget_registry
-        .widgets
-        .insert(id, WidgetEntry { update_fn, widget: gtk_widget.clone().upcast() });
-
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
-
-    Ok(gtk_widget)
-}
-
-pub(super) fn build_icon(props: &Map, widget_registry: &mut WidgetRegistry) -> Result<gtk4::Image> {
-    let gtk_widget = gtk4::Image::new();
-
-    let apply_props = |props: &Map, widget: &gtk4::Image| -> Result<()> {
-        let path = get_string_prop(&props, "path", None)?;
-        let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
-        let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
-        let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
-        let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
-
-        if !path.ends_with(".svg") && !fill_svg.is_empty() {
-            log::warn!("Fill attribute ignored, file is not an svg image");
-        }
-
-        if path.ends_with(".gif") {
-            let pixbuf_animation =
-                gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-            let iter = pixbuf_animation.iter(None);
-
-            let frame_pixbuf = iter.pixbuf();
-            widget.set_from_pixbuf(Some(&frame_pixbuf));
-
-            let widget_clone = widget.clone();
-
-            if let Some(delay) = iter.delay_time() {
-                glib::timeout_add_local(delay, move || {
-                    let frame_pixbuf = iter.pixbuf();
-                    widget_clone.set_from_pixbuf(Some(&frame_pixbuf));
-
-                    glib::ControlFlow::Continue
-                });
-            }
-        } else {
-            let pixbuf;
-            // populate the pixel buffer
-            if path.ends_with(".svg") && !fill_svg.is_empty() {
-                let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
-                // The fastest way to add/change fill color
-                let svg_data = if svg_data.contains("fill=") {
-                    let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
-                    reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
-                } else {
-                    let reg = regex::Regex::new(r"<svg")?;
-                    reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
-                };
-                let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
-                    svg_data.as_bytes(),
-                ));
-                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                    &stream,
-                    image_width,
-                    image_height,
-                    preserve_aspect_ratio,
-                    None::<&gtk4::gio::Cancellable>,
-                )?;
-                stream.close(None::<&gtk4::gio::Cancellable>)?;
-            } else {
-                pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
-                    std::path::PathBuf::from(path),
-                    image_width,
-                    image_height,
-                    preserve_aspect_ratio,
-                )?;
-            }
-            widget.set_from_pixbuf(Some(&pixbuf));
-        }
-
-        if let Ok(icon_name) = get_string_prop(&props, "icon", None) {
-            widget.set_icon_name(Some(&icon_name));
         }
 
         Ok(())
@@ -2475,8 +2387,14 @@ pub(super) fn build_gtk_scale(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Scale> {
+    let orientation = props .get("orientation")
+        .and_then(|v| v.clone().try_cast::<String>())
+        .map(|s| parse_orientation(&s))
+        .transpose()? 
+        .unwrap_or(gtk4::Orientation::Horizontal); 
+
     let gtk_widget = gtk4::Scale::new(
-        gtk4::Orientation::Horizontal,
+        orientation,
         Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
     );
 
@@ -2496,10 +2414,12 @@ pub(super) fn build_gtk_scale(
         scale_dat,
         move |ctrl, event| {
             match event.event_type() {
-                gtk4::gdk::EventType::ButtonPress => {
+                gtk4::gdk::EventType::ButtonPress
+                | gtk4::gdk::EventType::TouchBegin => {
                     scale_dat.borrow_mut().is_being_dragged = true;
                 }
-                gtk4::gdk::EventType::ButtonRelease => {
+                gtk4::gdk::EventType::ButtonRelease
+                | gtk4::gdk::EventType::TouchEnd => {
                     let mut scale_dat_mut = scale_dat.borrow_mut();
                     scale_dat_mut.is_being_dragged = false;
 

@@ -26,7 +26,7 @@ derive_more = { version = "1", features = [
 extend = "1.2"
 futures = "0.3.30"
 grass = "0.13.4"
-gtk4 = { version = "0.10.3", features = ["v4_18"] }
+gtk4 = { version = "0.10.3", features = ["v4_18", "v4_8"] }
 itertools = "0.13.0"
 libc = "0.2"
 log = "0.4"

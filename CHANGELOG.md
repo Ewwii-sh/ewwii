@@ -20,10 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - `v4_18` feature flag for to the `gtk4` crate to enable newer APIs.
+- `content_fit` property to image widget.
+- `can_shrink` property to image widget.
+- `mutations` property to localsignal.
+- `eval_ignore` property to all widgets.
+- Touch support to scale widget.
 
 ### Fixed
 
 - `clockwise` property not working on circular_progress.
+
+### Removed
+
+- icon widget.
 
 ## [0.3.1] - 2025-11-01
 
