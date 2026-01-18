@@ -56,13 +56,12 @@
 
             nativeBuildInputs = with pkgs; [
               pkg-config
-              wrapGAppsHook
+              wrapGAppsHook4
             ];
             buildInputs = with pkgs; [
-              gtk3
+              gtk4
               librsvg
-              gtk-layer-shell
-              libdbusmenu-gtk3
+              gtk4-layer-shell
             ];
           };
 
