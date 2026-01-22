@@ -2358,16 +2358,15 @@ pub(super) fn build_gtk_scale(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Scale> {
-    let orientation = props .get("orientation")
+    let orientation = props
+        .get("orientation")
         .and_then(|v| v.clone().try_cast::<String>())
         .map(|s| parse_orientation(&s))
-        .transpose()? 
-        .unwrap_or(gtk4::Orientation::Horizontal); 
+        .transpose()?
+        .unwrap_or(gtk4::Orientation::Horizontal);
 
-    let gtk_widget = gtk4::Scale::new(
-        orientation,
-        Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
-    );
+    let gtk_widget =
+        gtk4::Scale::new(orientation, Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
 
     // only allow changing the value via the value property if the user isn't currently dragging
     let scale_dat = Rc::new(RefCell::new(RangeCtrlData {
@@ -2385,12 +2384,10 @@ pub(super) fn build_gtk_scale(
         scale_dat,
         move |ctrl, event| {
             match event.event_type() {
-                gtk4::gdk::EventType::ButtonPress
-                | gtk4::gdk::EventType::TouchBegin => {
+                gtk4::gdk::EventType::ButtonPress | gtk4::gdk::EventType::TouchBegin => {
                     scale_dat.borrow_mut().is_being_dragged = true;
                 }
-                gtk4::gdk::EventType::ButtonRelease
-                | gtk4::gdk::EventType::TouchEnd => {
+                gtk4::gdk::EventType::ButtonRelease | gtk4::gdk::EventType::TouchEnd => {
                     let mut scale_dat_mut = scale_dat.borrow_mut();
                     scale_dat_mut.is_being_dragged = false;
 
