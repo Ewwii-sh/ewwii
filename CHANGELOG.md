@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `clockwise` property not working on circular_progress.
+- picture widget not rendering at full resolution.
 
 ### Removed
 

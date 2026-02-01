@@ -1535,7 +1535,9 @@ pub(super) fn build_image(
                 });
             }
         } else {
+            let scale = widget.scale_factor();
             let pixbuf;
+
             // populate the pixel buffer
             if path.ends_with(".svg") && !fill_svg.is_empty() {
                 let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
@@ -1552,17 +1554,20 @@ pub(super) fn build_image(
                 ));
                 pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
                     &stream,
-                    image_width,
-                    image_height,
+                    image_width * scale,
+                    image_height * scale,
                     preserve_aspect_ratio,
                     None::<&gtk4::gio::Cancellable>,
                 )?;
                 stream.close(None::<&gtk4::gio::Cancellable>)?;
             } else {
+                let width = if image_width > 0 { image_width * scale } else { -1 };
+                let height = if image_height > 0 { image_height * scale } else { -1 };
+
                 pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
                     std::path::PathBuf::from(path),
-                    image_width,
-                    image_height,
+                    width,
+                    height,
                     preserve_aspect_ratio,
                 )?;
             }
