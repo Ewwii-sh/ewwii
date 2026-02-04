@@ -260,6 +260,16 @@ pub enum WidgetControlAction {
         parent_name: String,
     },
 
+    /// Get a property value of a widget by name
+    PropertyGet {
+        /// Name of the property
+        property: String,
+
+        /// Name of the widget to get the property of
+        #[arg(long = "widget", short = 'w')]
+        widget_name: String,
+    },
+
     /// Update properties of a widget by name
     PropertyUpdate {
         /// Properties and its value
