@@ -369,7 +369,7 @@ impl<B: DisplayBackend> App<B> {
             }
             DaemonCommand::WidgetControl { action, sender } => {
                 match self.perform_widget_control(action) {
-                    Ok(_) => sender.send_success(String::new())?,
+                    Ok(s) => sender.send_success(s)?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
@@ -766,7 +766,7 @@ impl<B: DisplayBackend> App<B> {
     pub fn perform_widget_control(
         &mut self,
         action: crate::opts::WidgetControlAction,
-    ) -> Result<()> {
+    ) -> Result<String> {
         match action {
             crate::opts::WidgetControlAction::Remove { names } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
@@ -802,6 +802,24 @@ impl<B: DisplayBackend> App<B> {
                     } else {
                         log::error!("Failed to acquire lock on widget registry");
                     }
+                }
+            }
+            crate::opts::WidgetControlAction::PropertyGet {
+                property,
+                widget_name,
+            } => {
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        let property_value = widget_registry.get_property_by_name(
+                            &widget_name,
+                            &property,
+                        ).unwrap_or(String::new());
+                        return Ok(property_value)
+                    } else {
+                        log::error!("Widget registry is empty");
+                    }
+                } else {
+                    log::error!("Failed to acquire lock on widget registry");
                 }
             }
             crate::opts::WidgetControlAction::PropertyUpdate {
@@ -847,7 +865,7 @@ impl<B: DisplayBackend> App<B> {
             }
         }
 
-        Ok(())
+        Ok(String::new())
     }
 
     /// Trigger a UI update with the given flags.
