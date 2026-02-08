@@ -241,15 +241,9 @@ impl WidgetRegistry {
             .map(|(&id, _)| id)
     }
 
-    pub fn get_property_by_name(
-        &self,
-        widget_name: &str,
-        property: &str,
-    ) -> Option<String> {
-        let entry = self
-            .widgets
-            .values()
-            .find(|entry| entry.widget.widget_name() == widget_name)?;
+    pub fn get_property_by_name(&self, widget_name: &str, property: &str) -> Option<String> {
+        let entry =
+            self.widgets.values().find(|entry| entry.widget.widget_name() == widget_name)?;
 
         Some(entry.widget.property(property))
     }
