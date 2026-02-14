@@ -67,7 +67,7 @@ impl EwwiiConfig {
         let mut window_definitions = HashMap::new();
         let config_tree_clone = config_tree.clone();
 
-        if let WidgetNode::Enter(children) = config_tree_clone {
+        if let WidgetNode::Tree(children) = config_tree_clone {
             for node in children {
                 if let WidgetNode::DefWindow { name, props, node } = node {
                     let backend_options = BackendWindowOptionsDef::from_map(&props)?;

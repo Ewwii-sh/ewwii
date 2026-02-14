@@ -50,7 +50,7 @@ pub fn handle_state_changes(
     store: ReactiveVarStore,
 ) {
     let shell = get_prefered_shell();
-    if let WidgetNode::Enter(children) = root_node {
+    if let WidgetNode::Tree(children) = root_node {
         for child in children {
             match child {
                 WidgetNode::Poll { var, props } => {

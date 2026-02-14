@@ -81,8 +81,8 @@ impl WidgetNode {
             },
 
             // == Top-level container for multiple widgets ==
-            WidgetNode::Enter(children) => {
-                WidgetNode::Enter(process_children(children, parent_path, "enter"))
+            WidgetNode::Tree(children) => {
+                WidgetNode::Tree(process_children(children, parent_path, "tree"))
             }
 
             // == Poll/Listen nodes ==
