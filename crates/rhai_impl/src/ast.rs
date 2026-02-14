@@ -43,7 +43,7 @@ pub enum WidgetNode {
     // Listen { var: String, signal: String },
     Poll { var: String, props: Map },
     Listen { var: String, props: Map },
-    Enter(Vec<WidgetNode>),
+    Tree(Vec<WidgetNode>),
 }
 
 #[derive(Clone)]
@@ -62,7 +62,7 @@ pub fn get_id_to_widget_info<'a>(
 ) -> Result<()> {
     match node {
         // == Special Cases == //
-        WidgetNode::Enter(children) => {
+        WidgetNode::Tree(children) => {
             for child in children {
                 get_id_to_widget_info(child, id_to_props, parent_id)?;
             }

@@ -132,10 +132,10 @@ pub fn register_all_widgets(
 
     let all_nodes_clone = all_nodes.clone();
     engine.register_fn(
-        "enter",
+        "tree",
         move |ctx: NativeCallContext, children: Array| -> Result<(), Box<EvalAltResult>> {
             let children_vec = children_to_vec(children, &ctx)?;
-            let node = WidgetNode::Enter(children_vec);
+            let node = WidgetNode::Tree(children_vec);
 
             all_nodes_clone.borrow_mut().push(node);
 

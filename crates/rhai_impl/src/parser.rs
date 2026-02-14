@@ -74,22 +74,22 @@ impl ParseConfig {
         // Retain signals
         crate::updates::retain_signals(&self.keep_signal.borrow());
 
-        // Merge all nodes in all_nodes (`enter([])`) into a single root node
+        // Merge all nodes in all_nodes (`tree([])`) into a single root node
         let merged_node = {
             let mut all_nodes_vec = self.all_nodes.borrow_mut();
 
             let mut merged_children = Vec::new();
             for node in all_nodes_vec.drain(..) {
                 match node {
-                    WidgetNode::Enter(children) => merged_children.extend(children),
+                    WidgetNode::Tree(children) => merged_children.extend(children),
                     // I think that the following line is redundant as
-                    // it will be enter(..) 100% of the time. But, what if it
-                    // is an empty enter or smth? Idk.. it works... so I'll keep it.
+                    // it will be tree(..) 100% of the time. But, what if it
+                    // is an empty tree or smth? Idk.. it works... so I'll keep it.
                     other => merged_children.push(other),
                 }
             }
 
-            WidgetNode::Enter(merged_children)
+            WidgetNode::Tree(merged_children)
         };
 
         Ok(merged_node.setup_dyn_ids("root"))

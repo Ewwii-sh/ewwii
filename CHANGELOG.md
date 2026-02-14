@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `eval_ignore` property to all widgets.
 - Touch support to scale widget.
 
+### Changed
+
+- Renamed `enter` function to `tree`.
+
 ### Fixed
 
 - `clockwise` property not working on circular_progress.
