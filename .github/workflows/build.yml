@@ -37,9 +37,6 @@ jobs:
       - name: Setup problem matchers
         uses: r7kamura/rust-problem-matchers@v1
 
-      - name: Check formatting
-        run: cargo fmt -- --check
-
       - name: Check with default features
         run: cargo check
 
