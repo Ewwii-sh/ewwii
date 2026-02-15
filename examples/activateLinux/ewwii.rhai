@@ -1,4 +1,4 @@
-enter([
+tree([
   defwindow(
     "activate linux",
     #{

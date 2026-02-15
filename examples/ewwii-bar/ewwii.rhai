@@ -76,7 +76,7 @@ fn metric(props) {
   ]);
 }
 
-enter([
+tree([
   listen("music_var", #{
     initial: "",
     cmd: "echo Playing Ewwii",
