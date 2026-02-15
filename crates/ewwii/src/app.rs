@@ -809,8 +809,12 @@ impl<B: DisplayBackend> App<B> {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         let property_value = widget_registry
                             .get_property_by_name(&widget_name, &property)
-                            .unwrap_or(String::new());
-                        return Ok(property_value);
+                            .ok_or_else(|| anyhow::anyhow!(
+                                "Property '{}' not found or wrong type",
+                                property
+                            ))?;
+
+                        return Ok(property_value)
                     } else {
                         log::error!("Widget registry is empty");
                     }
