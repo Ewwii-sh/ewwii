@@ -65,7 +65,7 @@ fn layout(stringArray, object, selected) {
     ]);
 }
 
-enter([
+tree([
     // Track the selected emoji
     listen("selected", #{
         cmd: "scripts/readlast_and_truncate.sh",
