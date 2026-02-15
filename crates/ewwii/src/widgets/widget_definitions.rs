@@ -242,10 +242,29 @@ impl WidgetRegistry {
     }
 
     pub fn get_property_by_name(&self, widget_name: &str, property: &str) -> Option<String> {
-        let entry =
-            self.widgets.values().find(|entry| entry.widget.widget_name() == widget_name)?;
+        let entry = self.widgets
+            .values()
+            .find(|entry| entry.widget.widget_name() == widget_name)?;
 
-        Some(entry.widget.property(property))
+        let value: glib::Value = entry.widget.property_value(property);
+
+        if let Ok(s) = value.get::<String>() {
+            return Some(s);
+        }
+
+        if let Ok(b) = value.get::<bool>() {
+            return Some(b.to_string());
+        }
+
+        if let Ok(i) = value.get::<i32>() {
+            return Some(i.to_string());
+        }
+
+        if let Ok(f) = value.get::<f64>() {
+            return Some(f.to_string());
+        }
+
+        None
     }
 
     pub fn update_property_by_name(
