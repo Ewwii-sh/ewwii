@@ -46,6 +46,8 @@ This project is a fork of [Eww](https://github.com/elkowar/eww) (MIT License).
 -   Original Eww code remains under MIT License (see `licenses/eww-MIT.txt`).
 -   Modifications and additions in this fork are licensed under GPL-3.0 (see `LICENSE`).
 
-## Widget
+## Stars
 
-https://en.wikipedia.org/wiki/Wikipedia:Widget
+If you find this project interesting, be sure to leave a star!
+
+![Star History](https://api.star-history.com/svg?repos=Ewwii-sh/ewwii&type=Date)
