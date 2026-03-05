@@ -141,8 +141,8 @@
 //     fn draw(&self, cr: &gtk4::cairo::Context) -> glib::Propagation {
 //         let res: Result<()> = (|| {
 //             let rotate = *self.rotate.borrow();
-//             let total_width = self.obj().allocated_width() as f64;
-//             let total_height = self.obj().allocated_height() as f64;
+//             let total_width = self.obj().width() as f64;
+//             let total_height = self.obj().height() as f64;
 
 //             cr.save()?;
 

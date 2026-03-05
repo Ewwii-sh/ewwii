@@ -4,8 +4,8 @@ use crate::{
     display_backend::DisplayBackend,
     error_handling_ctx,
     gtk4::prelude::{
-        Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt,
-        StyleContextExt, WidgetExt,
+        Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt, 
+        WidgetExt,
     },
     paths::EwwiiPaths,
     // dynval::DynVal,
@@ -501,7 +501,7 @@ impl<B: DisplayBackend> App<B> {
                 build_gtk_widget(&WidgetInput::Window(window_def), registry)?
             };
 
-            root_widget.style_context().add_class(window_name);
+            root_widget.add_css_class(window_name);
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
@@ -757,7 +757,7 @@ impl<B: DisplayBackend> App<B> {
 
     /// Load a given CSS string into the gtk css provider
     pub fn load_css(&mut self, _file_id: usize, css: &str) -> Result<()> {
-        self.css_provider.load_from_data(&css);
+        self.css_provider.load_from_string(&css);
 
         Ok(())
     }
@@ -1180,7 +1180,7 @@ fn initialize_window<B: DisplayBackend>(
         display_backend::set_xprops(&window, monitor, window_init)?;
     }
 
-    window.show();
+    window.present();
 
     Ok(EwwiiWindow {
         name: window_init.name.clone(),
