@@ -125,8 +125,8 @@ mod imp {
                 (perc_to_rad(100.0 - value), 2f64 * std::f64::consts::PI)
             };
 
-            let total_width = self.obj().allocated_width() as f64;
-            let total_height = self.obj().allocated_height() as f64;
+            let total_width = self.obj().width() as f64;
+            let total_height = self.obj().height() as f64;
             let center = (total_width / 2.0, total_height / 2.0);
 
             let circle_width = total_width - margin_start - margin_end;

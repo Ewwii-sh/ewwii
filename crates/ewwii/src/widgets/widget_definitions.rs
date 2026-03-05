@@ -303,9 +303,9 @@ impl WidgetRegistry {
         {
             if let Some(entry) = self.widgets.get(&id) {
                 if !remove {
-                    entry.widget.style_context().add_class(class);
+                    entry.widget.add_css_class(class);
                 } else {
-                    entry.widget.style_context().remove_class(class);
+                    entry.widget.remove_css_class(class);
                 }
             }
         }
@@ -1058,7 +1058,6 @@ pub(super) fn build_event_box(
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
     let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
     gtk_widget.append(&child_widget);
-    child_widget.show();
 
     let id = hash_props_and_type(&props, "EventBox");
 
@@ -1192,7 +1191,6 @@ pub(super) fn build_gtk_stack(
     for (i, child) in children.enumerate() {
         let child = child?;
         gtk_widget.add_named(&child, Some(&i.to_string()));
-        child.show();
     }
 
     let apply_props = |props: &Map, widget: &gtk4::Stack| -> Result<()> {
@@ -2059,6 +2057,7 @@ pub(super) fn build_gtk_calendar(
     Ok(gtk_widget)
 }
 
+#[allow(deprecated)]
 pub(super) fn build_gtk_combo_box_text(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
@@ -2150,7 +2149,6 @@ pub(super) fn build_gtk_expander(
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
     let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
     gtk_widget.set_child(Some(&child_widget));
-    child_widget.show();
 
     let apply_props = |props: &Map, widget: &gtk4::Expander| -> Result<()> {
         if let Ok(name) = get_string_prop(&props, "name", None) {
@@ -2301,6 +2299,7 @@ pub(super) fn build_gtk_checkbox(
     Ok(gtk_widget)
 }
 
+#[allow(deprecated)]
 pub(super) fn build_gtk_color_button(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
@@ -2354,6 +2353,7 @@ pub(super) fn build_gtk_color_button(
     Ok(gtk_widget)
 }
 
+#[allow(deprecated)]
 pub(super) fn build_gtk_color_chooser(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
@@ -2570,7 +2570,6 @@ pub(super) fn build_gtk_scrolledwindow(
     let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
     let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
     gtk_widget.set_child(Some(&child_widget));
-    child_widget.show();
 
     let id = hash_props_and_type(&props, "ScrolledWindow");
 
@@ -2600,24 +2599,18 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
 
     // Handle visibility
     let visible = get_bool_prop(&props, "visible", Some(true))?;
-    if visible {
-        gtk_widget.show();
-    } else {
-        gtk_widget.hide();
-    }
+    gtk_widget.set_visible(visible);
 
     // Handle classes
     if let Ok(class_str) = get_string_prop(&props, "class", None) {
-        let style_context = gtk_widget.style_context();
-
         // remove all classes
         for class in gtk_widget.css_classes() {
-            style_context.remove_class(&class);
+            gtk_widget.remove_css_class(&class);
         }
 
         // then apply the classes
         for class in class_str.split_whitespace() {
-            style_context.add_class(class);
+            gtk_widget.add_css_class(class);
         }
     }
 
@@ -2626,12 +2619,12 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
 
     if let Ok(style_str) = get_string_prop(&props, "style", None) {
         let scss = format!("* {{ {} }}", style_str);
-        css_provider.load_from_data(&grass::from_string(scss, &grass::Options::default())?);
+        css_provider.load_from_string(&grass::from_string(scss, &grass::Options::default())?);
         gtk_widget.style_context().add_provider(&css_provider, 950);
     }
 
     if let Ok(css_str) = get_string_prop(&props, "css", None) {
-        css_provider2.load_from_data(&grass::from_string(css_str, &grass::Options::default())?);
+        css_provider2.load_from_string(&grass::from_string(css_str, &grass::Options::default())?);
         gtk_widget.style_context().add_provider(&css_provider2, 950);
     }
 
@@ -2655,13 +2648,13 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
     match (width, height) {
         (Some(w), Some(h)) => gtk_widget.set_size_request(w, h),
         (Some(w), None) => {
-            let h = gtk_widget.allocated_height();
+            let h = gtk_widget.height();
             if h > 0 {
                 gtk_widget.set_size_request(w, h);
             }
         }
         (None, Some(h)) => {
-            let w = gtk_widget.allocated_width();
+            let w = gtk_widget.width();
             if w > 0 {
                 gtk_widget.set_size_request(w, h);
             }
