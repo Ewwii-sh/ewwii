@@ -123,7 +123,7 @@ pub fn handle_localsignal_changes(
     ast: Option<Rc<RefCell<rhai::AST>>>,
 ) {
     let shell = get_prefered_shell();
-    let get_string_fn = shared_utils::extract_props::get_string_prop;
+    let get_string_fn = shared_utils::prop_utils::get_string_prop;
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
     let store = Arc::new(RwLock::new(HashMap::new()));
 

@@ -7,8 +7,9 @@ use crate::{
     providers::register_all_providers,
     updates::ReactiveVarStore,
 };
+use shared_utils::variables::GlobalVar;
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, ImmutableString, OptimizationLevel, Scope, AST};
+use rhai::{Dynamic, Engine, Module, ImmutableString, OptimizationLevel, Scope, AST};
 use std::cell::RefCell;
 use std::fs;
 use std::path::Path;
@@ -118,18 +119,21 @@ impl ParseConfig {
             .map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)
     }
 
-    pub fn initial_poll_listen_scope(code: &str) -> Result<Scope<'_>> {
-        // Setting the initial value of poll/listen
-        let mut scope = Scope::new();
-        for (var, initial) in extract_poll_and_listen_vars(code)? {
+    pub fn register_poll_listen_globals(&mut self, code: &str) -> Result<()> {
+        let mut global_module = Module::new();
+        self.engine.register_type::<GlobalVar>();
+        
+        for (name, initial) in extract_poll_and_listen_vars(code)? {
             let value = match initial {
-                Some(val) => Dynamic::from(val),
+                Some(v) => Dynamic::from(v),
                 None => Dynamic::UNIT,
             };
-            scope.set_value(var, value);
+            let glob_var = GlobalVar::from(name.clone(), value);
+            global_module.set_var(name, glob_var);
         }
-
-        Ok(scope)
+        
+        self.engine.register_global_module(global_module.into());
+        Ok(())
     }
 
     pub fn call_rhai_fn(&self, ast: &AST, expr: &str, scope: Option<&mut Scope>) -> Result<()> {

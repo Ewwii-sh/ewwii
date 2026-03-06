@@ -16,7 +16,7 @@
 
 use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
 use rhai::Map;
-use shared_utils::extract_props::*;
+use shared_utils::prop_utils::*;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::Command;

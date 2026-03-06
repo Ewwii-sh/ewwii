@@ -19,7 +19,7 @@ use nix::{
     unistd::{setpgid, Pid},
 };
 use rhai::Map;
-use shared_utils::extract_props::*;
+use shared_utils::prop_utils::*;
 use std::process::Stdio;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;

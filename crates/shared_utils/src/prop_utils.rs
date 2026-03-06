@@ -2,6 +2,14 @@ use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Map};
 use std::time::Duration;
 
+pub enum PropValue<T> {
+    Static(T),
+    Bound {
+        var_name: String,
+        initial: T,
+    },
+}
+
 /// General purpose helpers
 pub fn get_string_prop(props: &Map, key: &str, default: Option<&str>) -> Result<String> {
     if let Some(value) = props.get(key) {
