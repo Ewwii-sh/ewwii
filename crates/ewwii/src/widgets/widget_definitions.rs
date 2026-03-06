@@ -16,7 +16,7 @@ use rhai_impl::ast::{get_id_to_widget_info, hash_props_and_type, WidgetNode};
 use rhai_impl::updates::LocalSignal;
 
 use super::widget_definitions_helper::*;
-use shared_utils::extract_props::*;
+use shared_utils::prop_utils::*;
 use std::{
     cell::RefCell,
     collections::HashMap,

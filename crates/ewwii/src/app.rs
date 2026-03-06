@@ -545,93 +545,6 @@ impl<B: DisplayBackend> App<B> {
                     stored_parser_clone.clone(),
                     compiled_ast.clone(),
                 );
-
-                glib::MainContext::default().spawn_local(async move {
-                    let mut pending_updates = HashSet::new();
-
-                    while let Some(var_name) = rx.recv().await {
-                        pending_updates.insert(var_name);
-
-                        match b_interval {
-                            Some(i) => glib::timeout_future(Duration::from_millis(i)).await,
-                            None => {
-                                // short batching interval (1 frame)
-                                glib::timeout_future(Duration::from_millis(16)).await
-                            }
-                        }
-
-                        while let Ok(next_var) = rx.try_recv() {
-                            pending_updates.insert(next_var);
-                        }
-
-                        let vars = store.read().unwrap().clone();
-                        let mut parser_rc = stored_parser_clone.borrow_mut();
-                        let compiled_ast_ref = compiled_ast.as_ref().map(|rc| rc.borrow());
-                        match generate_new_widgetnode(
-                            &vars,
-                            &config_path,
-                            compiled_ast_ref.as_deref(),
-                            &mut *parser_rc,
-                        )
-                        .await
-                        {
-                            Ok(new_widget) => {
-                                if let Ok(mut maybe_registry) = widget_reg_store.lock() {
-                                    if let Some(registry) = maybe_registry.as_mut() {
-                                        let _ = registry.update_widget_tree(new_widget);
-                                    } else {
-                                        log::error!("WidgetRegistry is None inside async loop");
-                                    }
-                                } else {
-                                    log::error!("Failed to acquire lock on widget registry");
-                                }
-                            }
-                            Err(e) => {
-                                log::error!("Failed to generate new widgetnode: {:#}", e);
-                            }
-                        }
-
-                        pending_updates.clear();
-                    }
-
-                    log::debug!("Receiver loop exited");
-                });
-            } else {
-                // else, just update the window from the current store.
-                let widget_reg_store = self.widget_reg_store.clone();
-                let store = self.pl_handler_store.clone();
-
-                // notifiy localsignals
-                rhai_impl::updates::notify_all_localsignals();
-
-                glib::MainContext::default().spawn_local(async move {
-                    let vars = store.read().unwrap().clone();
-                    let mut parser_rc = stored_parser_clone.borrow_mut();
-                    let compiled_ast_ref = compiled_ast.as_ref().map(|rc| rc.borrow());
-                    match generate_new_widgetnode(
-                        &vars,
-                        &config_path,
-                        compiled_ast_ref.as_deref(),
-                        &mut *parser_rc,
-                    )
-                    .await
-                    {
-                        Ok(new_widget) => {
-                            if let Ok(mut maybe_registry) = widget_reg_store.lock() {
-                                if let Some(registry) = maybe_registry.as_mut() {
-                                    let _ = registry.update_widget_tree(new_widget);
-                                } else {
-                                    log::error!("WidgetRegistry is None inside async loop");
-                                }
-                            } else {
-                                log::error!("Failed to acquire lock on widget registry");
-                            }
-                        }
-                        Err(e) => {
-                            log::error!("Failed to generate new widgetnode: {:#}", e);
-                        }
-                    }
-                });
             }
 
             let gtk_close_handler = {
@@ -876,60 +789,7 @@ impl<B: DisplayBackend> App<B> {
         should_preserve_state: bool,
         lifetime: Option<String>,
     ) -> Result<()> {
-        let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-        let config_path = self.paths.get_rhai_path();
-
-        if !config_path.exists() {
-            bail!("The configuration file `{}` does not exist", config_path.display());
-        }
-
-        let mut reeval_parser = self.config_parser.borrow_mut();
-        let rhai_code = reeval_parser.code_from_file(&config_path)?;
-
-        let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
-
-        let all_vars = self.pl_handler_store.read().unwrap().clone();
-
-        for (name, val) in all_vars {
-            scope.set_value(name.clone(), Dynamic::from(val.clone()));
-        }
-
-        if let Some(vars) = inject_vars {
-            for (name, val) in vars {
-                scope.set_value(name.clone(), Dynamic::from(val.clone()));
-                let name_clone = name.clone();
-
-                // Preserving the new state.
-                // ---
-                // This is esstentially storing the inject variables
-                // in the poll/listen variable store (or the `pl_handler_store` in self)
-                if should_preserve_state {
-                    self.pl_handler_store.write().unwrap().insert(name, val);
-                    if let Some(win_name) = &lifetime {
-                        self.clear_pl_onclose.insert(win_name.clone(), name_clone);
-                    }
-                }
-            }
-        }
-
-        let compiled_ast_ref = compiled_ast.as_ref().map(|rc| rc.borrow());
-
-        let new_root_widget = reeval_parser.eval_code_with(
-            &rhai_code,
-            Some(scope),
-            compiled_ast_ref.as_deref(),
-            config_path.to_str(),
-        )?;
-
-        if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-            if let Some(widget_registry) = maybe_registry.as_mut() {
-                let _ = widget_registry.update_widget_tree(new_root_widget);
-            } else {
-                log::error!("Widget registry is empty");
-            }
-        } else {
-            log::error!("Failed to acquire lock on widget registry");
-        }
+        unimplemented!();
 
         Ok(())
     }
@@ -941,14 +801,12 @@ impl<B: DisplayBackend> App<B> {
         let mut reeval_parser = self.config_parser.borrow_mut();
         let rhai_code = reeval_parser.code_from_file(&config_path)?;
 
-        let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
-
         // unwrap Rc<RefCell<AST>>
         let ast_ref: &rhai::AST =
             &*compiled_ast.as_ref().ok_or_else(|| anyhow!("AST not compiled yet"))?.borrow();
 
         for fn_call in calls {
-            reeval_parser.call_rhai_fn(ast_ref, &fn_call, Some(&mut scope))?;
+            reeval_parser.call_rhai_fn(ast_ref, &fn_call, None)?;
         }
 
         Ok(())
@@ -1188,29 +1046,6 @@ fn initialize_window<B: DisplayBackend>(
         delete_event_handler_id: None,
         destroy_event_handler_id: None,
     })
-}
-
-async fn generate_new_widgetnode(
-    all_vars: &HashMap<String, String>,
-    code_path: &Path,
-    compiled_ast: Option<&rhai::AST>,
-    parser: &mut ParseConfig,
-) -> Result<WidgetNode> {
-    if !code_path.exists() {
-        bail!("The configuration file `{}` does not exist", code_path.display());
-    }
-
-    let rhai_code = parser.code_from_file(&code_path)?;
-
-    let mut scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
-    for (name, val) in all_vars {
-        scope.set_value(name.clone(), Dynamic::from(val.clone()));
-    }
-
-    let new_root_widget =
-        parser.eval_code_with(&rhai_code, Some(scope), compiled_ast, code_path.to_str())?;
-
-    Ok(new_root_widget)
 }
 
 fn get_opt_level_from(n: u8) -> rhai::OptimizationLevel {

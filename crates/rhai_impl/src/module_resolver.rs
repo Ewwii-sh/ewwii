@@ -68,27 +68,7 @@ impl ModuleResolver for SimpleFileResolver {
             None
         };
 
-        let mut scope = if let Some(ref script) = parent_script {
-            ParseConfig::initial_poll_listen_scope(script).map_err(|e| {
-                EvalAltResult::ErrorSystem(
-                    format!("error setting up default variables from {source_path:?}"),
-                    e.into(),
-                )
-            })?
-        } else {
-            Scope::new()
-        };
-
-        match &self.pl_handler_store {
-            Some(val) => {
-                let name_to_val: &HashMap<String, String> = &*val.read().unwrap();
-
-                for (name, val) in name_to_val {
-                    scope.set_value(name.clone(), Dynamic::from(val.clone()));
-                }
-            }
-            None => {}
-        }
+        let scope = rhai::Scope::new();
 
         let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {
             Box::new(EvalAltResult::ErrorSystem(
