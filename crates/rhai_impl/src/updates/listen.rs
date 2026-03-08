@@ -1,19 +1,4 @@
-/*
-    ┏━━━━━━━━━━━━━━━━━━━━━┓
-    ┃ Reference structure ┃
-    ┗━━━━━━━━━━━━━━━━━━━━━┛
-
-    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
-    pub struct ListenScriptVar {
-        pub name: VarName,
-        pub command: String,
-        pub initial_value: DynVal,
-        pub command_span: Span,
-        pub name_span: Span,
-    }
-*/
-
-use super::{ReactiveVarStore, SHUTDOWN_REGISTRY};
+use super::{GLOBAL_VAR_STORE, SHUTDOWN_REGISTRY, variable::VarWatcherAPI};
 use nix::{
     sys::signal,
     unistd::{setpgid, Pid},
@@ -31,27 +16,14 @@ pub fn handle_listen(
     var_name: String,
     props: &Map,
     shell: String,
-    store: ReactiveVarStore,
-    tx: tokio::sync::mpsc::UnboundedSender<String>,
 ) {
     let cmd = match get_string_prop(props, "cmd", Some("")) {
-        Ok(c) => c,
+        Ok(c) => unwrap_static("cmd", c),
         Err(e) => {
-            log::warn!("Listen {} missing cmd property: {}", var_name, e);
+            log::warn!("Listen {} cmd property either missing or invalid: {}", var_name, e);
             return;
         }
     };
-
-    // No need to do this as we apply the initial value before parsing
-    // Handle initial value
-    // if let Ok(initial) = get_string_prop(&props, "initial", None) {
-    //     log::debug!("[{}] initial value: {}", var_name, initial);
-    //     store.write().unwrap().insert(var_name.clone(), initial.clone());
-    //     let _ = tx.send(var_name.clone());
-    // }
-
-    let store = store.clone();
-    let tx = tx.clone();
 
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
@@ -80,7 +52,6 @@ pub fn handle_listen(
             Command::new(&shell)
                 .arg("-c")
                 .arg(&cmd)
-                // .kill_on_drop(true)
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .stdin(Stdio::null())
@@ -119,7 +90,6 @@ pub fn handle_listen(
 
                     #[cfg(target_os = "macos")]
                     {
-                        // Perhaps make it a TODO?
                         log::warn!("Parent-death signal is not supported on macOS system");
                     }
 
@@ -143,13 +113,13 @@ pub fn handle_listen(
                             if Some(&val) != last_value.as_ref() {
                                 last_value = Some(val.clone());
                                 log::debug!("[{}] listened value: {}", var_name, val);
-                                store.write().unwrap().insert(var_name.clone(), val);
-                                let _ = tx.send(var_name.clone());
+
+                                VarWatcherAPI::update_with_broadcast(&var_name, val);
                             } else {
                                 log::trace!("[{}] value unchanged, skipping tx", var_name);
                             }
                         }
-                        Ok(None) => break, // EOF
+                        Ok(None) => break,
                         Err(e) => {
                             log::error!("[{}] error reading line: {}", var_name, e);
                             break;

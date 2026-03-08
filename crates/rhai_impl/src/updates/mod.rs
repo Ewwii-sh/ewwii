@@ -15,12 +15,11 @@
 */
 
 mod listen;
-mod localsignal;
 mod poll;
-
-pub use localsignal::*;
+pub mod variable;
 
 use crate::ast::WidgetNode;
+use variable::{GLOBAL_VAR_STORE, VAR_WATCHERS, VarWatcherAPI};
 use listen::handle_listen;
 use once_cell::sync::Lazy;
 use poll::handle_poll;
@@ -30,7 +29,6 @@ use std::{collections::HashMap, sync::Arc, sync::RwLock};
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::watch;
 
-pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
 
@@ -44,20 +42,18 @@ pub fn get_prefered_shell() -> String {
     shell
 }
 
-pub fn handle_state_changes(
-    root_node: &WidgetNode,
-    tx: UnboundedSender<String>,
-    store: ReactiveVarStore,
-) {
+pub fn handle_state_changes(root_node: &WidgetNode) {
     let shell = get_prefered_shell();
     if let WidgetNode::Tree(children) = root_node {
         for child in children {
             match child {
                 WidgetNode::Poll { var, props } => {
-                    handle_poll(var.to_string(), props, shell.clone(), store.clone(), tx.clone());
+                    VarWatcherAPI::register(var, String::new());
+                    handle_poll(var.to_string(), props, shell.clone());
                 }
                 WidgetNode::Listen { var, props } => {
-                    handle_listen(var.to_string(), props, shell.clone(), store.clone(), tx.clone());
+                    VarWatcherAPI::register(var, String::new());
+                    handle_listen(var.to_string(), props, shell.clone());
                 }
                 _ => {}
             }

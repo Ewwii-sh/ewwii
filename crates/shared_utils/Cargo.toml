@@ -11,5 +11,6 @@ homepage = "https://github.com/ewwii-sh/ewwii"
 [dependencies]
 serde.workspace = true
 rhai = { workspace = true, features = ["internals"] }
+log.workspace = true
 anyhow.workspace = true
 once_cell.workspace = true
