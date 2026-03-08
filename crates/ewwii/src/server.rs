@@ -1,5 +1,5 @@
 use crate::{
-    app::{self, App, DaemonCommand, EngineConfValues},
+    app::{self, App, DaemonCommand},
     config, daemon_response,
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,
@@ -32,11 +32,8 @@ pub fn initialize_server<B: DisplayBackend>(
 
     log::info!("Loading paths: {}", &paths);
 
-    let pl_handler_store: rhai_impl::updates::ReactiveVarStore =
-        Arc::new(RwLock::new(HashMap::new()));
-
     let config_parser =
-        Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new(Some(pl_handler_store.clone()))));
+        Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new()));
 
     cleanup_log_dir(paths.get_log_dir())?;
 
@@ -85,9 +82,6 @@ pub fn initialize_server<B: DisplayBackend>(
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
-        pl_handler_store,
-        clear_pl_onclose: HashMap::new(),
-        rt_engine_config: EngineConfValues::default(),
         config_parser,
         paths,
         gtk_main_loop: main_loop.clone(),
@@ -290,6 +284,10 @@ async fn run_filewatch<P: AsRef<Path>>(
                 // This is probably a result of editors not locking the file correctly,
                 // and eww being too fast, thus reading the file while it's empty.
                 // There should be some cleaner solution for this, but this will do for now.
+                // - Elkowar
+                // 
+                // Byson94 here, I am not sure if this issue is still relevant, 
+                // but I am keeping this for now.
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                 reload_config_and_css(&evt_send)?;
             }

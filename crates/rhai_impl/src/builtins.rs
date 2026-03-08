@@ -1,9 +1,7 @@
 use crate::ast::{hash_props, WidgetNode};
-use crate::updates::{register_signal, LocalDataBinder, LocalSignal};
 use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Arc;
 
 /// Converts a Dynamic array into a Vec<WidgetNode>, returning proper errors with position.
 fn children_to_vec(
@@ -30,7 +28,6 @@ pub fn register_all_widgets(
     keep_signal: &Rc<RefCell<Vec<u64>>>,
 ) {
     engine.register_type::<WidgetNode>();
-    engine.register_type::<LocalSignal>();
 
     // == Primitive widgets ==
     macro_rules! register_primitive {
@@ -81,8 +78,6 @@ pub fn register_all_widgets(
     register_with_children!("stack", Stack);
     register_with_children!("eventbox", EventBox);
     register_with_children!("tooltip", ToolTip);
-    register_with_children!("localbind", LocalBind);
-    register_with_children!("widget_action", WidgetAction);
 
     // == Special widget
     engine.register_fn(
@@ -92,22 +87,6 @@ pub fn register_all_widgets(
             props.insert("file".into(), path.into());
             props.insert("id".into(), load.into());
             Ok(WidgetNode::GtkUI { props })
-        },
-    );
-
-    // == Special signal
-    let keep_signal_clone = keep_signal.clone();
-    engine.register_fn(
-        "localsignal",
-        move |props: Map| -> Result<LocalSignal, Box<EvalAltResult>> {
-            let id = hash_props(&props);
-            let signal = Rc::new(LocalSignal { id, props, data: Arc::new(LocalDataBinder::new()) });
-
-            let signal_rc = register_signal(id, signal);
-
-            keep_signal_clone.borrow_mut().push(id);
-
-            Ok((*signal_rc).clone())
         },
     );
 

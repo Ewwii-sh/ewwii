@@ -2,15 +2,15 @@ use rhai::Dynamic;
 
 #[derive(Clone)]
 pub struct GlobalVar {
-    name: String,
-    value: Dynamic,
+    pub name: String,
+    pub initial: Dynamic,
 }
 
 impl GlobalVar {
-    pub fn from(name: String, value: Dynamic) -> Self {
+    pub fn from(name: String, initial: Dynamic) -> Self {
         Self {
             name,
-            value
+            initial
         }
     }
 }

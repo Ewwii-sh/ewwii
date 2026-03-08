@@ -5,7 +5,6 @@ use crate::{
     helper::extract_poll_and_listen_vars,
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
-    updates::ReactiveVarStore,
 };
 use shared_utils::variables::GlobalVar;
 use anyhow::{anyhow, Result};
@@ -22,17 +21,17 @@ pub struct ParseConfig {
 }
 
 impl ParseConfig {
-    pub fn new(pl_handler_store: Option<ReactiveVarStore>) -> Self {
+    pub fn new() -> Self {
         let mut engine = Engine::new();
         let all_nodes = Rc::new(RefCell::new(Vec::new()));
         let keep_signal = Rc::new(RefCell::new(Vec::new()));
 
         engine.set_max_expr_depths(128, 128);
         engine
-            .set_module_resolver(SimpleFileResolver { pl_handler_store: pl_handler_store.clone() });
+            .set_module_resolver(SimpleFileResolver);
 
         register_all_widgets(&mut engine, &all_nodes, &keep_signal);
-        register_all_providers(&mut engine, pl_handler_store);
+        register_all_providers(&mut engine);
 
         Self { engine, all_nodes, keep_signal }
     }
@@ -72,9 +71,6 @@ impl ParseConfig {
                 .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, file_id)))?;
         };
 
-        // Retain signals
-        crate::updates::retain_signals(&self.keep_signal.borrow());
-
         // Merge all nodes in all_nodes (`tree([])`) into a single root node
         let merged_node = {
             let mut all_nodes_vec = self.all_nodes.borrow_mut();
@@ -104,9 +100,6 @@ impl ParseConfig {
             .engine
             .eval_with_scope::<WidgetNode>(&mut scope, code)
             .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, Some("<dyn eval>"))))?;
-
-        // Retain signals
-        crate::updates::retain_signals(&self.keep_signal.borrow());
 
         // Clear all nodes
         self.all_nodes.borrow_mut().clear();

@@ -1,6 +1,5 @@
 use crate::error::{format_eval_error, format_parse_error};
 use crate::parser::ParseConfig;
-use crate::updates::ReactiveVarStore;
 use rhai::Scope;
 use rhai::{Dynamic, Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
 use std::collections::HashMap;
@@ -8,9 +7,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-pub struct SimpleFileResolver {
-    pub pl_handler_store: Option<ReactiveVarStore>,
-}
+pub struct SimpleFileResolver;
 
 impl ModuleResolver for SimpleFileResolver {
     fn resolve(

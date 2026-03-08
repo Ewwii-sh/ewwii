@@ -221,17 +221,6 @@ pub enum ActionWithServer {
         calls: Vec<String>,
     },
 
-    /// Override the default runtime engine settings
-    #[command(name = "engine-override")]
-    EngineOverride {
-        /// Configuration in JSON format
-        config_json: String,
-
-        /// Weather to print the current engine settings
-        #[arg(long = "sprint", short = 'p')]
-        print: bool,
-    },
-
     /// Set a plugin (.so) to the ewwii binary
     #[command(name = "set-plugin")]
     SetPlugin {
@@ -439,13 +428,6 @@ impl ActionWithServer {
             }
             ActionWithServer::ShowDebug => {
                 return with_response_channel(app::DaemonCommand::PrintDebug)
-            }
-            ActionWithServer::EngineOverride { config_json, print } => {
-                return with_response_channel(|sender| app::DaemonCommand::EngineOverride {
-                    config: config_json,
-                    print,
-                    sender,
-                })
             }
             ActionWithServer::SetPlugin { file_path } => {
                 return with_response_channel(|sender| app::DaemonCommand::SetPlugin {
