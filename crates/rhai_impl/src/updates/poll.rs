@@ -1,4 +1,4 @@
-use super::{GLOBAL_VAR_STORE, SHUTDOWN_REGISTRY, variable::VarWatcherAPI};
+use super::{SHUTDOWN_REGISTRY, variable::VarWatcherAPI};
 use rhai::Map;
 use shared_utils::prop_utils::*;
 use std::time::Duration;

@@ -22,15 +22,13 @@ use crate::{
     window_initiator::WindowInitiator,
     *,
 };
-use anyhow::{anyhow, bail};
+use anyhow::{anyhow};
 use ewwii_plugin_api as epapi;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
-use rhai::Dynamic;
-use rhai_impl::ast::WidgetNode;
 use rhai_impl::parser::ParseConfig;
 use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use std::{
@@ -450,8 +448,7 @@ impl<B: DisplayBackend> App<B> {
                 // builds the widget and populates widget registry
                 let mut maybe_registry = self.widget_reg_store.lock().unwrap();
                 let registry = maybe_registry
-                    .as_mut()
-                    .ok_or_else(|| anyhow::anyhow!("WidgetRegistry is not initialized"))?;
+                    .get_or_insert_with(WidgetRegistry::new);
                 build_gtk_widget(&WidgetInput::Window(window_def), registry)?
             };
 
@@ -460,22 +457,7 @@ impl<B: DisplayBackend> App<B> {
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
 
-            // Start the poll/listen only once per startup
-            // at the start, the open_windows will be empty because
-            // it is only later down in open_window(..) that we register
-            // the current `instance_id` in the open_windows variable.
-            //
-            // But since we are doing this hacky method, I wonder
-            // if we can move this piece of code somewhere else.
-            // I just cant find the perfect place where it can live
-            // so I guess that I will just let it stay right here.
-            let config_path = self.paths.get_rhai_path();
-            let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-
-            let stored_parser_clone = self.config_parser.clone();
             if self.open_windows.is_empty() || self.reloading {
-                let widget_reg_store = self.widget_reg_store.clone();
-
                 // Start the global variables
                 rhai_impl::updates::handle_state_changes(self.ewwii_config.get_root_node()?.as_ref());
             }

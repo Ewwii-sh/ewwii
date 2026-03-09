@@ -48,7 +48,7 @@ fn animalRow(stringArray) {
 // Widget: currently selected animal display
 fn currentAnimal(object) {
     return box(#{}, [
-        label(#{ text: object[selected] + " " + selected })
+        label(#{ text: selected })
     ]);
 }
 

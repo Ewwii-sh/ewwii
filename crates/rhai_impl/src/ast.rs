@@ -1,8 +1,6 @@
 use ahash::AHasher;
-use anyhow::Result;
 use rhai::Map;
 use scan_prop_proc::scan_prop;
-use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use shared_utils::prop_utils::{get_string_prop, unwrap_static};
 
