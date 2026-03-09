@@ -8,10 +8,6 @@
     Even though rhai is static by nature (only evaluates once),
     we can trigger a re-evaluation every time a variable updates
     as a workaround to this limitation.
-
-    Other than the poll and listen, we also handle the updates of
-    the internal built in signals (the functions that return data)
-    which is also known as "magic variables" in eww.
 */
 
 mod listen;
@@ -19,7 +15,7 @@ mod poll;
 pub mod variable;
 
 use crate::ast::WidgetNode;
-use variable::{GLOBAL_VAR_STORE, VarWatcherAPI};
+use variable::VarWatcherAPI;
 use listen::handle_listen;
 use once_cell::sync::Lazy;
 use poll::handle_poll;
