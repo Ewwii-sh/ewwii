@@ -17,23 +17,21 @@ use std::rc::Rc;
 pub struct ParseConfig {
     pub engine: Engine,
     all_nodes: Rc<RefCell<Vec<WidgetNode>>>,
-    keep_signal: Rc<RefCell<Vec<u64>>>,
 }
 
 impl ParseConfig {
     pub fn new() -> Self {
         let mut engine = Engine::new();
         let all_nodes = Rc::new(RefCell::new(Vec::new()));
-        let keep_signal = Rc::new(RefCell::new(Vec::new()));
 
         engine.set_max_expr_depths(128, 128);
         engine
             .set_module_resolver(SimpleFileResolver);
 
-        register_all_widgets(&mut engine, &all_nodes, &keep_signal);
+        register_all_widgets(&mut engine, &all_nodes);
         register_all_providers(&mut engine);
 
-        Self { engine, all_nodes, keep_signal }
+        Self { engine, all_nodes }
     }
 
     pub fn compile_code(&mut self, code: &str, file_path: &str) -> Result<AST> {

@@ -1,8 +1,5 @@
 use crate::error::{format_eval_error, format_parse_error};
-use crate::parser::ParseConfig;
-use rhai::Scope;
-use rhai::{Dynamic, Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
-use std::collections::HashMap;
+use rhai::{Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
 use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;

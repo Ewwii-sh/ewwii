@@ -1,4 +1,4 @@
-use crate::ast::{hash_props, WidgetNode};
+use crate::ast::{WidgetNode};
 use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -25,7 +25,6 @@ fn children_to_vec(
 pub fn register_all_widgets(
     engine: &mut Engine,
     all_nodes: &Rc<RefCell<Vec<WidgetNode>>>,
-    keep_signal: &Rc<RefCell<Vec<u64>>>,
 ) {
     engine.register_type::<WidgetNode>();
 

@@ -19,14 +19,12 @@ mod poll;
 pub mod variable;
 
 use crate::ast::WidgetNode;
-use variable::{GLOBAL_VAR_STORE, VAR_WATCHERS, VarWatcherAPI};
+use variable::{GLOBAL_VAR_STORE, VarWatcherAPI};
 use listen::handle_listen;
 use once_cell::sync::Lazy;
 use poll::handle_poll;
 use std::process::Command;
 use std::sync::Mutex;
-use std::{collections::HashMap, sync::Arc, sync::RwLock};
-use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::watch;
 
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =

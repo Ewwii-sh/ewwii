@@ -14,7 +14,7 @@ use std::{
     os::unix::io::AsRawFd,
     path::Path,
     rc::Rc,
-    sync::{atomic::Ordering, Arc, RwLock},
+    sync::{atomic::Ordering, Arc},
 };
 use tokio::sync::mpsc::*;
 
