@@ -977,16 +977,12 @@ pub(super) fn build_image(
     let gtk_widget = gtk4::Picture::new();
 
     let path_prop = get_string_prop(&props, "path", None)?;
-    let can_shrink_prop = get_bool_prop(&props, "can_shrink", Some(true))?;
-    let content_fit_prop = get_string_prop(&props, "content_fit", Some("contain"))?;
     let image_width_prop = get_i32_prop(&props, "image_width", Some(-1))?;
     let image_height_prop = get_i32_prop(&props, "image_height", Some(-1))?;
     let preserve_aspect_ratio_prop = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
     let fill_svg_prop = get_string_prop(&props, "fill_svg", Some(""))?;
 
     let current_path = Rc::new(RefCell::new(path_prop.initial_value()));
-    let current_can_shrink = Rc::new(RefCell::new(can_shrink_prop.initial_value()));
-    let current_content_fit_str = Rc::new(RefCell::new(content_fit_prop.initial_value()));
     let current_image_width = Rc::new(RefCell::new(image_width_prop.initial_value()));
     let current_image_height = Rc::new(RefCell::new(image_height_prop.initial_value()));
     let current_preserve_aspect_ratio = Rc::new(RefCell::new(preserve_aspect_ratio_prop.initial_value()));
@@ -995,8 +991,6 @@ pub(super) fn build_image(
     let re_render = {
         let gtk_widget = gtk_widget.clone();
         let current_path = current_path.clone();
-        let current_can_shrink = current_can_shrink.clone();
-        let current_content_fit_str = current_content_fit_str.clone();
         let current_image_width = current_image_width.clone();
         let current_image_height = current_image_height.clone();
         let current_preserve_aspect_ratio = current_preserve_aspect_ratio.clone();
@@ -1004,25 +998,15 @@ pub(super) fn build_image(
 
         Rc::new(move || {
             let path = current_path.borrow().clone();
-            let can_shrink = *current_can_shrink.borrow();
-            let content_fit_str = current_content_fit_str.borrow().clone();
             let image_width = *current_image_width.borrow();
             let image_height = *current_image_height.borrow();
             let preserve_aspect_ratio = *current_preserve_aspect_ratio.borrow();
             let fill_svg = current_fill_svg.borrow().clone();
 
-            println!("RERENDERING>>>>>>");
-
-            let content_fit = match parse_content_fit(&content_fit_str) {
-                Ok(cf) => cf,
-                Err(e) => {
-                    log::error!("Invalid content_fit value `{content_fit_str}`: {e}");
-                    return;
-                }
-            };
-
-            gtk_widget.set_content_fit(content_fit);
-            gtk_widget.set_can_shrink(can_shrink);
+            // is multiplied by 2 because it appears that it looks 
+            // half in size in my screen.
+            gtk_widget.set_height_request(image_height * 2);
+            gtk_widget.set_width_request(image_width * 2);
 
             if !path.ends_with(".svg") && !fill_svg.is_empty() {
                 log::warn!("Fill attribute ignored, file is not an svg image");
@@ -1131,14 +1115,6 @@ pub(super) fn build_image(
         *current_path.borrow_mut() = v;
         re_render();
     });
-    apply_property_watch!(can_shrink_prop, [current_can_shrink, re_render], |v: bool| {
-        *current_can_shrink.borrow_mut() = v;
-        re_render();
-    });
-    apply_property_watch!(content_fit_prop, [current_content_fit_str, re_render], |v: String| {
-        *current_content_fit_str.borrow_mut() = v;
-        re_render();
-    });
     apply_property_watch!(image_width_prop, [current_image_width, re_render], |v: i32| {
         *current_image_width.borrow_mut() = v;
         re_render();
@@ -1154,6 +1130,16 @@ pub(super) fn build_image(
     apply_property_watch!(fill_svg_prop, [current_fill_svg, re_render], |v: String| {
         *current_fill_svg.borrow_mut() = v;
         re_render();
+    });
+
+    bind_property!(&props, "content_fit", get_string_prop, Some("contain"), [gtk_widget], |v: String| {
+        if let Ok(content_fit) = parse_content_fit(&v) {
+            gtk_widget.set_content_fit(content_fit);
+        };
+    });
+
+    bind_property!(&props, "can_shrink", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
+        gtk_widget.set_can_shrink(v);
     });
 
     let id = hash_props_and_type(&props, "Image");
