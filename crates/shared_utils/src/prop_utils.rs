@@ -12,6 +12,15 @@ pub enum PropValue<T> {
     },
 }
 
+impl<T: Clone> PropValue<T> {
+    pub fn initial_value(&self) -> T {
+        match self {
+            PropValue::Static(v) => v.clone(),
+            PropValue::Bound { initial, .. } => initial.clone(),
+        }
+    }
+}
+
 fn try_get_global_var(value: &Dynamic) -> Option<GlobalVar> {
     value.clone().try_cast::<GlobalVar>()
 }
@@ -202,8 +211,8 @@ pub fn get_i32_prop(props: &Map, key: &str, default: Option<i32>) -> Result<Prop
 pub fn get_vec_string_prop(
     props: &Map,
     key: &str,
-    default: Option<Vec<String>>,
-) -> Result<Vec<String>> {
+    default: Option<Vec<PropValue<String>>>,
+) -> Result<Vec<PropValue<String>>> {
     if let Some(value) = props.get(key) {
         let array = value
             .clone()
@@ -213,8 +222,20 @@ pub fn get_vec_string_prop(
         array
             .into_iter()
             .map(|d| {
-                d.try_cast::<String>()
-                    .ok_or_else(|| anyhow!("Expected all elements of `{}` to be strings", key))
+                if let Some(var) = try_get_global_var(&d) {
+                    let initial = var.initial.clone()
+                        .try_cast::<String>()
+                        .unwrap_or_default();
+                    Ok(PropValue::Bound {
+                        var_name: var.name,
+                        initial,
+                        parser: parse_string,
+                    })
+                } else {
+                    d.try_cast::<String>()
+                        .map(PropValue::Static)
+                        .ok_or_else(|| anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key))
+                }
             })
             .collect()
     } else {

@@ -2,7 +2,7 @@
 
 use crate::util;
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
-use crate::{bind_property, apply_property};
+use crate::{bind_property, apply_property, apply_property_watch};
 use anyhow::{anyhow, bail, Result};
 use gtk4::gdk::DragAction;
 use gtk4::glib::translate::FromGlib;
@@ -334,20 +334,7 @@ pub(super) fn build_event_box(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
-    let orientation = props
-        .get("orientation")
-        .and_then(|v| v.clone().try_cast::<String>())
-        .map(|s| parse_orientation(&s))
-        .transpose()?
-        .unwrap_or(gtk4::Orientation::Horizontal);
-
-    let spacing =
-        props.get("spacing").and_then(|v| v.clone().try_cast::<i64>()).unwrap_or(0) as i32;
-
-    let space_evenly = get_bool_prop(&props, "space_evenly", Some(true))?;
-
-    let gtk_widget = gtk4::Box::new(orientation, spacing);
-    gtk_widget.set_homogeneous(space_evenly);
+    let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
 
     // controllers
     let hover_controller = EventControllerMotion::new();
@@ -713,36 +700,34 @@ pub(crate) fn build_gtk_flowbox(
         index += 1;
     }
 
-    if let Ok(default_select) = get_i32_prop(&props, "default_select", None) {
-        if let Some(child) = gtk_widget.child_at_index(default_select) {
+    bind_property!(&props, "default_select", get_i32_prop, None, [gtk_widget], |dsv: i32| {
+        if let Some(child) = gtk_widget.child_at_index(dsv) {
             gtk_widget.select_child(&child);
             child.grab_focus();
         } else {
-            log::error!("Failed to get child at index {} from FlowBox", default_select);
+            log::error!("Failed to get child at index {} from FlowBox", dsv);
         }
-    }
+    });
 
-    if let Ok(space_evenly) = get_bool_prop(&props, "space_evenly", Some(true)) {
-        gtk_widget.set_homogeneous(space_evenly);
-    }
+    bind_property!(&props, "orientation", get_string_prop, Some("h"), [gtk_widget], |v: String| {
+        if let Ok(o) = parse_orientation(&v) {
+            gtk_widget.set_orientation(o);
+        }
+    });
 
-    let orientation = props
-        .get("orientation")
-        .and_then(|v| v.clone().try_cast::<String>())
-        .map(|s| parse_orientation(&s))
-        .transpose()?
-        .unwrap_or(gtk4::Orientation::Horizontal);
+    bind_property!(&props, "space_evenly", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
+        gtk_widget.set_homogeneous(v);
+    });
 
-    gtk_widget.set_orientation(orientation);
+    bind_property!(&props, "selection_model", get_string_prop, None, [gtk_widget], |v: String| {
+        if let Ok(selection_model) = parse_selection_model(&v) {
+            gtk_widget.set_selection_mode(selection_model);
+        }
+    });
 
-    if let Ok(selection_model_raw) = get_string_prop(&props, "selection_model", None) {
-        let selection_model = parse_selection_model(&selection_model_raw)?;
-        gtk_widget.set_selection_mode(selection_model);
-    }
-
-    if let Ok(onaccept) = get_string_prop(&props, "onaccept", None) {
-        controller_data.borrow_mut().onaccept_cmd = onaccept;
-    }
+    bind_property!(&props, "onaccept", get_string_prop, None, [controller_data], |v: String| {
+        controller_data.borrow_mut().onaccept_cmd = v;
+    });
 
     let id = hash_props_and_type(&props, "FlowBox");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
@@ -772,16 +757,19 @@ pub(super) fn build_gtk_stack(
     }
 
     // parsing the properties
-    if let Ok(selected) = get_i32_prop(&props, "selected", None) {
-        gtk_widget.set_visible_child_name(&selected.to_string());
-    }
+    bind_property!(&props, "selected", get_i32_prop, None, [gtk_widget], |v: i32| {
+        gtk_widget.set_visible_child_name(&v.to_string());
+    });
 
-    let transition = get_string_prop(&props, "transition", Some("crossfade"))?;
-    gtk_widget.set_transition_type(parse_stack_transition(&transition)?);
+    bind_property!(&props, "transition", get_string_prop, Some("crossfade"), [gtk_widget], |v: String| {
+        if let Ok(t) = parse_stack_transition(&v) {
+            gtk_widget.set_transition_type(t);
+        }
+    });
 
-    if let Ok(transition_dur) = get_i32_prop(&props, "transition_duration", None) {
-        gtk_widget.set_transition_duration(transition_dur as u32);
-    }
+    bind_property!(&props, "transition_duration", get_i32_prop, None, [gtk_widget], |v: i32| {
+        gtk_widget.set_transition_duration(v as u32);
+    });
 
     // let same_size = get_bool_prop(&props, "same_size", Some(false))?;
     // gtk_widget.set_homogeneous(same_size);
@@ -798,33 +786,33 @@ pub(super) fn build_circular_progress_bar(
 ) -> Result<CircProg> {
     let widget = CircProg::new();
 
-    if let Ok(value) = get_f64_prop(&props, "value", None) {
-        widget.set_property("value", value.clamp(0.0, 100.0));
-    }
+    bind_property!(&props, "value", get_f64_prop, None, [widget], |v: f64| {
+        widget.set_property("value", v.clamp(0.0, 100.0));
+    });
 
-    if let Ok(start_at) = get_f64_prop(&props, "start_at", None) {
-        widget.set_property("start-at", start_at.clamp(0.0, 100.0));
-    }
+    bind_property!(&props, "start_at", get_f64_prop, None, [widget], |v: f64| {
+        widget.set_property("start-at", v.clamp(0.0, 100.0));
+    });
 
-    if let Ok(thickness) = get_f64_prop(&props, "thickness", None) {
-        widget.set_property("thickness", thickness);
-    }
+    bind_property!(&props, "thickness", get_f64_prop, None, [widget], |v: f64| {
+        widget.set_property("thickness", v);
+    });
 
-    if let Ok(clockwise) = get_bool_prop(&props, "clockwise", None) {
-        widget.set_property("clockwise", clockwise);
-    }
+    bind_property!(&props, "clockwise", get_bool_prop, None, [widget], |v: bool| {
+        widget.set_property("clockwise", v);
+    });
 
-    if let Ok(fg_color_str) = get_string_prop(&props, "fg_color", None) {
-        if let Ok(rgba) = gdk::RGBA::parse(fg_color_str) {
+    bind_property!(&props, "fg_color", get_string_prop, None, [widget], |v: String| {
+        if let Ok(rgba) = gdk::RGBA::parse(v) {
             widget.set_property("fg-color", rgba);
         }
-    }
+    });
 
-    if let Ok(bg_color_str) = get_string_prop(&props, "bg_color", None) {
-        if let Ok(rgba) = gdk::RGBA::parse(bg_color_str) {
+    bind_property!(&props, "bg_color", get_string_prop, None, [widget], |v: String| {
+        if let Ok(rgba) = gdk::RGBA::parse(v) {
             widget.set_property("bg-color", rgba);
         }
-    }
+    });
 
     let id = hash_props_and_type(&props, "CircularProgress");
     widget_registry.widgets.insert(id, widget.clone().upcast());
@@ -837,7 +825,8 @@ pub(super) fn build_graph(props: &Map, widget_registry: &mut WidgetRegistry) -> 
 
     bind_property!(&props, "value", get_f64_prop, None, [widget], |value: f64| {
         if value.is_nan() || value.is_infinite() {
-            return Err(anyhow!("Graph's value should never be NaN or infinite"));
+            log::error!("Graph's value should never be NaN or infinite");
+            return;
         }
         widget.set_property("value", value);
     });
@@ -891,13 +880,17 @@ pub(super) fn build_graph(props: &Map, widget_registry: &mut WidgetRegistry) -> 
     bind_property!(&props, "type", get_string_prop, None, [widget], |render_type: String| {
         match parse_graph_render_type(render_type.as_str()) {
             Ok(t) => widget.set_property("type", t),
-            Err(e) => return Err(anyhow!("Failed to parse graph type property: {}", e)),
+            Err(e) => {
+                log::error!("Failed to parse graph type property: {}", e);
+                return;
+            },
         };
     });
 
     bind_property!(&props, "thickness", get_f64_prop, None, [widget], |thickness: f64| {
         if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
-            return Err(anyhow!("Property thickness can only be used with line graphs"));
+            log::error!("Property thickness can only be used with line graphs");
+            return;
         }
 
         widget.set_property("thickness", thickness);
@@ -905,12 +898,16 @@ pub(super) fn build_graph(props: &Map, widget_registry: &mut WidgetRegistry) -> 
 
     bind_property!(&props, "line_style", get_string_prop, None, [widget], |line_style: String| {
         if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
-            return Err(anyhow!("Property line-style can only be used with line graphs"));
+            log::error!("Property line-style can only be used with line graphs");
+            return;
         }
 
         match parse_graph_line_style(line_style.as_str()) {
             Ok(ls) => widget.set_property("line-style", ls),
-            Err(e) => return Err(anyhow!("Failed to parse graph line-style property: {}", e)),
+            Err(e) => {
+                log::error!("Failed to parse graph line-style property: {}", e);
+                return;
+            },
         };
     });
 
@@ -980,87 +977,188 @@ pub(super) fn build_image(
 ) -> Result<gtk4::Picture> {
     let gtk_widget = gtk4::Picture::new();
 
-    let path = get_string_prop(&props, "path", None)?;
-    let can_shrink = get_bool_prop(&props, "can_shrink", Some(true))?;
-    let content_fit_str = get_string_prop(&props, "content_fit", Some("contain"))?;
-    let content_fit = parse_content_fit(&content_fit_str)?;
-    let image_width = get_i32_prop(&props, "image_width", Some(-1))?;
-    let image_height = get_i32_prop(&props, "image_height", Some(-1))?;
-    let preserve_aspect_ratio = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
-    let fill_svg = get_string_prop(&props, "fill_svg", Some(""))?;
+    let path_prop = get_string_prop(&props, "path", None)?;
+    let can_shrink_prop = get_bool_prop(&props, "can_shrink", Some(true))?;
+    let content_fit_prop = get_string_prop(&props, "content_fit", Some("contain"))?;
+    let image_width_prop = get_i32_prop(&props, "image_width", Some(-1))?;
+    let image_height_prop = get_i32_prop(&props, "image_height", Some(-1))?;
+    let preserve_aspect_ratio_prop = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
+    let fill_svg_prop = get_string_prop(&props, "fill_svg", Some(""))?;
 
-    if !path.ends_with(".svg") && !fill_svg.is_empty() {
-        log::warn!("Fill attribute ignored, file is not an svg image");
-    }
+    let current_path = Rc::new(RefCell::new(path_prop.initial_value()));
+    let current_can_shrink = Rc::new(RefCell::new(can_shrink_prop.initial_value()));
+    let current_content_fit_str = Rc::new(RefCell::new(content_fit_prop.initial_value()));
+    let current_image_width = Rc::new(RefCell::new(image_width_prop.initial_value()));
+    let current_image_height = Rc::new(RefCell::new(image_height_prop.initial_value()));
+    let current_preserve_aspect_ratio = Rc::new(RefCell::new(preserve_aspect_ratio_prop.initial_value()));
+    let current_fill_svg = Rc::new(RefCell::new(fill_svg_prop.initial_value()));
 
-    gtk_widget.set_content_fit(content_fit);
-    gtk_widget.set_can_shrink(can_shrink);
+    let re_render = {
+        let gtk_widget = gtk_widget.clone();
+        let current_path = current_path.clone();
+        let current_can_shrink = current_can_shrink.clone();
+        let current_content_fit_str = current_content_fit_str.clone();
+        let current_image_width = current_image_width.clone();
+        let current_image_height = current_image_height.clone();
+        let current_preserve_aspect_ratio = current_preserve_aspect_ratio.clone();
+        let current_fill_svg = current_fill_svg.clone();
 
-    if path.ends_with(".gif") {
-        let pixbuf_animation =
-            gtk4::gdk_pixbuf::PixbufAnimation::from_file(std::path::PathBuf::from(path))?;
-        let iter = pixbuf_animation.iter(None);
+        Rc::new(move || {
+            let path = current_path.borrow().clone();
+            let can_shrink = *current_can_shrink.borrow();
+            let content_fit_str = current_content_fit_str.borrow().clone();
+            let image_width = *current_image_width.borrow();
+            let image_height = *current_image_height.borrow();
+            let preserve_aspect_ratio = *current_preserve_aspect_ratio.borrow();
+            let fill_svg = current_fill_svg.borrow().clone();
 
-        let frame_pixbuf = iter.pixbuf();
-        gtk_widget.set_pixbuf(Some(&frame_pixbuf));
-
-        let widget_clone = gtk_widget.clone();
-
-        if let Some(delay) = iter.delay_time() {
-            glib::timeout_add_local(delay, move || {
-                let now = std::time::SystemTime::now();
-
-                if iter.advance(now) {
-                    let frame_pixbuf = iter.pixbuf();
-                    widget_clone.set_pixbuf(Some(&frame_pixbuf));
+            let content_fit = match parse_content_fit(&content_fit_str) {
+                Ok(cf) => cf,
+                Err(e) => {
+                    log::error!("Invalid content_fit value `{content_fit_str}`: {e}");
+                    return;
                 }
-
-                glib::ControlFlow::Continue
-            });
-        }
-    } else {
-        let scale = gtk_widget.scale_factor();
-        let pixbuf;
-
-        // populate the pixel buffer
-        if path.ends_with(".svg") && !fill_svg.is_empty() {
-            let svg_data = std::fs::read_to_string(std::path::PathBuf::from(path.clone()))?;
-            // The fastest way to add/change fill color
-            let svg_data = if svg_data.contains("fill=") {
-                let reg = regex::Regex::new(r#"fill="[^"]*""#)?;
-                reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
-            } else {
-                let reg = regex::Regex::new(r"<svg")?;
-                reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
             };
-            let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
-                svg_data.as_bytes(),
-            ));
-            pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                &stream,
-                image_width * scale,
-                image_height * scale,
-                preserve_aspect_ratio,
-                None::<&gtk4::gio::Cancellable>,
-            )?;
-            stream.close(None::<&gtk4::gio::Cancellable>)?;
-        } else {
-            let width = if image_width > 0 { image_width * scale } else { -1 };
-            let height = if image_height > 0 { image_height * scale } else { -1 };
 
-            pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
-                std::path::PathBuf::from(path),
-                width,
-                height,
-                preserve_aspect_ratio,
-            )?;
-        }
-        gtk_widget.set_pixbuf(Some(&pixbuf));
-    }
+            gtk_widget.set_content_fit(content_fit);
+            gtk_widget.set_can_shrink(can_shrink);
+
+            if !path.ends_with(".svg") && !fill_svg.is_empty() {
+                log::warn!("Fill attribute ignored, file is not an svg image");
+            }
+
+            if path.ends_with(".gif") {
+                let pixbuf_animation = match gtk4::gdk_pixbuf::PixbufAnimation::from_file(
+                    std::path::PathBuf::from(&path),
+                ) {
+                    Ok(a) => a,
+                    Err(e) => {
+                        log::error!("Failed to load GIF `{path}`: {e}");
+                        return;
+                    }
+                };
+                let iter = pixbuf_animation.iter(None);
+                let frame_pixbuf = iter.pixbuf();
+                gtk_widget.set_pixbuf(Some(&frame_pixbuf));
+                let widget_clone = gtk_widget.clone();
+                if let Some(delay) = iter.delay_time() {
+                    glib::timeout_add_local(delay, move || {
+                        let now = std::time::SystemTime::now();
+                        if iter.advance(now) {
+                            let frame_pixbuf = iter.pixbuf();
+                            widget_clone.set_pixbuf(Some(&frame_pixbuf));
+                        }
+                        glib::ControlFlow::Continue
+                    });
+                }
+            } else {
+                let scale = gtk_widget.scale_factor();
+                let pixbuf = if path.ends_with(".svg") && !fill_svg.is_empty() {
+                    let svg_data = match std::fs::read_to_string(std::path::PathBuf::from(&path)) {
+                        Ok(d) => d,
+                        Err(e) => {
+                            log::error!("Failed to read SVG `{path}`: {e}");
+                            return;
+                        }
+                    };
+                    let svg_data = if svg_data.contains("fill=") {
+                        let reg = match regex::Regex::new(r#"fill="[^"]*""#) {
+                            Ok(r) => r,
+                            Err(e) => {
+                                log::error!("Regex error: {e}");
+                                return;
+                            }
+                        };
+                        reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
+                    } else {
+                        let reg = match regex::Regex::new(r"<svg") {
+                            Ok(r) => r,
+                            Err(e) => {
+                                log::error!("Regex error: {e}");
+                                return;
+                            }
+                        };
+                        reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
+                    };
+                    let stream = gtk4::gio::MemoryInputStream::from_bytes(
+                        &gtk4::glib::Bytes::from(svg_data.as_bytes()),
+                    );
+                    let result = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
+                        &stream,
+                        image_width * scale,
+                        image_height * scale,
+                        preserve_aspect_ratio,
+                        None::<&gtk4::gio::Cancellable>,
+                    );
+                    if let Err(e) = stream.close(None::<&gtk4::gio::Cancellable>) {
+                        log::error!("Failed to close SVG stream: {e}");
+                    }
+                    match result {
+                        Ok(p) => p,
+                        Err(e) => {
+                            log::error!("Failed to render SVG `{path}`: {e}");
+                            return;
+                        }
+                    }
+                } else {
+                    let width = if image_width > 0 { image_width * scale } else { -1 };
+                    let height = if image_height > 0 { image_height * scale } else { -1 };
+                    match gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
+                        std::path::PathBuf::from(&path),
+                        width,
+                        height,
+                        preserve_aspect_ratio,
+                    ) {
+                        Ok(p) => p,
+                        Err(e) => {
+                            log::error!("Failed to load image `{path}`: {e}");
+                            return;
+                        }
+                    }
+                };
+
+                gtk_widget.set_pixbuf(Some(&pixbuf));
+            }
+        })
+    };
+
+    // Single initial render
+    re_render();
+
+    // Watch for future changes on bound props only
+    apply_property_watch!(path_prop, [current_path, re_render], |v: String| {
+        *current_path.borrow_mut() = v;
+        re_render();
+    });
+    apply_property_watch!(can_shrink_prop, [current_can_shrink, re_render], |v: bool| {
+        *current_can_shrink.borrow_mut() = v;
+        re_render();
+    });
+    apply_property_watch!(content_fit_prop, [current_content_fit_str, re_render], |v: String| {
+        *current_content_fit_str.borrow_mut() = v;
+        re_render();
+    });
+    apply_property_watch!(image_width_prop, [current_image_width, re_render], |v: i32| {
+        *current_image_width.borrow_mut() = v;
+        re_render();
+    });
+    apply_property_watch!(image_height_prop, [current_image_height, re_render], |v: i32| {
+        *current_image_height.borrow_mut() = v;
+        re_render();
+    });
+    apply_property_watch!(preserve_aspect_ratio_prop, [current_preserve_aspect_ratio, re_render], |v: bool| {
+        *current_preserve_aspect_ratio.borrow_mut() = v;
+        re_render();
+    });
+    apply_property_watch!(fill_svg_prop, [current_fill_svg, re_render], |v: String| {
+        *current_fill_svg.borrow_mut() = v;
+        re_render();
+    });
 
     let id = hash_props_and_type(&props, "Image");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
     resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+
     Ok(gtk_widget)
 }
 
@@ -1184,19 +1282,35 @@ pub(super) fn build_gtk_label(
     let current_text: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
     let current_markup: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
 
-    let text_params = Rc::new(RefCell::new(LabelTextParams {
-        truncate: false,
-        limit_width: i32::MAX,
-        truncate_left: false,
-        show_truncated: true,
-        unindent: true,
-    }));
-
     let has_text = props.get("text").is_some();
     let has_markup = props.get("markup").is_some();
 
     if has_text && has_markup {
         bail!("Cannot set both 'text' and 'markup' for a label");
+    }
+
+    let truncate_prop = get_bool_prop(&props, "truncate", Some(false))?;
+    let limit_width_prop = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
+    let truncate_left_prop = get_bool_prop(&props, "truncate_left", Some(false))?;
+    let show_truncated_prop = get_bool_prop(&props, "show_truncated", Some(true))?;
+    let unindent_prop = get_bool_prop(&props, "unindent", Some(true))?;
+
+    let text_params = Rc::new(RefCell::new(LabelTextParams {
+        truncate: truncate_prop.initial_value(),
+        limit_width: limit_width_prop.initial_value(),
+        truncate_left: truncate_left_prop.initial_value(),
+        show_truncated: show_truncated_prop.initial_value(),
+        unindent: unindent_prop.initial_value(),
+    }));
+
+    if has_text {
+        let text_prop = get_string_prop(&props, "text", None)?;
+        *current_text.borrow_mut() = Some(text_prop.initial_value());
+    } else if has_markup {
+        let markup_prop = get_string_prop(&props, "markup", None)?;
+        *current_markup.borrow_mut() = Some(markup_prop.initial_value());
+    } else {
+        bail!("Either 'text' or 'markup' must be set");
     }
 
     let re_render = {
@@ -1240,42 +1354,45 @@ pub(super) fn build_gtk_label(
         })
     };
 
-    // there is room for improvement
-    bind_property!(&props, "truncate", get_bool_prop, Some(false), [text_params, re_render], |v: bool| {
+    // Single initial render
+    re_render();
+
+    apply_property_watch!(truncate_prop, [text_params, re_render], |v: bool| {
         text_params.borrow_mut().truncate = v;
         re_render();
     });
-    bind_property!(&props, "limit_width", get_i32_prop, Some(i32::MAX), [text_params, re_render], |v: i32| {
+    apply_property_watch!(limit_width_prop, [text_params, re_render], |v: i32| {
         text_params.borrow_mut().limit_width = v;
         re_render();
     });
-    bind_property!(&props, "truncate_left", get_bool_prop, Some(false), [text_params, re_render], |v: bool| {
+    apply_property_watch!(truncate_left_prop, [text_params, re_render], |v: bool| {
         text_params.borrow_mut().truncate_left = v;
         re_render();
     });
-    bind_property!(&props, "show_truncated", get_bool_prop, Some(true), [text_params, re_render], |v: bool| {
+    apply_property_watch!(show_truncated_prop, [text_params, re_render], |v: bool| {
         text_params.borrow_mut().show_truncated = v;
         re_render();
     });
-    bind_property!(&props, "unindent", get_bool_prop, Some(true), [text_params, re_render], |v: bool| {
+    apply_property_watch!(unindent_prop, [text_params, re_render], |v: bool| {
         text_params.borrow_mut().unindent = v;
         re_render();
     });
 
     if has_text {
-        bind_property!(&props, "text", get_string_prop, None, [current_text, re_render], |text: String| {
+        let text_prop = get_string_prop(&props, "text", None)?;
+        apply_property_watch!(text_prop, [current_text, re_render], |text: String| {
             *current_text.borrow_mut() = Some(text);
             re_render();
         });
     } else if has_markup {
-        bind_property!(&props, "markup", get_string_prop, None, [current_markup, re_render], |markup: String| {
+        let markup_prop = get_string_prop(&props, "markup", None)?;
+        apply_property_watch!(markup_prop, [current_markup, re_render], |markup: String| {
             *current_markup.borrow_mut() = Some(markup);
             re_render();
         });
-    } else {
-        bail!("Either 'text' or 'markup' must be set");
     }
 
+    // independent properties
     bind_property!(&props, "wrap", get_bool_prop, Some(false), [gtk_widget], |wrap: bool| {
         gtk_widget.set_wrap(wrap);
     });
@@ -1461,11 +1578,13 @@ pub(super) fn build_gtk_combo_box_text(
 ) -> Result<gtk4::ComboBoxText> {
     let gtk_widget = gtk4::ComboBoxText::new();
 
-    // items is static-only since get_vec_string_prop doesn't support GlobalVar binding
     if let Ok(items) = get_vec_string_prop(&props, "items", None) {
         gtk_widget.remove_all();
-        for i in items {
-            gtk_widget.append_text(&i);
+        for item in items {
+            let widget_clone = gtk_widget.clone();
+            apply_property!(item, |v: String| {
+                widget_clone.append_text(&v);
+            });
         }
     }
 
@@ -1497,10 +1616,8 @@ pub(super) fn build_gtk_combo_box_text(
 }
 
 pub(super) fn build_gtk_ui_file(props: &Map) -> Result<gtk4::Widget> {
-    let path = get_string_prop(&props, "file", None)?
-        .map(|p| unwrap_static("dyn_id", p));
-    let main_id = get_string_prop(&props, "id", None)?
-        .map(|p| unwrap_static("dyn_id", p));
+    let path = unwrap_static("file", get_string_prop(&props, "file", None)?);
+    let main_id = unwrap_static("id", get_string_prop(&props, "id", None)?);
 
     if !std::path::Path::new(&path).exists() {
         return Err(anyhow::anyhow!("UI file not found: {}", path));
@@ -1777,7 +1894,9 @@ pub(super) fn build_gtk_scale(
     bind_property!(&props, "marks", get_string_prop, None, [gtk_widget], |marks: String| {
         gtk_widget.clear_marks();
         for mark in marks.split(',') {
-            gtk_widget.add_mark(mark.trim().parse()?, gtk4::PositionType::Bottom, None);
+            if let Ok(val) = mark.trim().parse() {
+                gtk_widget.add_mark(val, gtk4::PositionType::Bottom, None);
+            }
         }
     });
 
