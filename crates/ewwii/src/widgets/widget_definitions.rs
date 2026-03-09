@@ -1011,6 +1011,8 @@ pub(super) fn build_image(
             let preserve_aspect_ratio = *current_preserve_aspect_ratio.borrow();
             let fill_svg = current_fill_svg.borrow().clone();
 
+            println!("RERENDERING>>>>>>");
+
             let content_fit = match parse_content_fit(&content_fit_str) {
                 Ok(cf) => cf,
                 Err(e) => {
@@ -1288,10 +1290,12 @@ pub(super) fn build_gtk_label(
         bail!("Cannot set both 'text' and 'markup' for a label");
     }
 
+    // Quick Info: 
+    // limit_width wouldn't work if show_truncated is true.
     let truncate_prop = get_bool_prop(&props, "truncate", Some(false))?;
     let limit_width_prop = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
     let truncate_left_prop = get_bool_prop(&props, "truncate_left", Some(false))?;
-    let show_truncated_prop = get_bool_prop(&props, "show_truncated", Some(true))?;
+    let show_truncated_prop = get_bool_prop(&props, "show_truncated", Some(false))?;
     let unindent_prop = get_bool_prop(&props, "unindent", Some(true))?;
 
     let text_params = Rc::new(RefCell::new(LabelTextParams {
@@ -1342,9 +1346,14 @@ pub(super) fn build_gtk_label(
                         text.to_string()
                     }
                 };
-                if let Some(unescaped) = unescape::unescape(&t) {
-                    let final_text = if p.unindent { util::unindent(&unescaped) } else { unescaped };
-                    gtk_widget.set_text(&final_text);
+                match unescape::unescape(&t) {
+                    Some(unescaped) => {
+                        let final_text = if p.unindent { util::unindent(&unescaped) } else { unescaped };
+                        gtk_widget.set_text(&final_text);
+                    },
+                    None => {
+                        log::error!("Failed to unescape...");
+                    }
                 }
             } else if let Some(markup) = &*current_markup.borrow() {
                 apply_ellipsize_settings(&gtk_widget, p.truncate, p.limit_width, p.truncate_left, p.show_truncated);
