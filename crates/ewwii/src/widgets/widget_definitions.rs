@@ -1003,10 +1003,8 @@ pub(super) fn build_image(
             let preserve_aspect_ratio = *current_preserve_aspect_ratio.borrow();
             let fill_svg = current_fill_svg.borrow().clone();
 
-            // is multiplied by 2 because it appears that it looks 
-            // half in size in my screen.
-            gtk_widget.set_height_request(image_height * 2);
-            gtk_widget.set_width_request(image_width * 2);
+            gtk_widget.set_height_request(image_height);
+            gtk_widget.set_width_request(image_width);
 
             if !path.ends_with(".svg") && !fill_svg.is_empty() {
                 log::warn!("Fill attribute ignored, file is not an svg image");
