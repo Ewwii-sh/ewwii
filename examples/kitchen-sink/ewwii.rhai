@@ -15,9 +15,9 @@ fn widgets() {
             color_chooser(#{}),
             scale(#{}),
             progress(#{ value: 50, text: "Progress...", show_text: true }),
-            circular_progress(#{}),
-            input(#{}),
-            button(#{}),
+            circular_progress(#{ value: 50 }),
+            input(#{ placeholder: "Text goes here..." }),
+            button(#{ label: "A simple button" }),
             image(#{ path: "./EwwiiLogo.png", content_fit: "contain" }),
             overlay(#{}, [
                 label(#{ text: "A little overlay :D" })
@@ -26,10 +26,10 @@ fn widgets() {
                 label(#{ text: "Child 1" }),
                 label(#{ text: "Child 2" }),
             ]),
-            eventbox(#{}, [
+            eventbox(#{ drag_type: "text", dragvalue: "Hello :D" }, [
                 label(#{ text: "Some event is gonna happen" })
             ]),
-            label(#{ text: "Hello, World" }),
+            label(#{ text: "Hello, World", truncate: false, show_truncated: false, limit_width: 5 }),
             calendar(#{}),
             stack(#{}, [
                 label(#{ text: "Page 1" }),

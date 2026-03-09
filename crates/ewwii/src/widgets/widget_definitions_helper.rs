@@ -115,6 +115,7 @@ pub(super) fn apply_ellipsize_settings(
 ) {
     if (truncate || limit_width != i32::MAX) && show {
         label.set_max_width_chars(if limit_width == i32::MAX { -1 } else { limit_width });
+        label.set_width_chars(if limit_width == i32::MAX { -1 } else { limit_width });
         label.set_ellipsize(if truncate_left {
             pango::EllipsizeMode::Start
         } else {

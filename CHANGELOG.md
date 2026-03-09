@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - `v4_18` feature flag for to the `gtk4` crate to enable newer APIs.
+- `show_truncated` property of label widget to be false by default.
 
 ### Fixed
 
