@@ -43,7 +43,7 @@ fn widgets() {
 tree([
     poll("time", #{
         cmd: "date +%H:%M:%S",
-        initial: "12:30:10",
+        initial: "Initial Time",
         interval: "1s"
     }),
 

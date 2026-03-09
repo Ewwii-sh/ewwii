@@ -444,6 +444,11 @@ impl<B: DisplayBackend> App<B> {
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
+            if self.open_windows.is_empty() || self.reloading {
+                // Start the global variables
+                rhai_impl::updates::handle_state_changes(self.ewwii_config.get_root_node()?.as_ref());
+            }
+
             let root_widget = {
                 // builds the widget and populates widget registry
                 let mut maybe_registry = self.widget_reg_store.lock().unwrap();
@@ -456,11 +461,6 @@ impl<B: DisplayBackend> App<B> {
 
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
-
-            if self.open_windows.is_empty() || self.reloading {
-                // Start the global variables
-                rhai_impl::updates::handle_state_changes(self.ewwii_config.get_root_node()?.as_ref());
-            }
 
             let gtk_close_handler = {
                 let app_evt_sender = self.app_evt_send.clone();
