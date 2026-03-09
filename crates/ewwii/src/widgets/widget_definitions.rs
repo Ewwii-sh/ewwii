@@ -1578,11 +1578,27 @@ pub(super) fn build_gtk_combo_box_text(
     let gtk_widget = gtk4::ComboBoxText::new();
 
     if let Ok(items) = get_vec_string_prop(&props, "items", None) {
-        gtk_widget.remove_all();
-        for item in items {
-            let widget_clone = gtk_widget.clone();
-            apply_property!(item, |v: String| {
-                widget_clone.append_text(&v);
+        let current_items: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(
+            items.iter().map(|p| p.initial_value()).collect()
+        ));
+
+        let apply_items = {
+            let gtk_widget = gtk_widget.clone();
+            let current_items = current_items.clone();
+            Rc::new(move || {
+                gtk_widget.remove_all();
+                for item in current_items.borrow().iter() {
+                    gtk_widget.append_text(item);
+                }
+            })
+        };
+
+        apply_items();
+
+        for (i, item) in items.into_iter().enumerate() {
+            apply_property_watch!(item, [current_items, apply_items], |v: String| {
+                current_items.borrow_mut()[i] = v;
+                apply_items();
             });
         }
     }
