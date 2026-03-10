@@ -1705,7 +1705,6 @@ dependencies = [
  "ahash",
  "anyhow",
  "codespan-reporting",
- "gtk4",
  "libc",
  "log",
  "nix",
@@ -1714,7 +1713,6 @@ dependencies = [
  "rhai",
  "rhai_trace",
  "scan_prop_proc",
- "serde",
  "shared_utils",
  "tokio",
 ]
@@ -1855,7 +1853,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "log",
- "once_cell",
  "rhai",
  "serde",
 ]
