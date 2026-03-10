@@ -18,7 +18,13 @@ fn widgets() {
             circular_progress(#{ value: 50 }),
             input(#{ placeholder: "Text goes here..." }),
             button(#{ label: "A simple button" }),
-            image(#{ path: "./EwwiiLogo.png", content_fit: "contain", image_height: 16, image_width: 16 }),
+            image(#{ 
+                path: "/home/byson94/Downloads/foile.svg", 
+                content_fit: "scaledown", 
+                can_shrink: false,
+                image_height: 32, 
+                image_width: 32,
+            }),
             overlay(#{}, [
                 label(#{ text: "A little overlay :D" })
             ]),

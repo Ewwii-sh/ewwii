@@ -13,4 +13,3 @@ serde.workspace = true
 rhai = { workspace = true, features = ["internals"] }
 log.workspace = true
 anyhow.workspace = true
-once_cell.workspace = true

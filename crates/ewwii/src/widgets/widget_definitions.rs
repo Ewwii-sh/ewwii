@@ -1036,6 +1036,9 @@ pub(super) fn build_image(
                 }
             } else {
                 let scale = gtk_widget.scale_factor();
+                let width = if image_width > 0 { image_width * scale } else { -1 };
+                let height = if image_height > 0 { image_height * scale } else { -1 };
+
                 let pixbuf = if path.ends_with(".svg") && !fill_svg.is_empty() {
                     let svg_data = match std::fs::read_to_string(std::path::PathBuf::from(&path)) {
                         Ok(d) => d,
@@ -1068,8 +1071,8 @@ pub(super) fn build_image(
                     );
                     let result = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
                         &stream,
-                        image_width * scale,
-                        image_height * scale,
+                        width,
+                        height,
                         preserve_aspect_ratio,
                         None::<&gtk4::gio::Cancellable>,
                     );
@@ -1084,8 +1087,6 @@ pub(super) fn build_image(
                         }
                     }
                 } else {
-                    let width = if image_width > 0 { image_width * scale } else { -1 };
-                    let height = if image_height > 0 { image_height * scale } else { -1 };
                     match gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
                         std::path::PathBuf::from(&path),
                         width,
@@ -1100,7 +1101,8 @@ pub(super) fn build_image(
                     }
                 };
 
-                gtk_widget.set_pixbuf(Some(&pixbuf));
+                let texture = gtk4::gdk::Texture::for_pixbuf(&pixbuf);
+                gtk_widget.set_paintable(Some(&texture));
             }
         })
     };
@@ -1136,7 +1138,7 @@ pub(super) fn build_image(
         };
     });
 
-    bind_property!(&props, "can_shrink", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
+    bind_property!(&props, "can_shrink", get_bool_prop, Some(false), [gtk_widget], |v: bool| {
         gtk_widget.set_can_shrink(v);
     });
 
