@@ -1,5 +1,6 @@
-use crate::ast::{WidgetNode};
-use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
+use crate::ast::WidgetNode;
+use rhai::{Array, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
+use shared_utils::prop_utils::PropValue;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -22,10 +23,7 @@ fn children_to_vec(
         .collect()
 }
 
-pub fn register_all_widgets(
-    engine: &mut Engine,
-    all_nodes: &Rc<RefCell<Vec<WidgetNode>>>,
-) {
+pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<WidgetNode>>>) {
     engine.register_type::<WidgetNode>();
 
     // == Primitive widgets ==
@@ -88,6 +86,13 @@ pub fn register_all_widgets(
             Ok(WidgetNode::GtkUI { props })
         },
     );
+
+    // engine.register_fn(
+    //     "bound",
+    //     |vars: Vec<Dyanmic>, func: FnPtr| -> Result<PropValue, Box<EvalAltResult>> {
+    //         PropValue::Bound
+    //     },
+    // );
 
     // == Top-level macros ==
     engine.register_fn(

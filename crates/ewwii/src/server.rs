@@ -32,8 +32,7 @@ pub fn initialize_server<B: DisplayBackend>(
 
     log::info!("Loading paths: {}", &paths);
 
-    let config_parser =
-        Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new()));
+    let config_parser = Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new()));
 
     cleanup_log_dir(paths.get_log_dir())?;
 
@@ -285,8 +284,8 @@ async fn run_filewatch<P: AsRef<Path>>(
                 // and eww being too fast, thus reading the file while it's empty.
                 // There should be some cleaner solution for this, but this will do for now.
                 // - Elkowar
-                // 
-                // Byson94 here, I am not sure if this issue is still relevant, 
+                //
+                // Byson94 here, I am not sure if this issue is still relevant,
                 // but I am keeping this for now.
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                 reload_config_and_css(&evt_send)?;

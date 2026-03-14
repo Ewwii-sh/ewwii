@@ -1,6 +1,6 @@
-use tokio::sync::watch;
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
+use tokio::sync::watch;
 
 pub static GLOBAL_VAR_STORE: Lazy<Arc<RwLock<HashMap<String, String>>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));

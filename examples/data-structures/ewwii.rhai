@@ -15,11 +15,13 @@ let object = #{
 
 // Widget: a single animal button
 fn animalButton(emoji) {
-    let class = "animal";
-
-    if selected == emoji {
-        class = "animal selected" 
-    }
+    let class = bound([emoji, selected], |vars| {
+        if vars[0] == vars[1] {
+            return "animal selected"
+        } else {
+            return "animal"
+        }
+    });
 
     return box(#{ class: "animalLayout" }, [
         eventbox(#{ 

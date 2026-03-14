@@ -4,7 +4,7 @@ use crate::{
     display_backend::DisplayBackend,
     error_handling_ctx,
     gtk4::prelude::{
-        Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt, 
+        Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt,
         WidgetExt,
     },
     paths::EwwiiPaths,
@@ -22,7 +22,7 @@ use crate::{
     window_initiator::WindowInitiator,
     *,
 };
-use anyhow::{anyhow};
+use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
 use gdk::Monitor;
 use gtk4::Window;
@@ -446,14 +446,15 @@ impl<B: DisplayBackend> App<B> {
 
             if self.open_windows.is_empty() || self.reloading {
                 // Start the global variables
-                rhai_impl::updates::handle_state_changes(self.ewwii_config.get_root_node()?.as_ref());
+                rhai_impl::updates::handle_state_changes(
+                    self.ewwii_config.get_root_node()?.as_ref(),
+                );
             }
 
             let root_widget = {
                 // builds the widget and populates widget registry
                 let mut maybe_registry = self.widget_reg_store.lock().unwrap();
-                let registry = maybe_registry
-                    .get_or_insert_with(WidgetRegistry::new);
+                let registry = maybe_registry.get_or_insert_with(WidgetRegistry::new);
                 build_gtk_widget(&WidgetInput::Window(window_def), registry)?
             };
 
@@ -637,12 +638,11 @@ impl<B: DisplayBackend> App<B> {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         let property_value = widget_registry
                             .get_property_by_name(&widget_name, &property)
-                            .ok_or_else(|| anyhow::anyhow!(
-                                "Property '{}' not found or wrong type",
-                                property
-                            ))?;
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("Property '{}' not found or wrong type", property)
+                            })?;
 
-                        return Ok(property_value)
+                        return Ok(property_value);
                     } else {
                         log::error!("Widget registry is empty");
                     }
@@ -783,11 +783,8 @@ impl<B: DisplayBackend> App<B> {
             PluginRequest::WidgetRegistryAct(func) => {
                 let mut wgs_guard = wgs.lock().unwrap();
                 if let Some(ref mut registry) = *wgs_guard {
-                    let repr_map: HashMap<u64, &mut gtk4::Widget> = registry
-                        .widgets
-                        .iter_mut()
-                        .map(|(id, widget)| (*id, widget))
-                        .collect();
+                    let repr_map: HashMap<u64, &mut gtk4::Widget> =
+                        registry.widgets.iter_mut().map(|(id, widget)| (*id, widget)).collect();
                     func(&mut ewwii_plugin_api::widget_backend::WidgetRegistryRepr {
                         widgets: repr_map,
                     });

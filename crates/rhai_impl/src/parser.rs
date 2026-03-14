@@ -6,9 +6,9 @@ use crate::{
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
 };
-use shared_utils::variables::GlobalVar;
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, Module, ImmutableString, OptimizationLevel, Scope, AST};
+use rhai::{Dynamic, Engine, ImmutableString, Module, OptimizationLevel, Scope, AST};
+use shared_utils::variables::GlobalVar;
 use std::cell::RefCell;
 use std::fs;
 use std::path::Path;
@@ -25,8 +25,7 @@ impl ParseConfig {
         let all_nodes = Rc::new(RefCell::new(Vec::new()));
 
         engine.set_max_expr_depths(128, 128);
-        engine
-            .set_module_resolver(SimpleFileResolver);
+        engine.set_module_resolver(SimpleFileResolver);
 
         register_all_widgets(&mut engine, &all_nodes);
         register_all_providers(&mut engine);
@@ -113,7 +112,7 @@ impl ParseConfig {
     pub fn register_poll_listen_globals(&mut self, code: &str) -> Result<()> {
         let mut global_module = Module::new();
         self.engine.register_type::<GlobalVar>();
-        
+
         for (name, initial) in extract_poll_and_listen_vars(code)? {
             let value = match initial {
                 Some(v) => Dynamic::from(v),
@@ -122,7 +121,7 @@ impl ParseConfig {
             let glob_var = GlobalVar::from(name.clone(), value);
             global_module.set_var(name, glob_var);
         }
-        
+
         self.engine.register_global_module(global_module.into());
         Ok(())
     }
