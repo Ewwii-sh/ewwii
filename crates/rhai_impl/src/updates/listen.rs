@@ -1,4 +1,4 @@
-use super::{SHUTDOWN_REGISTRY, variable::VarWatcherAPI};
+use super::{variable::VarWatcherAPI, SHUTDOWN_REGISTRY};
 use nix::{
     sys::signal,
     unistd::{setpgid, Pid},
@@ -12,11 +12,7 @@ use tokio::process::Command;
 use tokio::signal as tokio_signal;
 use tokio::sync::watch;
 
-pub fn handle_listen(
-    var_name: String,
-    props: &Map,
-    shell: String,
-) {
+pub fn handle_listen(var_name: String, props: &Map, shell: String) {
     let cmd = match get_string_prop(props, "cmd", Some("")) {
         Ok(c) => unwrap_static("cmd", c),
         Err(e) => {

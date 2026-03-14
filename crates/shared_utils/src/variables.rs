@@ -8,9 +8,6 @@ pub struct GlobalVar {
 
 impl GlobalVar {
     pub fn from(name: String, initial: Dynamic) -> Self {
-        Self {
-            name,
-            initial
-        }
+        Self { name, initial }
     }
 }

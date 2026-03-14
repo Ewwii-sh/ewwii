@@ -2,7 +2,7 @@
 
 use crate::util;
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
-use crate::{bind_property, apply_property, apply_property_watch};
+use crate::{apply_property, apply_property_watch, bind_property};
 use anyhow::{anyhow, bail, Result};
 use gtk4::gdk::DragAction;
 use gtk4::{self, prelude::*};
@@ -50,12 +50,12 @@ impl WidgetRegistry {
             let parent_widget = parent.clone();
 
             // find old siblings if the widget already exists
-            let (prev_sibling, next_sibling) = if let Some(old_widget) = self.widgets.get(&widget_id)
-            {
-                (old_widget.prev_sibling(), old_widget.next_sibling())
-            } else {
-                (None, None)
-            };
+            let (prev_sibling, next_sibling) =
+                if let Some(old_widget) = self.widgets.get(&widget_id) {
+                    (old_widget.prev_sibling(), old_widget.next_sibling())
+                } else {
+                    (None, None)
+                };
 
             // check if widget already exists
             if let Some(old_widget) = self.widgets.remove(&widget_id) {
@@ -125,9 +125,7 @@ impl WidgetRegistry {
     }
 
     pub fn get_property_by_name(&self, widget_name: &str, property: &str) -> Option<String> {
-        let widget = self.widgets
-            .values()
-            .find(|widget| widget.widget_name() == widget_name)?;
+        let widget = self.widgets.values().find(|widget| widget.widget_name() == widget_name)?;
 
         let value: glib::Value = widget.property_value(property);
 
@@ -155,10 +153,8 @@ impl WidgetRegistry {
         widget_name: &str,
         property_and_value: (String, String),
     ) -> bool {
-        if let Some((&id, _)) = self
-            .widgets
-            .iter()
-            .find(|(_, widget)| widget.widget_name().as_str() == widget_name)
+        if let Some((&id, _)) =
+            self.widgets.iter().find(|(_, widget)| widget.widget_name().as_str() == widget_name)
         {
             if let Some(widget) = self.widgets.get(&id) {
                 set_property_from_string_anywhere(
@@ -178,10 +174,8 @@ impl WidgetRegistry {
         class: &str,
         remove: bool,
     ) -> bool {
-        if let Some((&id, _)) = self
-            .widgets
-            .iter()
-            .find(|(_, widget)| widget.widget_name().as_str() == widget_name)
+        if let Some((&id, _)) =
+            self.widgets.iter().find(|(_, widget)| widget.widget_name().as_str() == widget_name)
         {
             if let Some(widget) = self.widgets.get(&id) {
                 if !remove {
@@ -581,9 +575,16 @@ pub(super) fn build_event_box(
     });
 
     // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
-    bind_property!(&props, "cursor", get_string_prop, Some("default"), [controller_data], |v: String| {
-        controller_data.borrow_mut().hover_cursor = v;
-    });
+    bind_property!(
+        &props,
+        "cursor",
+        get_string_prop,
+        Some("default"),
+        [controller_data],
+        |v: String| {
+            controller_data.borrow_mut().hover_cursor = v;
+        }
+    );
 
     // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
     bind_property!(&props, "ondropped", get_string_prop, None, [controller_data], |v: String| {
@@ -591,11 +592,18 @@ pub(super) fn build_event_box(
     });
 
     // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
-    bind_property!(&props, "drag_type", get_string_prop, Some("file"), [controller_data], |v: String| {
-        if let Ok(dt) = parse_dragtype(&v) {
-            controller_data.borrow_mut().dragtype = dt;
+    bind_property!(
+        &props,
+        "drag_type",
+        get_string_prop,
+        Some("file"),
+        [controller_data],
+        |v: String| {
+            if let Ok(dt) = parse_dragtype(&v) {
+                controller_data.borrow_mut().dragtype = dt;
+            }
         }
-    });
+    );
 
     // dragvalue - URI that will be provided when dragging from this widget
     bind_property!(&props, "dragvalue", get_string_prop, None, [controller_data], |v: String| {
@@ -608,14 +616,28 @@ pub(super) fn build_event_box(
     });
 
     // onmiddleclick - command to run when the widget is middleclicked
-    bind_property!(&props, "onmiddleclick", get_string_prop, None, [controller_data], |v: String| {
-        controller_data.borrow_mut().onmiddleclick_cmd = v;
-    });
+    bind_property!(
+        &props,
+        "onmiddleclick",
+        get_string_prop,
+        None,
+        [controller_data],
+        |v: String| {
+            controller_data.borrow_mut().onmiddleclick_cmd = v;
+        }
+    );
 
     // onrightclick - command to run when the widget is rightclicked
-    bind_property!(&props, "onrightclick", get_string_prop, None, [controller_data], |v: String| {
-        controller_data.borrow_mut().onrightclick_cmd = v;
-    });
+    bind_property!(
+        &props,
+        "onrightclick",
+        get_string_prop,
+        None,
+        [controller_data],
+        |v: String| {
+            controller_data.borrow_mut().onrightclick_cmd = v;
+        }
+    );
 
     // onkeypress - command to run when a key is pressed
     bind_property!(&props, "onkeypress", get_string_prop, None, [controller_data], |v: String| {
@@ -623,9 +645,16 @@ pub(super) fn build_event_box(
     });
 
     // onkeyrelease - command to run when a key is released
-    bind_property!(&props, "onkeyrelease", get_string_prop, None, [controller_data], |v: String| {
-        controller_data.borrow_mut().onkeyrelease_cmd = Some(v);
-    });
+    bind_property!(
+        &props,
+        "onkeyrelease",
+        get_string_prop,
+        None,
+        [controller_data],
+        |v: String| {
+            controller_data.borrow_mut().onkeyrelease_cmd = Some(v);
+        }
+    );
 
     bind_property!(&props, "orientation", get_string_prop, Some("h"), [gtk_widget], |v: String| {
         if let Ok(o) = parse_orientation(&v) {
@@ -760,11 +789,18 @@ pub(super) fn build_gtk_stack(
         gtk_widget.set_visible_child_name(&v.to_string());
     });
 
-    bind_property!(&props, "transition", get_string_prop, Some("crossfade"), [gtk_widget], |v: String| {
-        if let Ok(t) = parse_stack_transition(&v) {
-            gtk_widget.set_transition_type(t);
+    bind_property!(
+        &props,
+        "transition",
+        get_string_prop,
+        Some("crossfade"),
+        [gtk_widget],
+        |v: String| {
+            if let Ok(t) = parse_stack_transition(&v) {
+                gtk_widget.set_transition_type(t);
+            }
         }
-    });
+    );
 
     bind_property!(&props, "transition_duration", get_i32_prop, None, [gtk_widget], |v: i32| {
         gtk_widget.set_transition_duration(v as u32);
@@ -882,7 +918,7 @@ pub(super) fn build_graph(props: &Map, widget_registry: &mut WidgetRegistry) -> 
             Err(e) => {
                 log::error!("Failed to parse graph type property: {}", e);
                 return;
-            },
+            }
         };
     });
 
@@ -906,7 +942,7 @@ pub(super) fn build_graph(props: &Map, widget_registry: &mut WidgetRegistry) -> 
             Err(e) => {
                 log::error!("Failed to parse graph line-style property: {}", e);
                 return;
-            },
+            }
         };
     });
 
@@ -985,7 +1021,8 @@ pub(super) fn build_image(
     let current_path = Rc::new(RefCell::new(path_prop.initial_value()));
     let current_image_width = Rc::new(RefCell::new(image_width_prop.initial_value()));
     let current_image_height = Rc::new(RefCell::new(image_height_prop.initial_value()));
-    let current_preserve_aspect_ratio = Rc::new(RefCell::new(preserve_aspect_ratio_prop.initial_value()));
+    let current_preserve_aspect_ratio =
+        Rc::new(RefCell::new(preserve_aspect_ratio_prop.initial_value()));
     let current_fill_svg = Rc::new(RefCell::new(fill_svg_prop.initial_value()));
 
     let re_render = {
@@ -1123,20 +1160,31 @@ pub(super) fn build_image(
         *current_image_height.borrow_mut() = v;
         re_render();
     });
-    apply_property_watch!(preserve_aspect_ratio_prop, [current_preserve_aspect_ratio, re_render], |v: bool| {
-        *current_preserve_aspect_ratio.borrow_mut() = v;
-        re_render();
-    });
+    apply_property_watch!(
+        preserve_aspect_ratio_prop,
+        [current_preserve_aspect_ratio, re_render],
+        |v: bool| {
+            *current_preserve_aspect_ratio.borrow_mut() = v;
+            re_render();
+        }
+    );
     apply_property_watch!(fill_svg_prop, [current_fill_svg, re_render], |v: String| {
         *current_fill_svg.borrow_mut() = v;
         re_render();
     });
 
-    bind_property!(&props, "content_fit", get_string_prop, Some("contain"), [gtk_widget], |v: String| {
-        if let Ok(content_fit) = parse_content_fit(&v) {
-            gtk_widget.set_content_fit(content_fit);
-        };
-    });
+    bind_property!(
+        &props,
+        "content_fit",
+        get_string_prop,
+        Some("contain"),
+        [gtk_widget],
+        |v: String| {
+            if let Ok(content_fit) = parse_content_fit(&v) {
+                gtk_widget.set_content_fit(content_fit);
+            };
+        }
+    );
 
     bind_property!(&props, "can_shrink", get_bool_prop, Some(false), [gtk_widget], |v: bool| {
         gtk_widget.set_can_shrink(v);
@@ -1234,13 +1282,27 @@ pub(super) fn build_gtk_button(
         controller_data.borrow_mut().onclick_cmd = v;
     });
 
-    bind_property!(&props, "onmiddleclick", get_string_prop, None, [controller_data], |v: String| {
-        controller_data.borrow_mut().onmiddleclick_cmd = v;
-    });
+    bind_property!(
+        &props,
+        "onmiddleclick",
+        get_string_prop,
+        None,
+        [controller_data],
+        |v: String| {
+            controller_data.borrow_mut().onmiddleclick_cmd = v;
+        }
+    );
 
-    bind_property!(&props, "onrightclick", get_string_prop, None, [controller_data], |v: String| {
-        controller_data.borrow_mut().onrightclick_cmd = v;
-    });
+    bind_property!(
+        &props,
+        "onrightclick",
+        get_string_prop,
+        None,
+        [controller_data],
+        |v: String| {
+            controller_data.borrow_mut().onrightclick_cmd = v;
+        }
+    );
 
     bind_property!(&props, "label", get_string_prop, None, [gtk_widget], |lbl: String| {
         gtk_widget.set_label(&lbl);
@@ -1276,7 +1338,7 @@ pub(super) fn build_gtk_label(
         bail!("Cannot set both 'text' and 'markup' for a label");
     }
 
-    // Quick Info: 
+    // Quick Info:
     // limit_width wouldn't work if show_truncated is true.
     let truncate_prop = get_bool_prop(&props, "truncate", Some(false))?;
     let limit_width_prop = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
@@ -1316,7 +1378,13 @@ pub(super) fn build_gtk_label(
                     } else {
                         gtk_widget.set_max_width_chars(p.limit_width);
                     }
-                    apply_ellipsize_settings(&gtk_widget, p.truncate, p.limit_width, p.truncate_left, p.show_truncated);
+                    apply_ellipsize_settings(
+                        &gtk_widget,
+                        p.truncate,
+                        p.limit_width,
+                        p.truncate_left,
+                        p.show_truncated,
+                    );
                     text.to_string()
                 } else {
                     gtk_widget.set_ellipsize(pango::EllipsizeMode::None);
@@ -1334,15 +1402,22 @@ pub(super) fn build_gtk_label(
                 };
                 match unescape::unescape(&t) {
                     Some(unescaped) => {
-                        let final_text = if p.unindent { util::unindent(&unescaped) } else { unescaped };
+                        let final_text =
+                            if p.unindent { util::unindent(&unescaped) } else { unescaped };
                         gtk_widget.set_text(&final_text);
-                    },
+                    }
                     None => {
                         log::error!("Failed to unescape...");
                     }
                 }
             } else if let Some(markup) = &*current_markup.borrow() {
-                apply_ellipsize_settings(&gtk_widget, p.truncate, p.limit_width, p.truncate_left, p.show_truncated);
+                apply_ellipsize_settings(
+                    &gtk_widget,
+                    p.truncate,
+                    p.limit_width,
+                    p.truncate_left,
+                    p.show_truncated,
+                );
                 gtk_widget.set_markup(markup);
             }
         })
@@ -1395,11 +1470,18 @@ pub(super) fn build_gtk_label(
     //     widget.set_angle(angle);
     // }
 
-    bind_property!(&props, "gravity", get_string_prop, Some("south"), [gtk_widget], |grav: String| {
-        if let Ok(v) = parse_gravity(&grav) {
-            gtk_widget.pango_context().set_base_gravity(v);
+    bind_property!(
+        &props,
+        "gravity",
+        get_string_prop,
+        Some("south"),
+        [gtk_widget],
+        |grav: String| {
+            if let Ok(v) = parse_gravity(&grav) {
+                gtk_widget.pango_context().set_base_gravity(v);
+            }
         }
-    });
+    );
 
     bind_property!(&props, "xalign", get_f64_prop, Some(0.5), [gtk_widget], |v: f64| {
         gtk_widget.set_xalign(v as f32);
@@ -1409,17 +1491,31 @@ pub(super) fn build_gtk_label(
         gtk_widget.set_yalign(v as f32);
     });
 
-    bind_property!(&props, "justify", get_string_prop, Some("left"), [gtk_widget], |justify: String| {
-        if let Ok(v) = parse_justification(&justify) {
-            gtk_widget.set_justify(v);
+    bind_property!(
+        &props,
+        "justify",
+        get_string_prop,
+        Some("left"),
+        [gtk_widget],
+        |justify: String| {
+            if let Ok(v) = parse_justification(&justify) {
+                gtk_widget.set_justify(v);
+            }
         }
-    });
+    );
 
-    bind_property!(&props, "wrap_mode", get_string_prop, Some("word"), [gtk_widget], |wrap: String| {
-        if let Ok(v) = parse_wrap_mode(&wrap) {
-            gtk_widget.set_wrap_mode(v);
+    bind_property!(
+        &props,
+        "wrap_mode",
+        get_string_prop,
+        Some("word"),
+        [gtk_widget],
+        |wrap: String| {
+            if let Ok(v) = parse_wrap_mode(&wrap) {
+                gtk_widget.set_wrap_mode(v);
+            }
         }
-    });
+    );
 
     bind_property!(&props, "lines", get_i32_prop, Some(-1), [gtk_widget], |lines: i32| {
         gtk_widget.set_lines(lines);
@@ -1446,9 +1542,16 @@ pub(super) fn build_gtk_input(
         gtk_widget.set_placeholder_text(Some(&value));
     });
 
-    bind_property!(&props, "password", get_bool_prop, Some(false), [gtk_widget], |password: bool| {
-        gtk_widget.set_visibility(!password);
-    });
+    bind_property!(
+        &props,
+        "password",
+        get_bool_prop,
+        Some(false),
+        [gtk_widget],
+        |password: bool| {
+            gtk_widget.set_visibility(!password);
+        }
+    );
 
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
 
@@ -1524,19 +1627,40 @@ pub(super) fn build_gtk_calendar(
     // });
 
     // show-heading - show heading line
-    bind_property!(&props, "show_heading", get_bool_prop, None, [gtk_widget], |show_heading: bool| {
-        gtk_widget.set_show_heading(show_heading);
-    });
+    bind_property!(
+        &props,
+        "show_heading",
+        get_bool_prop,
+        None,
+        [gtk_widget],
+        |show_heading: bool| {
+            gtk_widget.set_show_heading(show_heading);
+        }
+    );
 
     // show-day-names - show names of days
-    bind_property!(&props, "show_day_names", get_bool_prop, None, [gtk_widget], |show_day_names: bool| {
-        gtk_widget.set_show_day_names(show_day_names);
-    });
+    bind_property!(
+        &props,
+        "show_day_names",
+        get_bool_prop,
+        None,
+        [gtk_widget],
+        |show_day_names: bool| {
+            gtk_widget.set_show_day_names(show_day_names);
+        }
+    );
 
     // show-week-numbers - show week numbers
-    bind_property!(&props, "show_week_numbers", get_bool_prop, None, [gtk_widget], |show_week_numbers: bool| {
-        gtk_widget.set_show_week_numbers(show_week_numbers);
-    });
+    bind_property!(
+        &props,
+        "show_week_numbers",
+        get_bool_prop,
+        None,
+        [gtk_widget],
+        |show_week_numbers: bool| {
+            gtk_widget.set_show_week_numbers(show_week_numbers);
+        }
+    );
 
     // timeout - timeout of the command. Default: "200ms"
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
@@ -1573,9 +1697,8 @@ pub(super) fn build_gtk_combo_box_text(
     let gtk_widget = gtk4::ComboBoxText::new();
 
     if let Ok(items) = get_vec_string_prop(&props, "items", None) {
-        let current_items: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(
-            items.iter().map(|p| p.initial_value()).collect()
-        ));
+        let current_items: Rc<RefCell<Vec<String>>> =
+            Rc::new(RefCell::new(items.iter().map(|p| p.initial_value()).collect()));
 
         let apply_items = {
             let gtk_widget = gtk_widget.clone();
@@ -1661,7 +1784,6 @@ pub(super) fn build_gtk_expander(
     let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
     gtk_widget.set_child(Some(&child_widget));
 
-
     bind_property!(&props, "name", get_string_prop, None, [gtk_widget], |name: String| {
         gtk_widget.set_label(Some(&name));
     });
@@ -1683,11 +1805,18 @@ pub(super) fn build_gtk_revealer(
 ) -> Result<gtk4::Revealer> {
     let gtk_widget = gtk4::Revealer::new();
 
-    bind_property!(&props, "transition", get_string_prop, Some("crossfade"), [gtk_widget], |transition: String| {
-        if let Ok(t) = parse_revealer_transition(&transition) {
-            gtk_widget.set_transition_type(t);
+    bind_property!(
+        &props,
+        "transition",
+        get_string_prop,
+        Some("crossfade"),
+        [gtk_widget],
+        |transition: String| {
+            if let Ok(t) = parse_revealer_transition(&transition) {
+                gtk_widget.set_transition_type(t);
+            }
         }
-    });
+    );
 
     bind_property!(&props, "reveal", get_bool_prop, None, [gtk_widget], |reveal: bool| {
         gtk_widget.set_reveal_child(reveal);
@@ -1733,9 +1862,16 @@ pub(super) fn build_gtk_checkbox(
         *onchecked_cmd.borrow_mut() = v;
     });
 
-    bind_property!(&props, "onunchecked", get_string_prop, Some(""), [onunchecked_cmd], |v: String| {
-        *onunchecked_cmd.borrow_mut() = v;
-    });
+    bind_property!(
+        &props,
+        "onunchecked",
+        get_string_prop,
+        Some(""),
+        [onunchecked_cmd],
+        |v: String| {
+            *onunchecked_cmd.borrow_mut() = v;
+        }
+    );
 
     gtk_widget.connect_toggled(glib::clone!(
         #[strong]
@@ -1751,7 +1887,8 @@ pub(super) fn build_gtk_checkbox(
                 if widget.is_active() { &oncheck } else { &onuncheck },
                 &[] as &[&str],
             );
-    }));
+        }
+    ));
 
     let id = hash_props_and_type(&props, "Checkbox");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
@@ -1845,8 +1982,10 @@ pub(super) fn build_gtk_scale(
     props: &Map,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Scale> {
-    let gtk_widget =
-        gtk4::Scale::new(gtk4::Orientation::Horizontal, Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)));
+    let gtk_widget = gtk4::Scale::new(
+        gtk4::Orientation::Horizontal,
+        Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
+    );
 
     // only allow changing the value via the value property if the user isn't currently dragging
     let scale_dat = Rc::new(RefCell::new(RangeCtrlData {
@@ -1914,11 +2053,18 @@ pub(super) fn build_gtk_scale(
         gtk_widget.set_draw_value(v);
     });
 
-    bind_property!(&props, "value_pos", get_string_prop, None, [gtk_widget], |value_pos: String| {
-        if let Ok(pos) = parse_position_type(&value_pos) {
-            gtk_widget.set_value_pos(pos);
+    bind_property!(
+        &props,
+        "value_pos",
+        get_string_prop,
+        None,
+        [gtk_widget],
+        |value_pos: String| {
+            if let Ok(pos) = parse_position_type(&value_pos) {
+                gtk_widget.set_value_pos(pos);
+            }
         }
-    });
+    );
 
     bind_property!(&props, "round_digits", get_i32_prop, Some(0), [gtk_widget], |v: i32| {
         gtk_widget.set_round_digits(v);
@@ -1942,19 +2088,30 @@ pub(super) fn build_gtk_scrolledwindow(
     let gtk_widget = gtk4::ScrolledWindow::new();
 
     bind_property!(&props, "hscroll", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_hscrollbar_policy(
-            if v { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never }
-        );
+        gtk_widget.set_hscrollbar_policy(if v {
+            gtk4::PolicyType::Automatic
+        } else {
+            gtk4::PolicyType::Never
+        });
     });
     bind_property!(&props, "vscroll", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_vscrollbar_policy(
-            if v { gtk4::PolicyType::Automatic } else { gtk4::PolicyType::Never }
-        );
+        gtk_widget.set_vscrollbar_policy(if v {
+            gtk4::PolicyType::Automatic
+        } else {
+            gtk4::PolicyType::Never
+        });
     });
 
-    bind_property!(&props, "propagate_natural_height", get_bool_prop, None, [gtk_widget], |natural_height: bool| {
-        gtk_widget.set_propagate_natural_height(natural_height);
-    });
+    bind_property!(
+        &props,
+        "propagate_natural_height",
+        get_bool_prop,
+        None,
+        [gtk_widget],
+        |natural_height: bool| {
+            gtk_widget.set_propagate_natural_height(natural_height);
+        }
+    );
 
     let count = children.len();
 

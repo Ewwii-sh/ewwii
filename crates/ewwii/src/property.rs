@@ -1,14 +1,16 @@
 #[macro_export]
 macro_rules! apply_property {
     ($prop:expr, |$v:ident: $t:ty| $body:expr) => {{
-        let setter = move |$v: $t| { $body };
+        let setter = move |$v: $t| $body;
         match $prop {
             PropValue::Static(val) => {
                 setter(val);
             }
             PropValue::Bound { var_name, initial, parser } => {
                 setter(initial);
-                if let Some(mut receiver) = rhai_impl::updates::variable::VarWatcherAPI::subscribe(&var_name) {
+                if let Some(mut receiver) =
+                    rhai_impl::updates::variable::VarWatcherAPI::subscribe(&var_name)
+                {
                     glib::MainContext::default().spawn_local(async move {
                         while receiver.changed().await.is_ok() {
                             let raw = receiver.borrow().clone();

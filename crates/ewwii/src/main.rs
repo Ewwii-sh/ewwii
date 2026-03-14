@@ -49,11 +49,11 @@ mod ipc_server;
 mod opts;
 mod paths;
 mod plugin;
+mod property;
 mod server;
 mod util;
 mod widgets;
 mod window;
-mod property;
 mod window_arguments;
 mod window_initiator;
 

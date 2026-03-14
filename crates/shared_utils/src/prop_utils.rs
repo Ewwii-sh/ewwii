@@ -1,15 +1,11 @@
+use super::variables::GlobalVar;
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Map};
 use std::time::Duration;
-use super::variables::GlobalVar;
 
 pub enum PropValue<T> {
     Static(T),
-    Bound {
-        var_name: String,
-        initial: T,
-        parser: fn(&str) -> Option<T>,
-    },
+    Bound { var_name: String, initial: T, parser: fn(&str) -> Option<T> },
 }
 
 impl<T: Clone> PropValue<T> {
@@ -76,7 +72,9 @@ pub fn get_string_prop(props: &Map, key: &str, default: Option<&str>) -> Result<
         if let Some(var) = try_get_global_var(value) {
             return Ok(PropValue::Bound {
                 var_name: var.name,
-                initial: var.initial.clone()
+                initial: var
+                    .initial
+                    .clone()
                     .try_cast::<String>()
                     .unwrap_or_else(|| default.unwrap_or("").to_string()),
                 parser: parse_string,
@@ -99,9 +97,7 @@ pub fn get_bool_prop(props: &Map, key: &str, default: Option<bool>) -> Result<Pr
         if let Some(var) = try_get_global_var(value) {
             return Ok(PropValue::Bound {
                 var_name: var.name,
-                initial: var.initial.clone()
-                    .try_cast::<bool>()
-                    .unwrap_or(default.unwrap_or(false)),
+                initial: var.initial.clone().try_cast::<bool>().unwrap_or(default.unwrap_or(false)),
                 parser: parse_bool,
             });
         }
@@ -122,9 +118,7 @@ pub fn get_i64_prop(props: &Map, key: &str, default: Option<i64>) -> Result<Prop
         if let Some(var) = try_get_global_var(value) {
             return Ok(PropValue::Bound {
                 var_name: var.name,
-                initial: var.initial.clone()
-                    .try_cast::<i64>()
-                    .unwrap_or(default.unwrap_or(0)),
+                initial: var.initial.clone().try_cast::<i64>().unwrap_or(default.unwrap_or(0)),
                 parser: parse_i64,
             });
         }
@@ -149,7 +143,9 @@ pub fn get_f64_prop(props: &Map, key: &str, default: Option<f64>) -> Result<Prop
         if let Some(var) = try_get_global_var(value) {
             return Ok(PropValue::Bound {
                 var_name: var.name,
-                initial: var.initial.clone()
+                initial: var
+                    .initial
+                    .clone()
                     .try_cast::<f64>()
                     .or_else(|| var.initial.clone().try_cast::<i64>().map(|v| v as f64))
                     .unwrap_or(default.unwrap_or(0.0)),
@@ -161,9 +157,9 @@ pub fn get_f64_prop(props: &Map, key: &str, default: Option<f64>) -> Result<Prop
         } else if let Some(v) = value.clone().try_cast::<i64>() {
             Ok(PropValue::Static(v as f64))
         } else if let Some(s) = value.clone().try_cast::<String>() {
-            s.parse::<f64>()
-                .map(PropValue::Static)
-                .map_err(|_| anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key))
+            s.parse::<f64>().map(PropValue::Static).map_err(|_| {
+                anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key)
+            })
         } else {
             Err(anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key))
         }
@@ -179,7 +175,9 @@ pub fn get_i32_prop(props: &Map, key: &str, default: Option<i32>) -> Result<Prop
         if let Some(var) = try_get_global_var(value) {
             return Ok(PropValue::Bound {
                 var_name: var.name,
-                initial: var.initial.clone()
+                initial: var
+                    .initial
+                    .clone()
                     .try_cast::<i32>()
                     .or_else(|| var.initial.clone().try_cast::<i64>().map(|v| v as i32))
                     .unwrap_or(default.unwrap_or(0)),
@@ -223,18 +221,12 @@ pub fn get_vec_string_prop(
             .into_iter()
             .map(|d| {
                 if let Some(var) = try_get_global_var(&d) {
-                    let initial = var.initial.clone()
-                        .try_cast::<String>()
-                        .unwrap_or_default();
-                    Ok(PropValue::Bound {
-                        var_name: var.name,
-                        initial,
-                        parser: parse_string,
-                    })
+                    let initial = var.initial.clone().try_cast::<String>().unwrap_or_default();
+                    Ok(PropValue::Bound { var_name: var.name, initial, parser: parse_string })
                 } else {
-                    d.try_cast::<String>()
-                        .map(PropValue::Static)
-                        .ok_or_else(|| anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key))
+                    d.try_cast::<String>().map(PropValue::Static).ok_or_else(|| {
+                        anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key)
+                    })
                 }
             })
             .collect()

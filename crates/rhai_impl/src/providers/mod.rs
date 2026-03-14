@@ -24,9 +24,6 @@ pub fn register_all_providers(engine: &mut rhai::Engine) {
     register_stdlib(&mut resolver);
     register_apilib(&mut resolver);
 
-    let chained = ChainedResolver {
-        first: SimpleFileResolver,
-        second: resolver.clone(),
-    };
+    let chained = ChainedResolver { first: SimpleFileResolver, second: resolver.clone() };
     engine.set_module_resolver(chained);
 }

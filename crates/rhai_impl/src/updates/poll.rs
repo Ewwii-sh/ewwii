@@ -1,4 +1,4 @@
-use super::{SHUTDOWN_REGISTRY, variable::VarWatcherAPI};
+use super::{variable::VarWatcherAPI, SHUTDOWN_REGISTRY};
 use rhai::Map;
 use shared_utils::prop_utils::*;
 use std::time::Duration;
@@ -7,11 +7,7 @@ use tokio::process::Command;
 use tokio::sync::watch;
 use tokio::time::sleep;
 
-pub fn handle_poll(
-    var_name: String,
-    props: &Map,
-    shell: String,
-) {
+pub fn handle_poll(var_name: String, props: &Map, shell: String) {
     let interval = get_duration_prop(props, "interval", Some(Duration::from_secs(1)));
     let interval = interval.expect("Error parsing interval property of poll");
 
