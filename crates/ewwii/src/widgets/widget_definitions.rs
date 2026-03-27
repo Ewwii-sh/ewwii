@@ -1649,7 +1649,7 @@ pub(super) fn build_image(
                     preserve_aspect_ratio,
                 )?;
 
-                widget.set_pixbuf(Some(&frame_pixbuf));
+                widget.set_pixbuf(Some(&pixbuf));
             }
         }
 
