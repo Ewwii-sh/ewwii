@@ -17,7 +17,7 @@ impl<T: Clone> PropValue<T> {
     }
 }
 
-fn try_get_global_var(value: &Dynamic) -> Option<GlobalVar> {
+pub fn try_get_global_var(value: &Dynamic) -> Option<GlobalVar> {
     value.clone().try_cast::<GlobalVar>()
 }
 
@@ -222,7 +222,11 @@ pub fn get_vec_string_prop(
             .map(|d| {
                 if let Some(var) = try_get_global_var(&d) {
                     let initial = var.initial.clone().try_cast::<String>().unwrap_or_default();
-                    Ok(PropValue::Bound { var_name: var.name, initial, parser: parse_string })
+                    Ok(PropValue::Bound {
+                        var_name: var.name,
+                        initial,
+                        parser: parse_string,
+                    })
                 } else {
                     d.try_cast::<String>().map(PropValue::Static).ok_or_else(|| {
                         anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key)

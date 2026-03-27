@@ -9,8 +9,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use ewwii_rhai_impl::{ast::WidgetNode, parser::ParseConfig};
 use rhai::{Map, AST};
-use rhai_impl::{ast::WidgetNode, parser::ParseConfig};
 
 // use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
 

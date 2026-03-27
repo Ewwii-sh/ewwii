@@ -23,13 +23,15 @@ impl ParseConfig {
     pub fn new() -> Self {
         let mut engine = Engine::new();
         let all_nodes = Rc::new(RefCell::new(Vec::new()));
+        let shared_engine: Rc<RefCell<Option<Engine>>> = Rc::new(RefCell::new(None));
 
         engine.set_max_expr_depths(128, 128);
         engine.set_module_resolver(SimpleFileResolver);
 
-        register_all_widgets(&mut engine, &all_nodes);
+        register_all_widgets(&mut engine, &all_nodes, shared_engine.clone());
         register_all_providers(&mut engine);
 
+        *shared_engine.borrow_mut() = Some(engine.clone());
         Self { engine, all_nodes }
     }
 

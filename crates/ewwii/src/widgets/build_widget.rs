@@ -4,7 +4,7 @@ use gtk4::gdk::prelude::Cast;
 use crate::config::WindowDefinition;
 use crate::widgets::widget_definitions::*;
 
-use rhai_impl::ast::WidgetNode;
+use ewwii_rhai_impl::ast::WidgetNode;
 
 /// Widget input allows us to pass either a widgetnode or a window_def
 /// this is important to make build_gtk_widget standalone without having to
