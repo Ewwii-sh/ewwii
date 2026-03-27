@@ -16,7 +16,7 @@ wayland = ["gtk4-layer-shell"]
 
 [dependencies]
 shared_utils.workspace = true
-rhai_impl.workspace = true
+ewwii_rhai_impl.workspace = true
 ewwii_plugin_api.workspace = true
 
 gtk4-layer-shell = { version = "0.6.3", optional = true }

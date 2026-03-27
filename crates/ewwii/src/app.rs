@@ -24,12 +24,12 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
+use ewwii_rhai_impl::parser::ParseConfig;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
-use rhai_impl::parser::ParseConfig;
 use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use std::{
     cell::{Cell, RefCell},
@@ -341,7 +341,8 @@ impl<B: DisplayBackend> App<B> {
                 sender.send_success(output)?
             }
             DaemonCommand::ShowState(sender) => {
-                let output = format!("{:#?}", rhai_impl::updates::variable::VarWatcherAPI::state());
+                let output =
+                    format!("{:#?}", ewwii_rhai_impl::updates::variable::VarWatcherAPI::state());
                 sender.send_success(output)?
             }
             DaemonCommand::TriggerUpdateUI {
@@ -380,7 +381,7 @@ impl<B: DisplayBackend> App<B> {
     /// Fully stop ewwii:
     /// close all windows, kill the poll/listen state handler, quit the gtk appliaction and send the exit instruction to the lifecycle manager
     fn stop_application(&mut self) {
-        rhai_impl::updates::kill_state_change_handler();
+        ewwii_rhai_impl::updates::kill_state_change_handler();
         for (_, window) in self.open_windows.drain() {
             window.close();
         }
@@ -415,7 +416,7 @@ impl<B: DisplayBackend> App<B> {
         // stop poll/listen handlers if no windows are open
         if self.open_windows.is_empty() || self.reloading {
             log::trace!("Killing ewwii state change handler.");
-            rhai_impl::updates::kill_state_change_handler();
+            ewwii_rhai_impl::updates::kill_state_change_handler();
         }
 
         Ok(())
@@ -446,7 +447,7 @@ impl<B: DisplayBackend> App<B> {
 
             if self.open_windows.is_empty() || self.reloading {
                 // Start the global variables
-                rhai_impl::updates::handle_state_changes(
+                ewwii_rhai_impl::updates::handle_state_changes(
                     self.ewwii_config.get_root_node()?.as_ref(),
                 );
             }
@@ -614,9 +615,10 @@ impl<B: DisplayBackend> App<B> {
                 let mut parser = self.config_parser.borrow_mut();
                 for rhai_code in rhai_codes {
                     let widget_node = parser.eval_code_snippet(&rhai_code)?;
-                    let wid = rhai_impl::ast::hash_props(widget_node.props().ok_or_else(|| {
-                        anyhow::anyhow!("Failed to retreive the properties of this widget.")
-                    })?);
+                    let wid =
+                        ewwii_rhai_impl::ast::hash_props(widget_node.props().ok_or_else(|| {
+                            anyhow::anyhow!("Failed to retreive the properties of this widget.")
+                        })?);
 
                     if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                         if let Some(widget_registry) = maybe_registry.as_mut() {

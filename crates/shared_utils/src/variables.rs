@@ -1,4 +1,4 @@
-use rhai::Dynamic;
+use rhai::{Dynamic, Map};
 
 #[derive(Clone)]
 pub struct GlobalVar {

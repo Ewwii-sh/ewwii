@@ -32,7 +32,7 @@ pub fn initialize_server<B: DisplayBackend>(
 
     log::info!("Loading paths: {}", &paths);
 
-    let config_parser = Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new()));
+    let config_parser = Rc::new(RefCell::new(ewwii_rhai_impl::parser::ParseConfig::new()));
 
     cleanup_log_dir(paths.get_log_dir())?;
 

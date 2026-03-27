@@ -4,6 +4,7 @@ use crate::util;
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use crate::{apply_property, apply_property_watch, bind_property};
 use anyhow::{anyhow, bail, Result};
+use ewwii_rhai_impl::ast::{hash_props_and_type, WidgetNode};
 use gtk4::gdk::DragAction;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
@@ -12,7 +13,6 @@ use gtk4::{
     EventControllerScroll, GestureClick,
 };
 use rhai::Map;
-use rhai_impl::ast::{hash_props_and_type, WidgetNode};
 
 use super::widget_definitions_helper::*;
 use shared_utils::prop_utils::*;
