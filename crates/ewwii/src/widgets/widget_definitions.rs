@@ -1602,17 +1602,42 @@ pub(super) fn build_image(
                     let reg = regex::Regex::new(r"<svg")?;
                     reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
                 };
+
+                let pw = image_width * scale;
+                let ph = image_height * scale;
+
                 let stream = gtk4::gio::MemoryInputStream::from_bytes(&gtk4::glib::Bytes::from(
                     svg_data.as_bytes(),
                 ));
                 pixbuf = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
                     &stream,
-                    image_width * scale,
-                    image_height * scale,
+                    pw,
+                    ph,
                     preserve_aspect_ratio,
                     None::<&gtk4::gio::Cancellable>,
                 )?;
                 stream.close(None::<&gtk4::gio::Cancellable>)?;
+
+                let mut surface = gtk4::cairo::ImageSurface::create(gtk4::cairo::Format::ARgb32, pw, ph)?;
+                surface.set_device_scale(scale as f64, scale as f64);
+
+                {
+                    let cr = gtk4::cairo::Context::new(&surface)?;
+                    cr.set_source_pixbuf(&pixbuf, 0.0, 0.0);
+                    cr.paint()?;
+                }
+
+                let stride = surface.stride() as usize;
+                let data = surface.data()?;
+                let texture = gtk4::gdk::MemoryTexture::new(
+                    image_width,
+                    image_height,
+                    gtk4::gdk::MemoryFormat::B8g8r8a8Premultiplied,
+                    &gtk4::glib::Bytes::from(&*data),
+                    stride,
+                );
+
+                widget.set_paintable(Some(&texture));
             } else {
                 let width = if image_width > 0 { image_width * scale } else { -1 };
                 let height = if image_height > 0 { image_height * scale } else { -1 };
@@ -1623,8 +1648,9 @@ pub(super) fn build_image(
                     height,
                     preserve_aspect_ratio,
                 )?;
+
+                widget.set_pixbuf(Some(&frame_pixbuf));
             }
-            widget.set_pixbuf(Some(&pixbuf));
         }
 
         Ok(())
