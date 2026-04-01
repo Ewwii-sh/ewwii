@@ -18,6 +18,7 @@ use crate::{
         monitor::MonitorIdentifier,
         window_geometry::{AnchorPoint, WindowGeometry},
     },
+    config::ewwii_config::EWWII_CONFIG_PARSER,
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
     *,
@@ -163,8 +164,6 @@ pub struct App<B: DisplayBackend> {
     /// The dynamic gtk widget registery
     pub widget_reg_store: Rc<Mutex<Option<WidgetRegistry>>>,
 
-    pub config_parser: Rc<RefCell<ParseConfig>>,
-
     pub paths: EwwiiPaths,
     pub gtk_main_loop: gtk4::glib::MainLoop,
     pub phantom: PhantomData<B>,
@@ -233,10 +232,11 @@ impl<B: DisplayBackend> App<B> {
                 wait_for_monitor_model().await;
                 let mut errors = Vec::new();
 
-                let mut parser_ref = self.config_parser.borrow_mut();
-                let config_result = config::read_from_ewwii_paths(&self.paths, &mut *parser_ref);
-
-                drop(parser_ref);
+                let config_result = EWWII_CONFIG_PARSER.with(|p| {
+                    let mut parser = p.borrow_mut();
+                    let parser_ref = parser.as_mut().unwrap();
+                    config::read_from_ewwii_paths(&self.paths, parser_ref)
+                });
 
                 if let Err(e) = config_result.and_then(|new_config| self.load_config(new_config)) {
                     errors.push(e)
@@ -612,9 +612,12 @@ impl<B: DisplayBackend> App<B> {
                 }
             }
             crate::opts::WidgetControlAction::Create { rhai_codes, parent_name } => {
-                let mut parser = self.config_parser.borrow_mut();
                 for rhai_code in rhai_codes {
-                    let widget_node = parser.eval_code_snippet(&rhai_code)?;
+                    let widget_node = EWWII_CONFIG_PARSER.with(|p| {
+                        let mut parser = p.borrow_mut();
+                        let parser_ref = parser.as_mut().unwrap();
+                        parser_ref.eval_code_snippet(&rhai_code)
+                    })?;
                     let wid =
                         ewwii_rhai_impl::ast::hash_props(widget_node.props().ok_or_else(|| {
                             anyhow::anyhow!("Failed to retreive the properties of this widget.")
@@ -715,16 +718,19 @@ impl<B: DisplayBackend> App<B> {
         let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
         let config_path = self.paths.get_rhai_path();
 
-        let mut reeval_parser = self.config_parser.borrow_mut();
-        let rhai_code = reeval_parser.code_from_file(&config_path)?;
-
         // unwrap Rc<RefCell<AST>>
         let ast_ref: &rhai::AST =
             &*compiled_ast.as_ref().ok_or_else(|| anyhow!("AST not compiled yet"))?.borrow();
 
-        for fn_call in calls {
-            reeval_parser.call_rhai_fn(ast_ref, &fn_call, None)?;
-        }
+
+        EWWII_CONFIG_PARSER.with(move |p| -> anyhow::Result<()> {
+            let parser = p.borrow();
+            let parser = parser.as_ref().unwrap();
+            for fn_call in calls {
+                parser.call_rhai_fn(ast_ref, &fn_call, None)?;
+            }
+            Ok(())
+        })?;
 
         Ok(())
     }
@@ -758,21 +764,32 @@ impl<B: DisplayBackend> App<B> {
             plugin.init(&host); // call init immediately
         }
 
-        let cp = self.config_parser.clone();
         let wgs = self.widget_reg_store.clone();
 
         let handle_request = move |req: PluginRequest| match req {
             PluginRequest::RhaiEngineAct(func) => {
-                func(&mut cp.borrow_mut().engine);
+                EWWII_CONFIG_PARSER.with(move |p| {
+                    let mut parser = p.borrow_mut();
+                    let parser_ref = parser.as_mut().unwrap();
+                    func(&mut parser_ref.engine);
+                });
             }
             PluginRequest::RegisterFunc((name, namespace, func)) => match namespace {
                 epapi::rhai_backend::RhaiFnNamespace::Custom(ns) => {
                     let mut module = rhai::Module::new();
                     module.set_native_fn(name, func);
-                    cp.borrow_mut().engine.register_static_module(&ns, module.into());
+                    EWWII_CONFIG_PARSER.with(move |p| {
+                        let mut parser = p.borrow_mut();
+                        let parser_ref = parser.as_mut().unwrap();
+                        parser_ref.engine.register_static_module(&ns, module.into());
+                    });
                 }
                 epapi::rhai_backend::RhaiFnNamespace::Global => {
-                    cp.borrow_mut().engine.register_fn(name, func);
+                    EWWII_CONFIG_PARSER.with(move |p| {
+                        let mut parser = p.borrow_mut();
+                        let parser_ref = parser.as_mut().unwrap();
+                        parser_ref.engine.register_fn(name, func);
+                    });
                 }
             },
             PluginRequest::ListWidgetIds(res_tx) => {

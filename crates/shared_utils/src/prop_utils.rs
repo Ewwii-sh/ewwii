@@ -1,24 +1,49 @@
-use super::variables::GlobalVar;
+use super::variables::{GlobalVar, GlobalCompare};
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Map};
 use std::time::Duration;
 
 pub enum PropValue<T> {
     Static(T),
-    Bound { var_name: String, initial: T, parser: fn(&str) -> Option<T> },
+    Compare {
+        comp: GlobalCompare,
+        parser: fn(&str) -> Option<T>,
+    },
+    Bound { 
+        var_name: String, 
+        initial: T, 
+        parser: fn(&str) -> Option<T>
+    },
 }
 
-impl<T: Clone> PropValue<T> {
+impl<T: Clone + Default> PropValue<T> {
     pub fn initial_value(&self) -> T {
         match self {
             PropValue::Static(v) => v.clone(),
             PropValue::Bound { initial, .. } => initial.clone(),
+            PropValue::Compare { .. } => T::default(),
         }
     }
 }
 
+// === Helpers ===
 pub fn try_get_global_var(value: &Dynamic) -> Option<GlobalVar> {
     value.clone().try_cast::<GlobalVar>()
+}
+
+pub fn try_get_global_compare(value: &Dynamic) -> Option<GlobalCompare> {
+    value.clone().try_cast::<GlobalCompare>()
+}
+
+fn make_bound<T>(var: GlobalVar, default: T, parser: fn(&str) -> Option<T>) -> PropValue<T>
+where
+    T: Clone + 'static,
+{
+    PropValue::Bound {
+        var_name: var.name,
+        initial: var.initial.clone().try_cast::<T>().unwrap_or(default),
+        parser,
+    }
 }
 
 // === Typed parsers with logging ===
@@ -70,14 +95,12 @@ fn parse_i32(s: &str) -> Option<i32> {
 pub fn get_string_prop(props: &Map, key: &str, default: Option<&str>) -> Result<PropValue<String>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = try_get_global_var(value) {
-            return Ok(PropValue::Bound {
-                var_name: var.name,
-                initial: var
-                    .initial
-                    .clone()
-                    .try_cast::<String>()
-                    .unwrap_or_else(|| default.unwrap_or("").to_string()),
-                parser: parse_string,
+            return Ok(make_bound(var, default.unwrap_or("").to_string(), parse_string));
+        }
+        if let Some(var) = try_get_global_compare(value) {
+            return Ok(PropValue::Compare {
+                comp: var,
+                parser: parse_string
             });
         }
         value
@@ -95,10 +118,12 @@ pub fn get_string_prop(props: &Map, key: &str, default: Option<&str>) -> Result<
 pub fn get_bool_prop(props: &Map, key: &str, default: Option<bool>) -> Result<PropValue<bool>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = try_get_global_var(value) {
-            return Ok(PropValue::Bound {
-                var_name: var.name,
-                initial: var.initial.clone().try_cast::<bool>().unwrap_or(default.unwrap_or(false)),
-                parser: parse_bool,
+            return Ok(make_bound(var, default.unwrap_or(false), parse_bool));
+        }
+        if let Some(var) = try_get_global_compare(value) {
+            return Ok(PropValue::Compare {
+                comp: var,
+                parser: parse_bool
             });
         }
         value
@@ -116,10 +141,12 @@ pub fn get_bool_prop(props: &Map, key: &str, default: Option<bool>) -> Result<Pr
 pub fn get_i64_prop(props: &Map, key: &str, default: Option<i64>) -> Result<PropValue<i64>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = try_get_global_var(value) {
-            return Ok(PropValue::Bound {
-                var_name: var.name,
-                initial: var.initial.clone().try_cast::<i64>().unwrap_or(default.unwrap_or(0)),
-                parser: parse_i64,
+            return Ok(make_bound(var, default.unwrap_or(0), parse_i64));
+        }
+        if let Some(var) = try_get_global_compare(value) {
+            return Ok(PropValue::Compare {
+                comp: var,
+                parser: parse_i64
             });
         }
         if let Some(v) = value.clone().try_cast::<i64>() {
@@ -141,15 +168,15 @@ pub fn get_i64_prop(props: &Map, key: &str, default: Option<i64>) -> Result<Prop
 pub fn get_f64_prop(props: &Map, key: &str, default: Option<f64>) -> Result<PropValue<f64>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = try_get_global_var(value) {
-            return Ok(PropValue::Bound {
-                var_name: var.name,
-                initial: var
-                    .initial
-                    .clone()
-                    .try_cast::<f64>()
-                    .or_else(|| var.initial.clone().try_cast::<i64>().map(|v| v as f64))
-                    .unwrap_or(default.unwrap_or(0.0)),
-                parser: parse_f64,
+            let initial = var.initial.clone().try_cast::<f64>()
+                .or_else(|| var.initial.clone().try_cast::<i64>().map(|v| v as f64))
+                .unwrap_or(default.unwrap_or(0.0));
+            return Ok(PropValue::Bound { var_name: var.name, initial, parser: parse_f64 });
+        }
+        if let Some(var) = try_get_global_compare(value) {
+            return Ok(PropValue::Compare {
+                comp: var,
+                parser: parse_f64
             });
         }
         if let Some(v) = value.clone().try_cast::<f64>() {
@@ -173,15 +200,15 @@ pub fn get_f64_prop(props: &Map, key: &str, default: Option<f64>) -> Result<Prop
 pub fn get_i32_prop(props: &Map, key: &str, default: Option<i32>) -> Result<PropValue<i32>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = try_get_global_var(value) {
-            return Ok(PropValue::Bound {
-                var_name: var.name,
-                initial: var
-                    .initial
-                    .clone()
-                    .try_cast::<i32>()
-                    .or_else(|| var.initial.clone().try_cast::<i64>().map(|v| v as i32))
-                    .unwrap_or(default.unwrap_or(0)),
-                parser: parse_i32,
+            let initial = var.initial.clone().try_cast::<i32>()
+                .or_else(|| var.initial.clone().try_cast::<i64>().map(|v| v as i32))
+                .unwrap_or(default.unwrap_or(0));
+            return Ok(PropValue::Bound { var_name: var.name, initial, parser: parse_i32 });
+        }
+        if let Some(var) = try_get_global_compare(value) {
+            return Ok(PropValue::Compare {
+                comp: var,
+                parser: parse_i32
             });
         }
         if let Some(v) = value.clone().try_cast::<i32>() {
@@ -227,6 +254,11 @@ pub fn get_vec_string_prop(
                         initial,
                         parser: parse_string,
                     })
+                } else if let Some(var) = try_get_global_compare(&d) {
+                    return Ok(PropValue::Compare {
+                        comp: var,
+                        parser: parse_string
+                    });
                 } else {
                     d.try_cast::<String>().map(PropValue::Static).ok_or_else(|| {
                         anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key)
@@ -285,6 +317,13 @@ pub fn unwrap_static<T: Default>(key: &str, prop: PropValue<T>) -> T {
                 "Property `{}` does not support variable binding (got GlobalVar `{}`), using default as fallback",
                 key,
                 var_name
+            );
+            T::default()
+        }
+        PropValue::Compare { .. } => {
+            log::error!(
+                "Property `{}` does not support variable binding comparision (got GlobalCompare), using default as fallback",
+                key,
             );
             T::default()
         }

@@ -1,7 +1,6 @@
 use crate::ast::WidgetNode;
-use crate::updates::variable::VarWatcherAPI;
-use rhai::{Array, Dynamic, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
-use shared_utils::variables::GlobalVar;
+use rhai::{Array, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
+use shared_utils::variables::GlobalCompare;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -26,6 +25,7 @@ fn children_to_vec(
 
 pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<WidgetNode>>>) {
     engine.register_type::<WidgetNode>();
+    engine.register_type::<GlobalCompare>();
 
     // == Primitive widgets ==
     macro_rules! register_primitive {
@@ -90,96 +90,14 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
 
     engine.register_fn(
         "bound",
-        |variables: Array, closure: FnPtr| -> Result<GlobalVar, Box<EvalAltResult>> {
-            let unique_name = format!("__bound_{:032x}", rand::random::<u128>());
-            let mut bindings = Map::new();
-            let mut global_var_entries: Vec<(usize, String)> = vec![];
-            let mut static_values: Map = Map::new();
-
-            bindings.insert("closure".into(), Dynamic::from(closure.clone()));
-
-            for (idx, variable) in variables.iter().enumerate() {
-                let key = idx.to_string();
-                if let Some(global_var) = shared_utils::prop_utils::try_get_global_var(variable) {
-                    let mut entry = Map::new();
-                    entry.insert("type".into(), Dynamic::from("global"));
-                    entry.insert("name".into(), Dynamic::from(global_var.name.clone()));
-                    bindings.insert(key.into(), Dynamic::from(entry));
-                    global_var_entries.push((idx, global_var.name.clone()));
-                } else {
-                    bindings.insert(key.into(), variable.clone());
-                    static_values.insert(idx.to_string().into(), variable.clone());
-                }
-            }
-
-            // Registration
-            VarWatcherAPI::register(&unique_name, String::new());
-
-            let unique_name_clone = unique_name.clone();
-            let total_len = variables.len();
-
-            tokio::spawn(async move {
-                // Lazy subscribe to all global vars
-                let mut receivers: Vec<(usize, watch::Receiver<String>)> = futures::future::join_all(
-                    global_var_entries.iter().map(|(idx, name)| {
-                        let idx = *idx;
-                        async move {
-                            let rx = VarWatcherAPI::lazy_subscribe(name).await;
-                            (idx, rx)
-                        }
-                    })
-                ).await;
-
-                // Build initial value array
-                let mut current_values: Vec<Dynamic> = vec![Dynamic::from(""); total_len];
-
-                // Fill in static values
-                for (key, val) in &static_values {
-                    if let Ok(idx) = key.parse::<usize>() {
-                        current_values[idx] = val.clone();
-                    }
-                }
-
-                // Fill in current global var values
-                for (idx, rx) in &receivers {
-                    current_values[*idx] = Dynamic::from(rx.borrow().clone());
-                }
-
-                loop {
-                    // Wait for any receiver to change
-                    let changed_idx = {
-                        let futs: Vec<_> = receivers.iter_mut().map(|(idx, rx)| {
-                            let idx = *idx;
-                            Box::pin(async move {
-                                rx.changed().await.ok();
-                                idx
-                            })
-                        }).collect();
-
-                        let (idx, _, _) = futures::future::select_all(futs).await;
-                        idx
-                    };
-
-                    // Update the changed value
-                    if let Some((_, rx)) = receivers.iter().find(|(i, _)| *i == changed_idx) {
-                        current_values[changed_idx] = Dynamic::from(rx.borrow().clone());
-                    }
-
-                    // Call the closure with the current array
-                    let args_array: Array = current_values.clone();
-                    // TODO: call closure with args_array and handle result
-                    // e.g. update the bound var:
-                    // let result = closure.call::<Dynamic>(&engine, &ast, (args_array,));
-                    // VarWatcherAPI::update(&unique_name_clone, result.to_string());
-                }
-            });
-
-            Ok(GlobalVar {
+        |variables: Array, closure: FnPtr| -> Result<GlobalCompare, Box<EvalAltResult>> {
+            let unique_name = format!("\0__globalbound__{}", rand::random::<u64>());
+            Ok(GlobalCompare {
                 name: unique_name,
-                initial: Dynamic::from(""),
-                additional: Some(bindings),
+                vars: variables,
+                closure,
             })
-        },
+        }
     );
 
     // == Top-level macros ==
