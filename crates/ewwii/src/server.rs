@@ -3,6 +3,7 @@ use crate::{
     config, daemon_response,
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,
+    config::ewwii_config::EWWII_CONFIG_PARSER,
 };
 use anyhow::{Context, Result};
 use gtk4::prelude::{DisplayExt, ListModelExt};
@@ -31,8 +32,11 @@ pub fn initialize_server<B: DisplayBackend>(
     })?;
 
     log::info!("Loading paths: {}", &paths);
-
-    let config_parser = Rc::new(RefCell::new(ewwii_rhai_impl::parser::ParseConfig::new()));
+    
+    EWWII_CONFIG_PARSER.with(|p| {
+        let config_parser = ewwii_rhai_impl::parser::ParseConfig::new();
+        *p.borrow_mut() = Some(config_parser);
+    });
 
     cleanup_log_dir(paths.get_log_dir())?;
 
@@ -81,7 +85,6 @@ pub fn initialize_server<B: DisplayBackend>(
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
-        config_parser,
         paths,
         gtk_main_loop: main_loop.clone(),
         phantom: PhantomData,
@@ -94,11 +97,11 @@ pub fn initialize_server<B: DisplayBackend>(
         }
     }
 
-    let mut config_parser_mut = app.config_parser.borrow_mut();
-    let read_config = config::read_from_ewwii_paths(&app.paths, &mut *config_parser_mut);
-
-    // free the temporary parser borrow
-    drop(config_parser_mut);
+    let read_config = EWWII_CONFIG_PARSER.with(|p| {
+        let mut parser = p.borrow_mut();
+        let config_parser_mut = parser.as_mut().unwrap();
+        config::read_from_ewwii_paths(&app.paths, config_parser_mut)
+    });
 
     match read_config {
         Ok(new_config) => {
