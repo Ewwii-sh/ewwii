@@ -18,6 +18,7 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
     let (tx, _) = watch::channel(String::new());
 
     let (notify_tx, mut notify_rx) = tokio::sync::mpsc::unbounded_channel::<()>();
+    let _ = notify_tx.send(()); // Init
 
     // Handle GlobalVar's
     for (_, var) in global_vars.clone() {
@@ -34,7 +35,7 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
 
             loop {
                 if rx.changed().await.is_err() {
-                    log::error!("Watcher closed for global var: {}", var.name);
+                    log::debug!("Watcher closed for global var: {}", var.name);
                     break;
                 }
 

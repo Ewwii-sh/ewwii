@@ -25,7 +25,6 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
-use ewwii_rhai_impl::parser::ParseConfig;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
@@ -33,7 +32,7 @@ use itertools::Itertools;
 use once_cell::sync::OnceCell;
 use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use std::{
-    cell::{Cell, RefCell},
+    cell::Cell,
     collections::{HashMap, HashSet},
     marker::PhantomData,
     rc::Rc,
