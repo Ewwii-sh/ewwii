@@ -91,4 +91,9 @@ impl VarWatcherAPI {
     pub fn state() -> HashMap<String, String> {
         GLOBAL_VAR_STORE.read().unwrap().clone()
     }
+
+    /// Get a snapshot of a particular variable state
+    pub fn state_of(variable: &str) -> String {
+        GLOBAL_VAR_STORE.read().unwrap().get(variable).cloned().unwrap_or(String::new())
+    }
 }
