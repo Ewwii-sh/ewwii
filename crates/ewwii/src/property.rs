@@ -125,7 +125,15 @@ macro_rules! apply_property {
                 setter(val);
             }
             PropValue::Bound { var_name, initial, parser } => {
-                setter(initial);
+                let var_value = ewwii_rhai_impl::updates::api::VarWatcherAPI::state_of(&var_name);
+
+                // Set initial only if variable value is empty
+                if let Some(v) = (!var_value.is_empty()).then(|| parser(&var_value)).flatten() {
+                    setter(v);
+                } else {
+                    setter(initial);
+                }
+
                 if let Some(mut receiver) =
                     ewwii_rhai_impl::updates::api::VarWatcherAPI::subscribe(&var_name)
                 {
