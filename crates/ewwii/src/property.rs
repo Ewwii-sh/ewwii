@@ -1,5 +1,5 @@
 use crate::config::ewwii_config::{EWWII_CONFIG_AST, EWWII_CONFIG_PARSER};
-use ewwii_rhai_impl::updates::variable::VarWatcherAPI;
+use ewwii_rhai_impl::updates::api::VarWatcherAPI;
 use shared_utils::variables::{GlobalCompare, GlobalVar};
 use tokio::sync::watch;
 use gtk4::glib;
@@ -127,7 +127,7 @@ macro_rules! apply_property {
             PropValue::Bound { var_name, initial, parser } => {
                 setter(initial);
                 if let Some(mut receiver) =
-                    ewwii_rhai_impl::updates::variable::VarWatcherAPI::subscribe(&var_name)
+                    ewwii_rhai_impl::updates::api::VarWatcherAPI::subscribe(&var_name)
                 {
                     glib::MainContext::default().spawn_local(async move {
                         while receiver.changed().await.is_ok() {
@@ -161,7 +161,7 @@ macro_rules! apply_property_watch {
 
         match $prop {
             PropValue::Bound { var_name, initial: _, parser } => {
-                if let Some(mut receiver) = ewwii_rhai_impl::updates::variable::VarWatcherAPI::subscribe(&var_name) {
+                if let Some(mut receiver) = ewwii_rhai_impl::updates::api::VarWatcherAPI::subscribe(&var_name) {
                     gtk4::glib::MainContext::default().spawn_local(async move {
                         while receiver.changed().await.is_ok() {
                             let raw = receiver.borrow().clone();

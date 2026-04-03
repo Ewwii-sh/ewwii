@@ -25,6 +25,8 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
+use ewwii_rhai_impl::parser::ParseConfig;
+use ewwii_rhai_impl::updates::api::VarWatcherAPI;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
@@ -87,10 +89,8 @@ pub enum DaemonCommand {
         action: crate::opts::WidgetControlAction,
         sender: DaemonResponseSender,
     },
-    TriggerUpdateUI {
-        inject_vars: Option<HashMap<String, String>>,
-        should_preserve_state: bool,
-        lifetime: Option<String>,
+    Update {
+        mappings: HashMap<String, String>,
         sender: DaemonResponseSender,
     },
     CallRhaiFns {
@@ -341,16 +341,14 @@ impl<B: DisplayBackend> App<B> {
             }
             DaemonCommand::ShowState(sender) => {
                 let output =
-                    format!("{:#?}", ewwii_rhai_impl::updates::variable::VarWatcherAPI::state());
+                    format!("{:#?}", ewwii_rhai_impl::updates::api::VarWatcherAPI::state());
                 sender.send_success(output)?
             }
-            DaemonCommand::TriggerUpdateUI {
-                inject_vars,
-                should_preserve_state,
-                lifetime,
+            DaemonCommand::Update {
+                mappings,
                 sender,
             } => {
-                match self.trigger_ui_update_with(inject_vars, should_preserve_state, lifetime) {
+                match self.update_variables(mappings) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
@@ -700,15 +698,14 @@ impl<B: DisplayBackend> App<B> {
         Ok(String::new())
     }
 
-    /// Trigger a UI update with the given flags.
-    /// Even if there are no flags, the UI will still be updated.
-    pub fn trigger_ui_update_with(
+    /// Update variables based on the mappings provided
+    pub fn update_variables(
         &mut self,
-        inject_vars: Option<HashMap<String, String>>,
-        should_preserve_state: bool,
-        lifetime: Option<String>,
+        mappings: HashMap<String, String>,
     ) -> Result<()> {
-        unimplemented!();
+        for (variable, value) in mappings {
+            VarWatcherAPI::update_with_broadcast(&variable, value);
+        }
 
         Ok(())
     }
