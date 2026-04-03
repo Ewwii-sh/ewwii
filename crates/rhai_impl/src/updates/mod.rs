@@ -12,7 +12,7 @@
 
 mod listen;
 mod poll;
-pub mod variable;
+pub mod api;
 
 use crate::ast::WidgetNode;
 use listen::handle_listen;
@@ -21,7 +21,7 @@ use poll::handle_poll;
 use std::process::Command;
 use std::sync::Mutex;
 use tokio::sync::watch;
-use variable::VarWatcherAPI;
+use api::VarWatcherAPI;
 
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));

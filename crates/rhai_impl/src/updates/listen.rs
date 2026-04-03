@@ -1,4 +1,4 @@
-use super::{variable::VarWatcherAPI, SHUTDOWN_REGISTRY};
+use super::{api::VarWatcherAPI, SHUTDOWN_REGISTRY};
 use nix::{
     sys::signal,
     unistd::{setpgid, Pid},

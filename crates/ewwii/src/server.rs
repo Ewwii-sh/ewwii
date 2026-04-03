@@ -242,7 +242,7 @@ fn init_async_part(
     handle
 }
 
-/// Watch configuration files for changes, sending reload events to the eww app when the files change.
+/// Watch configuration files for changes, sending reload events to the ewwii app when the files change.
 async fn run_filewatch<P: AsRef<Path>>(
     config_dir: P,
     evt_send: UnboundedSender<app::DaemonCommand>,

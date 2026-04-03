@@ -9,7 +9,7 @@ use tokio::sync::broadcast;
 pub static APPLICATION_EXIT_SENDER: Lazy<broadcast::Sender<()>> =
     Lazy::new(|| broadcast::channel(2).0);
 
-/// Notify all listening tasks of the termination of the eww application process.
+/// Notify all listening tasks of the termination of the ewwii application process.
 pub fn send_exit() -> Result<()> {
     (APPLICATION_EXIT_SENDER).send(()).context("Failed to send exit lifecycle event")?;
     Ok(())
