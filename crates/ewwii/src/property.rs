@@ -168,7 +168,17 @@ macro_rules! apply_property_watch {
         $(let $clone = $clone.clone();)*
 
         match $prop {
-            PropValue::Bound { var_name, initial: _, parser } => {
+            PropValue::Bound { var_name, initial, parser } => {
+                let var_value = ewwii_rhai_impl::updates::api::VarWatcherAPI::state_of(&var_name);
+
+                // Set initial only if variable value is empty
+                if let Some($v) = (!var_value.is_empty()).then(|| parser(&var_value)).flatten() {
+                    $body
+                } else {
+                    let $v = initial;
+                    $body
+                }
+
                 if let Some(mut receiver) = ewwii_rhai_impl::updates::api::VarWatcherAPI::subscribe(&var_name) {
                     gtk4::glib::MainContext::default().spawn_local(async move {
                         while receiver.changed().await.is_ok() {

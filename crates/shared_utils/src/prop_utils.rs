@@ -9,7 +9,7 @@ pub enum PropValue<T> {
         comp: GlobalCompare,
         parser: fn(&str) -> Option<T>,
     },
-    Bound { 
+    Bound {
         var_name: String, 
         initial: T, 
         parser: fn(&str) -> Option<T>
