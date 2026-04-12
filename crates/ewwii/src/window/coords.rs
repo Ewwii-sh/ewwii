@@ -32,14 +32,6 @@ impl NumWithUnit {
             NumWithUnit::Pixels(n) => n,
         }
     }
-
-    // add back when needed
-    // pub fn perc_relative_to(&self, max: i32) -> f32 {
-    //     match *self {
-    //         NumWithUnit::Percent(n) => n,
-    //         NumWithUnit::Pixels(n) => ((n as f64 / max as f64) * 100.0) as f32,
-    //     }
-    // }
 }
 
 impl FromStr for NumWithUnit {
@@ -93,11 +85,6 @@ impl Coords {
     pub fn from_strs(x: &str, y: &str) -> Result<Coords, Error> {
         Ok(Coords { x: x.parse()?, y: y.parse()? })
     }
-
-    // /// resolve the possibly relative coordinates relative to a given containers size
-    // pub fn relative_to(&self, width: i32, height: i32) -> (i32, i32) {
-    //     (self.x.pixels_relative_to(width), self.y.pixels_relative_to(height))
-    // }
 }
 
 #[cfg(test)]
