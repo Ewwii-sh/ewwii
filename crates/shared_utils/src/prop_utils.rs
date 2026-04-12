@@ -329,3 +329,144 @@ pub fn unwrap_static<T: Default>(key: &str, prop: PropValue<T>) -> T {
         }
     }
 }
+
+
+// == Tests ==
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    // parse_duration_str 
+    #[test]
+    fn parse_duration_milliseconds() {
+        assert_eq!(parse_duration_str("100ms"), Some(Duration::from_millis(100)));
+    }
+
+    #[test]
+    fn parse_duration_seconds() {
+        assert_eq!(parse_duration_str("5s"), Some(Duration::from_secs(5)));
+    }
+
+    #[test]
+    fn parse_duration_minutes() {
+        assert_eq!(parse_duration_str("2m"), Some(Duration::from_secs(120)));
+        assert_eq!(parse_duration_str("2min"), Some(Duration::from_secs(120)));
+    }
+
+    #[test]
+    fn parse_duration_hours() {
+        assert_eq!(parse_duration_str("3h"), Some(Duration::from_secs(10800)));
+    }
+
+    #[test]
+    fn parse_duration_zero_ms() {
+        assert_eq!(parse_duration_str("0ms"), Some(Duration::from_millis(0)));
+    }
+
+    #[test]
+    fn parse_duration_no_suffix() {
+        assert_eq!(parse_duration_str("100"), None);
+    }
+
+    #[test]
+    fn parse_duration_empty_string() {
+        assert_eq!(parse_duration_str(""), None);
+    }
+
+    #[test]
+    fn parse_duration_suffix_only_no_number() {
+        assert_eq!(parse_duration_str("ms"), None);
+        assert_eq!(parse_duration_str("s"), None);
+        assert_eq!(parse_duration_str("m"), None);
+        assert_eq!(parse_duration_str("h"), None);
+    }
+
+    #[test]
+    fn parse_duration_non_numeric() {
+        assert_eq!(parse_duration_str("abcs"), None);
+        assert_eq!(parse_duration_str("xyzms"), None);
+    }
+
+    #[test]
+    fn parse_duration_negative_not_supported() {
+        // u64 parse will fail on negative numbers
+        assert_eq!(parse_duration_str("-5s"), None);
+    }
+
+    // get_i32_prop 
+    #[test]
+    fn i32_prop_from_i64_in_range() {
+        let mut map = rhai::Map::new();
+        map.insert("val".into(), rhai::Dynamic::from(100i64));
+        let result = get_i32_prop(&map, "val", None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().initial_value(), 100i32);
+    }
+
+    #[test]
+    fn i32_prop_from_i64_out_of_range() {
+        let mut map = rhai::Map::new();
+        map.insert("val".into(), rhai::Dynamic::from(i32::MAX as i64 + 1));
+        let result = get_i32_prop(&map, "val", None);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn i32_prop_from_numeric_string() {
+        let mut map = rhai::Map::new();
+        map.insert("val".into(), rhai::Dynamic::from("42".to_string()));
+        let result = get_i32_prop(&map, "val", None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().initial_value(), 42i32);
+    }
+
+    #[test]
+    fn i32_prop_from_non_numeric_string_errors() {
+        let mut map = rhai::Map::new();
+        map.insert("val".into(), rhai::Dynamic::from("hello".to_string()));
+        let result = get_i32_prop(&map, "val", None);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn i32_prop_missing_with_default() {
+        let map = rhai::Map::new();
+        let result = get_i32_prop(&map, "val", Some(5));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().initial_value(), 5i32);
+    }
+
+    #[test]
+    fn i32_prop_missing_no_default_errors() {
+        let map = rhai::Map::new();
+        let result = get_i32_prop(&map, "val", None);
+        assert!(result.is_err());
+    }
+
+    // get_f64_prop
+    #[test]
+    fn f64_prop_from_i64_coerces() {
+        let mut map = rhai::Map::new();
+        map.insert("val".into(), rhai::Dynamic::from(3i64));
+        let result = get_f64_prop(&map, "val", None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().initial_value(), 3.0f64);
+    }
+
+    #[test]
+    fn f64_prop_from_numeric_string() {
+        let mut map = rhai::Map::new();
+        map.insert("val".into(), rhai::Dynamic::from("1.5".to_string()));
+        let result = get_f64_prop(&map, "val", None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().initial_value(), 1.5f64);
+    }
+
+    #[test]
+    fn f64_prop_missing_no_default_errors() {
+        let map = rhai::Map::new();
+        let result = get_f64_prop(&map, "val", None);
+        assert!(result.is_err());
+    }
+}
