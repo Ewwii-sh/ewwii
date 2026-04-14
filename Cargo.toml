@@ -54,3 +54,12 @@ shell-words = "1.1.0"
 
 [profile.dev]
 split-debuginfo = "unpacked"
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+panic = "abort"
+strip = "symbols"
+codegen-units = 1
+
+
