@@ -25,14 +25,12 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
-use ewwii_rhai_impl::parser::ParseConfig;
 use ewwii_rhai_impl::updates::api::VarWatcherAPI;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
-use serde::{de::Error as SerdeError, Deserialize, Deserializer};
 use std::{
     cell::Cell,
     collections::{HashMap, HashSet},
@@ -712,7 +710,6 @@ impl<B: DisplayBackend> App<B> {
 
     pub fn call_rhai_fns(&self, calls: Vec<String>) -> Result<()> {
         let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-        let config_path = self.paths.get_rhai_path();
 
         // unwrap Rc<RefCell<AST>>
         let ast_ref: &rhai::AST =
@@ -825,21 +822,6 @@ impl<B: DisplayBackend> App<B> {
     }
 }
 
-fn validate_optimization_level<'de, D>(deserializer: D) -> Result<Option<u8>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let opt = Option::<u8>::deserialize(deserializer)?;
-    if let Some(value) = opt {
-        match value {
-            0 | 1 | 2 => Ok(Some(value)),
-            _ => Err(D::Error::custom("optimization_level must be 0, 1, or 2")),
-        }
-    } else {
-        Ok(None)
-    }
-}
-
 fn initialize_window<B: DisplayBackend>(
     window_init: &WindowInitiator,
     monitor: Monitor,
@@ -937,15 +919,6 @@ fn initialize_window<B: DisplayBackend>(
         delete_event_handler_id: None,
         destroy_event_handler_id: None,
     })
-}
-
-fn get_opt_level_from(n: u8) -> rhai::OptimizationLevel {
-    match n {
-        0 => rhai::OptimizationLevel::None,
-        1 => rhai::OptimizationLevel::Simple,
-        2 => rhai::OptimizationLevel::Full,
-        _ => rhai::OptimizationLevel::Simple,
-    }
 }
 
 /// Apply the provided window-positioning rules to the window.

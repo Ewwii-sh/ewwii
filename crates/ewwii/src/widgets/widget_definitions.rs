@@ -31,12 +31,11 @@ use crate::widgets::graph::{Graph, RenderType};
 
 pub struct WidgetRegistry {
     pub widgets: HashMap<u64, gtk4::Widget>,
-    pub window_widgets: HashMap<String, Vec<u64>>,
 }
 
 impl WidgetRegistry {
     pub fn new() -> Self {
-        Self { widgets: HashMap::new(), window_widgets: HashMap::new() }
+        Self { widgets: HashMap::new() }
     }
 
     pub fn create_widget(
@@ -95,12 +94,12 @@ impl WidgetRegistry {
         Ok(())
     }
 
-    pub fn remove_widget(&mut self, widget_id: u64) {
-        log::trace!("Removing '{}'", widget_id);
-        if let Some(widget) = self.widgets.remove(&widget_id) {
-            widget.unparent();
-        }
-    }
+    // pub fn remove_widget(&mut self, widget_id: u64) {
+    //     log::trace!("Removing '{}'", widget_id);
+    //     if let Some(widget) = self.widgets.remove(&widget_id) {
+    //         widget.unparent();
+    //     }
+    // }
 
     pub fn remove_widget_by_name(&mut self, name: &str) -> bool {
         if let Some((&id, _)) =
@@ -1025,6 +1024,7 @@ pub(super) fn build_image(
         Rc::new(RefCell::new(preserve_aspect_ratio_prop.initial_value()));
     let current_fill_svg = Rc::new(RefCell::new(fill_svg_prop.initial_value()));
 
+    #[allow(deprecated)]
     let re_render = {
         let gtk_widget = gtk_widget.clone();
         let current_path = current_path.clone();
@@ -2171,6 +2171,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         let scss = format!("* {{ {} }}", style_str);
         if let Ok(compiled) = grass::from_string(scss, &grass::Options::default()) {
             css_provider.load_from_string(&compiled);
+            #[allow(deprecated)]
             gtk_widget.style_context().add_provider(&css_provider, 950);
         }
     });
@@ -2179,6 +2180,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
         let css_provider = gtk4::CssProvider::new();
         if let Ok(compiled) = grass::from_string(css_str, &grass::Options::default()) {
             css_provider.load_from_string(&compiled);
+            #[allow(deprecated)]
             gtk_widget.style_context().add_provider(&css_provider, 950);
         }
     });
