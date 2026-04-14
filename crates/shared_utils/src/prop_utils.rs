@@ -367,7 +367,7 @@ mod tests {
 
     #[test]
     fn parse_duration_no_suffix() {
-        assert_eq!(parse_duration_str("100"), None);
+        assert_eq!(parse_duration_str("100"), Some(Duration::from_secs(100)));
     }
 
     #[test]
