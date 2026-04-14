@@ -50,18 +50,6 @@ impl ModuleResolver for SimpleFileResolver {
             ))
         })?;
 
-        let parent_script: Option<String> = if let Some(parent_path) = source_path {
-            match fs::read_to_string(parent_path) {
-                Ok(s) => Some(s),
-                Err(err) => {
-                    log::error!("Could not read parent script {parent_path:?}: {err}");
-                    None
-                }
-            }
-        } else {
-            None
-        };
-
         let scope = rhai::Scope::new();
 
         let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {

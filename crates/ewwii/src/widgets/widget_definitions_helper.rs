@@ -5,7 +5,6 @@ use gtk4::glib::translate::{FromGlibPtrNone, IntoGlib};
 use gtk4::glib::Value;
 use gtk4::pango;
 use gtk4::prelude::{Cast, ObjectExt, RangeExt, StaticType, ToValue};
-use rhai::Map;
 use std::process::Command;
 
 use crate::widgets::graph::{LineStyle, RenderType};
@@ -48,40 +47,6 @@ where
             }
         })
         .expect("Failed to start command-execution-thread");
-}
-
-/// Dynamic system
-pub fn props_differ(old: &Map, new: &Map) -> bool {
-    if old.len() != new.len() {
-        return true;
-    }
-    for (k, v) in old.iter() {
-        match new.get(k) {
-            Some(nv) => {
-                if !dynamic_eq(v, nv) {
-                    return true;
-                }
-            }
-            None => return true,
-        }
-    }
-    false
-}
-
-pub fn dynamic_eq(a: &rhai::Dynamic, b: &rhai::Dynamic) -> bool {
-    match (a.clone().try_cast::<i64>(), b.clone().try_cast::<i64>()) {
-        (Some(a_int), Some(b_int)) => return a_int == b_int,
-        _ => {}
-    }
-    match (a.clone().try_cast::<f64>(), b.clone().try_cast::<f64>()) {
-        (Some(a_f), Some(b_f)) => return a_f == b_f,
-        _ => {}
-    }
-    match (a.clone().try_cast::<String>(), b.clone().try_cast::<String>()) {
-        (Some(a_s), Some(b_s)) => return a_s == b_s,
-        _ => {}
-    }
-    false
 }
 
 /// ALL WIDGETS
