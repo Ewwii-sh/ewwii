@@ -5,14 +5,19 @@ use crate::{
     window::backend_window_options::BackendWindowOptionsDef,
 };
 use anyhow::{bail, Context, Result};
-use std::cell::RefCell;
 use std::collections::HashMap;
+use std::cell::RefCell;
 use std::rc::Rc;
 
+use ewwii_rhai_impl::{ast::WidgetNode, parser::ParseConfig};
 use rhai::{Map, AST};
-use rhai_impl::{ast::WidgetNode, parser::ParseConfig};
 
-// use tokio::{net::UnixStream, runtime::Runtime, sync::mpsc};
+// NOTE: These global variables are used for the proper functioning
+// of bind function and for access to AST across the whole program.
+thread_local! {
+    pub static EWWII_CONFIG_AST: RefCell<Option<AST>> = RefCell::new(None);
+    pub static EWWII_CONFIG_PARSER: RefCell<Option<ParseConfig>> = RefCell::new(None);
+}
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
@@ -53,13 +58,20 @@ impl EwwiiConfig {
         // Get Option<&str> form of rhai_path
         let rhai_path_opt_str = rhai_path.to_str();
 
-        // get the iirhai widget tree
+        // get the rhai widget tree
         let compiled_ast =
             config_parser.compile_code(&rhai_code, rhai_path_opt_str.unwrap_or("<rhai>"))?;
-        let poll_listen_scope = ParseConfig::initial_poll_listen_scope(&rhai_code)?;
+
+        EWWII_CONFIG_AST.with(|p| {
+            let mut write_guard = p.borrow_mut();
+            *write_guard = Some(compiled_ast.clone());
+        });
+
+        config_parser.register_poll_listen_globals(&rhai_code)?;
+
         let config_tree = config_parser.eval_code_with(
             &rhai_code,
-            Some(poll_listen_scope),
+            None,
             Some(&compiled_ast),
             rhai_path_opt_str,
         )?;

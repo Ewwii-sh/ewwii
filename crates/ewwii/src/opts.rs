@@ -194,23 +194,12 @@ pub enum ActionWithServer {
         action: WidgetControlAction,
     },
 
-    /// Update the widgets of a particular window. Poll/Listen variables will be cleared
+    /// Update the value of a variable, in a running ewwii instance
     #[command(name = "update", alias = "u")]
-    TriggerUpdateUI {
-        /// Inject variables while updating the UI
-        ///
-        /// Format: --inject foo="val1" baz="val2"
-        /// Only variables used by the widget tree will affect the UI.
-        #[arg(long = "inject", short = 'i', value_parser = parse_inject_var_map)]
-        inject_vars: Option<HashMap<String, String>>,
-
-        /// Preserve the new updates.
-        #[arg(long = "preserve", short = 'p')]
-        should_preserve_state: bool,
-
-        /// Tie the variable lifetime to a window lifetime.
-        #[arg(long = "lifetime", short = 'l')]
-        lifetime: Option<String>,
+    Update {
+        /// Format: foo="val1" baz="val2"
+        #[arg(required = true, value_parser = parse_inject_var_map)]
+        mappings: HashMap<String, String>
     },
 
     /// Call rhai functions. (NOTE: All poll/listen will default to their initial value)
@@ -219,17 +208,6 @@ pub enum ActionWithServer {
         /// Rhai functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
         #[arg(required = true)]
         calls: Vec<String>,
-    },
-
-    /// Override the default runtime engine settings
-    #[command(name = "engine-override")]
-    EngineOverride {
-        /// Configuration in JSON format
-        config_json: String,
-
-        /// Weather to print the current engine settings
-        #[arg(long = "sprint", short = 'p')]
-        print: bool,
     },
 
     /// Set a plugin (.so) to the ewwii binary
@@ -369,11 +347,9 @@ impl ActionWithServer {
                     sender,
                 })
             }
-            ActionWithServer::TriggerUpdateUI { inject_vars, should_preserve_state, lifetime } => {
-                return with_response_channel(|sender| app::DaemonCommand::TriggerUpdateUI {
-                    inject_vars,
-                    should_preserve_state,
-                    lifetime,
+            ActionWithServer::Update { mappings } => {
+                return with_response_channel(|sender| app::DaemonCommand::Update {
+                    mappings,
                     sender,
                 })
             }
@@ -439,13 +415,6 @@ impl ActionWithServer {
             }
             ActionWithServer::ShowDebug => {
                 return with_response_channel(app::DaemonCommand::PrintDebug)
-            }
-            ActionWithServer::EngineOverride { config_json, print } => {
-                return with_response_channel(|sender| app::DaemonCommand::EngineOverride {
-                    config: config_json,
-                    print,
-                    sender,
-                })
             }
             ActionWithServer::SetPlugin { file_path } => {
                 return with_response_channel(|sender| app::DaemonCommand::SetPlugin {

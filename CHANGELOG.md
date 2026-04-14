@@ -10,14 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `graph` widget back.
+- `bound` function for interacting with global variables.
+
+### Changed
+
+- `v4_18` feature flag for to the `gtk4` crate to enable newer APIs.
+- `show_truncated` property of label widget to be false by default.
+- `can_shrink` property of image widget to be false by default.
+- The use case of `update` command.
+- Made Global variables immutable.
 
 ### Fixed
 
 - A few issue related with `property-get` subcommand.
 
-### Changed
+### Removed
 
-- `v4_18` feature flag for to the `gtk4` crate to enable newer APIs.
+- `eval_ignore` property.
+- Reevaluation system.
+- `localsignal` and `localbind`.
 
 ## [0.4.0] - 2026-02-14
 

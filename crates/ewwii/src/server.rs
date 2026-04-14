@@ -1,20 +1,19 @@
 use crate::{
-    app::{self, App, DaemonCommand, EngineConfValues},
+    app::{self, App, DaemonCommand},
     config, daemon_response,
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,
+    config::ewwii_config::EWWII_CONFIG_PARSER,
 };
 use anyhow::{Context, Result};
 use gtk4::prelude::{DisplayExt, ListModelExt};
 use std::{
-    cell::RefCell,
     collections::{HashMap, HashSet},
     io::Write,
     marker::PhantomData,
     os::unix::io::AsRawFd,
     path::Path,
-    rc::Rc,
-    sync::{atomic::Ordering, Arc, RwLock},
+    sync::{atomic::Ordering, Arc},
 };
 use tokio::sync::mpsc::*;
 
@@ -31,12 +30,11 @@ pub fn initialize_server<B: DisplayBackend>(
     })?;
 
     log::info!("Loading paths: {}", &paths);
-
-    let pl_handler_store: rhai_impl::updates::ReactiveVarStore =
-        Arc::new(RwLock::new(HashMap::new()));
-
-    let config_parser =
-        Rc::new(RefCell::new(rhai_impl::parser::ParseConfig::new(Some(pl_handler_store.clone()))));
+    
+    EWWII_CONFIG_PARSER.with(|p| {
+        let config_parser = ewwii_rhai_impl::parser::ParseConfig::new();
+        *p.borrow_mut() = Some(config_parser);
+    });
 
     cleanup_log_dir(paths.get_log_dir())?;
 
@@ -85,10 +83,6 @@ pub fn initialize_server<B: DisplayBackend>(
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
         widget_reg_store: std::rc::Rc::new(std::sync::Mutex::new(None)),
-        pl_handler_store,
-        clear_pl_onclose: HashMap::new(),
-        rt_engine_config: EngineConfValues::default(),
-        config_parser,
         paths,
         gtk_main_loop: main_loop.clone(),
         phantom: PhantomData,
@@ -101,11 +95,11 @@ pub fn initialize_server<B: DisplayBackend>(
         }
     }
 
-    let mut config_parser_mut = app.config_parser.borrow_mut();
-    let read_config = config::read_from_ewwii_paths(&app.paths, &mut *config_parser_mut);
-
-    // free the temporary parser borrow
-    drop(config_parser_mut);
+    let read_config = EWWII_CONFIG_PARSER.with(|p| {
+        let mut parser = p.borrow_mut();
+        let config_parser_mut = parser.as_mut().unwrap();
+        config::read_from_ewwii_paths(&app.paths, config_parser_mut)
+    });
 
     match read_config {
         Ok(new_config) => {
@@ -248,7 +242,7 @@ fn init_async_part(
     handle
 }
 
-/// Watch configuration files for changes, sending reload events to the eww app when the files change.
+/// Watch configuration files for changes, sending reload events to the ewwii app when the files change.
 async fn run_filewatch<P: AsRef<Path>>(
     config_dir: P,
     evt_send: UnboundedSender<app::DaemonCommand>,
@@ -290,6 +284,10 @@ async fn run_filewatch<P: AsRef<Path>>(
                 // This is probably a result of editors not locking the file correctly,
                 // and eww being too fast, thus reading the file while it's empty.
                 // There should be some cleaner solution for this, but this will do for now.
+                // - Elkowar
+                //
+                // Byson94 here, I am not sure if this issue is still relevant,
+                // but I am keeping this for now.
                 tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                 reload_config_and_css(&evt_send)?;
             }
