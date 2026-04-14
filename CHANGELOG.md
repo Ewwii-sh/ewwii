@@ -5,7 +5,7 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [UNRELEASED]
+## [0.5.0] - 2026-04-14
 
 ### Added
 
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `show_truncated` property of label widget to be false by default.
 - `can_shrink` property of image widget to be false by default.
 - The use case of `update` command.
+- Image widget for better rendering at HiDPI displays.
 - Made Global variables immutable.
 
 ### Fixed
@@ -28,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `eval_ignore` property.
 - Reevaluation system.
+- `graph` command.
+- `engine-override` command.
 - `localsignal` and `localbind`.
 
 ## [0.4.0] - 2026-02-14
