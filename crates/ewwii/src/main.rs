@@ -49,6 +49,7 @@ mod ipc_server;
 mod opts;
 mod paths;
 mod plugin;
+mod property;
 mod server;
 mod util;
 mod widgets;
@@ -76,7 +77,7 @@ fn main() {
     } else {
         pretty_env_logger::formatted_timed_builder()
             .filter(Some("ewwii"), log_level_filter)
-            .filter(Some("notifier_host"), log_level_filter)
+            .filter(Some("shared_utils"), log_level_filter)
             .filter(Some("rhai_impl"), log_level_filter)
             .init();
     }

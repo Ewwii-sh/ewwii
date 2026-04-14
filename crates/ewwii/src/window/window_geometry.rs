@@ -144,3 +144,100 @@ impl WindowGeometry {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // NumWithUnit::to_pixels
+    #[test]
+    fn to_pixels_percent_of_zero_container() {
+        assert_eq!(NumWithUnit::Percent(50.0).to_pixels(0), 0);
+    }
+
+    #[test]
+    fn to_pixels_percent_rounds() {
+        // 50% of 101 = 50.5 (rounds to 51)
+        assert_eq!(NumWithUnit::Percent(50.0).to_pixels(101), 51);
+    }
+
+    #[test]
+    fn to_pixels_zero_percent() {
+        assert_eq!(NumWithUnit::Percent(0.0).to_pixels(500), 0);
+    }
+
+    // AnchorAlignment::alignment_to_coordinate
+    #[test]
+    fn alignment_center_inner_larger_than_outer() {
+        // if widget bigger than screen then it goes negative
+        assert_eq!(AnchorAlignment::CENTER.alignment_to_coordinate(600, 500), -50);
+    }
+
+    #[test]
+    fn alignment_center_odd_difference_truncates() {
+        // outer - inner = 101, integer division truncates to 50
+        assert_eq!(AnchorAlignment::CENTER.alignment_to_coordinate(100, 201), 50);
+    }
+
+    // Coords::relative_to
+    #[test]
+    fn relative_to_does_not_swap_axes() {
+        let coords = Coords {
+            x: NumWithUnit::Percent(10.0),
+            y: NumWithUnit::Percent(50.0),
+        };
+        let (x, y) = coords.relative_to(1000, 2000);
+        // x should be 10% of width (1000), y should be 50% of height (2000)
+        assert_eq!(x, 100);
+        assert_eq!(y, 1000);
+    }
+
+    // AnchorPoint::from_str
+    #[test]
+    fn anchor_point_missing_space_errors() {
+        assert!("lefttop".parse::<AnchorPoint>().is_err());
+    }
+
+    #[test]
+    fn anchor_point_invalid_token_errors() {
+        assert!("diagonal up".parse::<AnchorPoint>().is_err());
+    }
+
+    // AnchorPoint::Dispay 
+    #[test]
+    fn anchor_point_display_center_center() {
+        let ap = AnchorPoint {
+            x: AnchorAlignment::CENTER,
+            y: AnchorAlignment::CENTER,
+        };
+        assert_eq!(ap.to_string(), "center");
+    }
+
+    #[test]
+    fn anchor_point_display_non_center() {
+        let ap = AnchorPoint {
+            x: AnchorAlignment::START,
+            y: AnchorAlignment::END,
+        };
+        assert_eq!(ap.to_string(), "start end");
+    }
+
+    // WindowGeometry::override_with
+    #[test]
+    fn override_with_partial_only_replaces_some() {
+        let geom = WindowGeometry {
+            anchor_point: AnchorPoint {
+                x: AnchorAlignment::START,
+                y: AnchorAlignment::START,
+            },
+            offset: Coords::from_pixels((0, 0)),
+            size: Coords::from_pixels((800, 600)),
+        };
+        let new_size = Coords::from_pixels((1920, 1080));
+        let result = geom.override_with(None, None, Some(new_size));
+
+        assert_eq!(result.anchor_point, geom.anchor_point);
+        assert_eq!(result.offset, geom.offset);
+        assert_eq!(result.size, new_size);
+    }
+}

@@ -9,7 +9,8 @@ repository = "https://github.com/ewwii-sh/ewwii"
 homepage = "https://github.com/ewwii-sh/ewwii"
 
 [dependencies]
-serde.workspace = true
-rhai = { workspace = true, features = ["internals"] }
 anyhow.workspace = true
-once_cell.workspace = true
+log.workspace = true
+rhai = { workspace = true, features = ["internals"] }
+serde.workspace = true
+tokio.workspace = true

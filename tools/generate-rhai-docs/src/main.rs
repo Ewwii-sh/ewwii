@@ -1,6 +1,6 @@
+use ewwii_rhai_impl::providers;
 use rhai::{Engine, module_resolvers::StaticModuleResolver};
 use rhai_autodocs::{export::options, generate::docusaurus};
-use rhai_impl::providers;
 use std::{env, fs, path::Path};
 
 fn generate_docs(

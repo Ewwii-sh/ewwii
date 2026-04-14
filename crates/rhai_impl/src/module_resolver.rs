@@ -1,16 +1,10 @@
 use crate::error::{format_eval_error, format_parse_error};
-use crate::parser::ParseConfig;
-use crate::updates::ReactiveVarStore;
-use rhai::Scope;
-use rhai::{Dynamic, Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
-use std::collections::HashMap;
+use rhai::{Engine, EvalAltResult, Module, ModuleResolver, Position, AST};
 use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-pub struct SimpleFileResolver {
-    pub pl_handler_store: Option<ReactiveVarStore>,
-}
+pub struct SimpleFileResolver;
 
 impl ModuleResolver for SimpleFileResolver {
     fn resolve(
@@ -68,27 +62,7 @@ impl ModuleResolver for SimpleFileResolver {
             None
         };
 
-        let mut scope = if let Some(ref script) = parent_script {
-            ParseConfig::initial_poll_listen_scope(script).map_err(|e| {
-                EvalAltResult::ErrorSystem(
-                    format!("error setting up default variables from {source_path:?}"),
-                    e.into(),
-                )
-            })?
-        } else {
-            Scope::new()
-        };
-
-        match &self.pl_handler_store {
-            Some(val) => {
-                let name_to_val: &HashMap<String, String> = &*val.read().unwrap();
-
-                for (name, val) in name_to_val {
-                    scope.set_value(name.clone(), Dynamic::from(val.clone()));
-                }
-            }
-            None => {}
-        }
+        let scope = rhai::Scope::new();
 
         let mut module = Module::eval_ast_as_new(scope, &ast, engine).map_err(|e| {
             Box::new(EvalAltResult::ErrorSystem(

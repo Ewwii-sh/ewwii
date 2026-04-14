@@ -200,17 +200,6 @@ impl WlBackendWindowOptionsDef {
     }
 }
 
-// fn eval_opt_expr_as_bool(
-//     opt_expr: &Option<NumWithUnit>,
-//     default: bool,
-//     local_variables: &HashMap<VarName, DynVal>,
-// ) -> Result<bool, EvalError> {
-//     Ok(match opt_expr {
-//         Some(expr) => expr.eval(local_variables)?.as_bool()?,
-//         None => default,
-//     })
-// }
-
 #[derive(Debug, Clone, PartialEq, Eq, smart_default::SmartDefault, serde::Serialize)]
 pub enum WlWindowFocusable {
     #[default]
@@ -286,28 +275,6 @@ pub struct X11StrutDefinitionExpr {
     pub side: Option<NumWithUnit>,
     pub distance: NumWithUnit,
 }
-
-// impl X11StrutDefinitionExpr {
-//     fn eval(&self, local_variables: &HashMap<VarName, DynVal>) -> Result<X11StrutDefinition, Error> {
-//         Ok(X11StrutDefinition {
-//             side: match &self.side {
-//                 Some(expr) => Side::from_dynval(&expr.eval(local_variables)?)?,
-//                 None => Side::default(),
-//             },
-//             distance: NumWithUnit::from_dynval(&self.distance.eval(local_variables)?)?,
-//         })
-//     }
-// }
-
-// impl FromAstElementContent for X11StrutDefinitionExpr {
-//     const ELEMENT_NAME: &'static str = "struts";
-
-//     fn from_tail<I: Iterator<Item = Ast>>(_span: Span, mut iter: AstIterator<I>) -> DiagResult<Self> {
-//         let mut attrs = iter.expect_key_values()?;
-//         iter.expect_done().map_err(DiagError::from).note("Check if you are missing a colon in front of a key")?;
-//         Ok(X11StrutDefinitionExpr { side: attrs.ast_optional("side")?, distance: attrs.ast_required("distance")? })
-//     }
-// }
 
 #[derive(Debug, Clone, Copy, PartialEq, Default, serde::Serialize)]
 pub struct X11StrutDefinition {

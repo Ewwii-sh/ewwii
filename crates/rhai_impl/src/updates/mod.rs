@@ -8,17 +8,11 @@
     Even though rhai is static by nature (only evaluates once),
     we can trigger a re-evaluation every time a variable updates
     as a workaround to this limitation.
-
-    Other than the poll and listen, we also handle the updates of
-    the internal built in signals (the functions that return data)
-    which is also known as "magic variables" in eww.
 */
 
 mod listen;
-mod localsignal;
 mod poll;
-
-pub use localsignal::*;
+pub mod api;
 
 use crate::ast::WidgetNode;
 use listen::handle_listen;
@@ -26,11 +20,9 @@ use once_cell::sync::Lazy;
 use poll::handle_poll;
 use std::process::Command;
 use std::sync::Mutex;
-use std::{collections::HashMap, sync::Arc, sync::RwLock};
-use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::watch;
+use api::VarWatcherAPI;
 
-pub type ReactiveVarStore = Arc<RwLock<HashMap<String, String>>>;
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
 
@@ -44,20 +36,18 @@ pub fn get_prefered_shell() -> String {
     shell
 }
 
-pub fn handle_state_changes(
-    root_node: &WidgetNode,
-    tx: UnboundedSender<String>,
-    store: ReactiveVarStore,
-) {
+pub fn handle_state_changes(root_node: &WidgetNode) {
     let shell = get_prefered_shell();
     if let WidgetNode::Tree(children) = root_node {
         for child in children {
             match child {
                 WidgetNode::Poll { var, props } => {
-                    handle_poll(var.to_string(), props, shell.clone(), store.clone(), tx.clone());
+                    VarWatcherAPI::register(var, String::new());
+                    handle_poll(var.to_string(), props, shell.clone());
                 }
                 WidgetNode::Listen { var, props } => {
-                    handle_listen(var.to_string(), props, shell.clone(), store.clone(), tx.clone());
+                    VarWatcherAPI::register(var, String::new());
+                    handle_listen(var.to_string(), props, shell.clone());
                 }
                 _ => {}
             }

@@ -5,10 +5,10 @@ use crate::{
     helper::extract_poll_and_listen_vars,
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
-    updates::ReactiveVarStore,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, ImmutableString, OptimizationLevel, Scope, AST};
+use rhai::{Dynamic, Engine, ImmutableString, Module, OptimizationLevel, Scope, AST};
+use shared_utils::variables::GlobalVar;
 use std::cell::RefCell;
 use std::fs;
 use std::path::Path;
@@ -17,23 +17,20 @@ use std::rc::Rc;
 pub struct ParseConfig {
     pub engine: Engine,
     all_nodes: Rc<RefCell<Vec<WidgetNode>>>,
-    keep_signal: Rc<RefCell<Vec<u64>>>,
 }
 
 impl ParseConfig {
-    pub fn new(pl_handler_store: Option<ReactiveVarStore>) -> Self {
+    pub fn new() -> Self {
         let mut engine = Engine::new();
         let all_nodes = Rc::new(RefCell::new(Vec::new()));
-        let keep_signal = Rc::new(RefCell::new(Vec::new()));
 
         engine.set_max_expr_depths(128, 128);
-        engine
-            .set_module_resolver(SimpleFileResolver { pl_handler_store: pl_handler_store.clone() });
+        engine.set_module_resolver(SimpleFileResolver);
 
-        register_all_widgets(&mut engine, &all_nodes, &keep_signal);
-        register_all_providers(&mut engine, pl_handler_store);
+        register_all_widgets(&mut engine, &all_nodes);
+        register_all_providers(&mut engine);
 
-        Self { engine, all_nodes, keep_signal }
+        Self { engine, all_nodes }
     }
 
     pub fn compile_code(&mut self, code: &str, file_path: &str) -> Result<AST> {
@@ -71,9 +68,6 @@ impl ParseConfig {
                 .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, file_id)))?;
         };
 
-        // Retain signals
-        crate::updates::retain_signals(&self.keep_signal.borrow());
-
         // Merge all nodes in all_nodes (`tree([])`) into a single root node
         let merged_node = {
             let mut all_nodes_vec = self.all_nodes.borrow_mut();
@@ -104,9 +98,6 @@ impl ParseConfig {
             .eval_with_scope::<WidgetNode>(&mut scope, code)
             .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, Some("<dyn eval>"))))?;
 
-        // Retain signals
-        crate::updates::retain_signals(&self.keep_signal.borrow());
-
         // Clear all nodes
         self.all_nodes.borrow_mut().clear();
 
@@ -118,18 +109,21 @@ impl ParseConfig {
             .map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)
     }
 
-    pub fn initial_poll_listen_scope(code: &str) -> Result<Scope<'_>> {
-        // Setting the initial value of poll/listen
-        let mut scope = Scope::new();
-        for (var, initial) in extract_poll_and_listen_vars(code)? {
+    pub fn register_poll_listen_globals(&mut self, code: &str) -> Result<()> {
+        let mut global_module = Module::new();
+        self.engine.register_type::<GlobalVar>();
+
+        for (name, initial) in extract_poll_and_listen_vars(code)? {
             let value = match initial {
-                Some(val) => Dynamic::from(val),
+                Some(v) => Dynamic::from(v),
                 None => Dynamic::UNIT,
             };
-            scope.set_value(var, value);
+            let glob_var = GlobalVar::from(name.clone(), value);
+            global_module.set_var(name, glob_var);
         }
 
-        Ok(scope)
+        self.engine.register_global_module(global_module.into());
+        Ok(())
     }
 
     pub fn call_rhai_fn(&self, ast: &AST, expr: &str, scope: Option<&mut Scope>) -> Result<()> {

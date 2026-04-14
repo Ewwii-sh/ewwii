@@ -13,14 +13,15 @@ let object = #{
     "🦊": "fox"
 };
 
-
 // Widget: a single animal button
-fn animalButton(emoji, selected) {
-    let class = "animal";
-
-    if selected == emoji {
-        class = "animal selected" 
-    }
+fn animalButton(emoji) {
+    let class = bound([emoji, selected], |vars| {
+        if vars[0] == vars[1] {
+            return "animal selected"
+        } else {
+            return "animal"
+        }
+    });
 
     return box(#{ class: "animalLayout" }, [
         eventbox(#{ 
@@ -34,10 +35,10 @@ fn animalButton(emoji, selected) {
 }
 
 // Widget: the row of animal buttons
-fn animalRow(stringArray, selected) {
+fn animalRow(stringArray) {
     let buttons = [];
     for emoji in stringArray {
-        buttons.push(animalButton(emoji, selected));
+        buttons.push(animalButton(emoji));
     }
     return box(#{ 
         class: "animals",
@@ -47,21 +48,21 @@ fn animalRow(stringArray, selected) {
 }
 
 // Widget: currently selected animal display
-fn currentAnimal(object, selected) {
+fn currentAnimal(object) {
     return box(#{}, [
-        label(#{ text: object[selected] + " " + selected })
+        label(#{ text: selected })
     ]);
 }
 
 // Layout widget
-fn layout(stringArray, object, selected) {
+fn layout(stringArray, object) {
     return box(#{ 
         class: "layout",
         orientation: "v",
         halign: "center"
     }, [
-        animalRow(stringArray, selected),
-        currentAnimal(object, selected)
+        animalRow(stringArray),
+        currentAnimal(object)
     ]);
 }
 
@@ -78,5 +79,5 @@ tree([
         focusable: "none",
         windowtype: "normal",
         geometry: #{ anchor: "center", x: "0px", y: "0px", width: "100px", height: "10px" },
-    }, layout(stringArray, object, selected))
+    }, layout(stringArray, object))
 ])

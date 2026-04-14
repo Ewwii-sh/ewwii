@@ -1,9 +1,8 @@
-use crate::ast::{hash_props, WidgetNode};
-use crate::updates::{register_signal, LocalDataBinder, LocalSignal};
-use rhai::{Array, Engine, EvalAltResult, Map, NativeCallContext};
+use crate::ast::WidgetNode;
+use rhai::{Array, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
+use shared_utils::variables::GlobalCompare;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Arc;
 
 /// Converts a Dynamic array into a Vec<WidgetNode>, returning proper errors with position.
 fn children_to_vec(
@@ -24,13 +23,9 @@ fn children_to_vec(
         .collect()
 }
 
-pub fn register_all_widgets(
-    engine: &mut Engine,
-    all_nodes: &Rc<RefCell<Vec<WidgetNode>>>,
-    keep_signal: &Rc<RefCell<Vec<u64>>>,
-) {
+pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<WidgetNode>>>) {
     engine.register_type::<WidgetNode>();
-    engine.register_type::<LocalSignal>();
+    engine.register_type::<GlobalCompare>();
 
     // == Primitive widgets ==
     macro_rules! register_primitive {
@@ -81,10 +76,8 @@ pub fn register_all_widgets(
     register_with_children!("stack", Stack);
     register_with_children!("eventbox", EventBox);
     register_with_children!("tooltip", ToolTip);
-    register_with_children!("localbind", LocalBind);
-    register_with_children!("widget_action", WidgetAction);
 
-    // == Special widget
+    // == Special widget & tools ==
     engine.register_fn(
         "gtk_ui",
         |path: &str, load: &str| -> Result<WidgetNode, Box<EvalAltResult>> {
@@ -95,20 +88,16 @@ pub fn register_all_widgets(
         },
     );
 
-    // == Special signal
-    let keep_signal_clone = keep_signal.clone();
     engine.register_fn(
-        "localsignal",
-        move |props: Map| -> Result<LocalSignal, Box<EvalAltResult>> {
-            let id = hash_props(&props);
-            let signal = Rc::new(LocalSignal { id, props, data: Arc::new(LocalDataBinder::new()) });
-
-            let signal_rc = register_signal(id, signal);
-
-            keep_signal_clone.borrow_mut().push(id);
-
-            Ok((*signal_rc).clone())
-        },
+        "bound",
+        |variables: Array, closure: FnPtr| -> Result<GlobalCompare, Box<EvalAltResult>> {
+            let unique_name = format!("\0__globalbound__{}", rand::random::<u64>());
+            Ok(GlobalCompare {
+                name: unique_name,
+                vars: variables,
+                closure,
+            })
+        }
     );
 
     // == Top-level macros ==
