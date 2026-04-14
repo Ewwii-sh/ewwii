@@ -10,8 +10,8 @@ pub enum PropValue<T> {
         parser: fn(&str) -> Option<T>,
     },
     Bound {
-        var_name: String, 
-        initial: T, 
+        var_name: String,
+        initial: T,
         parser: fn(&str) -> Option<T>
     },
 }
@@ -288,7 +288,8 @@ fn parse_duration_str(key_str: &str) -> Option<Duration> {
         let num = &key_str[..key_str.len() - 1];
         num.parse::<u64>().ok().map(Duration::from_secs)
     } else {
-        None
+        let num = &key_str[..key_str.len()];
+        num.parse::<u64>().ok().map(Duration::from_secs)
     }
 }
 
@@ -337,7 +338,7 @@ mod tests {
     use super::*;
     use std::time::Duration;
 
-    // parse_duration_str 
+    // parse_duration_str
     #[test]
     fn parse_duration_milliseconds() {
         assert_eq!(parse_duration_str("100ms"), Some(Duration::from_millis(100)));
@@ -394,7 +395,7 @@ mod tests {
         assert_eq!(parse_duration_str("-5s"), None);
     }
 
-    // get_i32_prop 
+    // get_i32_prop
     #[test]
     fn i32_prop_from_i64_in_range() {
         let mut map = rhai::Map::new();
