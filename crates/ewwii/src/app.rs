@@ -37,13 +37,18 @@ use std::{
     marker::PhantomData,
     rc::Rc,
     sync::Mutex,
+    path::PathBuf,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
-static ACTIVE_PLUGIN: OnceCell<libloading::Library> = OnceCell::new();
+static ACTIVE_PLUGINS: Mutex<Vec<libloading::Library>> = Mutex::new(Vec::new());
 
-fn set_active_plugin(lib: libloading::Library) -> Result<()> {
-    ACTIVE_PLUGIN.set(lib).map_err(|_| anyhow!("Plugin already set"))
+fn load_active_plugin(lib: libloading::Library) -> Result<()> {
+    ACTIVE_PLUGINS
+        .lock()
+        .map_err(|_| anyhow!("Failed to lock plugin list"))?
+        .push(lib);
+    Ok(())
 }
 
 /// A command for the ewwii daemon.
@@ -93,10 +98,6 @@ pub enum DaemonCommand {
     },
     CallRhaiFns {
         calls: Vec<String>,
-        sender: DaemonResponseSender,
-    },
-    SetPlugin {
-        file_path: String,
         sender: DaemonResponseSender,
     },
 }
@@ -362,12 +363,6 @@ impl<B: DisplayBackend> App<B> {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
-            }
-            DaemonCommand::SetPlugin { file_path, sender } => {
-                match self.set_ewwii_plugin(file_path) {
-                    Ok(_) => sender.send_success(String::from("OK"))?,
-                    Err(e) => sender.send_failure(e.to_string())?,
-                }
             }
         }
         Ok(())
@@ -728,13 +723,21 @@ impl<B: DisplayBackend> App<B> {
         Ok(())
     }
 
-    pub fn set_ewwii_plugin(&mut self, file_path: String) -> Result<()> {
+    pub fn load_ewwii_plugins(&mut self, plugin_paths: Vec<PathBuf>) -> Result<()> {
+        // In case no plugins were passed
+        if plugin_paths.is_empty() {
+            return Ok(())
+        }
+
         if ACTIVE_PLUGIN.get().is_some() {
             anyhow::bail!("A plugin is already loaded");
         }
 
+        // TODO: The first plugin is used for the sake of getting it compiled for now
+        let first_plugin = &plugin_paths[0];
+
         let lib = unsafe {
-            libloading::Library::new(file_path)
+            libloading::Library::new(first_plugin)
                 .map_err(|e| anyhow!("Failed to load plugin: {}", e))?
         };
 
@@ -751,7 +754,7 @@ impl<B: DisplayBackend> App<B> {
 
             let plugin = constructor(); // instantiate plugin
 
-            set_active_plugin(lib)?; // keep library alive
+            load_active_plugin(lib)?; // keep library alive
 
             let host = crate::plugin::EwwiiImpl { requestor: tx.clone() };
             plugin.init(&host); // call init immediately

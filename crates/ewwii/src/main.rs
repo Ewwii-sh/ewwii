@@ -169,11 +169,11 @@ fn run<B: DisplayBackend>(opts: opts::Opt, ewwii_binary_name: String) -> Result<
         }
 
         // make sure that there isn't already a Ewwii daemon running.
-        opts::Action::Daemon { .. } if check_server_running(paths.get_ipc_socket_file()) => {
+        opts::Action::Daemon if check_server_running(paths.get_ipc_socket_file()) => {
             eprintln!("Ewwii server already running.");
             true
         }
-        opts::Action::Daemon { with_plugin } => {
+        opts::Action::Daemon => {
             log::info!("Initializing Ewwii server. ({})", paths.get_ipc_socket_file().display());
             let _ = std::fs::remove_file(paths.get_ipc_socket_file());
 
@@ -187,7 +187,6 @@ fn run<B: DisplayBackend>(opts: opts::Opt, ewwii_binary_name: String) -> Result<
                 paths.clone(),
                 None,
                 !opts.no_daemonize,
-                with_plugin,
             )?;
             opts.no_daemonize || fork_result == ForkResult::Parent
         }
@@ -228,7 +227,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, ewwii_binary_name: String) -> Result<
                     let (command, response_recv) = action.into_daemon_command();
                     // start the daemon and give it the command
                     let fork_result =
-                        server::initialize_server::<B>(paths.clone(), Some(command), true, None)?;
+                        server::initialize_server::<B>(paths.clone(), Some(command), true)?;
                     let is_parent = fork_result == ForkResult::Parent;
                     if let (Some(recv), true) = (response_recv, is_parent) {
                         listen_for_daemon_response(recv);
