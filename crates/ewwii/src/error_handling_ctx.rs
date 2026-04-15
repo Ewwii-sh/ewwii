@@ -11,7 +11,7 @@ use codespan_reporting::{
     term::{self, Chars},
 };
 use once_cell::sync::Lazy;
-use shared_utils::Span;
+use ewwii_shared_utils::Span;
 
 pub static FILE_DATABASE: Lazy<Arc<RwLock<FileDatabase>>> =
     Lazy::new(|| Arc::new(RwLock::new(FileDatabase::new())));

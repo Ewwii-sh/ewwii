@@ -4,7 +4,7 @@ use nix::{
     unistd::{setpgid, Pid},
 };
 use rhai::Map;
-use shared_utils::prop_utils::*;
+use ewwii_shared_utils::prop_utils::*;
 use std::process::Stdio;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;

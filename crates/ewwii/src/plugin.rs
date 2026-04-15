@@ -1,18 +1,12 @@
-use ewwii_plugin_api::{rhai_backend, widget_backend, EwwiiAPI};
-use rhai::{Array, Dynamic, Engine, EvalAltResult};
-use std::sync::mpsc::{channel as mpsc_channel, Receiver, Sender};
+use ewwii_plugin_api::{EwwiiAPI, FnNamespace, NativeFn};
+use ewwii_plugin_api::proxy::{PluginRequest};
+use crate::config::EWWII_CONFIG_PARSER;
 
-pub(crate) struct EwwiiImpl {
-    pub(crate) requestor: Sender<PluginRequest>,
-}
+pub(crate) struct EwwiiImpl;
 
 impl EwwiiAPI for EwwiiImpl {
     // General
     // "PCL = Plugin Controlled Log"
-    fn print(&self, msg: &str) {
-        println!("[PCL] {}", msg);
-    }
-
     fn log(&self, msg: &str) {
         log::info!("[PCL] {}", msg);
     }
@@ -25,62 +19,47 @@ impl EwwiiAPI for EwwiiImpl {
         log::error!("[PCL] {}", msg);
     }
 
-    // Rhai Manipulation Stuff
-    fn rhai_engine_action(&self, f: Box<dyn FnOnce(&mut Engine) + Send>) -> Result<(), String> {
-        self.requestor
-            .send(PluginRequest::RhaiEngineAct(f))
-            .map_err(|_| "Failed to send request to host".to_string())?;
-        Ok(())
-    }
-
     fn register_function(
         &self,
-        name: String,
-        namespace: rhai_backend::RhaiFnNamespace,
-        f: Box<dyn Fn(Array) -> Result<Dynamic, Box<EvalAltResult>> + Send + Sync>,
+        name: &str,
+        namespace: FnNamespace,
+        handler: NativeFn,
     ) -> Result<(), String> {
-        let func_info = (name, namespace, f);
-
-        self.requestor
-            .send(PluginRequest::RegisterFunc(func_info))
-            .map_err(|_| "Failed to send request to host".to_string())?;
-        Ok(())
-    }
-
-    // Widget Rendering & Logic
-    fn list_widget_ids(&self) -> Result<Vec<u64>, String> {
-        let (tx, rx): (Sender<Vec<u64>>, Receiver<Vec<u64>>) = mpsc_channel();
-
-        self.requestor
-            .send(PluginRequest::ListWidgetIds(tx))
-            .map_err(|_| "Failed to send request to host".to_string())?;
-
-        match rx.recv() {
-            Ok(r) => Ok(r),
-            Err(e) => Err(e.to_string()),
+        match namespace {
+            // TODO
+            FnNamespace::Custom(_) => {},
+            FnNamespace::Global => {},
         }
-    }
 
-    fn widget_reg_action(
-        &self,
-        f: Box<dyn FnOnce(&mut widget_backend::WidgetRegistryRepr) + Send>,
-    ) -> Result<(), String> {
-        self.requestor
-            .send(PluginRequest::WidgetRegistryAct(f))
-            .map_err(|_| "Failed to send request to host".to_string())?;
         Ok(())
     }
 }
 
-pub(crate) enum PluginRequest {
-    RhaiEngineAct(Box<dyn FnOnce(&mut Engine) + Send>),
-    RegisterFunc(
-        (
-            String,
-            rhai_backend::RhaiFnNamespace,
-            Box<dyn Fn(Array) -> Result<Dynamic, Box<EvalAltResult>> + Send + Sync>,
-        ),
-    ),
-    ListWidgetIds(Sender<Vec<u64>>),
-    WidgetRegistryAct(Box<dyn FnOnce(&mut widget_backend::WidgetRegistryRepr) + Send>),
+#[unsafe(no_mangle)]
+pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize) {
+    // SAFETY: Convert the raw pointer/len into a Rust slice
+    let bytes = unsafe { 
+        std::slice::from_raw_parts(ptr, len) 
+    };
+
+    let request: PluginRequest = match bincode::deserialize(bytes) {
+        Ok(req) => req,
+        Err(e) => {
+            eprintln!("[Host] Failed to deserialize plugin request: {}", e);
+            return;
+        }
+    };
+
+    let host = crate::plugin::EwwiiImpl;
+
+    match request {
+        PluginRequest::Log((id, msg)) => host.log(&format!("[{}] {}", id, msg)),
+        PluginRequest::Warn((id, msg)) => host.warn(&format!("[{}] {}", id, msg)),
+        PluginRequest::Error((id, msg)) => host.error(&format!("[{}] {}", id, msg)),
+        PluginRequest::RegisterFn { id, name, namespace, callback_id } => {
+            // Here you'd call your internal registration logic
+            // that handles the Rhai setup using the callback_id.
+            // let _ = host.register_function(&name, namespace, callback_id);
+        }
+    }
 }

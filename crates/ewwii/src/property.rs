@@ -1,6 +1,6 @@
 use crate::config::ewwii_config::{EWWII_CONFIG_AST, EWWII_CONFIG_PARSER};
 use ewwii_rhai_impl::updates::api::VarWatcherAPI;
-use shared_utils::variables::{GlobalCompare, GlobalVar};
+use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
 use tokio::sync::watch;
 use gtk4::glib;
 
@@ -9,7 +9,7 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
     let mut idx = 0;
 
     for var in &compare.vars {
-        if let Some(val) = shared_utils::prop_utils::try_get_global_var(var) {
+        if let Some(val) = ewwii_shared_utils::prop_utils::try_get_global_var(var) {
             global_vars.push((idx, val));
         }
         idx += 1

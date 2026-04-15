@@ -1,4 +1,4 @@
-//! Module implementing macros
+//! This module implements macros that makes developing plugins easier
 
 /// Macro to implement and export a plugin in a single step.
 /// With this macro, users can write their plugin code directly
@@ -10,12 +10,16 @@
 /// easily make plugins in a single step.
 ///
 /// ```rust,ignore
-/// use ewwii_plugin_api::auto_plugin;
+/// use ewwii_plugin_api::{auto_plugin, PluginInfo};
 ///
-/// auto_plugin!(MyPluginName, {
-///     // host variable is passed in automatically
-///     host.log("Easy, huh?");
-/// });
+/// auto_plugin!(
+///     MyPluginName,
+///     PluginInfo::new("com.auto.plugin", "0.1.0", "Author02"),
+///     host, // this host contains the API's
+///     {
+///         host.log("Easy, huh?");
+///     }
+/// );
 /// ```
 ///
 /// ## When not to use it
@@ -24,12 +28,16 @@
 /// The manual approach is verbose, but is way safer and flexible than using this macro.
 #[macro_export]
 macro_rules! auto_plugin {
-    ($struct_name:ident, $init_block:block) => {
+    ($struct_name:ident, $metadata:expr, $host_name:ident, $init_block:block) => {
+        #[derive(::std::default::Default)]
         pub struct $struct_name;
 
-        // Implement the Plugin trait
         impl $crate::Plugin for $struct_name {
-            fn init(&self, host: &dyn $crate::EwwiiAPI) {
+            fn metadata(&self) -> $crate::PluginInfo {
+                $metadata
+            }
+
+            fn init(&self, $host_name: &dyn $crate::EwwiiAPI) {
                 $init_block
             }
         }
@@ -38,26 +46,27 @@ macro_rules! auto_plugin {
     };
 }
 
-/// Automatically implements `create_plugin` for a given fieldless structure
+/// Exports the required FFI symbols for the plugin to load
 #[macro_export]
 macro_rules! export_plugin {
-    ($plugin_struct:path) => {
-        #[unsafe(no_mangle)]
-        pub extern "C" fn create_plugin() -> Box<dyn $crate::Plugin> {
-            Box::new($plugin_struct)
+    ($plugin_struct:ty) => {
+        #[no_mangle]
+        pub extern "C" fn ewwii_plugin_create() -> $crate::PluginInfo {
+            let p = <$plugin_struct as ::std::default::Default>::default();
+            $crate::Plugin::metadata(&p)
         }
-    };
-}
 
-/// Automatically implements `create_plugin` for a given structure that has fields.
-///
-/// This macro expects the structure to have fields and also implement a `default()` method.
-#[macro_export]
-macro_rules! export_stateful_plugin {
-    ($plugin_struct:path) => {
-        #[unsafe(no_mangle)]
-        pub extern "C" fn create_plugin() -> Box<dyn $crate::Plugin> {
-            Box::new(<$plugin_struct>::default())
+        #[no_mangle]
+        pub extern "C" fn ewwii_plugin_init(id_ptr: *const u8, id_len: usize) {
+            let id_bytes = unsafe { ::std::slice::from_raw_parts(id_ptr, id_len) };
+            
+            let id_cow = ::std::string::String::from_utf8_lossy(id_bytes);
+            let id_str: &str = &id_cow;
+            
+            let proxy = $crate::proxy::HostProxy::new(id_str);
+            
+            let p = <$plugin_struct as ::std::default::Default>::default();
+            $crate::Plugin::init(&p, &proxy);
         }
     };
 }

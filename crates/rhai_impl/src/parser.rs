@@ -8,7 +8,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, ImmutableString, Module, OptimizationLevel, Scope, AST};
-use shared_utils::variables::GlobalVar;
+use ewwii_shared_utils::variables::GlobalVar;
 use std::cell::RefCell;
 use std::fs;
 use std::path::Path;

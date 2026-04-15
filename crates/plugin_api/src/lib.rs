@@ -10,12 +10,18 @@
 //! The following example shows how this crate shall be used to build ewwii plugins:
 //!
 //! ```rust
-//! use ewwii_plugin_api::{EwwiiAPI, Plugin, export_plugin};
+//! use ewwii_plugin_api::{
+//!     EwwiiAPI, Plugin, PluginInfo, 
+//!     export_plugin, proxy::HostProxy
+//! };
 //!
 //! pub struct DummyStructure;
 //!
 //! impl Plugin for DummyStructure {
-//!     // critical for ewwii to launch the plugin
+//!     fn metadata(&self) -> PluginInfo {
+//!         PluginInfo::new("com.app.example", "1.0.0", "Author27");
+//!     }
+//!
 //!     fn init(&self, host: &dyn EwwiiAPI) {
 //!         // will be printed by the host
 //!         host.log("Plugin says Hello!");
@@ -27,22 +33,16 @@
 //! ```
 
 mod export_macros;
+mod bridge;
 
 pub mod example;
-pub mod rhai_backend;
-pub mod widget_backend;
+pub mod proxy;
 
-#[cfg(feature = "include-rhai")]
-pub use rhai;
-
-#[cfg(feature = "include-gtk4")]
-pub use gtk4;
+pub use bridge::*;
 
 /// The shared trait defining the Ewwii plugin API
 pub trait EwwiiAPI: Send + Sync {
     // == General Stuff == //
-    /// Print a message from the host
-    fn print(&self, msg: &str);
     /// Log a message from the host
     fn log(&self, msg: &str);
     /// Log a warning from the host
@@ -50,32 +50,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// Log an error from the host
     fn error(&self, msg: &str);
 
-    // == Rhai Manipulation Stuff == //
-    /// _(include-rhai)_ Perform actions on the latest rhai engine.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use ewwii_plugin_api::{EwwiiAPI, Plugin};
-    ///
-    /// pub struct DummyStructure;
-    ///
-    /// impl Plugin for DummyStructure {
-    ///     fn init(&self, host: &dyn EwwiiAPI) {
-    ///         host.rhai_engine_action(Box::new(|eng| {
-    ///             // eng = rhai::Engine
-    ///             eng.set_max_expr_depths(128, 128);
-    ///         }));
-    ///     }
-    /// }
-    /// ```
-    #[cfg(feature = "include-rhai")]
-    fn rhai_engine_action(
-        &self,
-        f: Box<dyn FnOnce(&mut rhai::Engine) + Send>,
-    ) -> Result<(), String>;
-
-    /// _(include-rhai)_ Expose a function that rhai configuration can call.
+    /// Expose a function that rhai configuration can call.
     ///
     /// **NOTE:***
     ///
@@ -115,42 +90,11 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```js
     /// print(my_func(["param1", "param2"]));
     /// ```
-    #[cfg(feature = "include-rhai")]
     fn register_function(
         &self,
-        name: String,
-        namespace: rhai_backend::RhaiFnNamespace,
-        f: Box<
-            dyn Fn(rhai::Array) -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> + Send + Sync,
-        >,
-    ) -> Result<(), String>;
-
-    // == Widget Rendering & Logic == //
-    /// Get the list of all widget id's
-    fn list_widget_ids(&self) -> Result<Vec<u64>, String>;
-
-    /// _(include-gtk4)_ Perform actions on the latest widget registry.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use ewwii_plugin_api::{EwwiiAPI, Plugin};
-    ///
-    /// pub struct DummyStructure;
-    ///
-    /// impl Plugin for DummyStructure {
-    ///     fn init(&self, host: &dyn EwwiiAPI) {
-    ///         host.widget_reg_action(Box::new(|wrg| {
-    ///             // wrg = widget_backend::WidgetRegistryRepr
-    ///             // The gtk4::Widget can be modified here.
-    ///         }));
-    ///     }
-    /// }
-    /// ```
-    #[cfg(feature = "include-gtk4")]
-    fn widget_reg_action(
-        &self,
-        f: Box<dyn FnOnce(&mut widget_backend::WidgetRegistryRepr) + Send>,
+        name: &str,
+        namespace: FnNamespace,
+        handler: NativeFn,
     ) -> Result<(), String>;
 }
 
@@ -175,6 +119,9 @@ pub trait EwwiiAPI: Send + Sync {
 /// export_plugin!(MyStruct);
 /// ```
 pub trait Plugin: Send + Sync {
-    /// Function ran by host to startup plugin (and its a must-have for plugin loading)
+/// Returns the unique identity and version of the plugin.
+    fn metadata(&self) -> PluginInfo;
+
+    /// Function ran by host to startup plugin.
     fn init(&self, host: &dyn EwwiiAPI);
 }
