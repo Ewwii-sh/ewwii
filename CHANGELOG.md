@@ -5,6 +5,13 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [UNRELEASED]
+
+## Fixed
+
+- Poll's interval detection without duration type panicing. #32
+- Large program size. #30
+
 ## [0.5.0] - 2026-04-14
 
 ### Added
