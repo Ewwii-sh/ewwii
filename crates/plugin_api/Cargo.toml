@@ -1,6 +1,6 @@
 [package]
 name = "ewwii_plugin_api"
-version = "0.7.0"
+version = "1.0.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -8,16 +8,8 @@ description = "A shared library for building plugins for ewwii"
 repository = "https://github.com/byson94/ewwii"
 homepage = "https://github.com/byson94/ewwii"
 
-[features]
-default = ["include-gtk4", "include-rhai"]
-
-## Include the gtk4 dependency
-include-gtk4 = ["dep:gtk4"]
-
-## Include the rhai dependency
-include-rhai = ["dep:rhai"]
-
 [dependencies]
-# rhai crate features should exactly match that of rhai_impl
-rhai = { workspace = true, optional = true, features = ["internals"] }
-gtk4 = { workspace = true, optional = true }
+ewwii_shared_utils.workspace = true
+bincode.workspace = true
+serde.workspace = true
+rand.workspace = true

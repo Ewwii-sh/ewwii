@@ -77,8 +77,8 @@ fn main() {
     } else {
         pretty_env_logger::formatted_timed_builder()
             .filter(Some("ewwii"), log_level_filter)
-            .filter(Some("shared_utils"), log_level_filter)
-            .filter(Some("rhai_impl"), log_level_filter)
+            .filter(Some("ewwii_shared_utils"), log_level_filter)
+            .filter(Some("ewwii_rhai_impl"), log_level_filter)
             .init();
     }
 

@@ -481,6 +481,7 @@ dependencies = [
  "derive_more",
  "ewwii_plugin_api",
  "ewwii_rhai_impl",
+ "ewwii_shared_utils",
  "extend",
  "futures",
  "gdk4-x11",
@@ -499,7 +500,6 @@ dependencies = [
  "rhai",
  "serde",
  "serde_json",
- "shared_utils",
  "shell-words",
  "simple-signal",
  "smart-default",
@@ -513,10 +513,12 @@ dependencies = [
 
 [[package]]
 name = "ewwii_plugin_api"
-version = "0.7.0"
+version = "1.0.0"
 dependencies = [
- "gtk4",
- "rhai",
+ "bincode",
+ "ewwii_shared_utils",
+ "rand 0.10.0",
+ "serde",
 ]
 
 [[package]]
@@ -526,6 +528,7 @@ dependencies = [
  "ahash",
  "anyhow",
  "codespan-reporting",
+ "ewwii_shared_utils",
  "gtk4",
  "libc",
  "log",
@@ -536,7 +539,17 @@ dependencies = [
  "rhai",
  "rhai_trace",
  "scan_prop_proc",
- "shared_utils",
+ "tokio",
+]
+
+[[package]]
+name = "ewwii_shared_utils"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "rhai",
+ "serde",
  "tokio",
 ]
 
@@ -1946,17 +1959,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shared_utils"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "log",
- "rhai",
- "serde",
- "tokio",
-]
-
-[[package]]
 name = "shell-words"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2277,6 +2279,13 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+
+[[package]]
+name = "veryimptest"
+version = "0.1.0"
+dependencies = [
+ "ewwii_plugin_api",
+]
 
 [[package]]
 name = "wait-timeout"

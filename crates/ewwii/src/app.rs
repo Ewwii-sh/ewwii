@@ -1,4 +1,3 @@
-use crate::plugin::PluginRequest;
 use crate::{
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
@@ -30,7 +29,6 @@ use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
 use itertools::Itertools;
-use once_cell::sync::OnceCell;
 use std::{
     cell::Cell,
     collections::{HashMap, HashSet},
@@ -41,13 +39,30 @@ use std::{
 };
 use tokio::sync::mpsc::UnboundedSender;
 
-static ACTIVE_PLUGINS: Mutex<Vec<libloading::Library>> = Mutex::new(Vec::new());
+pub struct ActivePlugin {
+    pub library: libloading::Library,
+    pub id: String,
+    pub version: String,
+}
 
-fn load_active_plugin(lib: libloading::Library) -> Result<()> {
-    ACTIVE_PLUGINS
+static ACTIVE_PLUGINS: Mutex<Vec<ActivePlugin>> = Mutex::new(Vec::new());
+
+fn register_active_plugin(lib: libloading::Library, id: String, version: String) 
+    -> Result<()> {
+    let mut plugins = ACTIVE_PLUGINS
         .lock()
-        .map_err(|_| anyhow!("Failed to lock plugin list"))?
-        .push(lib);
+        .map_err(|_| anyhow!("Failed to lock plugin list"))?;
+    
+    if plugins.iter().any(|p| p.id == id) {
+        return Err(anyhow!("Plugin with ID {} is already loaded", id));
+    }
+
+    plugins.push(ActivePlugin {
+        library: lib,
+        id,
+        version,
+    });
+    
     Ok(())
 }
 
@@ -729,97 +744,36 @@ impl<B: DisplayBackend> App<B> {
             return Ok(())
         }
 
-        if ACTIVE_PLUGIN.get().is_some() {
-            anyhow::bail!("A plugin is already loaded");
-        }
+        for plugin_path in plugin_paths {
+            // SAFETY: This is necessary to load plugins
+            unsafe {
+                let lib = libloading::Library::new(&plugin_path)
+                    .map_err(|e| anyhow!("Failed to load library: {}", e))?;
 
-        // TODO: The first plugin is used for the sake of getting it compiled for now
-        let first_plugin = &plugin_paths[0];
+                // Create the plugin and receive metadata
+                let create: libloading::Symbol<unsafe extern "C" fn() -> epapi::PluginInfo> =
+                    lib.get(b"ewwii_plugin_create")
+                        .map_err(|e| anyhow!("Missing ewwii_plugin_create: {}", e))?;
 
-        let lib = unsafe {
-            libloading::Library::new(first_plugin)
-                .map_err(|e| anyhow!("Failed to load plugin: {}", e))?
-        };
+                let info = create(); 
+                log::debug!("Loading plugin: {} v{}", info.id, info.version);
 
-        let (tx, rx): (
-            std::sync::mpsc::Sender<PluginRequest>,
-            std::sync::mpsc::Receiver<PluginRequest>,
-        ) = std::sync::mpsc::channel();
+                let file_stem = plugin_path.file_stem().unwrap().to_str().unwrap();
+                let unique_id = format!("{}::{}", file_stem, info.id);
 
-        unsafe {
-            // Each plugin exposes: extern "C" fn create_plugin() -> Box<dyn Plugin>
-            let constructor: libloading::Symbol<unsafe extern "C" fn() -> Box<dyn epapi::Plugin>> =
-                lib.get(b"create_plugin")
-                    .map_err(|e| anyhow!("Failed to find create_plugin: {}", e))?;
+                // Initializing plugins with metadata
+                let init: libloading::Symbol<unsafe extern "C" fn(*const u8, usize)> =
+                    lib.get(b"ewwii_plugin_init")
+                        .map_err(|e| anyhow!("Missing ewwii_plugin_init: {}", e))?;
 
-            let plugin = constructor(); // instantiate plugin
+                // Pass the ID back to the plugin
+                let id_bytes = unique_id.as_bytes();
+                init(id_bytes.as_ptr(), id_bytes.len());
 
-            load_active_plugin(lib)?; // keep library alive
-
-            let host = crate::plugin::EwwiiImpl { requestor: tx.clone() };
-            plugin.init(&host); // call init immediately
-        }
-
-        let wgs = self.widget_reg_store.clone();
-
-        let handle_request = move |req: PluginRequest| match req {
-            PluginRequest::RhaiEngineAct(func) => {
-                EWWII_CONFIG_PARSER.with(move |p| {
-                    let mut parser = p.borrow_mut();
-                    let parser_ref = parser.as_mut().unwrap();
-                    func(&mut parser_ref.engine);
-                });
+                // Keep the library alive in your state manager
+                register_active_plugin(lib, unique_id, info.version.to_string())?; 
             }
-            PluginRequest::RegisterFunc((name, namespace, func)) => match namespace {
-                epapi::rhai_backend::RhaiFnNamespace::Custom(ns) => {
-                    let mut module = rhai::Module::new();
-                    module.set_native_fn(name, func);
-                    EWWII_CONFIG_PARSER.with(move |p| {
-                        let mut parser = p.borrow_mut();
-                        let parser_ref = parser.as_mut().unwrap();
-                        parser_ref.engine.register_static_module(&ns, module.into());
-                    });
-                }
-                epapi::rhai_backend::RhaiFnNamespace::Global => {
-                    EWWII_CONFIG_PARSER.with(move |p| {
-                        let mut parser = p.borrow_mut();
-                        let parser_ref = parser.as_mut().unwrap();
-                        parser_ref.engine.register_fn(name, func);
-                    });
-                }
-            },
-            PluginRequest::ListWidgetIds(res_tx) => {
-                let wgs_guard = wgs.lock().unwrap();
-                if let Some(wgs_brw) = wgs_guard.as_ref() {
-                    let output: Vec<u64> = wgs_brw.widgets.keys().cloned().collect();
-                    let _ = res_tx.send(output);
-                }
-            }
-            PluginRequest::WidgetRegistryAct(func) => {
-                let mut wgs_guard = wgs.lock().unwrap();
-                if let Some(ref mut registry) = *wgs_guard {
-                    let repr_map: HashMap<u64, &mut gtk4::Widget> =
-                        registry.widgets.iter_mut().map(|(id, widget)| (*id, widget)).collect();
-                    func(&mut ewwii_plugin_api::widget_backend::WidgetRegistryRepr {
-                        widgets: repr_map,
-                    });
-                }
-            }
-        };
-
-        // quick drain
-        while let Ok(req) = rx.try_recv() {
-            handle_request(req);
         }
-
-        // handling requests that arrive later
-        glib::MainContext::default().spawn_local(async move {
-            let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                while let Ok(req) = rx.recv() {
-                    handle_request(req);
-                }
-            }));
-        });
 
         Ok(())
     }

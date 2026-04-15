@@ -1,7 +1,7 @@
 use ahash::AHasher;
 use rhai::Map;
 use scan_prop_proc::scan_prop;
-use shared_utils::prop_utils::{get_string_prop, unwrap_static};
+use ewwii_shared_utils::prop_utils::{get_string_prop, unwrap_static};
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]

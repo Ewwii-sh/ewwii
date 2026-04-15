@@ -15,7 +15,7 @@ use gtk4::{
 use rhai::Map;
 
 use super::widget_definitions_helper::*;
-use shared_utils::prop_utils::*;
+use ewwii_shared_utils::prop_utils::*;
 use std::{
     cell::RefCell,
     collections::HashMap,

@@ -1,6 +1,6 @@
 use crate::ast::WidgetNode;
 use rhai::{Array, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
-use shared_utils::variables::GlobalCompare;
+use ewwii_shared_utils::variables::GlobalCompare;
 use std::cell::RefCell;
 use std::rc::Rc;
 

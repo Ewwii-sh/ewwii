@@ -3,11 +3,10 @@ members = ["crates/*", "tools/*", "proc_macros/*"]
 resolver = "2"
 
 [workspace.dependencies]
-
-shared_utils = { version = "0.1.0", path = "crates/shared_utils" }
-scan_prop_proc = { version = "0.1.0", path = "proc_macros/scan_prop_proc" }
+ewwii_shared_utils = { version = "0.1.0", path = "crates/shared_utils" }
 ewwii_rhai_impl = { version = "0.1.0", path = "crates/rhai_impl" }
-ewwii_plugin_api = { version = "0.7.0", path = "crates/plugin_api" }
+ewwii_plugin_api = { version = "1.0.0", path = "crates/plugin_api" }
+scan_prop_proc = { version = "0.1.0", path = "proc_macros/scan_prop_proc" }
 
 anyhow = "1.0.86"
 ahash = "0.8.12"
@@ -61,5 +60,3 @@ lto = "fat"
 panic = "abort"
 strip = "symbols"
 codegen-units = 1
-
-

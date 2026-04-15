@@ -15,7 +15,7 @@ x11 = ["gdk4-x11", "x11rb"]
 wayland = ["gtk4-layer-shell"]
 
 [dependencies]
-shared_utils.workspace = true
+ewwii_shared_utils.workspace = true
 ewwii_rhai_impl.workspace = true
 ewwii_plugin_api.workspace = true
 
