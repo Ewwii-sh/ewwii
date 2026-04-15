@@ -91,6 +91,30 @@ impl EwwiiPaths {
     pub fn get_rhai_path(&self) -> PathBuf {
         self.config_dir.join("ewwii.rhai")
     }
+
+    pub fn get_plugin_paths(&self) -> Vec<PathBuf> {
+        let plugin_dir = self.config_dir.join("plugins");
+        let mut plugins = Vec::new();
+
+        let Ok(discovered_entries) = std::fs::read_dir(plugin_dir) else {
+            return plugins;
+        };
+
+        for entry in discovered_entries {
+            let Ok(entry) = entry else { continue; };
+            let path = entry.path();
+
+            if !path.is_file() {
+                continue;
+            }
+
+            if path.extension() == Some(std::ffi::OsStr::new("so")) {
+                plugins.push(path);
+            }
+        }
+
+        plugins
+    }
 }
 
 impl std::fmt::Display for EwwiiPaths {

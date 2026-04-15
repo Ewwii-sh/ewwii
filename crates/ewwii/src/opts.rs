@@ -67,10 +67,7 @@ pub enum Action {
 
     /// Start the Ewwii daemon.
     #[command(name = "daemon", alias = "d")]
-    Daemon {
-        #[arg(long)]
-        with_plugin: Option<String>,
-    },
+    Daemon,
 
     #[command(flatten)]
     ClientOnly(ActionClientOnly),
@@ -208,14 +205,6 @@ pub enum ActionWithServer {
         /// Rhai functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
         #[arg(required = true)]
         calls: Vec<String>,
-    },
-
-    /// Set a plugin (.so) to the ewwii binary
-    #[command(name = "set-plugin")]
-    SetPlugin {
-        /// The .so file to load
-        #[arg(value_parser = absolute_file_path_parser)]
-        file_path: String,
     },
 }
 
@@ -415,12 +404,6 @@ impl ActionWithServer {
             }
             ActionWithServer::ShowDebug => {
                 return with_response_channel(app::DaemonCommand::PrintDebug)
-            }
-            ActionWithServer::SetPlugin { file_path } => {
-                return with_response_channel(|sender| app::DaemonCommand::SetPlugin {
-                    file_path,
-                    sender,
-                })
             }
         };
         (command, None)

@@ -21,7 +21,6 @@ pub fn initialize_server<B: DisplayBackend>(
     paths: EwwiiPaths,
     action: Option<DaemonCommand>,
     should_daemonize: bool,
-    ewwii_plugin_path: Option<String>,
 ) -> Result<ForkResult> {
     let (ui_send, mut ui_recv) = tokio::sync::mpsc::unbounded_channel();
 
@@ -35,6 +34,8 @@ pub fn initialize_server<B: DisplayBackend>(
         let config_parser = ewwii_rhai_impl::parser::ParseConfig::new();
         *p.borrow_mut() = Some(config_parser);
     });
+
+    let ewwii_plugins = paths.get_plugin_paths();
 
     cleanup_log_dir(paths.get_log_dir())?;
 
@@ -89,10 +90,8 @@ pub fn initialize_server<B: DisplayBackend>(
     };
 
     // start up plugins
-    if let Some(ewwii_plugin) = ewwii_plugin_path {
-        if let Err(e) = app.set_ewwii_plugin(ewwii_plugin) {
-            error_handling_ctx::print_error(e);
-        }
+    if let Err(e) = app.load_ewwii_plugins(ewwii_plugins) {
+        error_handling_ctx::print_error(e);
     }
 
     let read_config = EWWII_CONFIG_PARSER.with(|p| {
