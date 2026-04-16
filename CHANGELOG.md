@@ -7,11 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+## Added
+
+- Support for to and fro communication between plugin and host
+
+## Changed
+
+- The Plugin API.
+- The handling of requests from plugins.
+
 ## Fixed
 
 - Poll's interval detection without duration type panicing. #32
 - Large program size. #30
 - Logging issues with rhai implementation crate.
+
+## Removed
+
+- Gtk related API from the plugin API.
+- `include-gtk` and `include-rhai` feature from ewwii_plugin_api.
 
 ## [0.5.0] - 2026-04-14
 
