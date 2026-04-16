@@ -9,15 +9,15 @@
 /// The following example shows how you can use this macro to
 /// easily make plugins in a single step.
 ///
-/// ```rust,ignore
+/// ```rust
 /// use ewwii_plugin_api::{auto_plugin, PluginInfo};
 ///
 /// auto_plugin!(
 ///     MyPluginName,
-///     PluginInfo::new("com.auto.plugin", "0.1.0", "Author02"),
+///     PluginInfo::new("com.auto.plugin", "0.1.0"),
 ///     host, // this host contains the API's
 ///     {
-///         host.log("Easy, huh?");
+///         host.log("It's very easy!");
 ///     }
 /// );
 /// ```
