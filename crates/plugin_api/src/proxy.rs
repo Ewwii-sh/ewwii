@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
-use crate::{NativeFn, FnNamespace, EwwiiAPI};
+use crate::{NativeFn, EwwiiAPI, PluginValue};
 use serde::{Serialize, Deserialize};
 
 static CALLBACKS: OnceLock<Mutex<HashMap<u64, NativeFn>>> = OnceLock::new();
@@ -24,7 +24,6 @@ pub enum PluginRequest {
     RegisterFn {
         id: String,
         name: String,
-        namespace: FnNamespace,
         callback_id: u64,
     },
 }
@@ -35,13 +34,39 @@ extern "C" {
 }
 
 #[no_mangle]
-pub extern "C" fn plugin_callback_handler(id: u64, arg_ptr: *const u8, arg_len: usize) {
+pub extern "C" fn plugin_callback_handler(
+    id: u64, 
+    arg_ptr: *const u8, 
+    arg_len: usize,
+    output_len: *mut usize
+) -> *mut u8 {
     let bytes = unsafe { std::slice::from_raw_parts(arg_ptr, arg_len) };
-    let args = bincode::deserialize(bytes).unwrap();
+    let args: Vec<PluginValue> = bincode::deserialize(bytes).unwrap_or_default();
 
     let callbacks = get_callbacks().lock().unwrap();
     if let Some(handler) = callbacks.get(&id) {
-        let _ = handler(args); 
+        let result = handler(args).unwrap_or(PluginValue::Null);
+
+        let res_bytes = bincode::serialize(&result).unwrap_or_default();
+        
+        unsafe {
+            let len = res_bytes.len();
+            *output_len = len;
+            
+            let boxed_slice = res_bytes.into_boxed_slice();
+            return Box::into_raw(boxed_slice) as *mut u8;
+        }
+    }
+    
+    std::ptr::null_mut()
+}
+
+#[no_mangle]
+pub extern "C" fn ewwii_free_buffer(ptr: *mut u8, len: usize) {
+    if !ptr.is_null() {
+        unsafe {
+            let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));
+        }
     }
 }
 
@@ -93,7 +118,6 @@ impl EwwiiAPI for HostProxy {
     fn register_function(
         &self,
         name: &str,
-        namespace: FnNamespace,
         handler: NativeFn,
     ) -> Result<(), String> {
         // Register id
@@ -104,7 +128,6 @@ impl EwwiiAPI for HostProxy {
         let req = PluginRequest::RegisterFn {
             id: self.get_id().to_string(),
             name: name.to_string(),
-            namespace,
             callback_id: id,
         };
 

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Poll's interval detection without duration type panicing. #32
 - Large program size. #30
+- Logging issues with rhai implementation crate.
 
 ## [0.5.0] - 2026-04-14
 

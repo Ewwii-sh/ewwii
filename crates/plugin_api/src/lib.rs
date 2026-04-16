@@ -52,17 +52,13 @@ pub trait EwwiiAPI: Send + Sync {
 
     /// Expose a function that rhai configuration can call.
     ///
-    /// **NOTE:***
-    ///
-    /// Due to TypeID mismatches, methods like `register_type`, `register_fn`,
-    /// etc. won't work on the engine and may cause a crash. It is recommended
-    /// to use the `register_function` API to register a funtion which `api::slib`
-    /// can call to in rhai.
-    ///
     /// # Example
     ///
     /// ```rust
-    /// use ewwii_plugin_api::{EwwiiAPI, Plugin, rhai_backend::RhaiFnNamespace};
+    /// use ewwii_plugin_api::{
+    ///     EwwiiAPI, Plugin, 
+    ///     PropValue, NativeFn, NativeFnExt
+    /// };
     /// use rhai::Dynamic;
     ///
     /// pub struct DummyStructure;
@@ -70,14 +66,13 @@ pub trait EwwiiAPI: Send + Sync {
     /// impl Plugin for DummyStructure {
     ///     fn init(&self, host: &dyn EwwiiAPI) {
     ///         host.register_function(
-    ///             "my_func".to_string(),
-    ///             RhaiFnNamespace::Global,
-    ///             Box::new(|args| {
+    ///             "my_func",
+    ///             NativeFn::new(|args| {
     ///             // Do stuff
     ///             // - Perform things on the args (if needed)
     ///             // - And return a value
     ///             
-    ///             Ok(Dynamic::default()) // return empty
+    ///             Ok(PropValue::Null) // return empty
     ///         }));
     ///     }
     /// }
@@ -93,7 +88,6 @@ pub trait EwwiiAPI: Send + Sync {
     fn register_function(
         &self,
         name: &str,
-        namespace: FnNamespace,
         handler: NativeFn,
     ) -> Result<(), String>;
 }

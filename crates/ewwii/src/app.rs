@@ -39,25 +39,17 @@ use std::{
 };
 use tokio::sync::mpsc::UnboundedSender;
 
-pub struct ActivePlugin {
-    pub library: libloading::Library,
-    pub id: String,
-    pub version: String,
-}
-
-static ACTIVE_PLUGINS: Mutex<Vec<ActivePlugin>> = Mutex::new(Vec::new());
-
 fn register_active_plugin(lib: libloading::Library, id: String, version: String) 
     -> Result<()> {
-    let mut plugins = ACTIVE_PLUGINS
-        .lock()
-        .map_err(|_| anyhow!("Failed to lock plugin list"))?;
+    let mut plugins = plugin::ACTIVE_PLUGINS
+        .write()
+        .map_err(|_| anyhow!("Plugin registry is poisoned!"))?;
     
     if plugins.iter().any(|p| p.id == id) {
         return Err(anyhow!("Plugin with ID {} is already loaded", id));
     }
 
-    plugins.push(ActivePlugin {
+    plugins.push(plugin::ActivePlugin {
         library: lib,
         id,
         version,
@@ -761,17 +753,21 @@ impl<B: DisplayBackend> App<B> {
                 let file_stem = plugin_path.file_stem().unwrap().to_str().unwrap();
                 let unique_id = format!("{}::{}", file_stem, info.id);
 
-                // Initializing plugins with metadata
-                let init: libloading::Symbol<unsafe extern "C" fn(*const u8, usize)> =
-                    lib.get(b"ewwii_plugin_init")
-                        .map_err(|e| anyhow!("Missing ewwii_plugin_init: {}", e))?;
+                // Keep the library alive and register it before initialization
+                register_active_plugin(lib, unique_id.clone(), info.version.to_string())?; 
 
-                // Pass the ID back to the plugin
-                let id_bytes = unique_id.as_bytes();
-                init(id_bytes.as_ptr(), id_bytes.len());
+                {
+                    let plugins = plugin::ACTIVE_PLUGINS.read().unwrap();
+                    let plugin_entry = plugins.iter().find(|p| p.id == unique_id).unwrap();
+                    
+                    // Initializing plugins with metadata
+                    let init: libloading::Symbol<unsafe extern "C" fn(*const u8, usize)> =
+                        plugin_entry.library.get(b"ewwii_plugin_init")?;
 
-                // Keep the library alive in your state manager
-                register_active_plugin(lib, unique_id, info.version.to_string())?; 
+                    // Pass the ID back to the plugin
+                    let id_bytes = unique_id.as_bytes();
+                    init(id_bytes.as_ptr(), id_bytes.len());
+                }
             }
         }
 
