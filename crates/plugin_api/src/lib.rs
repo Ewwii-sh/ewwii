@@ -15,11 +15,12 @@
 //!     export_plugin, proxy::HostProxy
 //! };
 //!
+//! #[derive(Default)]
 //! pub struct DummyStructure;
 //!
 //! impl Plugin for DummyStructure {
 //!     fn metadata(&self) -> PluginInfo {
-//!         PluginInfo::new("com.app.example", "1.0.0", "Author27");
+//!         PluginInfo::new("com.app.example", "1.0.0")
 //!     }
 //!
 //!     fn init(&self, host: &dyn EwwiiAPI) {
@@ -57,13 +58,17 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```rust
     /// use ewwii_plugin_api::{
     ///     EwwiiAPI, Plugin, 
-    ///     PropValue, NativeFn, NativeFnExt
+    ///     PluginValue, PluginInfo,
+    ///     NativeFn, NativeFnExt
     /// };
-    /// use rhai::Dynamic;
     ///
     /// pub struct DummyStructure;
     ///
     /// impl Plugin for DummyStructure {
+    ///     fn metadata(&self) -> PluginInfo {
+    ///         PluginInfo::new("test.example.register", "1.0")
+    ///     }
+    /// 
     ///     fn init(&self, host: &dyn EwwiiAPI) {
     ///         host.register_function(
     ///             "my_func",
@@ -72,7 +77,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///             // - Perform things on the args (if needed)
     ///             // - And return a value
     ///             
-    ///             Ok(PropValue::Null) // return empty
+    ///             Ok(PluginValue::Null) // return empty
     ///         }));
     ///     }
     /// }
@@ -99,11 +104,17 @@ pub trait EwwiiAPI: Send + Sync {
 /// ## Example
 ///
 /// ```rust
-/// use ewwii_plugin_api::{Plugin, EwwiiAPI, export_plugin};
+/// use ewwii_plugin_api::{Plugin, PluginInfo, EwwiiAPI, export_plugin};
 ///
+/// #[derive(Default)]
 /// struct MyStruct;
 ///
 /// impl Plugin for MyStruct {
+///     fn metadata(&self) -> PluginInfo {
+///         /* Dummy Implementation */
+///         PluginInfo::new("", "")
+///     }
+///
 ///     fn init(&self, host: &dyn EwwiiAPI) {
 ///         /* Implementation Skipped */   
 ///      }
