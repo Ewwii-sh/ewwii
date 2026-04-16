@@ -95,6 +95,7 @@ pub enum DaemonCommand {
     ShowState(DaemonResponseSender),
     ListWindows(DaemonResponseSender),
     ListActiveWindows(DaemonResponseSender),
+    ListPlugins(DaemonResponseSender),
     WidgetControl {
         action: crate::opts::WidgetControlAction,
         sender: DaemonResponseSender,
@@ -339,6 +340,22 @@ impl<B: DisplayBackend> App<B> {
                     .iter()
                     .map(|(id, window)| format!("{id}: {}", window.name))
                     .join("\n");
+                sender.send_success(output)?
+            }
+            DaemonCommand::ListPlugins(sender) => {
+                let plugins_guard = match plugin::ACTIVE_PLUGINS.read() {
+                    Ok(guard) => guard,
+                    Err(_) => {
+                        sender.send_failure("Failed to acquire plugin lock".to_string())?;
+                        return Ok(());
+                    }
+                };
+
+                let output: String = plugins_guard
+                    .iter()
+                    .map(|p| format!("{} (v{})", p.id, p.version))
+                    .join("\n");
+
                 sender.send_success(output)?
             }
             DaemonCommand::PrintDebug(sender) => {
