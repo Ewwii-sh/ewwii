@@ -739,15 +739,34 @@ impl<B: DisplayBackend> App<B> {
         for plugin_path in plugin_paths {
             // SAFETY: This is necessary to load plugins
             unsafe {
-                let lib = libloading::Library::new(&plugin_path)
-                    .map_err(|e| anyhow!("Failed to load library: {}", e))?;
+                let lib = match libloading::Library::new(&plugin_path) {
+                    Ok(l) => l,
+                    Err(e) => {
+                        log::error!("Failed to load plugin: {}", e);
+                        continue;
+                    }
+                };
 
                 // Create the plugin and receive metadata
-                let create: libloading::Symbol<unsafe extern "C" fn() -> epapi::PluginInfo> =
-                    lib.get(b"ewwii_plugin_create")
-                        .map_err(|e| anyhow!("Missing ewwii_plugin_create: {}", e))?;
+                let create_result: Result<libloading::Symbol<unsafe extern "C" fn() -> epapi::PluginInfo>, _> = 
+                    lib.get(b"ewwii_plugin_create");
+
+                let create = match create_result {
+                    Ok(symbol) => symbol,
+                    Err(e) => {
+                        log::error!("Missing ewwii_plugin_create in {:?}: {}", plugin_path, e);
+                        continue;
+                    }
+                };
 
                 let info = create(); 
+
+                // crash if plugin id is empty
+                if info.id.is_empty() {
+                    log::error!("Plugin registration failed: Plugin ID cannot be empty");
+                    continue;
+                }
+
                 log::debug!("Loading plugin: {} v{}", info.id, info.version);
 
                 let file_stem = plugin_path.file_stem().unwrap().to_str().unwrap();
