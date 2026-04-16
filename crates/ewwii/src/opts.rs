@@ -175,6 +175,10 @@ pub enum ActionWithServer {
     #[command(name = "active-windows")]
     ListActiveWindows,
 
+    /// List all active plugins
+    #[command(name = "list-plugins")]
+    ListPlugins,
+
     /// Print out the widget structure as seen by ewwii.
     ///
     /// This may be useful if you are facing issues with how ewwii is interpreting your configuration,
@@ -402,6 +406,9 @@ impl ActionWithServer {
             ActionWithServer::ListActiveWindows => {
                 return with_response_channel(app::DaemonCommand::ListActiveWindows)
             }
+            ActionWithServer::ListPlugins => {
+                return with_response_channel(app::DaemonCommand::ListPlugins)
+            }
             ActionWithServer::ShowDebug => {
                 return with_response_channel(app::DaemonCommand::PrintDebug)
             }
@@ -480,11 +487,4 @@ fn parse_inject_var_map(s: &str) -> Result<HashMap<String, String>, String> {
         map.insert(key.trim().to_string(), val.trim().to_string());
     }
     Ok(map)
-}
-
-fn absolute_file_path_parser(s: &str) -> Result<String, String> {
-    let p = std::path::Path::new(s);
-    std::fs::canonicalize(p)
-        .map_err(|e| format!("Failed to canonicalize '{}': {}", s, e))
-        .map(|abs_path| abs_path.to_string_lossy().into_owned())
 }
