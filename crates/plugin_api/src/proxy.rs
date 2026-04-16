@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
-use crate::{NativeFn, EwwiiAPI, PluginValue};
+use crate::{NativeFn, EwwiiAPI, PluginValue, PluginError};
 use serde::{Serialize, Deserialize};
 
 static CALLBACKS: OnceLock<Mutex<HashMap<u64, NativeFn>>> = OnceLock::new();
@@ -30,7 +30,8 @@ pub enum PluginRequest {
 
 // This is provided on the host side
 extern "C" {
-    fn ffi_gateway(ptr: *const u8, len: usize);
+    fn ffi_gateway(ptr: *const u8, len: usize, out_len: *mut usize) -> *mut u8;
+    fn host_free_buffer(ptr: *mut u8, len: usize);
 }
 
 #[no_mangle]
@@ -62,7 +63,7 @@ pub extern "C" fn plugin_callback_handler(
 }
 
 #[no_mangle]
-pub extern "C" fn ewwii_free_buffer(ptr: *mut u8, len: usize) {
+pub extern "C" fn plugin_free_buffer(ptr: *mut u8, len: usize) {
     if !ptr.is_null() {
         unsafe {
             let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));
@@ -88,38 +89,55 @@ impl HostProxy {
     fn get_id(&self) -> &str {
         &self.id
     }
+
+    fn call_host(&self, req: PluginRequest) -> Result<PluginValue, PluginError> {
+        let bytes = bincode::serialize(&req)
+            .map_err(|e| PluginError::BridgeError(e.to_string()))?;
+        let mut out_len: usize = 0;
+        
+        unsafe {
+            let res_ptr = ffi_gateway(bytes.as_ptr(), bytes.len(), &mut out_len);
+            if res_ptr.is_null() {
+                return Err(PluginError::BridgeError("Host gateway returned null".to_string()));
+            }
+
+            let res_slice = std::slice::from_raw_parts(res_ptr, out_len);
+            let result: Result<PluginValue, PluginError> = bincode::deserialize(res_slice)
+                .map_err(|e| PluginError::BridgeError(format!("Deserialization error: {}", e)))?;
+
+            host_free_buffer(res_ptr, out_len);
+            result
+        }
+    }
 }
 
 impl EwwiiAPI for HostProxy {
     fn log(&self, msg: &str) {
         let plugid = &self.get_id();
         let req = PluginRequest::Log((plugid.to_string(), msg.to_string()));
-        if let Ok(bytes) = bincode::serialize(&req) {
-            unsafe { ffi_gateway(bytes.as_ptr(), bytes.len()); }
-        }
+
+        let _ = self.call_host(req);
     }
 
     fn warn(&self, msg: &str) {
         let plugid = &self.get_id();
         let req = PluginRequest::Warn((plugid.to_string(), msg.to_string()));
-        if let Ok(bytes) = bincode::serialize(&req) {
-            unsafe { ffi_gateway(bytes.as_ptr(), bytes.len()); }
-        }
+
+        let _ = self.call_host(req);
     }
 
     fn error(&self, msg: &str) {
         let plugid = &self.get_id();
         let req = PluginRequest::Error((plugid.to_string(), msg.to_string()));
-        if let Ok(bytes) = bincode::serialize(&req) {
-            unsafe { ffi_gateway(bytes.as_ptr(), bytes.len()); }
-        }
+
+        let _ = self.call_host(req);
     }
 
     fn register_function(
         &self,
         name: &str,
         handler: NativeFn,
-    ) -> Result<(), String> {
+    ) -> Result<PluginValue, PluginError> {
         // Register id
         let id = rand::random::<u64>();
         get_callbacks().lock().unwrap().insert(id, handler);
@@ -131,11 +149,6 @@ impl EwwiiAPI for HostProxy {
             callback_id: id,
         };
 
-        let bytes = bincode::serialize(&req).map_err(|e| e.to_string())?;
-        unsafe {
-            ffi_gateway(bytes.as_ptr(), bytes.len());
-        }
-
-        Ok(())
+        self.call_host(req)
     }
 }

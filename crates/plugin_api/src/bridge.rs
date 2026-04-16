@@ -44,8 +44,6 @@ impl PluginInfoBuilder {
     }
 }
 
-// === register_function implementation === //
-
 /// Used for Plugin and host communication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PluginValue {
@@ -56,6 +54,25 @@ pub enum PluginValue {
     Array(Vec<PluginValue>),
     Null,
 }
+
+/// This enumrate provides improved error support for plugins
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum PluginError {
+    /// Error at FFI or data serialization/deserialization
+    BridgeError(String),
+    /// Error during registration
+    RegistrationError(String),
+    /// Some unknown internal error
+    Internal(String),
+}
+
+impl From<String> for PluginError {
+    fn from(msg: String) -> Self {
+        PluginError::Internal(msg)
+    }
+}
+
+// === register_function implementation === //
 
 /// Handler for handling Native Function registeration in rhai
 pub type NativeFn = 

@@ -1,5 +1,5 @@
 use crate::config::EWWII_CONFIG_PARSER;
-use ewwii_plugin_api::{EwwiiAPI, PluginValue, NativeFn};
+use ewwii_plugin_api::{PluginValue, PluginError};
 use ewwii_plugin_api::proxy::PluginRequest;
 use once_cell::sync::Lazy;
 use std::sync::RwLock;
@@ -77,7 +77,7 @@ fn trigger_plugin_callback(
             let result: PluginValue = bincode::deserialize(res_slice).unwrap_or(PluginValue::Null);
 
             // cleanup
-            if let Ok(free_fn) = plugin.library.get::<unsafe extern "C" fn(*mut u8, usize)>(b"ewwii_free_buffer") {
+            if let Ok(free_fn) = plugin.library.get::<unsafe extern "C" fn(*mut u8, usize)>(b"plugin_free_buffer") {
                 free_fn(res_ptr, res_len);
             }
 
@@ -88,9 +88,40 @@ fn trigger_plugin_callback(
     PluginValue::Null
 }
 
-pub(crate) struct EwwiiImpl;
+pub(crate) struct HostImpl;
 
-impl EwwiiImpl {
+impl HostImpl {
+    pub fn handle_request(&self, request: PluginRequest) 
+        -> Result<PluginValue, PluginError> 
+    {
+        match request {
+            PluginRequest::Log((id, msg)) => {
+                log::info!("[{}] {}", id, msg);
+                Ok(PluginValue::Null)
+            }
+            PluginRequest::Warn((id, msg)) => {
+                log::warn!("[{}] {}", id, msg);
+                Ok(PluginValue::Null)
+            }
+            PluginRequest::Error((id, msg)) => {
+                log::error!("[{}] {}", id, msg);
+                Ok(PluginValue::Null)
+            }
+            PluginRequest::RegisterFn { id, name, callback_id } => {
+                if name.trim().is_empty() {
+                    return Err(PluginError::RegistrationError("Function name cannot be empty".into()));
+                }
+
+                if name.contains(' ') {
+                    return Err(PluginError::RegistrationError("Function names cannot contain spaces".into()));
+                }
+
+                self.register_function_internal(id, name, callback_id);
+                Ok(PluginValue::Null)
+            }
+        }
+    }
+
     pub fn register_function_internal(
         &self, 
         plugin_id: String, 
@@ -112,33 +143,12 @@ impl EwwiiImpl {
     }
 }
 
-impl EwwiiAPI for EwwiiImpl {
-    // General
-    // "PCL = Plugin Controlled Log"
-    fn log(&self, msg: &str) {
-        log::info!("[PCL] {}", msg);
-    }
-
-    fn warn(&self, msg: &str) {
-        log::warn!("[PCL] {}", msg);
-    }
-
-    fn error(&self, msg: &str) {
-        log::error!("[PCL] {}", msg);
-    }
-
-    fn register_function(
-        &self,
-        _name: &str,
-        _handler: NativeFn,
-    ) -> Result<(), String> {
-        // NoOp
-        Ok(())
-    }
-}
-
 #[unsafe(no_mangle)]
-pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize) {
+pub extern "C" fn ffi_gateway(
+    ptr: *const u8, 
+    len: usize,
+    output_len: *mut usize
+) -> *mut u8 {
     // SAFETY: Convert the raw pointer/len into a Rust slice
     let bytes = unsafe { 
         std::slice::from_raw_parts(ptr, len) 
@@ -148,28 +158,25 @@ pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize) {
         Ok(req) => req,
         Err(e) => {
             eprintln!("[Host] Failed to deserialize plugin request: {}", e);
-            return;
+            return std::ptr::null_mut();
         }
     };
 
-    let host = crate::plugin::EwwiiImpl;
+    let host = HostImpl;
+    let response = host.handle_request(request);
 
-    match request {
-        PluginRequest::Log((id, msg)) => host.log(&format!("[{}] {}", id, msg)),
-        PluginRequest::Warn((id, msg)) => host.warn(&format!("[{}] {}", id, msg)),
-        PluginRequest::Error((id, msg)) => host.error(&format!("[{}] {}", id, msg)),
-        PluginRequest::RegisterFn { id, name, callback_id } => {
-            let exists = {
-                let plugins = ACTIVE_PLUGINS.read().unwrap();
-                plugins.iter().any(|p| p.id == id)
-            };
+    let res_bytes = bincode::serialize(&response).unwrap_or_default();
+    unsafe {
+        *output_len = res_bytes.len();
+        let boxed = res_bytes.into_boxed_slice();
+        Box::into_raw(boxed) as *mut u8
+    }
+}
 
-            if !exists {
-                log::error!("Plugin {} tried to register a function but isn't loaded!", id);
-                return;
-            }
-
-            host.register_function_internal(id, name, callback_id);
-        }
+// Way to free
+#[unsafe(no_mangle)]
+pub extern "C" fn host_free_buffer(ptr: *mut u8, len: usize) {
+    if !ptr.is_null() {
+        unsafe { let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len)); }
     }
 }
