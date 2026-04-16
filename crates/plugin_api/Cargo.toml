@@ -9,7 +9,6 @@ repository = "https://github.com/byson94/ewwii"
 homepage = "https://github.com/byson94/ewwii"
 
 [dependencies]
-ewwii_shared_utils.workspace = true
 bincode.workspace = true
 serde.workspace = true
 rand.workspace = true

@@ -46,14 +46,6 @@ impl PluginInfoBuilder {
 
 // === register_function implementation === //
 
-/// An enumrate providing options for
-/// function registaration namespaces.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum FnNamespace {
-    Custom(String),
-    Global,
-}
-
 /// Used for Plugin and host communication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PluginValue {
@@ -69,3 +61,18 @@ pub enum PluginValue {
 pub type NativeFn = 
     Arc<dyn Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync>;
 
+
+pub trait NativeFnExt {
+    fn new<F>(f: F) -> Self 
+    where 
+        F: Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync + 'static;
+}
+
+impl NativeFnExt for NativeFn {
+    fn new<F>(f: F) -> Self 
+    where 
+        F: Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync + 'static 
+    {
+        Arc::new(f)
+    }
+}
