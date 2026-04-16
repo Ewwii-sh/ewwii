@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Added
 
-- Support for to and fro communication between plugin and host
+- Improved to and fro communication between plugin and host
 
 ## Changed
 

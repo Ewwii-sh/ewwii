@@ -115,7 +115,7 @@ pub trait EwwiiAPI: Send + Sync {
         &self,
         name: &str,
         handler: NativeFn,
-    ) -> Result<(), String>;
+    ) -> Result<PluginValue, PluginError>;
 }
 
 /// The API format that the plugin should follow.
