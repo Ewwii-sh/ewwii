@@ -238,11 +238,7 @@ impl<B: DisplayBackend> App<B> {
                 wait_for_monitor_model().await;
                 let mut errors = Vec::new();
 
-                let config_result = EWWII_CONFIG_PARSER.with(|p| {
-                    let mut parser = p.borrow_mut();
-                    let parser_ref = parser.as_mut().unwrap();
-                    config::read_from_ewwii_paths(&self.paths, parser_ref)
-                });
+                let config_result = config::read_from_ewwii_paths(&self.paths);
 
                 if let Err(e) = config_result.and_then(|new_config| self.load_config(new_config)) {
                     errors.push(e)
@@ -461,9 +457,11 @@ impl<B: DisplayBackend> App<B> {
 
             if self.open_windows.is_empty() || self.reloading {
                 // Start the global variables
-                ewwii_rhai_impl::updates::handle_state_changes(
-                    self.ewwii_config.get_root_node()?.as_ref(),
+                let signals_vec = ewwii_rhai_impl::updates::retreive_signals(
+                    self.ewwii_config.get_root_node()?.as_ref()
                 );
+
+                ewwii_rhai_impl::updates::handle_state_changes(signals_vec);
             }
 
             let root_widget = {

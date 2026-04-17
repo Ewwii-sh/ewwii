@@ -116,6 +116,11 @@ pub trait EwwiiAPI: Send + Sync {
         name: &str,
         handler: NativeFn,
     ) -> Result<PluginValue, PluginError>;
+
+    // fn register_config(
+    //     &self,
+    //     handler: ConfigFn,
+    // ) -> Result<PluginValue, PluginError>;
 }
 
 /// The API format that the plugin should follow.

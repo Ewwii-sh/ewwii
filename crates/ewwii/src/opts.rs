@@ -203,7 +203,7 @@ pub enum ActionWithServer {
         mappings: HashMap<String, String>
     },
 
-    /// Call rhai functions. (NOTE: All poll/listen will default to their initial value)
+    /// Call rhai functions.
     #[command(name = "call-fns")]
     CallRhaiFns {
         /// Rhai functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"

@@ -21,11 +21,6 @@
 ///     }
 /// );
 /// ```
-///
-/// ## When not to use it
-///
-/// This macro shall not be used if you prefer flexibility and safety.
-/// The manual approach is verbose, but is way safer and flexible than using this macro.
 #[macro_export]
 macro_rules! auto_plugin {
     ($struct_name:ident, $metadata:expr, $host_name:ident, $init_block:block) => {
