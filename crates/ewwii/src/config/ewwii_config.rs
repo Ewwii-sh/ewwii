@@ -22,10 +22,9 @@ thread_local! {
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
 pub fn read_from_ewwii_paths(
-    eww_paths: &EwwiiPaths,
-    parser: &mut ParseConfig,
+    ewwii_paths: &EwwiiPaths,
 ) -> Result<EwwiiConfig> {
-    EwwiiConfig::read_from_dir(eww_paths, parser)
+    EwwiiConfig::read_from_dir(ewwii_paths)
 }
 
 /// Ewwii configuration structure.
@@ -46,61 +45,64 @@ pub struct WindowDefinition {
 
 impl EwwiiConfig {
     /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`], reading the main config file.
-    pub fn read_from_dir(eww_paths: &EwwiiPaths, config_parser: &mut ParseConfig) -> Result<Self> {
-        let rhai_path = eww_paths.get_rhai_path();
+    pub fn read_from_dir(ewwii_paths: &EwwiiPaths) -> Result<Self> {
+        let rhai_path = ewwii_paths.get_rhai_path();
         if !rhai_path.exists() {
             bail!("The configuration file `{}` does not exist", rhai_path.display());
         }
 
-        // get code from file
-        let rhai_code = config_parser.code_from_file(&rhai_path)?;
+        EWWII_CONFIG_PARSER.with(|p| {
+            let mut parser = p.borrow_mut();
+            let config_parser = parser.as_mut()
+                .context("Config parser not initialized")?;
 
-        // Get Option<&str> form of rhai_path
-        let rhai_path_opt_str = rhai_path.to_str();
+            // get code from file
+            let rhai_code = config_parser.code_from_file(&rhai_path)?;
+            let rhai_path_opt_str = rhai_path.to_str();
 
-        // get the rhai widget tree
-        let compiled_ast =
-            config_parser.compile_code(&rhai_code, rhai_path_opt_str.unwrap_or("<rhai>"))?;
+            // get the rhai widget tree
+            let compiled_ast = config_parser.compile_code(
+                &rhai_code, 
+                rhai_path_opt_str.unwrap_or("<rhai>")
+            )?;
 
-        EWWII_CONFIG_AST.with(|p| {
-            let mut write_guard = p.borrow_mut();
-            *write_guard = Some(compiled_ast.clone());
-        });
+            EWWII_CONFIG_AST.with(|p| {
+                *p.borrow_mut() = Some(compiled_ast.clone());
+            });
 
-        config_parser.register_poll_listen_globals(&rhai_code)?;
+            config_parser.register_poll_listen_globals(&rhai_code)?;
 
-        let config_tree = config_parser.eval_code_with(
-            &rhai_code,
-            None,
-            Some(&compiled_ast),
-            rhai_path_opt_str,
-        )?;
+            let config_tree = config_parser.eval_code_with(
+                &rhai_code,
+                None,
+                Some(&compiled_ast),
+                rhai_path_opt_str,
+            )?;
 
-        let mut window_definitions = HashMap::new();
-        let config_tree_clone = config_tree.clone();
+            let mut window_definitions = HashMap::new();
 
-        if let WidgetNode::Tree(children) = config_tree_clone {
-            for node in children {
-                if let WidgetNode::DefWindow { name, props, node } = node {
-                    let backend_options = BackendWindowOptionsDef::from_map(&props)?;
-
-                    let win_def = WindowDefinition {
-                        name,
-                        props,
-                        backend_options,
-                        root_widget: Rc::new(*node),
-                    };
-                    window_definitions.insert(win_def.name.clone(), win_def);
+            if let WidgetNode::Tree(children) = config_tree.clone() {
+                for node in children {
+                    if let WidgetNode::DefWindow { name, props, node } = node {
+                        let backend_options = BackendWindowOptionsDef::from_map(&props)?;
+                        let win_def = WindowDefinition {
+                            name,
+                            props,
+                            backend_options,
+                            root_widget: Rc::new(*node),
+                        };
+                        window_definitions.insert(win_def.name.clone(), win_def);
+                    }
                 }
+            } else {
+                bail!("Expected root node to be `Enter`, but got something else.");
             }
-        } else {
-            bail!("Expected root node to be `Enter`, but got something else.");
-        }
 
-        Ok(EwwiiConfig {
-            windows: window_definitions,
-            root_node: Some(Rc::new(config_tree)),
-            compiled_ast: Some(Rc::new(RefCell::new(compiled_ast))),
+            Ok(EwwiiConfig {
+                windows: window_definitions,
+                root_node: Some(Rc::new(config_tree)),
+                compiled_ast: Some(Rc::new(RefCell::new(compiled_ast))),
+            })
         })
     }
 

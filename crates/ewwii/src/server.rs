@@ -94,11 +94,7 @@ pub fn initialize_server<B: DisplayBackend>(
         error_handling_ctx::print_error(e);
     }
 
-    let read_config = EWWII_CONFIG_PARSER.with(|p| {
-        let mut parser = p.borrow_mut();
-        let config_parser_mut = parser.as_mut().unwrap();
-        config::read_from_ewwii_paths(&app.paths, config_parser_mut)
-    });
+    let read_config = config::read_from_ewwii_paths(&app.paths);
 
     match read_config {
         Ok(new_config) => {

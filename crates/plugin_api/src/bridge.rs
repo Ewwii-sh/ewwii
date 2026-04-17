@@ -93,3 +93,29 @@ impl NativeFnExt for NativeFn {
         Arc::new(f)
     }
 }
+
+// === register_config implementation === //
+#[repr(C)]
+pub struct ConfigInfo {
+    pub extension: &'static str,
+    pub main_file: &'static str,
+}
+
+pub type ConfigFn = 
+    Arc<dyn Fn() -> Result<ConfigInfo, String> + Send + Sync>;
+
+
+pub trait ConfigFnExt {
+    fn new<F>(f: F) -> Self 
+    where 
+        F: Fn() -> Result<ConfigInfo, String> + Send + Sync + 'static;
+}
+
+impl ConfigFnExt for ConfigFn {
+    fn new<F>(f: F) -> Self 
+    where 
+        F: Fn() -> Result<ConfigInfo, String> + Send + Sync + 'static 
+    {
+        Arc::new(f)
+    }
+}

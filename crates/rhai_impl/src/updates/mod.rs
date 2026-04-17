@@ -36,24 +36,65 @@ pub fn get_prefered_shell() -> String {
     shell
 }
 
-pub fn handle_state_changes(root_node: &WidgetNode) {
-    let shell = get_prefered_shell();
+pub enum SignalType {
+    Poll,
+    Listen
+}
+
+pub struct SignalProps {
+    pub name: String,
+    pub props: rhai::Map,
+    pub signal_type: SignalType,
+}
+
+pub fn retreive_signals(root_node: &WidgetNode) -> Vec<SignalProps> {
+    let mut signals: Vec<SignalProps> = Vec::new();
+
     if let WidgetNode::Tree(children) = root_node {
         for child in children {
             match child {
                 WidgetNode::Poll { var, props } => {
-                    VarWatcherAPI::register(var, String::new());
-                    handle_poll(var.to_string(), props, shell.clone());
+                    let signal = SignalProps {
+                        name: var.to_string(),
+                        props: props.clone(),
+                        signal_type: SignalType::Poll,
+                    };
+
+                    signals.push(signal);
                 }
                 WidgetNode::Listen { var, props } => {
-                    VarWatcherAPI::register(var, String::new());
-                    handle_listen(var.to_string(), props, shell.clone());
+                    let signal = SignalProps {
+                        name: var.to_string(),
+                        props: props.clone(),
+                        signal_type: SignalType::Listen,
+                    };
+
+                    signals.push(signal);
                 }
                 _ => {}
             }
         }
     } else {
         log::warn!("Expected Enter() as root node for config");
+    }
+
+    signals
+}
+
+pub fn handle_state_changes(signals: Vec<SignalProps>) {
+    let shell = get_prefered_shell();
+
+    for signal in signals {
+        match signal.signal_type {
+            SignalType::Poll => {
+                VarWatcherAPI::register(&signal.name, String::new());
+                handle_poll(signal.name, &signal.props, shell.clone());
+            },
+            SignalType::Listen => {
+                VarWatcherAPI::register(&signal.name, String::new());
+                handle_listen(signal.name, &signal.props, shell.clone());
+            }
+        }
     }
 }
 
