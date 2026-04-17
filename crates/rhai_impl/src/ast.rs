@@ -1,11 +1,9 @@
 use ahash::AHasher;
 use rhai::Map;
-use scan_prop_proc::scan_prop;
 use ewwii_shared_utils::prop_utils::{get_string_prop, unwrap_static};
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
-#[scan_prop]
 pub enum WidgetNode {
     Label { props: Map },
     Box { props: Map, children: Vec<WidgetNode> },
