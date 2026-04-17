@@ -3,8 +3,8 @@
 //! This crate supports parsing, error handling, and has a custom module_resolver.
 
 pub mod ast;
+mod ast_impl;
 pub mod builtins;
-mod dyn_id;
 pub mod error;
 pub mod helper;
 pub mod module_resolver;

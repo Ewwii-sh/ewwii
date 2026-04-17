@@ -2,6 +2,42 @@ use crate::ast::WidgetNode;
 use rhai::{Dynamic, Map};
 
 impl WidgetNode {
+    /// Returns a reference to the props Map if the variant has one.
+    pub fn props(&self) -> Option<&Map> {
+        match self {
+            WidgetNode::Label { props }
+            | WidgetNode::Box { props, .. }
+            | WidgetNode::FlowBox { props, .. }
+            | WidgetNode::Button { props }
+            | WidgetNode::Image { props }
+            | WidgetNode::Input { props }
+            | WidgetNode::Progress { props }
+            | WidgetNode::ComboBoxText { props }
+            | WidgetNode::Scale { props }
+            | WidgetNode::Checkbox { props }
+            | WidgetNode::Expander { props, .. }
+            | WidgetNode::Revealer { props, .. }
+            | WidgetNode::Scroll { props, .. }
+            | WidgetNode::OverLay { props, .. }
+            | WidgetNode::Stack { props, .. }
+            | WidgetNode::Calendar { props }
+            | WidgetNode::ColorButton { props }
+            | WidgetNode::ColorChooser { props }
+            | WidgetNode::CircularProgress { props }
+            | WidgetNode::Graph { props }
+            | WidgetNode::Transform { props }
+            | WidgetNode::EventBox { props, .. }
+            | WidgetNode::ToolTip { props, .. }
+            | WidgetNode::GtkUI { props }
+            | WidgetNode::DefWindow { props, .. }
+            | WidgetNode::Poll { props, .. }
+            | WidgetNode::Listen { props, .. } => Some(props),
+
+            // Variants with no props field
+            WidgetNode::Tree(_) => None,
+        }
+    }
+
     /// A very important implementation of [`WidgetNode`].
     /// This function implements dyn_id property to widgets.
     pub fn setup_dyn_ids(&self, parent_path: &str) -> Self {
