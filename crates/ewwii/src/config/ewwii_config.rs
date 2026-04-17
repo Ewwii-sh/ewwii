@@ -9,14 +9,25 @@ use std::collections::HashMap;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use ewwii_rhai_impl::{ast::WidgetNode, parser::ParseConfig};
+use ewwii_rhai_impl::{ast::WidgetNode, parser::RhaiParseConfig};
+use ewwii_plugin_api::CustomConfigEngine;
 use rhai::{Map, AST};
+
+pub enum ConfigEngine {
+    Default(RhaiParseConfig),
+    Custom(CustomConfigEngine)
+}
+
+impl ConfigEngine {
+    pub fn is_default(&self) -> bool {
+        matches!(self, ConfigEngine::Default(_))
+    }
+}
 
 // NOTE: These global variables are used for the proper functioning
 // of bind function and for access to AST across the whole program.
 thread_local! {
-    pub static EWWII_CONFIG_AST: RefCell<Option<AST>> = RefCell::new(None);
-    pub static EWWII_CONFIG_PARSER: RefCell<Option<ParseConfig>> = RefCell::new(None);
+    pub static EWWII_CONFIG_PARSER: RefCell<Option<RhaiParseConfig>> = RefCell::new(None);
 }
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
@@ -46,37 +57,34 @@ pub struct WindowDefinition {
 impl EwwiiConfig {
     /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`], reading the main config file.
     pub fn read_from_dir(ewwii_paths: &EwwiiPaths) -> Result<Self> {
-        let rhai_path = ewwii_paths.get_rhai_path();
-        if !rhai_path.exists() {
-            bail!("The configuration file `{}` does not exist", rhai_path.display());
-        }
-
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
             let config_parser = parser.as_mut()
                 .context("Config parser not initialized")?;
 
+            let mainfile = config_parser.main_file();
+            let configlang_path = ewwii_paths.get_configlang_path(&mainfile);
+            if !configlang_path.exists() {
+                bail!("The configuration file `{}` does not exist", configlang_path.display());
+            }
+
             // get code from file
-            let rhai_code = config_parser.code_from_file(&rhai_path)?;
-            let rhai_path_opt_str = rhai_path.to_str();
+            let config_code = crate::paths::code_from_file(&configlang_path)?;
+            let configlang_path_opt_str = configlang_path.to_str();
 
             // get the rhai widget tree
             let compiled_ast = config_parser.compile_code(
-                &rhai_code, 
-                rhai_path_opt_str.unwrap_or("<rhai>")
+                &config_code, 
+                configlang_path_opt_str
             )?;
 
-            EWWII_CONFIG_AST.with(|p| {
-                *p.borrow_mut() = Some(compiled_ast.clone());
-            });
-
-            config_parser.register_poll_listen_globals(&rhai_code)?;
+            config_parser.register_poll_listen_globals(&config_code)?;
 
             let config_tree = config_parser.eval_code_with(
-                &rhai_code,
+                &config_code,
                 None,
                 Some(&compiled_ast),
-                rhai_path_opt_str,
+                configlang_path_opt_str,
             )?;
 
             let mut window_definitions = HashMap::new();

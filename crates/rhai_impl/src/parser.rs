@@ -7,19 +7,21 @@ use crate::{
     providers::register_all_providers,
 };
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, ImmutableString, Module, OptimizationLevel, Scope, AST};
+use rhai::{Dynamic, Engine, ImmutableString, Module, Scope, AST, FnPtr, FuncArgs};
 use ewwii_shared_utils::variables::GlobalVar;
 use std::cell::RefCell;
-use std::fs;
-use std::path::Path;
 use std::rc::Rc;
 
-pub struct ParseConfig {
+thread_local! {
+    pub static EWWII_CONFIG_AST: RefCell<Option<AST>> = RefCell::new(None);
+}
+
+pub struct RhaiParseConfig {
     pub engine: Engine,
     all_nodes: Rc<RefCell<Vec<WidgetNode>>>,
 }
 
-impl ParseConfig {
+impl RhaiParseConfig {
     pub fn new() -> Self {
         let mut engine = Engine::new();
         let all_nodes = Rc::new(RefCell::new(Vec::new()));
@@ -33,13 +35,20 @@ impl ParseConfig {
         Self { engine, all_nodes }
     }
 
-    pub fn compile_code(&mut self, code: &str, file_path: &str) -> Result<AST> {
+    pub fn compile_code(&mut self, code: &str, file_id: Option<&str>) -> Result<AST> {
+        let file_id = file_id.unwrap_or("<rhai>");
+
         let mut ast = self
             .engine
             .compile(code)
-            .map_err(|e| anyhow!(format_parse_error(&e, code, Some(file_path))))?;
+            .map_err(|e| anyhow!(format_parse_error(&e, code, Some(file_id))))?;
 
-        ast.set_source(ImmutableString::from(file_path));
+        ast.set_source(ImmutableString::from(file_id));
+
+        EWWII_CONFIG_AST.with(|p| {
+            *p.borrow_mut() = Some(ast.clone());
+        });
+
         Ok(ast)
     }
 
@@ -62,9 +71,11 @@ impl ParseConfig {
                 .eval_ast_with_scope::<Dynamic>(&mut scope, &ast)
                 .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, file_id)))?;
         } else {
+            let ast = self.compile_code(code, file_id)?;
+
             let _ = self
                 .engine
-                .eval_with_scope::<Dynamic>(&mut scope, code)
+                .eval_ast_with_scope::<Dynamic>(&mut scope, &ast)
                 .map_err(|e| anyhow!(format_eval_error(&e, code, &self.engine, file_id)))?;
         };
 
@@ -102,11 +113,6 @@ impl ParseConfig {
         self.all_nodes.borrow_mut().clear();
 
         Ok(node)
-    }
-
-    pub fn code_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<String> {
-        Ok(fs::read_to_string(&file_path)
-            .map_err(|e| anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)
     }
 
     pub fn register_poll_listen_globals(&mut self, code: &str) -> Result<()> {
@@ -166,14 +172,31 @@ impl ParseConfig {
         }
     }
 
-    pub fn set_opt_level(&mut self, opt_lvl: OptimizationLevel) {
-        self.engine.set_optimization_level(opt_lvl);
+    pub fn call_fn_ptr<T>(
+        &self, 
+        fnptr: FnPtr, 
+        args: impl FuncArgs
+    ) -> Result<T, Box<rhai::EvalAltResult>>
+    where 
+        T: rhai::Variant + Clone,
+    {
+        EWWII_CONFIG_AST.with(|ast_cell| {
+            let ast_ref = ast_cell.borrow();
+
+            let ast = match ast_ref.as_ref() {
+                Some(a) => a,
+                None => return Err("AST not initialized".into()),
+            };
+
+            fnptr.call(&self.engine, ast, args)
+        })
     }
 
-    pub fn action_with_engine<F, R>(&mut self, f: F) -> R
-    where
-        F: FnOnce(&mut Engine) -> R,
-    {
-        f(&mut self.engine)
+    pub fn extension(&self) -> String {
+        String::from("rhai")
+    }
+
+    pub fn main_file(&self) -> String {
+        String::from("ewwii.rhai")
     }
 }

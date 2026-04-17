@@ -14,6 +14,7 @@ use std::{
     os::unix::io::AsRawFd,
     path::Path,
     sync::{atomic::Ordering, Arc},
+    ffi::OsString,
 };
 use tokio::sync::mpsc::*;
 
@@ -31,7 +32,7 @@ pub fn initialize_server<B: DisplayBackend>(
     log::info!("Loading paths: {}", &paths);
     
     EWWII_CONFIG_PARSER.with(|p| {
-        let config_parser = ewwii_rhai_impl::parser::ParseConfig::new();
+        let config_parser = ewwii_rhai_impl::parser::RhaiParseConfig::new();
         *p.borrow_mut() = Some(config_parser);
     });
 
@@ -120,8 +121,17 @@ pub fn initialize_server<B: DisplayBackend>(
 
     connect_monitor_added(ui_send.clone());
 
+    let config_ext = {
+        EWWII_CONFIG_PARSER.with(|p| {
+            p.borrow()
+                .as_ref()
+                .expect("parser not initialized")
+                .extension()
+        })
+    };
+
     // initialize all the handlers and tasks running asyncronously
-    let tokio_handle = init_async_part(app.paths.clone(), ui_send);
+    let tokio_handle = init_async_part(app.paths.clone(), ui_send, config_ext.into());
 
     gtk4::glib::MainContext::default().spawn_local(async move {
         // if an action was given to the daemon initially, execute it first.
@@ -185,6 +195,7 @@ fn reload_config_and_css(ui_send: &UnboundedSender<DaemonCommand>) -> Result<()>
 fn init_async_part(
     paths: EwwiiPaths,
     ui_send: UnboundedSender<app::DaemonCommand>,
+    config_ext: OsString,
 ) -> tokio::runtime::Handle {
     let rt = tokio::runtime::Builder::new_multi_thread()
         .thread_name("main-async-runtime")
@@ -200,7 +211,9 @@ fn init_async_part(
                 let filewatch_join_handle = {
                     let ui_send = ui_send.clone();
                     let paths = paths.clone();
-                    tokio::spawn(async move { run_filewatch(paths.config_dir, ui_send).await })
+                    tokio::spawn(async move { 
+                        run_filewatch(paths.config_dir, ui_send, config_ext).await 
+                    })
                 };
 
                 let ipc_server_join_handle = {
@@ -241,6 +254,7 @@ fn init_async_part(
 async fn run_filewatch<P: AsRef<Path>>(
     config_dir: P,
     evt_send: UnboundedSender<app::DaemonCommand>,
+    config_ext: OsString,
 ) -> Result<()> {
     use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
@@ -250,7 +264,7 @@ async fn run_filewatch<P: AsRef<Path>>(
             Ok(notify::Event { kind: notify::EventKind::Modify(_), paths, .. }) => {
                 let relevant_files_changed = paths.iter().any(|path| {
                     let ext = path.extension().unwrap_or_default();
-                    ext == "rhai" || ext == "scss" || ext == "css"
+                    ext == config_ext || ext == "scss" || ext == "css"
                 });
                 if relevant_files_changed {
                     if let Err(err) = tx.send(()) {
