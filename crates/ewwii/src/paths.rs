@@ -88,8 +88,8 @@ impl EwwiiPaths {
     }
 
     // Modified this code with rhai (the new yuck replacer in ewwii)
-    pub fn get_rhai_path(&self) -> PathBuf {
-        self.config_dir.join("ewwii.rhai")
+    pub fn get_configlang_path(&self, main_file: &str) -> PathBuf {
+        self.config_dir.join(main_file)
     }
 
     pub fn get_plugin_paths(&self) -> Vec<PathBuf> {
@@ -127,4 +127,10 @@ impl std::fmt::Display for EwwiiPaths {
             self.log_file.display()
         )
     }
+}
+
+
+pub fn code_from_file<P: AsRef<Path>>(file_path: P) -> Result<String> {
+    Ok(std::fs::read_to_string(&file_path)
+        .map_err(|e| anyhow::anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)
 }

@@ -119,7 +119,7 @@ pub trait EwwiiAPI: Send + Sync {
 
     // fn register_config(
     //     &self,
-    //     handler: ConfigFn,
+    //     engine: CustomConfigEngine,
     // ) -> Result<PluginValue, PluginError>;
 }
 

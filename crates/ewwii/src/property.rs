@@ -1,4 +1,4 @@
-use crate::config::ewwii_config::{EWWII_CONFIG_AST, EWWII_CONFIG_PARSER};
+use crate::config::ewwii_config::EWWII_CONFIG_PARSER;
 use ewwii_rhai_impl::updates::api::VarWatcherAPI;
 use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
 use tokio::sync::watch;
@@ -52,59 +52,46 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
 
     glib::MainContext::default().spawn_local(async move {
         while notify_rx.recv().await.is_some() {
-            let maybe_result: Option<String> = EWWII_CONFIG_AST.with(|ast_cell| {
-                EWWII_CONFIG_PARSER.with(|parser_cell| {
-                    let ast_ref = ast_cell.borrow();
-                    let parser_ref = parser_cell.borrow();
+            let maybe_result: Option<String> = EWWII_CONFIG_PARSER.with(|parser_cell| {
+                let parser_ref = parser_cell.borrow();
 
-                    let ast = match ast_ref.as_ref() {
-                        Some(a) => a,
+                let parser = match parser_ref.as_ref() {
+                    Some(p) => p,
+                    None => {
+                        log::error!("Parser not initialized");
+                        return None;
+                    }
+                };
+
+                // Building args
+                let mut args = compare_array.clone();
+                let state = VarWatcherAPI::state();
+
+                for (idx, gvar) in &global_vars {
+                    let value = match state.get(&gvar.name) {
+                        Some(v) => v,
                         None => {
-                            log::error!("AST not initialized");
-                            return None;
+                            log::error!("Global var '{}' not found", gvar.name);
+                            continue;
                         }
                     };
 
-                    let parser = match parser_ref.as_ref() {
-                        Some(p) => p,
-                        None => {
-                            log::error!("Parser not initialized");
+                    if let Some(slot) = args.get_mut(*idx) {
+                        *slot = rhai::Dynamic::from(value.clone());
+                    } else {
+                        log::error!("Index {} out of bounds", idx);
+                    }
+                }
+
+                Some(
+                    match parser.call_fn_ptr::<String>(compare_closure.clone(), (args,)) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            log::error!("Closure execution failed: {:?}", e);
                             return None;
-                        }
-                    };
-
-                    let engine = &parser.engine;
-
-                    // Building args
-                    let mut args = compare_array.clone();
-                    let state = VarWatcherAPI::state();
-
-                    for (idx, gvar) in &global_vars {
-                        let value = match state.get(&gvar.name) {
-                            Some(v) => v,
-                            None => {
-                                log::error!("Global var '{}' not found", gvar.name);
-                                continue;
-                            }
-                        };
-
-                        if let Some(slot) = args.get_mut(*idx) {
-                            *slot = rhai::Dynamic::from(value.clone());
-                        } else {
-                            log::error!("Index {} out of bounds", idx);
                         }
                     }
-
-                    Some(
-                        match compare_closure.call(engine, ast, (args,)) {
-                            Ok(v) => v,
-                            Err(e) => {
-                                log::error!("Closure execution failed: {:?}", e);
-                                return None;
-                            }
-                        }
-                    )
-                })
+                )
             });
 
             if let Some(result) = maybe_result {

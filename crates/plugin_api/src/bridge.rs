@@ -119,3 +119,6 @@ impl ConfigFnExt for ConfigFn {
         Arc::new(f)
     }
 }
+
+#[repr(C)]
+pub struct CustomConfigEngine;
