@@ -1,5 +1,5 @@
 use crate::ast::WidgetNode;
-use ewwii_shared_utils::prop::{Property, PropertyMap};
+use crate::prop::{Property, PropertyMap};
 
 impl WidgetNode {
     /// Returns a reference to the props Map if the variant has one.

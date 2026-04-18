@@ -1,7 +1,7 @@
-use crate::ast::WidgetNode;
 use rhai::{Array, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
 use ewwii_shared_utils::variables::GlobalCompare;
 use ewwii_shared_utils::prop::{Property, PropertyMap, Callback};
+use ewwii_shared_utils::ast::WidgetNode;
 use std::cell::RefCell;
 use std::rc::Rc;
 
