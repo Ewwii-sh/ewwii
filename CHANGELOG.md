@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Added
 
-- Improved to and fro communication between plugin and host
+- Improved to and fro communication between plugin and host.
+- Safe and FFI compatible data transfer between plugin and host.
 
 ## Changed
 
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## Removed
 
+- Tight coupling of rhai into core engine.
 - Gtk related API from the plugin API.
 - `include-gtk` and `include-rhai` feature from ewwii_plugin_api.
 
