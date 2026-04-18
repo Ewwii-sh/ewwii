@@ -427,6 +427,7 @@ impl<B: DisplayBackend> App<B> {
         if self.open_windows.is_empty() || self.reloading {
             log::trace!("Killing ewwii state change handler.");
             ewwii_rhai_impl::updates::kill_state_change_handler();
+            VarWatcherAPI::clear_all()
         }
 
         Ok(())

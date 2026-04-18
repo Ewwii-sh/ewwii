@@ -1,5 +1,6 @@
 use crate::config::ewwii_config::EWWII_CONFIG_PARSER;
 use ewwii_rhai_impl::updates::api::VarWatcherAPI;
+use ewwii_rhai_impl::updates::SHUTDOWN_REGISTRY;
 use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
 use tokio::sync::watch;
 use gtk4::glib;
@@ -20,9 +21,14 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
     let (notify_tx, mut notify_rx) = tokio::sync::mpsc::unbounded_channel::<()>();
     let _ = notify_tx.send(()); // Init
 
+    // Shutdown registry
+    let (shutdown_tx, shutdown_rx) = watch::channel(false);
+    SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx);
+
     // Handle GlobalVar's
     for (_, var) in global_vars.clone() {
         let notify_tx = notify_tx.clone();
+        let mut shutdown_rx = shutdown_rx.clone();
 
         tokio::spawn(async move {
             let mut rx = match VarWatcherAPI::subscribe(&var.name) {
@@ -34,12 +40,21 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
             };
 
             loop {
-                if rx.changed().await.is_err() {
-                    log::debug!("Watcher closed for global var: {}", var.name);
-                    break;
+                tokio::select! {
+                    result = rx.changed() => {
+                        if result.is_err() {
+                            log::debug!("Watcher closed for global var: {}", var.name);
+                            break;
+                        }
+                        let _ = notify_tx.send(());
+                    }
+                    _ = shutdown_rx.changed() => {
+                        if *shutdown_rx.borrow() {
+                            log::trace!("Shutdown received, stopping watcher for: {}", var.name);
+                            break;
+                        }
+                    }
                 }
-
-                let _ = notify_tx.send(());
             }
         });
     }
@@ -49,66 +64,73 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
     let compare_closure = compare.closure.clone();
     let compare_array = compare.vars.clone();
     let global_vars = global_vars.clone();
+    let mut shutdown_rx = shutdown_rx.clone();
 
     glib::MainContext::default().spawn_local(async move {
-        while notify_rx.recv().await.is_some() {
-            let maybe_result: Option<String> = EWWII_CONFIG_PARSER.with(|parser_cell| {
-                let parser_ref = parser_cell.borrow();
-
-                let parser = match parser_ref.as_ref() {
-                    Some(p) => p,
-                    None => {
-                        log::error!("Parser not initialized");
-                        return None;
+        loop {
+            tokio::select! {
+                msg = notify_rx.recv() => {
+                    if msg.is_none() {
+                        break;
                     }
-                };
 
-                // Building args
-                let mut args = compare_array.clone();
-                let state = VarWatcherAPI::state();
-
-                for (idx, gvar) in &global_vars {
-                    let value = match state.get(&gvar.name) {
-                        Some(v) => v,
-                        None => {
-                            log::error!("Global var '{}' not found", gvar.name);
-                            continue;
+                    let maybe_result: Option<String> = EWWII_CONFIG_PARSER.with(|parser_cell| {
+                        let parser_ref = parser_cell.borrow();
+                        let parser = match parser_ref.as_ref() {
+                            Some(p) => p,
+                            None => {
+                                log::error!("Parser not initialized");
+                                return None;
+                            }
+                        };
+                        let mut args = compare_array.clone();
+                        let state = VarWatcherAPI::state();
+                        for (idx, gvar) in &global_vars {
+                            let value = match state.get(&gvar.name) {
+                                Some(v) => v,
+                                None => {
+                                    log::error!("Global var '{}' not found", gvar.name);
+                                    return None;
+                                }
+                            };
+                            if let Some(slot) = args.get_mut(*idx) {
+                                *slot = value.clone().into();
+                            } else {
+                                log::error!("Index {} out of bounds", idx);
+                            }
                         }
-                    };
+                        let callback_handle = match compare_closure.handle {
+                            Some(h) => h,
+                            None => {
+                                log::error!("Unexpected callback handle received: None");
+                                return None;
+                            }
+                        };
+                        let args_dyn: rhai::Array = args
+                            .into_iter()
+                            .map(|a| a.into_dynamic())
+                            .collect();
+                        Some(
+                            match parser.call_callback::<String>(callback_handle, (args_dyn,)) {
+                                Ok(v) => v,
+                                Err(e) => {
+                                    log::error!("Closure execution failed: {:?}", e);
+                                    return None;
+                                }
+                            }
+                        )
+                    });
 
-                    if let Some(slot) = args.get_mut(*idx) {
-                        *slot = value.clone().into();
-                    } else {
-                        log::error!("Index {} out of bounds", idx);
+                    if let Some(result) = maybe_result {
+                        let _ = tx_clone.send(result);
                     }
                 }
-
-                let callback_handle = match compare_closure.handle {
-                    Some(h) => h,
-                    None => {
-                        log::error!("Unexpected callback handle received: None");
-                        return None;
+                _ = shutdown_rx.changed() => {
+                    if *shutdown_rx.borrow() {
+                        log::trace!("Shutdown received, stopping aggregator");
+                        break;
                     }
-                };
-
-                let args_dyn: rhai::Array = args
-                    .into_iter()
-                    .map(|a| a.into_dynamic())
-                    .collect();
-
-                Some(
-                    match parser.call_callback::<String>(callback_handle, (args_dyn,)) {
-                        Ok(v) => v,
-                        Err(e) => {
-                            log::error!("Closure execution failed: {:?}", e);
-                            return None;
-                        }
-                    }
-                )
-            });
-
-            if let Some(result) = maybe_result {
-                let _ = tx_clone.send(result);
+                }
             }
         }
     });
