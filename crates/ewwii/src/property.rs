@@ -9,8 +9,8 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
     let mut idx = 0;
 
     for var in &compare.vars {
-        if let Some(val) = ewwii_shared_utils::prop_utils::try_get_global_var(var) {
-            global_vars.push((idx, val));
+        if let Some(val) = var.as_global_var() {
+            global_vars.push((idx, val.clone()));
         }
         idx += 1
     }
@@ -77,14 +77,27 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
                     };
 
                     if let Some(slot) = args.get_mut(*idx) {
-                        *slot = rhai::Dynamic::from(value.clone());
+                        *slot = value.clone().into();
                     } else {
                         log::error!("Index {} out of bounds", idx);
                     }
                 }
 
+                let callback_handle = match compare_closure.handle {
+                    Some(h) => h,
+                    None => {
+                        log::error!("Unexpected callback handle received: None");
+                        return None;
+                    }
+                };
+
+                let args_dyn: rhai::Array = args
+                    .into_iter()
+                    .map(|a| a.into_dynamic())
+                    .collect();
+
                 Some(
-                    match parser.call_fn_ptr::<String>(compare_closure.clone(), (args,)) {
+                    match parser.call_callback::<String>(callback_handle, (args_dyn,)) {
                         Ok(v) => v,
                         Err(e) => {
                             log::error!("Closure execution failed: {:?}", e);

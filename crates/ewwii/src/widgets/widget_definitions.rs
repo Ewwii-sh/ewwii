@@ -12,7 +12,7 @@ use gtk4::{
     DragSource, DropTarget, EventControllerKey, EventControllerLegacy, EventControllerMotion,
     EventControllerScroll, GestureClick,
 };
-use rhai::Map;
+use ewwii_shared_utils::prop::PropertyMap;
 
 use super::widget_definitions_helper::*;
 use ewwii_shared_utils::prop_utils::*;
@@ -190,7 +190,7 @@ impl WidgetRegistry {
 }
 
 pub(super) fn build_gtk_box(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
@@ -221,7 +221,7 @@ pub(super) fn build_gtk_box(
 }
 
 pub(super) fn build_gtk_overlay(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Overlay> {
@@ -253,7 +253,7 @@ pub(super) fn build_gtk_overlay(
 }
 
 pub(super) fn build_tooltip(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
@@ -322,7 +322,7 @@ struct EventBoxCtrlData {
 }
 
 pub(super) fn build_event_box(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
@@ -693,7 +693,7 @@ struct FlowBoxCtrlData {
 }
 
 pub(crate) fn build_gtk_flowbox(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::FlowBox> {
@@ -764,7 +764,7 @@ pub(crate) fn build_gtk_flowbox(
 }
 
 pub(super) fn build_gtk_stack(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Stack> {
@@ -815,7 +815,7 @@ pub(super) fn build_gtk_stack(
 }
 
 pub(super) fn build_circular_progress_bar(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<CircProg> {
     let widget = CircProg::new();
@@ -854,7 +854,7 @@ pub(super) fn build_circular_progress_bar(
     Ok(widget)
 }
 
-pub(super) fn build_graph(props: &Map, widget_registry: &mut WidgetRegistry) -> Result<Graph> {
+pub(super) fn build_graph(props: &PropertyMap, widget_registry: &mut WidgetRegistry) -> Result<Graph> {
     let widget = Graph::new();
 
     bind_property!(&props, "value", get_f64_prop, None, [widget], |value: f64| {
@@ -972,7 +972,7 @@ pub(super) fn build_graph(props: &Map, widget_registry: &mut WidgetRegistry) -> 
 }
 
 pub(super) fn build_gtk_progress(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ProgressBar> {
     let gtk_widget = gtk4::ProgressBar::new();
@@ -1006,7 +1006,7 @@ pub(super) fn build_gtk_progress(
 }
 
 pub(super) fn build_image(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Picture> {
     let gtk_widget = gtk4::Picture::new();
@@ -1209,7 +1209,7 @@ struct GtkButtonCtrlData {
 }
 
 pub(super) fn build_gtk_button(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Button> {
     let gtk_widget = gtk4::Button::new();
@@ -1323,7 +1323,7 @@ struct LabelTextParams {
 }
 
 pub(super) fn build_gtk_label(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Label> {
     let gtk_widget = gtk4::Label::new(None);
@@ -1529,7 +1529,7 @@ pub(super) fn build_gtk_label(
 }
 
 pub(super) fn build_gtk_input(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Entry> {
     let gtk_widget = gtk4::Entry::new();
@@ -1593,7 +1593,7 @@ pub(super) fn build_gtk_input(
 }
 
 pub(super) fn build_gtk_calendar(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Calendar> {
     let gtk_widget = gtk4::Calendar::new();
@@ -1691,7 +1691,7 @@ pub(super) fn build_gtk_calendar(
 
 #[allow(deprecated)]
 pub(super) fn build_gtk_combo_box_text(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ComboBoxText> {
     let gtk_widget = gtk4::ComboBoxText::new();
@@ -1748,7 +1748,7 @@ pub(super) fn build_gtk_combo_box_text(
     Ok(gtk_widget)
 }
 
-pub(super) fn build_gtk_ui_file(props: &Map) -> Result<gtk4::Widget> {
+pub(super) fn build_gtk_ui_file(props: &PropertyMap) -> Result<gtk4::Widget> {
     let path = unwrap_static("file", get_string_prop(&props, "file", None)?);
     let main_id = unwrap_static("id", get_string_prop(&props, "id", None)?);
 
@@ -1766,7 +1766,7 @@ pub(super) fn build_gtk_ui_file(props: &Map) -> Result<gtk4::Widget> {
 }
 
 pub(super) fn build_gtk_expander(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Expander> {
@@ -1799,7 +1799,7 @@ pub(super) fn build_gtk_expander(
 }
 
 pub(super) fn build_gtk_revealer(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Revealer> {
@@ -1845,7 +1845,7 @@ pub(super) fn build_gtk_revealer(
 }
 
 pub(super) fn build_gtk_checkbox(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::CheckButton> {
     let gtk_widget = gtk4::CheckButton::new();
@@ -1899,7 +1899,7 @@ pub(super) fn build_gtk_checkbox(
 
 #[allow(deprecated)]
 pub(super) fn build_gtk_color_button(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorButton> {
     let gtk_widget = gtk4::ColorButton::builder().build();
@@ -1936,7 +1936,7 @@ pub(super) fn build_gtk_color_button(
 
 #[allow(deprecated)]
 pub(super) fn build_gtk_color_chooser(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorChooserWidget> {
     let gtk_widget = gtk4::ColorChooserWidget::new();
@@ -1979,7 +1979,7 @@ pub(super) struct RangeCtrlData {
 }
 
 pub(super) fn build_gtk_scale(
-    props: &Map,
+    props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Scale> {
     let gtk_widget = gtk4::Scale::new(
@@ -2080,7 +2080,7 @@ pub(super) fn build_gtk_scale(
 }
 
 pub(super) fn build_gtk_scrolledwindow(
-    props: &Map,
+    props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ScrolledWindow> {
@@ -2138,7 +2138,7 @@ pub(super) fn build_gtk_scrolledwindow(
 //     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
 
 /// Code that applies css/scss to widgets.
-pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) -> Result<()> {
+pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &PropertyMap) -> Result<()> {
     // // checking deprecated keys
     // // see eww issue #251 (https://github.com/elkowar/eww/issues/251)
     // for deprecated in DEPRECATED_ATTRS.iter() {
@@ -2238,7 +2238,7 @@ pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &Map) 
 
 /// Shared rage atribute
 pub(super) fn resolve_range_attrs(
-    props: &Map,
+    props: &PropertyMap,
     gtk_widget: &gtk4::Range,
     range_dat: Rc<RefCell<RangeCtrlData>>,
 ) -> Result<()> {

@@ -18,7 +18,7 @@ use crate::{
     window_arguments::WindowArguments,
 };
 
-use rhai::Dynamic;
+use ewwii_shared_utils::prop::{Property, PropertyMap};
 use std::str::FromStr;
 
 /// This stores all the information required to create a window and is created
@@ -45,7 +45,7 @@ impl WindowInitiator {
             properties
                 .get("monitor")?
                 .clone()
-                .try_cast::<i64>()
+                .as_int()
                 .map(|n| MonitorIdentifier::Numeric(n as i32))
         });
         Ok(WindowInitiator {
@@ -53,9 +53,9 @@ impl WindowInitiator {
             geometry,
             monitor,
             name: window_def.name.clone(),
-            resizable: properties.get("resizable").map(|d| d.clone_cast::<bool>()).unwrap_or(true),
+            resizable: properties.get("resizable").and_then(|d| d.as_bool()).unwrap_or(true),
             stacking: match properties.get("stacking") {
-                Some(d) => WindowStacking::from_str(&d.clone_cast::<String>())?,
+                Some(d) => WindowStacking::from_str(&d.as_str().unwrap_or_default())?,
                 None => WindowStacking::Foreground, // or error
             },
         })
@@ -67,15 +67,16 @@ impl WindowInitiator {
 }
 
 fn parse_geometry(
-    val: &Dynamic,
+    val: &Property,
     args: &WindowArguments,
     override_geom: bool,
 ) -> Result<WindowGeometry> {
-    let map = val.clone().cast::<rhai::Map>();
+    let map = val.as_map().unwrap();
 
     let anchor = map
         .get("anchor")
-        .map(|dyn_value| anchor_point_from_str(&dyn_value.to_string()))
+        .and_then(|v| v.as_str())
+        .map(|dyn_value| anchor_point_from_str(&dyn_value))
         .transpose()?;
 
     let mut geom = WindowGeometry {
@@ -97,17 +98,17 @@ fn parse_geometry(
     Ok(geom)
 }
 
-fn get_coords_from_map(map: &rhai::Map, x_key: &str, y_key: &str) -> Result<Coords> {
+fn get_coords_from_map(map: &PropertyMap, x_key: &str, y_key: &str) -> Result<Coords> {
     let key1 = map
         .get(x_key)
-        .and_then(|v| v.clone().into_string().ok())
+        .and_then(|v| v.as_str())
         .map(|s| NumWithUnit::from_str(&s))
         .transpose()?
         .unwrap_or_else(NumWithUnit::default);
 
     let key2 = map
         .get(y_key)
-        .and_then(|v| v.clone().into_string().ok())
+        .and_then(|v| v.as_str())
         .map(|s| NumWithUnit::from_str(&s))
         .transpose()?
         .unwrap_or_else(NumWithUnit::default);

@@ -22,6 +22,7 @@ use std::process::Command;
 use std::sync::Mutex;
 use tokio::sync::watch;
 use api::VarWatcherAPI;
+use ewwii_shared_utils::prop::PropertyMap;
 
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
@@ -43,7 +44,7 @@ pub enum SignalType {
 
 pub struct SignalProps {
     pub name: String,
-    pub props: rhai::Map,
+    pub props: PropertyMap,
     pub signal_type: SignalType,
 }
 

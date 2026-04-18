@@ -1,6 +1,7 @@
 use crate::ast::WidgetNode;
 use rhai::{Array, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
 use ewwii_shared_utils::variables::GlobalCompare;
+use ewwii_shared_utils::prop::{Property, PropertyMap, Callback};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -31,7 +32,8 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     macro_rules! register_primitive {
         ($name:expr, $variant:ident) => {
             engine.register_fn($name, |props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
-                Ok(WidgetNode::$variant { props })
+                let prop_map = PropertyMap::from_rhai(props);
+                Ok(WidgetNode::$variant { props: prop_map })
             });
         };
     }
@@ -61,7 +63,8 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
                  children: Array|
                  -> Result<WidgetNode, Box<EvalAltResult>> {
                     let children_vec = children_to_vec(children, &ctx)?;
-                    Ok(WidgetNode::$variant { props, children: children_vec })
+                    let prop_map = PropertyMap::from_rhai(props);
+                    Ok(WidgetNode::$variant { props: prop_map, children: children_vec })
                 },
             );
         };
@@ -81,9 +84,9 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     engine.register_fn(
         "gtk_ui",
         |path: &str, load: &str| -> Result<WidgetNode, Box<EvalAltResult>> {
-            let mut props = Map::new();
-            props.insert("file".into(), path.into());
-            props.insert("id".into(), load.into());
+            let mut props = PropertyMap::new();
+            props.insert("file", path.into());
+            props.insert("id", load.into());
             Ok(WidgetNode::GtkUI { props })
         },
     );
@@ -91,11 +94,24 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     engine.register_fn(
         "bound",
         |variables: Array, closure: FnPtr| -> Result<GlobalCompare, Box<EvalAltResult>> {
-            let unique_name = format!("\0__globalbound__{}", rand::random::<u64>());
+            let handle = rand::random::<u64>();
+            let unique_name = format!("\0__globalbound__{}", &handle);
+            let vars = variables
+                .into_iter()
+                .map(Property::from_dynamic)
+                .collect();
+
+            crate::callback::register_callback(handle, closure.clone());
+
+            let callback = Callback {
+                name: closure.fn_name().to_string(),
+                handle: Some(handle),
+            };
+
             Ok(GlobalCompare {
                 name: unique_name,
-                vars: variables,
-                closure,
+                vars,
+                closure: callback,
             })
         }
     );
@@ -104,18 +120,25 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
     engine.register_fn(
         "defwindow",
         |name: &str, props: Map, node: WidgetNode| -> Result<WidgetNode, Box<EvalAltResult>> {
-            Ok(WidgetNode::DefWindow { name: name.to_string(), props, node: Box::new(node) })
+            let prop_map = PropertyMap::from_rhai(props);
+            Ok(WidgetNode::DefWindow { 
+                name: name.to_string(), 
+                props: prop_map, 
+                node: Box::new(node) 
+            })
         },
     );
 
     engine.register_fn("poll", |var: &str, props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
-        Ok(WidgetNode::Poll { var: var.to_string(), props })
+        let prop_map = PropertyMap::from_rhai(props);
+        Ok(WidgetNode::Poll { var: var.to_string(), props: prop_map })
     });
 
     engine.register_fn(
         "listen",
         |var: &str, props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
-            Ok(WidgetNode::Listen { var: var.to_string(), props })
+            let prop_map = PropertyMap::from_rhai(props);
+            Ok(WidgetNode::Listen { var: var.to_string(), props: prop_map })
         },
     );
 

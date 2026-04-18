@@ -15,3 +15,4 @@ rhai = { workspace = true, features = ["internals"] }
 serde.workspace = true
 tokio.workspace = true
 ahash.workspace = true
+rand.workspace = true

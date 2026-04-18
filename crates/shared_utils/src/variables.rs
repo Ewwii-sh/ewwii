@@ -1,20 +1,22 @@
-use rhai::{Dynamic, Array, FnPtr};
+use crate::prop::{Property, Callback};
+use serde::{Serialize, Deserialize};
+use std::hash::Hash;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash)]
 pub struct GlobalVar {
     pub name: String,
-    pub initial: Dynamic,
+    pub initial: Property,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash)]
 pub struct GlobalCompare {
     pub name: String,
-    pub vars: Array,
-    pub closure: FnPtr,
+    pub vars: Vec<Property>,
+    pub closure: Callback,
 }
 
 impl GlobalVar {
-    pub fn from(name: String, initial: Dynamic) -> Self {
+    pub fn from(name: String, initial: Property) -> Self {
         Self { name, initial }
     }
 }
