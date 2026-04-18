@@ -1,7 +1,7 @@
 use crate::{
     app::{self, App, DaemonCommand},
     config,
-    config::ewwii_config::EWWII_CONFIG_PARSER,
+    config::ewwii_config::{EWWII_CONFIG_PARSER, ConfigEngine},
     daemon_response,
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,
@@ -34,7 +34,7 @@ pub fn initialize_server<B: DisplayBackend>(
 
     EWWII_CONFIG_PARSER.with(|p| {
         let config_parser = ewwii_rhai_impl::parser::RhaiParseConfig::new();
-        *p.borrow_mut() = Some(config_parser);
+        *p.borrow_mut() = Some(ConfigEngine::Default(config_parser));
     });
 
     let ewwii_plugins = paths.get_plugin_paths();

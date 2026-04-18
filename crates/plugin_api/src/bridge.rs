@@ -3,6 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use ewwii_shared_utils::ast::WidgetNode;
 
 // === Shared Implementation === //
 
@@ -62,6 +63,8 @@ pub enum PluginError {
     BridgeError(String),
     /// Error during registration
     RegistrationError(String),
+    /// Error during parsing
+    ParseError(String),
     /// Some unknown internal error
     Internal(String),
 }
@@ -69,6 +72,17 @@ pub enum PluginError {
 impl From<String> for PluginError {
     fn from(msg: String) -> Self {
         PluginError::Internal(msg)
+    }
+}
+
+impl std::fmt::Display for PluginError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PluginError::BridgeError(msg) => write!(f, "Bridge error: {}", msg),
+            PluginError::RegistrationError(msg) => write!(f, "Registration error: {}", msg),
+            PluginError::ParseError(msg) => write!(f, "Parse error: {}", msg),
+            PluginError::Internal(msg) => write!(f, "Internal error: {}", msg),
+        }
     }
 }
 
@@ -93,28 +107,24 @@ impl NativeFnExt for NativeFn {
 }
 
 // === register_config implementation === //
-#[repr(C)]
 pub struct ConfigInfo {
     pub extension: &'static str,
     pub main_file: &'static str,
 }
 
-pub type ConfigFn = Arc<dyn Fn() -> Result<ConfigInfo, String> + Send + Sync>;
+pub type ParseFn = Arc<dyn Fn(&str, &str) -> Result<WidgetNode, String> + Send + Sync>;
 
-pub trait ConfigFnExt {
+pub trait ParseFnExt {
     fn new<F>(f: F) -> Self
     where
-        F: Fn() -> Result<ConfigInfo, String> + Send + Sync + 'static;
+        F: Fn(&str, &str) -> Result<WidgetNode, String> + Send + Sync + 'static;
 }
 
-impl ConfigFnExt for ConfigFn {
+impl ParseFnExt for ParseFn {
     fn new<F>(f: F) -> Self
     where
-        F: Fn() -> Result<ConfigInfo, String> + Send + Sync + 'static,
+        F: Fn(&str, &str) -> Result<WidgetNode, String> + Send + Sync + 'static,
     {
         Arc::new(f)
     }
 }
-
-#[repr(C)]
-pub struct CustomConfigEngine;

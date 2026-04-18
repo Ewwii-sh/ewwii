@@ -1,9 +1,10 @@
 use crate::prop::PropertyMap;
 use crate::prop_utils::{get_string_prop, unwrap_static};
 use ahash::AHasher;
+use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WidgetNode {
     Label { props: PropertyMap },
     Box { props: PropertyMap, children: Vec<WidgetNode> },

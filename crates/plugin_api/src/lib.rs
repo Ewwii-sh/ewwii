@@ -60,6 +60,7 @@ mod export_macros;
 pub mod example;
 pub mod proxy;
 
+pub use ewwii_shared_utils as shared_utils;
 pub use bridge::*;
 
 /// The shared trait defining the Ewwii plugin API
@@ -113,10 +114,12 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```
     fn register_function(&self, name: &str, handler: NativeFn) -> Result<PluginValue, PluginError>;
 
-    // fn register_config(
-    //     &self,
-    //     engine: CustomConfigEngine,
-    // ) -> Result<PluginValue, PluginError>;
+    // TODO: Add doc comment here :D
+    fn register_config_engine(
+        &self, 
+        info: ConfigInfo, 
+        parser: ParseFn
+    ) -> Result<PluginValue, PluginError>;
 }
 
 /// The API format that the plugin should follow.

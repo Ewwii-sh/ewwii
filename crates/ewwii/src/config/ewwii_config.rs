@@ -1,6 +1,5 @@
 use crate::{
-    // ipc_server,
-    // error_handling_ctx,
+    plugin::CustomConfigEngine,
     paths::EwwiiPaths,
     window::backend_window_options::BackendWindowOptionsDef,
 };
@@ -8,12 +7,11 @@ use anyhow::{bail, Context, Result};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::path::PathBuf;
 
-use ewwii_plugin_api::CustomConfigEngine;
 use ewwii_rhai_impl::parser::RhaiParseConfig;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::PropertyMap;
-use rhai::AST;
 
 pub enum ConfigEngine {
     Default(RhaiParseConfig),
@@ -21,15 +19,56 @@ pub enum ConfigEngine {
 }
 
 impl ConfigEngine {
-    pub fn is_default(&self) -> bool {
-        matches!(self, ConfigEngine::Default(_))
+    pub fn extension(&self) -> String {
+        match self {
+            Self::Default(d) => d.extension(),
+            Self::Custom(c) => c.extension(),
+        }
     }
+
+    pub fn main_file(&self) -> String {
+        match self {
+            Self::Default(d) => d.main_file(),
+            Self::Custom(c) => c.main_file(),
+        }
+    }
+
+    pub fn parse_source(
+        &mut self, 
+        source: String, 
+        config_path: PathBuf
+    ) -> Result<WidgetNode, String> {
+        match self {
+            Self::Default(d) => parse_source(d, source, config_path),
+            Self::Custom(c) => c.parse_source(source, config_path),
+        }
+    }
+}
+
+// Extending RhaiParseConfig for parsing
+fn parse_source(
+    config_parser: &mut RhaiParseConfig,
+    source: String,
+    config_path: PathBuf,
+) -> Result<WidgetNode, String> {
+    let configlang_path_opt_str = config_path.to_str();
+    let compiled_ast = config_parser.compile_code(&source, configlang_path_opt_str)
+        .map_err(|e| e.to_string())?;
+    config_parser.register_poll_listen_globals(&source)
+        .map_err(|e| e.to_string())?;
+    let node = config_parser.eval_code_with(
+        &source,
+        None,
+        Some(&compiled_ast),
+        configlang_path_opt_str,
+    ).map_err(|e| e.to_string())?;
+    Ok(node)
 }
 
 // NOTE: These global variables are used for the proper functioning
 // of bind function and for access to AST across the whole program.
 thread_local! {
-    pub static EWWII_CONFIG_PARSER: RefCell<Option<RhaiParseConfig>> = RefCell::new(None);
+    pub static EWWII_CONFIG_PARSER: RefCell<Option<ConfigEngine>> = RefCell::new(None);
 }
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
@@ -43,7 +82,6 @@ pub fn read_from_ewwii_paths(ewwii_paths: &EwwiiPaths) -> Result<EwwiiConfig> {
 pub struct EwwiiConfig {
     windows: HashMap<String, WindowDefinition>,
     root_node: Option<Rc<WidgetNode>>,
-    compiled_ast: Option<Rc<RefCell<AST>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -69,19 +107,10 @@ impl EwwiiConfig {
 
             // get code from file
             let config_code = crate::paths::code_from_file(&configlang_path)?;
-            let configlang_path_opt_str = configlang_path.to_str();
 
-            // get the rhai widget tree
-            let compiled_ast = config_parser.compile_code(&config_code, configlang_path_opt_str)?;
-
-            config_parser.register_poll_listen_globals(&config_code)?;
-
-            let config_tree = config_parser.eval_code_with(
-                &config_code,
-                None,
-                Some(&compiled_ast),
-                configlang_path_opt_str,
-            )?;
+            // get the widget tree
+            let config_tree = config_parser.parse_source(config_code, configlang_path)
+                .map_err(|e| anyhow::anyhow!(e))?;
 
             let mut window_definitions = HashMap::new();
 
@@ -105,7 +134,6 @@ impl EwwiiConfig {
             Ok(EwwiiConfig {
                 windows: window_definitions,
                 root_node: Some(Rc::new(config_tree)),
-                compiled_ast: Some(Rc::new(RefCell::new(compiled_ast))),
             })
         })
     }
@@ -128,17 +156,7 @@ impl EwwiiConfig {
         self.root_node.clone().ok_or_else(|| anyhow::anyhow!("root_node is missing"))
     }
 
-    pub fn get_owned_compiled_ast(&self) -> Option<Rc<RefCell<AST>>> {
-        self.compiled_ast.clone()
-    }
-
     pub fn replace_data(&mut self, new_dat: Self) {
-        if let (Some(old_ast_rc), Some(new_ast_rc)) =
-            (self.compiled_ast.as_ref(), new_dat.compiled_ast.as_ref())
-        {
-            *old_ast_rc.borrow_mut() = new_ast_rc.borrow().clone();
-        }
-
         self.windows = new_dat.windows;
         self.root_node = new_dat.root_node;
     }

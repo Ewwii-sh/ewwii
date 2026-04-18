@@ -12,3 +12,4 @@ homepage = "https://ewwii-sh.github.io/"
 bincode.workspace = true
 serde.workspace = true
 rand.workspace = true
+ewwii_shared_utils.workspace = true
