@@ -96,4 +96,11 @@ impl VarWatcherAPI {
     pub fn state_of(variable: &str) -> String {
         GLOBAL_VAR_STORE.read().unwrap().get(variable).cloned().unwrap_or(String::new())
     }
+
+    /// Clear all variable state and watchers
+    pub fn clear_all() {
+        GLOBAL_VAR_STORE.write().unwrap().clear();
+        VAR_WATCHERS.write().unwrap().clear();
+        PENDING_SUBSCRIBERS.write().unwrap().clear();
+    }
 }
