@@ -6,7 +6,7 @@ edition = "2021"
 license = "GPL-3.0-or-later"
 description = "The rhai embedded language implementation of ewwii"
 repository = "https://github.com/byson94/ewwii"
-homepage = "https://github.com/byson94/ewwii"
+homepage = "https://ewwii-sh.github.io/"
 
 [dependencies]
 ewwii_shared_utils.workspace = true

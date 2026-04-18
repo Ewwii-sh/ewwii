@@ -6,7 +6,7 @@ edition = "2021"
 license = "GPL-3.0-or-later"
 description = "Utility crate used in ewwii"
 repository = "https://github.com/ewwii-sh/ewwii"
-homepage = "https://github.com/ewwii-sh/ewwii"
+homepage = "https://ewwii-sh.github.io/"
 
 [dependencies]
 anyhow.workspace = true
