@@ -2,8 +2,8 @@
 //!
 //! This crate supports parsing, error handling, and has a custom module_resolver.
 
-mod callback;
 pub mod builtins;
+mod callback;
 pub mod error;
 pub mod helper;
 pub mod module_resolver;

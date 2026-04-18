@@ -1,4 +1,5 @@
 use crate::{
+    config::ewwii_config::EWWII_CONFIG_PARSER,
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
     error_handling_ctx,
@@ -17,7 +18,6 @@ use crate::{
         monitor::MonitorIdentifier,
         window_geometry::{AnchorPoint, WindowGeometry},
     },
-    config::ewwii_config::EWWII_CONFIG_PARSER,
     window_arguments::WindowArguments,
     window_initiator::WindowInitiator,
     *,
@@ -33,28 +33,22 @@ use std::{
     cell::Cell,
     collections::{HashMap, HashSet},
     marker::PhantomData,
+    path::PathBuf,
     rc::Rc,
     sync::Mutex,
-    path::PathBuf,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
-fn register_active_plugin(lib: libloading::Library, id: String, version: String) 
-    -> Result<()> {
-    let mut plugins = plugin::ACTIVE_PLUGINS
-        .write()
-        .map_err(|_| anyhow!("Plugin registry is poisoned!"))?;
-    
+fn register_active_plugin(lib: libloading::Library, id: String, version: String) -> Result<()> {
+    let mut plugins =
+        plugin::ACTIVE_PLUGINS.write().map_err(|_| anyhow!("Plugin registry is poisoned!"))?;
+
     if plugins.iter().any(|p| p.id == id) {
         return Err(anyhow!("Plugin with ID {} is already loaded", id));
     }
 
-    plugins.push(plugin::ActivePlugin {
-        library: lib,
-        id,
-        version,
-    });
-    
+    plugins.push(plugin::ActivePlugin { library: lib, id, version });
+
     Ok(())
 }
 
@@ -347,10 +341,8 @@ impl<B: DisplayBackend> App<B> {
                     }
                 };
 
-                let output: String = plugins_guard
-                    .iter()
-                    .map(|p| format!("{} (v{})", p.id, p.version))
-                    .join("\n");
+                let output: String =
+                    plugins_guard.iter().map(|p| format!("{} (v{})", p.id, p.version)).join("\n");
 
                 sender.send_success(output)?
             }
@@ -363,10 +355,7 @@ impl<B: DisplayBackend> App<B> {
                     format!("{:#?}", ewwii_rhai_impl::updates::api::VarWatcherAPI::state());
                 sender.send_success(output)?
             }
-            DaemonCommand::Update {
-                mappings,
-                sender,
-            } => {
+            DaemonCommand::Update { mappings, sender } => {
                 match self.update_variables(mappings) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
@@ -459,7 +448,7 @@ impl<B: DisplayBackend> App<B> {
             if self.open_windows.is_empty() || self.reloading {
                 // Start the global variables
                 let signals_vec = ewwii_rhai_impl::updates::retreive_signals(
-                    self.ewwii_config.get_root_node()?.as_ref()
+                    self.ewwii_config.get_root_node()?.as_ref(),
                 );
 
                 ewwii_rhai_impl::updates::handle_state_changes(signals_vec);
@@ -631,10 +620,9 @@ impl<B: DisplayBackend> App<B> {
                         let parser_ref = parser.as_mut().unwrap();
                         parser_ref.eval_code_snippet(&rhai_code)
                     })?;
-                    let wid =
-                        ewwii_shared_utils::ast::hash_props(widget_node.props().ok_or_else(|| {
-                            anyhow::anyhow!("Failed to retreive the properties of this widget.")
-                        })?);
+                    let wid = ewwii_shared_utils::ast::hash_props(widget_node.props().ok_or_else(
+                        || anyhow::anyhow!("Failed to retreive the properties of this widget."),
+                    )?);
 
                     if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                         if let Some(widget_registry) = maybe_registry.as_mut() {
@@ -715,10 +703,7 @@ impl<B: DisplayBackend> App<B> {
     }
 
     /// Update variables based on the mappings provided
-    pub fn update_variables(
-        &mut self,
-        mappings: HashMap<String, String>,
-    ) -> Result<()> {
+    pub fn update_variables(&mut self, mappings: HashMap<String, String>) -> Result<()> {
         for (variable, value) in mappings {
             VarWatcherAPI::update_with_broadcast(&variable, value);
         }
@@ -732,7 +717,6 @@ impl<B: DisplayBackend> App<B> {
         // unwrap Rc<RefCell<AST>>
         let ast_ref: &rhai::AST =
             &*compiled_ast.as_ref().ok_or_else(|| anyhow!("AST not compiled yet"))?.borrow();
-
 
         EWWII_CONFIG_PARSER.with(move |p| -> anyhow::Result<()> {
             let parser = p.borrow();
@@ -749,7 +733,7 @@ impl<B: DisplayBackend> App<B> {
     pub fn load_ewwii_plugins(&mut self, plugin_paths: Vec<PathBuf>) -> Result<()> {
         // In case no plugins were passed
         if plugin_paths.is_empty() {
-            return Ok(())
+            return Ok(());
         }
 
         for plugin_path in plugin_paths {
@@ -764,8 +748,10 @@ impl<B: DisplayBackend> App<B> {
                 };
 
                 // Create the plugin and receive metadata
-                let create_result: Result<libloading::Symbol<unsafe extern "C" fn() -> epapi::PluginInfo>, _> = 
-                    lib.get(b"ewwii_plugin_create");
+                let create_result: Result<
+                    libloading::Symbol<unsafe extern "C" fn() -> epapi::PluginInfo>,
+                    _,
+                > = lib.get(b"ewwii_plugin_create");
 
                 let create = match create_result {
                     Ok(symbol) => symbol,
@@ -775,7 +761,7 @@ impl<B: DisplayBackend> App<B> {
                     }
                 };
 
-                let info = create(); 
+                let info = create();
 
                 // crash if plugin id is empty
                 if info.id.is_empty() {
@@ -789,12 +775,12 @@ impl<B: DisplayBackend> App<B> {
                 let unique_id = format!("{}::{}", file_stem, info.id);
 
                 // Keep the library alive and register it before initialization
-                register_active_plugin(lib, unique_id.clone(), info.version.to_string())?; 
+                register_active_plugin(lib, unique_id.clone(), info.version.to_string())?;
 
                 {
                     let plugins = plugin::ACTIVE_PLUGINS.read().unwrap();
                     let plugin_entry = plugins.iter().find(|p| p.id == unique_id).unwrap();
-                    
+
                     // Initializing plugins with metadata
                     let init: libloading::Symbol<unsafe extern "C" fn(*const u8, usize)> =
                         plugin_entry.library.get(b"ewwii_plugin_init")?;

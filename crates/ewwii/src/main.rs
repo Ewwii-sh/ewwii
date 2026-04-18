@@ -183,11 +183,8 @@ fn run<B: DisplayBackend>(opts: opts::Opt, ewwii_binary_name: String) -> Result<
                     ewwii_binary_name
                 );
             }
-            let fork_result = server::initialize_server::<B>(
-                paths.clone(),
-                None,
-                !opts.no_daemonize,
-            )?;
+            let fork_result =
+                server::initialize_server::<B>(paths.clone(), None, !opts.no_daemonize)?;
             opts.no_daemonize || fork_result == ForkResult::Parent
         }
 

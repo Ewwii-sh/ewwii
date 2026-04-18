@@ -1,8 +1,8 @@
 //! This module provides data structures and enumrates that are used
 //! as a bridge between the communication of both the plugin and the host.
 
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use serde::{Serialize, Deserialize};
 
 // === Shared Implementation === //
 
@@ -75,20 +75,18 @@ impl From<String> for PluginError {
 // === register_function implementation === //
 
 /// Handler for handling Native Function registeration in rhai
-pub type NativeFn = 
-    Arc<dyn Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync>;
-
+pub type NativeFn = Arc<dyn Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync>;
 
 pub trait NativeFnExt {
-    fn new<F>(f: F) -> Self 
-    where 
+    fn new<F>(f: F) -> Self
+    where
         F: Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync + 'static;
 }
 
 impl NativeFnExt for NativeFn {
-    fn new<F>(f: F) -> Self 
-    where 
-        F: Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync + 'static 
+    fn new<F>(f: F) -> Self
+    where
+        F: Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync + 'static,
     {
         Arc::new(f)
     }
@@ -101,20 +99,18 @@ pub struct ConfigInfo {
     pub main_file: &'static str,
 }
 
-pub type ConfigFn = 
-    Arc<dyn Fn() -> Result<ConfigInfo, String> + Send + Sync>;
-
+pub type ConfigFn = Arc<dyn Fn() -> Result<ConfigInfo, String> + Send + Sync>;
 
 pub trait ConfigFnExt {
-    fn new<F>(f: F) -> Self 
-    where 
+    fn new<F>(f: F) -> Self
+    where
         F: Fn() -> Result<ConfigInfo, String> + Send + Sync + 'static;
 }
 
 impl ConfigFnExt for ConfigFn {
-    fn new<F>(f: F) -> Self 
-    where 
-        F: Fn() -> Result<ConfigInfo, String> + Send + Sync + 'static 
+    fn new<F>(f: F) -> Self
+    where
+        F: Fn() -> Result<ConfigInfo, String> + Send + Sync + 'static,
     {
         Arc::new(f)
     }

@@ -2,8 +2,8 @@ use crate::config::ewwii_config::EWWII_CONFIG_PARSER;
 use ewwii_rhai_impl::updates::api::VarWatcherAPI;
 use ewwii_rhai_impl::updates::SHUTDOWN_REGISTRY;
 use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
-use tokio::sync::watch;
 use gtk4::glib;
+use tokio::sync::watch;
 
 pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> {
     let mut global_vars: Vec<(usize, GlobalVar)> = Vec::new();

@@ -1,19 +1,12 @@
+use super::variables::{GlobalCompare, GlobalVar};
 use crate::prop::PropertyMap;
-use super::variables::{GlobalVar, GlobalCompare};
 use anyhow::{anyhow, Result};
 use std::time::Duration;
 
 pub enum PropValue<T> {
     Static(T),
-    Compare {
-        comp: GlobalCompare,
-        parser: fn(&str) -> Option<T>,
-    },
-    Bound {
-        var_name: String,
-        initial: T,
-        parser: fn(&str) -> Option<T>
-    },
+    Compare { comp: GlobalCompare, parser: fn(&str) -> Option<T> },
+    Bound { var_name: String, initial: T, parser: fn(&str) -> Option<T> },
 }
 
 impl<T: Clone + Default> PropValue<T> {
@@ -31,15 +24,9 @@ fn make_bound<T>(var: GlobalVar, default: T, parser: fn(&str) -> Option<T>) -> P
 where
     T: Clone + 'static,
 {
-    let initial_val = var.initial.as_str()
-        .and_then(|s| parser(s))
-        .unwrap_or(default);
+    let initial_val = var.initial.as_str().and_then(|s| parser(s)).unwrap_or(default);
 
-    PropValue::Bound {
-        var_name: var.name,
-        initial: initial_val,
-        parser,
-    }
+    PropValue::Bound { var_name: var.name, initial: initial_val, parser }
 }
 
 // === Typed parsers with logging ===
@@ -88,19 +75,21 @@ fn parse_i32(s: &str) -> Option<i32> {
 }
 
 // === prop getters ===
-pub fn get_string_prop(props: &PropertyMap, key: &str, default: Option<&str>) -> Result<PropValue<String>> {
+pub fn get_string_prop(
+    props: &PropertyMap,
+    key: &str,
+    default: Option<&str>,
+) -> Result<PropValue<String>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = value.as_global_var() {
             return Ok(make_bound(var.clone(), default.unwrap_or("").to_string(), parse_string));
         }
         if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare {
-                comp: var.clone(),
-                parser: parse_string
-            });
+            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_string });
         }
 
-        value.as_str()
+        value
+            .as_str()
             .map(String::from)
             .map(PropValue::Static)
             .ok_or_else(|| anyhow!("Expected property `{}` to be a string", key))
@@ -111,19 +100,21 @@ pub fn get_string_prop(props: &PropertyMap, key: &str, default: Option<&str>) ->
     }
 }
 
-pub fn get_bool_prop(props: &PropertyMap, key: &str, default: Option<bool>) -> Result<PropValue<bool>> {
+pub fn get_bool_prop(
+    props: &PropertyMap,
+    key: &str,
+    default: Option<bool>,
+) -> Result<PropValue<bool>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = value.as_global_var() {
             return Ok(make_bound(var.clone(), default.unwrap_or(false), parse_bool));
         }
         if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare {
-                comp: var.clone(),
-                parser: parse_bool
-            });
+            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_bool });
         }
 
-        value.as_bool()
+        value
+            .as_bool()
             .map(PropValue::Static)
             .ok_or_else(|| anyhow!("Expected property `{}` to be a bool", key))
     } else {
@@ -133,18 +124,19 @@ pub fn get_bool_prop(props: &PropertyMap, key: &str, default: Option<bool>) -> R
     }
 }
 
-pub fn get_i64_prop(props: &PropertyMap, key: &str, default: Option<i64>) -> Result<PropValue<i64>> {
+pub fn get_i64_prop(
+    props: &PropertyMap,
+    key: &str,
+    default: Option<i64>,
+) -> Result<PropValue<i64>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = value.as_global_var() {
             return Ok(make_bound(var.clone(), default.unwrap_or(0), parse_i64));
         }
         if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare {
-                comp: var.clone(),
-                parser: parse_i64
-            });
+            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_i64 });
         }
-        
+
         // as_int is i64
         if let Some(v) = value.as_int() {
             Ok(PropValue::Static(v))
@@ -162,19 +154,23 @@ pub fn get_i64_prop(props: &PropertyMap, key: &str, default: Option<i64>) -> Res
     }
 }
 
-pub fn get_f64_prop(props: &PropertyMap, key: &str, default: Option<f64>) -> Result<PropValue<f64>> {
+pub fn get_f64_prop(
+    props: &PropertyMap,
+    key: &str,
+    default: Option<f64>,
+) -> Result<PropValue<f64>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = value.as_global_var() {
-            let initial = var.initial.clone().as_float()
+            let initial = var
+                .initial
+                .clone()
+                .as_float()
                 .or_else(|| var.initial.clone().as_int().map(|v| v as f64))
                 .unwrap_or(default.unwrap_or(0.0));
             return Ok(PropValue::Bound { var_name: var.name.clone(), initial, parser: parse_f64 });
         }
         if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare {
-                comp: var.clone(),
-                parser: parse_f64
-            });
+            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_f64 });
         }
 
         // as_float is f64
@@ -196,18 +192,19 @@ pub fn get_f64_prop(props: &PropertyMap, key: &str, default: Option<f64>) -> Res
     }
 }
 
-pub fn get_i32_prop(props: &PropertyMap, key: &str, default: Option<i32>) -> Result<PropValue<i32>> {
+pub fn get_i32_prop(
+    props: &PropertyMap,
+    key: &str,
+    default: Option<i32>,
+) -> Result<PropValue<i32>> {
     if let Some(value) = props.get(key) {
         if let Some(var) = value.as_global_var() {
-            let initial = var.initial.clone().as_int().map(|v| v as i32)
-                .unwrap_or(default.unwrap_or(0));
+            let initial =
+                var.initial.clone().as_int().map(|v| v as i32).unwrap_or(default.unwrap_or(0));
             return Ok(PropValue::Bound { var_name: var.name.clone(), initial, parser: parse_i32 });
         }
         if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare {
-                comp: var.clone(),
-                parser: parse_i32
-            });
+            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_i32 });
         }
 
         // as_int is i64
@@ -237,9 +234,8 @@ pub fn get_vec_string_prop(
     default: Option<Vec<PropValue<String>>>,
 ) -> Result<Vec<PropValue<String>>> {
     if let Some(value) = props.get(key) {
-        let array = value
-            .as_array()
-            .ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
+        let array =
+            value.as_array().ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
 
         array
             .into_iter()
@@ -252,10 +248,7 @@ pub fn get_vec_string_prop(
                         parser: parse_string,
                     })
                 } else if let Some(var) = d.as_global_compare() {
-                    return Ok(PropValue::Compare {
-                        comp: var.clone(),
-                        parser: parse_string
-                    });
+                    return Ok(PropValue::Compare { comp: var.clone(), parser: parse_string });
                 } else {
                     d.as_str().map(String::from).map(PropValue::Static).ok_or_else(|| {
                         anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key)
@@ -290,7 +283,11 @@ fn parse_duration_str(key_str: &str) -> Option<Duration> {
     }
 }
 
-pub fn get_duration_prop(props: &PropertyMap, key: &str, default: Option<Duration>) -> Result<Duration> {
+pub fn get_duration_prop(
+    props: &PropertyMap,
+    key: &str,
+    default: Option<Duration>,
+) -> Result<Duration> {
     if let Some(value) = props.get(key) {
         // Duration doesn't support GlobalVar binding. It's a static config value
         let raw = value
@@ -327,13 +324,12 @@ pub fn unwrap_static<T: Default>(key: &str, prop: PropValue<T>) -> T {
     }
 }
 
-
 // == Tests ==
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Duration;
     use crate::prop::{Property, PropertyMap};
+    use std::time::Duration;
 
     // parse_duration_str
     #[test]

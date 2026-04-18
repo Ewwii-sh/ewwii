@@ -1,5 +1,5 @@
-use crate::prop::{Property, Callback};
-use serde::{Serialize, Deserialize};
+use crate::prop::{Callback, Property};
+use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash)]

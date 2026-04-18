@@ -182,10 +182,7 @@ mod tests {
     // Coords::relative_to
     #[test]
     fn relative_to_does_not_swap_axes() {
-        let coords = Coords {
-            x: NumWithUnit::Percent(10.0),
-            y: NumWithUnit::Percent(50.0),
-        };
+        let coords = Coords { x: NumWithUnit::Percent(10.0), y: NumWithUnit::Percent(50.0) };
         let (x, y) = coords.relative_to(1000, 2000);
         // x should be 10% of width (1000), y should be 50% of height (2000)
         assert_eq!(x, 100);
@@ -203,22 +200,16 @@ mod tests {
         assert!("diagonal up".parse::<AnchorPoint>().is_err());
     }
 
-    // AnchorPoint::Dispay 
+    // AnchorPoint::Dispay
     #[test]
     fn anchor_point_display_center_center() {
-        let ap = AnchorPoint {
-            x: AnchorAlignment::CENTER,
-            y: AnchorAlignment::CENTER,
-        };
+        let ap = AnchorPoint { x: AnchorAlignment::CENTER, y: AnchorAlignment::CENTER };
         assert_eq!(ap.to_string(), "center");
     }
 
     #[test]
     fn anchor_point_display_non_center() {
-        let ap = AnchorPoint {
-            x: AnchorAlignment::START,
-            y: AnchorAlignment::END,
-        };
+        let ap = AnchorPoint { x: AnchorAlignment::START, y: AnchorAlignment::END };
         assert_eq!(ap.to_string(), "start end");
     }
 
@@ -226,10 +217,7 @@ mod tests {
     #[test]
     fn override_with_partial_only_replaces_some() {
         let geom = WindowGeometry {
-            anchor_point: AnchorPoint {
-                x: AnchorAlignment::START,
-                y: AnchorAlignment::START,
-            },
+            anchor_point: AnchorPoint { x: AnchorAlignment::START, y: AnchorAlignment::START },
             offset: Coords::from_pixels((0, 0)),
             size: Coords::from_pixels((800, 600)),
         };

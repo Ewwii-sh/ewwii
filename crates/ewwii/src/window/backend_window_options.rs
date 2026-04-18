@@ -12,7 +12,7 @@ use crate::{
 // use ewwii_shared_utils::{Span, VarName};
 
 // use crate::dynval::{DynVal, FromDynVal, ConversionError};
-use ewwii_shared_utils::prop::{PropertyMap, Property};
+use ewwii_shared_utils::prop::{Property, PropertyMap};
 // use crate::error::{DiagError, DiagResultExt};
 
 pub trait TryFromProperty: Sized {
@@ -53,12 +53,10 @@ impl TryFromProperty for NumWithUnit {
 impl TryFromProperty for X11StrutDefinitionExpr {
     fn try_from_prop(p: &Property) -> Option<Self> {
         let map = p.as_map()?;
-        
-        let distance = map.get("distance")
-            .and_then(|v| NumWithUnit::try_from_prop(v))?;
 
-        let side = map.get("side")
-            .and_then(|v| NumWithUnit::try_from_prop(v));
+        let distance = map.get("distance").and_then(|v| NumWithUnit::try_from_prop(v))?;
+
+        let side = map.get("side").and_then(|v| NumWithUnit::try_from_prop(v));
 
         Some(Self { side, distance })
     }
@@ -172,11 +170,11 @@ impl X11BackendWindowOptionsDef {
 
             struts: match properties.get("reserve").and_then(|v| v.as_map()) {
                 Some(obj_map) => {
-                let distance = obj_map
-                    .get("distance")
-                    .and_then(|v| v.as_str())
-                    .ok_or(Error::MissingField("distance"))
-                    .and_then(|s| NumWithUnit::from_str(s).map_err(Into::into))?;
+                    let distance = obj_map
+                        .get("distance")
+                        .and_then(|v| v.as_str())
+                        .ok_or(Error::MissingField("distance"))
+                        .and_then(|s| NumWithUnit::from_str(s).map_err(Into::into))?;
 
                     let side = obj_map
                         .get("side")
@@ -236,13 +234,8 @@ impl WlBackendWindowOptionsDef {
                 }
                 None => WlWindowFocusable::default(),
             },
-            namespace: properties.get("namespace")
-                .and_then(|d| d.as_str())
-                .map(String::from),
-            force_normal: properties
-                .get("force_normal")
-                .and_then(|d| d.as_bool())
-                .unwrap_or(false),
+            namespace: properties.get("namespace").and_then(|d| d.as_str()).map(String::from),
+            force_normal: properties.get("force_normal").and_then(|d| d.as_bool()).unwrap_or(false),
         })
     }
 }
