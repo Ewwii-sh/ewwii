@@ -1,5 +1,5 @@
 use crate::{
-    config::ewwii_config::EWWII_CONFIG_PARSER,
+    config::ewwii_config::{EWWII_CONFIG_PARSER, ConfigEngine},
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
     error_handling_ctx,
@@ -617,8 +617,12 @@ impl<B: DisplayBackend> App<B> {
                 for rhai_code in rhai_codes {
                     let widget_node = EWWII_CONFIG_PARSER.with(|p| {
                         let mut parser = p.borrow_mut();
-                        let parser_ref = parser.as_mut().unwrap();
-                        parser_ref.eval_code_snippet(&rhai_code)
+                        match parser.as_mut().unwrap() {
+                            ConfigEngine::Default(rhai) => rhai.eval_code_snippet(&rhai_code),
+                            ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
+                                "Dynamic widget creation is only supported with the Rhai config engine"
+                            )),
+                        }
                     })?;
                     let wid = ewwii_shared_utils::ast::hash_props(widget_node.props().ok_or_else(
                         || anyhow::anyhow!("Failed to retreive the properties of this widget."),
@@ -712,19 +716,19 @@ impl<B: DisplayBackend> App<B> {
     }
 
     pub fn call_rhai_fns(&self, calls: Vec<String>) -> Result<()> {
-        let compiled_ast = self.ewwii_config.get_owned_compiled_ast();
-
-        // unwrap Rc<RefCell<AST>>
-        let ast_ref: &rhai::AST =
-            &*compiled_ast.as_ref().ok_or_else(|| anyhow!("AST not compiled yet"))?.borrow();
-
         EWWII_CONFIG_PARSER.with(move |p| -> anyhow::Result<()> {
             let parser = p.borrow();
-            let parser = parser.as_ref().unwrap();
-            for fn_call in calls {
-                parser.call_rhai_fn(ast_ref, &fn_call, None)?;
+            match parser.as_ref().unwrap() {
+                ConfigEngine::Default(rhai) => {
+                    for fn_call in calls {
+                        rhai.call_rhai_fn(&fn_call, None)?;
+                    }
+                    Ok(())
+                },
+                ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
+                    "Calling rhai functions is only supported with the Rhai config engine"
+                )),
             }
-            Ok(())
         })?;
 
         Ok(())

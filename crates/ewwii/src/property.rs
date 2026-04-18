@@ -1,4 +1,4 @@
-use crate::config::ewwii_config::EWWII_CONFIG_PARSER;
+use crate::config::ewwii_config::{EWWII_CONFIG_PARSER, ConfigEngine};
 use ewwii_rhai_impl::updates::api::VarWatcherAPI;
 use ewwii_rhai_impl::updates::SHUTDOWN_REGISTRY;
 use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
@@ -110,11 +110,20 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
                             .into_iter()
                             .map(|a| a.into_dynamic())
                             .collect();
+                            
                         Some(
-                            match parser.call_callback::<String>(callback_handle, (args_dyn,)) {
-                                Ok(v) => v,
-                                Err(e) => {
-                                    log::error!("Closure execution failed: {:?}", e);
+                            match parser {
+                                ConfigEngine::Default(rhai) => {
+                                    match rhai.call_callback::<String>(callback_handle, (args_dyn,)) {
+                                        Ok(v) => v,
+                                        Err(e) => {
+                                            log::error!("Closure execution failed: {:?}", e);
+                                            return None;
+                                        }
+                                    }
+                                }
+                                ConfigEngine::Custom(_) => {
+                                    log::error!("Callbacks are only supported with the Rhai config engine");
                                     return None;
                                 }
                             }

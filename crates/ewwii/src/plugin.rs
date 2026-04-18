@@ -1,8 +1,10 @@
-use crate::config::EWWII_CONFIG_PARSER;
-use ewwii_plugin_api::proxy::PluginRequest;
+use crate::config::{EWWII_CONFIG_PARSER, ConfigEngine};
+use ewwii_plugin_api::proxy::{PluginRequest, CallbackResponse};
 use ewwii_plugin_api::{PluginError, PluginValue};
+use ewwii_shared_utils::ast::WidgetNode;
 use once_cell::sync::Lazy;
 use std::sync::RwLock;
+use std::path::PathBuf;
 
 pub struct ActivePlugin {
     pub library: libloading::Library,
@@ -49,40 +51,89 @@ fn plugin_value_to_dynamic(val: PluginValue) -> rhai::Dynamic {
     }
 }
 
-fn trigger_plugin_callback(plugin_id: &str, callback_id: u64, args: rhai::Array) -> PluginValue {
+fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) -> Option<Vec<u8>> {
     let plugins = ACTIVE_PLUGINS.read().unwrap();
+    let plugin = plugins.iter().find(|p| p.id == plugin_id)?;
 
-    if let Some(plugin) = plugins.iter().find(|p| p.id == plugin_id) {
-        let plugin_args: Vec<PluginValue> = args.into_iter().map(dynamic_to_plugin_value).collect();
-        let arg_bytes = bincode::serialize(&plugin_args).unwrap_or_default();
+    unsafe {
+        let func: libloading::Symbol<
+            unsafe extern "C" fn(u64, *const u8, usize, *mut usize) -> *mut u8,
+        > = plugin.library.get(b"plugin_callback_handler").ok()?;
 
-        unsafe {
-            let func: libloading::Symbol<
-                unsafe extern "C" fn(u64, *const u8, usize, *mut usize) -> *mut u8,
-            > = plugin.library.get(b"plugin_callback_handler").unwrap();
+        let mut res_len: usize = 0;
+        let res_ptr = func(callback_id, arg_bytes.as_ptr(), arg_bytes.len(), &mut res_len);
 
-            let mut res_len: usize = 0;
-            let res_ptr = func(callback_id, arg_bytes.as_ptr(), arg_bytes.len(), &mut res_len);
-
-            if res_ptr.is_null() {
-                return PluginValue::Null;
-            }
-
-            let res_slice = std::slice::from_raw_parts(res_ptr, res_len);
-            let result: PluginValue = bincode::deserialize(res_slice).unwrap_or(PluginValue::Null);
-
-            // cleanup
-            if let Ok(free_fn) =
-                plugin.library.get::<unsafe extern "C" fn(*mut u8, usize)>(b"plugin_free_buffer")
-            {
-                free_fn(res_ptr, res_len);
-            }
-
-            return result;
+        if res_ptr.is_null() {
+            return None;
         }
+
+        let res_slice = std::slice::from_raw_parts(res_ptr, res_len);
+        let result = res_slice.to_vec();
+
+        if let Ok(free_fn) =
+            plugin.library.get::<unsafe extern "C" fn(*mut u8, usize)>(b"plugin_free_buffer")
+        {
+            free_fn(res_ptr, res_len);
+        }
+
+        Some(result)
     }
-    log::error!("[Ewwii Plugin Handler] Could not find plugin {} in ACTIVE_PLUGINS", plugin_id);
-    PluginValue::Null
+}
+
+fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: rhai::Array) -> PluginValue {
+    let arg_bytes = bincode::serialize(&args.into_iter().map(dynamic_to_plugin_value).collect::<Vec<_>>()).unwrap_or_default();
+    let res = call_plugin_handler(plugin_id, callback_id, arg_bytes).unwrap_or_default();
+    bincode::deserialize::<CallbackResponse>(&res)
+        .ok()
+        .and_then(|r| if let CallbackResponse::PluginValue(v) = r { Some(v) } else { None })
+        .unwrap_or(PluginValue::Null)
+}
+
+fn trigger_plugin_config_parse(
+    plugin_id: &str, 
+    callback_id: u64, 
+    source: &str,
+    config_path: &str,
+) -> Result<WidgetNode, PluginError> {
+    let arg_bytes = bincode::serialize(&(source, config_path)).unwrap_or_default();
+    let res = call_plugin_handler(plugin_id, callback_id, arg_bytes)
+        .ok_or_else(|| "Plugin returned null".to_string())?;
+    match bincode::deserialize::<CallbackResponse>(&res).map_err(|e| e.to_string())? {
+        CallbackResponse::WidgetNode(node) => Ok(node),
+        CallbackResponse::Error(e) => Err(e),
+        _ => Err(PluginError::BridgeError("Unexpected response type".to_string())),
+    }
+}
+
+pub struct CustomConfigEngine {
+    id: String,
+    extension: String,
+    main_file: String,
+    callback_id: u64,
+}
+
+impl CustomConfigEngine {
+    pub fn extension(&self) -> String {
+        self.extension.clone()
+    }
+
+    pub fn main_file(&self) -> String {
+        self.main_file.clone()
+    }
+
+    pub fn parse_source(
+        &self, 
+        source: String, 
+        config_path: PathBuf
+    ) -> Result<WidgetNode, String> {
+        let path_str = config_path.to_str().unwrap_or("<unknown>");
+        trigger_plugin_config_parse(
+            &self.id,
+            self.callback_id,
+            &source,
+            path_str,
+        ).map_err(|e| e.to_string())
+    }
 }
 
 pub(crate) struct HostImpl;
@@ -115,26 +166,65 @@ impl HostImpl {
                     ));
                 }
 
-                self.register_function_internal(id, name, callback_id);
+                self.register_function_internal(id, name, callback_id)
+            }
+            PluginRequest::RegisterConfigEngine { id, extension, main_file, callback_id } => {
+                if extension.trim().is_empty() || main_file.trim().is_empty() {
+                    return Err(PluginError::RegistrationError(
+                        "File extension or main file cannot be empty".into(),
+                    ));
+                }
+
+                if extension.contains(' ') || main_file.contains(' ') {
+                    return Err(PluginError::RegistrationError(
+                        "File extension or main file cannot contain spaces".into(),
+                    ));
+                }
+
+                let custom_engine = CustomConfigEngine {
+                    id,
+                    extension, 
+                    main_file,
+                    callback_id,
+                };
+
+                EWWII_CONFIG_PARSER.with(|p| {
+                    *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
+                });
+                
                 Ok(PluginValue::Null)
             }
         }
     }
 
-    pub fn register_function_internal(&self, plugin_id: String, name: String, callback_id: u64) {
+    pub fn register_function_internal(
+        &self, 
+        plugin_id: String, 
+        name: String, 
+        callback_id: u64
+    ) -> Result<PluginValue, PluginError> {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
-            let parser_ref = parser.as_mut().unwrap();
 
-            parser_ref.engine.register_fn(
-                &name,
-                move |args: rhai::Array| -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> {
-                    let result = trigger_plugin_callback(&plugin_id, callback_id, args);
+            match parser.as_mut().unwrap() {
+                ConfigEngine::Default(rhai) => {
+                    rhai.engine.register_fn(
+                        &name,
+                        move |args: rhai::Array| -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> {
+                            let result = trigger_plugin_func_call(&plugin_id, callback_id, args);
 
-                    Ok(plugin_value_to_dynamic(result))
+                            Ok(plugin_value_to_dynamic(result))
+                        },
+                    );
+
+                    Ok(PluginValue::Null)
                 },
-            );
-        });
+                ConfigEngine::Custom(_) => Err(PluginError::RegistrationError(
+                    "Registering rhai functions is only supported with the Rhai config engine"
+                        .to_string()
+                )),
+            }
+        })
     }
 }
 

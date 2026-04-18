@@ -516,6 +516,7 @@ name = "ewwii_plugin_api"
 version = "1.0.0"
 dependencies = [
  "bincode",
+ "ewwii_shared_utils",
  "rand 0.10.0",
  "serde",
 ]

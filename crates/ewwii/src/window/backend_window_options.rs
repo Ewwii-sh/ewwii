@@ -68,8 +68,6 @@ pub enum Error {
     MissingField(&'static str),
     #[error(transparent)]
     EnumParseError(#[from] EnumParseError),
-    #[error("Enum parse error: {0}")]
-    EnumParseErrorMessage(&'static str),
     #[error(transparent)]
     CoordsError(#[from] coords::Error),
 }
