@@ -14,7 +14,7 @@ mod listen;
 mod poll;
 pub mod api;
 
-use crate::ast::WidgetNode;
+use ewwii_shared_utils::ast::WidgetNode;
 use listen::handle_listen;
 use once_cell::sync::Lazy;
 use poll::handle_poll;

@@ -632,7 +632,7 @@ impl<B: DisplayBackend> App<B> {
                         parser_ref.eval_code_snippet(&rhai_code)
                     })?;
                     let wid =
-                        ewwii_rhai_impl::ast::hash_props(widget_node.props().ok_or_else(|| {
+                        ewwii_shared_utils::ast::hash_props(widget_node.props().ok_or_else(|| {
                             anyhow::anyhow!("Failed to retreive the properties of this widget.")
                         })?);
 

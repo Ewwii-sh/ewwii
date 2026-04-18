@@ -1,11 +1,11 @@
 use crate::{
-    ast::WidgetNode,
     builtins::register_all_widgets,
     error::{format_eval_error, format_parse_error},
     helper::extract_poll_and_listen_vars,
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
 };
+use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Property;
 use anyhow::{anyhow, Result};
 use rhai::{Dynamic, Engine, ImmutableString, Module, Scope, AST, FuncArgs};

@@ -1,6 +1,6 @@
 use ahash::AHasher;
-use ewwii_shared_utils::prop::PropertyMap;
-use ewwii_shared_utils::prop_utils::{get_string_prop, unwrap_static};
+use crate::prop::PropertyMap;
+use crate::prop_utils::{get_string_prop, unwrap_static};
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]

@@ -9,7 +9,8 @@ use std::collections::HashMap;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use ewwii_rhai_impl::{ast::WidgetNode, parser::RhaiParseConfig};
+use ewwii_rhai_impl::parser::RhaiParseConfig;
+use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::PropertyMap;
 use ewwii_plugin_api::CustomConfigEngine;
 use rhai::AST;
