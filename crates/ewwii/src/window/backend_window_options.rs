@@ -12,8 +12,57 @@ use crate::{
 // use ewwii_shared_utils::{Span, VarName};
 
 // use crate::dynval::{DynVal, FromDynVal, ConversionError};
-use rhai::Map;
+use ewwii_shared_utils::prop::{PropertyMap, Property};
 // use crate::error::{DiagError, DiagResultExt};
+
+pub trait TryFromProperty: Sized {
+    fn try_from_prop(p: &Property) -> Option<Self>;
+}
+
+// Basic type implementations
+impl TryFromProperty for bool {
+    fn try_from_prop(p: &Property) -> Option<Self> {
+        p.as_bool()
+    }
+}
+
+impl TryFromProperty for String {
+    fn try_from_prop(p: &Property) -> Option<Self> {
+        p.as_str().map(|s| s.to_string())
+    }
+}
+
+impl TryFromProperty for i64 {
+    fn try_from_prop(p: &Property) -> Option<Self> {
+        p.as_int()
+    }
+}
+
+impl TryFromProperty for NumWithUnit {
+    fn try_from_prop(p: &Property) -> Option<Self> {
+        match p {
+            Property::String(s) => Self::from_str(s).ok(),
+            // Map raw numbers to Pixels(i32)
+            Property::Int(i) => Some(Self::Pixels(*i as i32)),
+            Property::Float(f) => Some(Self::Pixels(*f as i32)),
+            _ => None,
+        }
+    }
+}
+
+impl TryFromProperty for X11StrutDefinitionExpr {
+    fn try_from_prop(p: &Property) -> Option<Self> {
+        let map = p.as_map()?;
+        
+        let distance = map.get("distance")
+            .and_then(|v| NumWithUnit::try_from_prop(v))?;
+
+        let side = map.get("side")
+            .and_then(|v| NumWithUnit::try_from_prop(v));
+
+        Some(Self { side, distance })
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -36,7 +85,7 @@ pub struct BackendWindowOptionsDef {
 }
 
 impl BackendWindowOptionsDef {
-    pub fn eval(&self, properties: Map) -> Result<BackendWindowOptions, Error> {
+    pub fn eval(&self, properties: PropertyMap) -> Result<BackendWindowOptions, Error> {
         Ok(BackendWindowOptions {
             wayland: self.wayland.eval(properties.clone())?,
             x11: self.x11.eval(properties)?,
@@ -63,7 +112,7 @@ impl BackendWindowOptionsDef {
     // }
 
     // pass rhai map from WindowDefinition here
-    pub fn from_map(map: &Map) -> Result<Self> {
+    pub fn from_map(map: &PropertyMap) -> Result<Self> {
         // let get = |key: &str| map.get(key).cloned();
 
         let struts = Self::get_optional(map, "reserve")?;
@@ -87,8 +136,8 @@ impl BackendWindowOptionsDef {
         Ok(Self { wayland, x11 })
     }
 
-    fn get_optional<T: Clone + 'static>(map: &Map, key: &str) -> Result<Option<T>> {
-        Ok(map.get(key).cloned().and_then(|v| v.try_cast::<T>()))
+    fn get_optional<T: TryFromProperty>(map: &PropertyMap, key: &str) -> Result<Option<T>> {
+        Ok(map.get(key).and_then(|v| T::try_from_prop(v)))
     }
 }
 
@@ -117,44 +166,40 @@ pub struct X11BackendWindowOptionsDef {
 }
 
 impl X11BackendWindowOptionsDef {
-    fn eval(&self, properties: Map) -> Result<X11BackendWindowOptions, Error> {
+    fn eval(&self, properties: PropertyMap) -> Result<X11BackendWindowOptions, Error> {
         Ok(X11BackendWindowOptions {
-            sticky: properties.get("sticky").map(|d| d.clone_cast::<bool>()).unwrap_or(true),
+            sticky: properties.get("sticky").and_then(|d| d.as_bool()).unwrap_or(true),
 
-            struts: match properties.get("reserve") {
-                Some(dynval) => {
-                    let obj_map = dynval
-                        .read_lock::<Map>()
-                        .ok_or(Error::EnumParseErrorMessage("Expected map for reserve"))?;
-
-                    let distance_str = obj_map
-                        .get("distance")
-                        .ok_or(Error::MissingField("distance"))?
-                        .clone_cast::<String>();
-
-                    let distance = NumWithUnit::from_str(&distance_str)?;
+            struts: match properties.get("reserve").and_then(|v| v.as_map()) {
+                Some(obj_map) => {
+                let distance = obj_map
+                    .get("distance")
+                    .and_then(|v| v.as_str())
+                    .ok_or(Error::MissingField("distance"))
+                    .and_then(|s| NumWithUnit::from_str(s).map_err(Into::into))?;
 
                     let side = obj_map
                         .get("side")
-                        .map(|s| s.clone_cast::<String>())
-                        .map(|s| Side::from_str(&s))
-                        .transpose()?;
+                        .and_then(|s| s.as_str())
+                        .map(Side::from_str)
+                        .transpose()?
+                        .unwrap_or_default();
 
-                    X11StrutDefinition { distance, side: side.unwrap_or(Side::default()) }
+                    X11StrutDefinition { distance, side }
                 }
                 None => X11StrutDefinition::default(),
             },
 
             window_type: match properties.get("windowtype") {
                 Some(dynval) => {
-                    let s = dynval.clone_cast::<String>();
+                    let s = dynval.as_str().unwrap();
                     X11WindowType::from_str(&s)?
                 }
                 None => X11WindowType::default(),
             },
 
             wm_ignore: {
-                let wm_ignore = properties.get("wm_ignore").map(|d| d.clone_cast::<bool>());
+                let wm_ignore = properties.get("wm_ignore").and_then(|d| d.as_bool());
                 wm_ignore.unwrap_or_else(|| {
                     properties.get("windowtype").is_none() && properties.get("reserve").is_none()
                 })
@@ -181,20 +226,22 @@ pub struct WlBackendWindowOptionsDef {
 }
 
 impl WlBackendWindowOptionsDef {
-    fn eval(&self, properties: Map) -> Result<WlBackendWindowOptions, Error> {
+    fn eval(&self, properties: PropertyMap) -> Result<WlBackendWindowOptions, Error> {
         Ok(WlBackendWindowOptions {
-            exclusive: properties.get("exclusive").map(|d| d.clone_cast::<bool>()).unwrap_or(false),
+            exclusive: properties.get("exclusive").and_then(|d| d.as_bool()).unwrap_or(false),
             focusable: match properties.get("focusable") {
                 Some(dynval) => {
-                    let s = dynval.clone_cast::<String>().to_lowercase();
+                    let s = dynval.as_str().unwrap_or_default().to_lowercase();
                     WlWindowFocusable::from_str(&s)?
                 }
                 None => WlWindowFocusable::default(),
             },
-            namespace: properties.get("namespace").map(|d| d.clone_cast::<String>()),
+            namespace: properties.get("namespace")
+                .and_then(|d| d.as_str())
+                .map(String::from),
             force_normal: properties
                 .get("force_normal")
-                .map(|d| d.clone_cast::<bool>())
+                .and_then(|d| d.as_bool())
                 .unwrap_or(false),
         })
     }

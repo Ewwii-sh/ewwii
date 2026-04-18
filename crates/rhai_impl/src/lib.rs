@@ -4,6 +4,7 @@
 
 pub mod ast;
 mod ast_impl;
+mod callback;
 pub mod builtins;
 pub mod error;
 pub mod helper;

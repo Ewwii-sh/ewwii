@@ -1,9 +1,9 @@
 use crate::ast::WidgetNode;
-use rhai::{Dynamic, Map};
+use ewwii_shared_utils::prop::{Property, PropertyMap};
 
 impl WidgetNode {
     /// Returns a reference to the props Map if the variant has one.
-    pub fn props(&self) -> Option<&Map> {
+    pub fn props(&self) -> Option<&PropertyMap> {
         match self {
             WidgetNode::Label { props }
             | WidgetNode::Box { props, .. }
@@ -42,8 +42,8 @@ impl WidgetNode {
     /// This function implements dyn_id property to widgets.
     pub fn setup_dyn_ids(&self, parent_path: &str) -> Self {
         // fn to assign dyn_id to a node
-        fn with_dyn_id(mut props: Map, dyn_id: &str) -> Map {
-            props.insert("dyn_id".into(), Dynamic::from(dyn_id.to_string()));
+        fn with_dyn_id(mut props: PropertyMap, dyn_id: &str) -> PropertyMap {
+            props.insert("dyn_id", Property::String(dyn_id.to_string()));
             props
         }
 

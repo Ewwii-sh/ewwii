@@ -6,8 +6,9 @@ use crate::{
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
 };
+use ewwii_shared_utils::prop::Property;
 use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, ImmutableString, Module, Scope, AST, FnPtr, FuncArgs};
+use rhai::{Dynamic, Engine, ImmutableString, Module, Scope, AST, FuncArgs};
 use ewwii_shared_utils::variables::GlobalVar;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -121,8 +122,8 @@ impl RhaiParseConfig {
 
         for (name, initial) in extract_poll_and_listen_vars(code)? {
             let value = match initial {
-                Some(v) => Dynamic::from(v),
-                None => Dynamic::UNIT,
+                Some(v) => v.into(),
+                None => Property::None,
             };
             let glob_var = GlobalVar::from(name.clone(), value);
             global_module.set_var(name, glob_var);
@@ -172,14 +173,17 @@ impl RhaiParseConfig {
         }
     }
 
-    pub fn call_fn_ptr<T>(
+    pub fn call_callback<T>(
         &self, 
-        fnptr: FnPtr, 
+        handle: u64,
         args: impl FuncArgs
     ) -> Result<T, Box<rhai::EvalAltResult>>
     where 
         T: rhai::Variant + Clone,
     {
+        let fnptr = crate::callback::get_callback(handle)
+            .ok_or_else(|| format!("Callback handle {} not found in registry", handle))?;
+
         EWWII_CONFIG_AST.with(|ast_cell| {
             let ast_ref = ast_cell.borrow();
 

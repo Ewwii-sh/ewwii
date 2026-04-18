@@ -10,8 +10,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use ewwii_rhai_impl::{ast::WidgetNode, parser::RhaiParseConfig};
+use ewwii_shared_utils::prop::PropertyMap;
 use ewwii_plugin_api::CustomConfigEngine;
-use rhai::{Map, AST};
+use rhai::AST;
 
 pub enum ConfigEngine {
     Default(RhaiParseConfig),
@@ -49,7 +50,7 @@ pub struct EwwiiConfig {
 #[derive(Debug, Clone)]
 pub struct WindowDefinition {
     pub name: String,
-    pub props: Map,
+    pub props: PropertyMap,
     pub backend_options: BackendWindowOptionsDef,
     pub root_widget: Rc<WidgetNode>,
 }

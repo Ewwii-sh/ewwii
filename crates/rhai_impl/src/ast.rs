@@ -1,47 +1,47 @@
 use ahash::AHasher;
-use rhai::Map;
+use ewwii_shared_utils::prop::PropertyMap;
 use ewwii_shared_utils::prop_utils::{get_string_prop, unwrap_static};
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
 pub enum WidgetNode {
-    Label { props: Map },
-    Box { props: Map, children: Vec<WidgetNode> },
-    FlowBox { props: Map, children: Vec<WidgetNode> },
-    Button { props: Map },
-    Image { props: Map },
-    Input { props: Map },
-    Progress { props: Map },
-    ComboBoxText { props: Map },
-    Scale { props: Map },
-    Checkbox { props: Map },
-    Expander { props: Map, children: Vec<WidgetNode> },
-    Revealer { props: Map, children: Vec<WidgetNode> },
-    Scroll { props: Map, children: Vec<WidgetNode> },
-    OverLay { props: Map, children: Vec<WidgetNode> },
-    Stack { props: Map, children: Vec<WidgetNode> },
-    Calendar { props: Map },
-    ColorButton { props: Map },
-    ColorChooser { props: Map },
-    CircularProgress { props: Map },
-    Graph { props: Map },
-    Transform { props: Map },
-    EventBox { props: Map, children: Vec<WidgetNode> },
-    ToolTip { props: Map, children: Vec<WidgetNode> },
+    Label { props: PropertyMap },
+    Box { props: PropertyMap, children: Vec<WidgetNode> },
+    FlowBox { props: PropertyMap, children: Vec<WidgetNode> },
+    Button { props: PropertyMap },
+    Image { props: PropertyMap },
+    Input { props: PropertyMap },
+    Progress { props: PropertyMap },
+    ComboBoxText { props: PropertyMap },
+    Scale { props: PropertyMap },
+    Checkbox { props: PropertyMap },
+    Expander { props: PropertyMap, children: Vec<WidgetNode> },
+    Revealer { props: PropertyMap, children: Vec<WidgetNode> },
+    Scroll { props: PropertyMap, children: Vec<WidgetNode> },
+    OverLay { props: PropertyMap, children: Vec<WidgetNode> },
+    Stack { props: PropertyMap, children: Vec<WidgetNode> },
+    Calendar { props: PropertyMap },
+    ColorButton { props: PropertyMap },
+    ColorChooser { props: PropertyMap },
+    CircularProgress { props: PropertyMap },
+    Graph { props: PropertyMap },
+    Transform { props: PropertyMap },
+    EventBox { props: PropertyMap, children: Vec<WidgetNode> },
+    ToolTip { props: PropertyMap, children: Vec<WidgetNode> },
 
     // Special
-    GtkUI { props: Map },
+    GtkUI { props: PropertyMap },
 
     // Top-level macros
-    DefWindow { name: String, props: Map, node: Box<WidgetNode> },
+    DefWindow { name: String, props: PropertyMap, node: Box<WidgetNode> },
     // Poll { var: String, interval: String, cmd: String, initial: String },
     // Listen { var: String, signal: String },
-    Poll { var: String, props: Map },
-    Listen { var: String, props: Map },
+    Poll { var: String, props: PropertyMap },
+    Listen { var: String, props: PropertyMap },
     Tree(Vec<WidgetNode>),
 }
 
-pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
+pub fn hash_props_and_type(props: &PropertyMap, widget_type_str: &str) -> u64 {
     let mut hasher = AHasher::default();
 
     widget_type_str.hash(&mut hasher);
@@ -57,7 +57,7 @@ pub fn hash_props_and_type(props: &Map, widget_type_str: &str) -> u64 {
     hasher.finish()
 }
 
-pub fn hash_props(props: &Map) -> u64 {
+pub fn hash_props(props: &PropertyMap) -> u64 {
     let mut hasher = AHasher::default();
 
     props.hash(&mut hasher);
@@ -68,42 +68,42 @@ pub fn hash_props(props: &Map) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rhai::{Dynamic, Map};
+    use ewwii_shared_utils::prop::{Property, PropertyMap};
 
     #[test]
     fn test_hash_props_and_type_consistency() {
-        let mut props = Map::new();
-        props.insert("class".into(), Dynamic::from("mywidget"));
-        props.insert("enabled".into(), Dynamic::from(true));
-        props.insert("count".into(), Dynamic::from(42_i64));
-        //? IMPORTANT
-        props.insert("dyn_id".into(), Dynamic::from("mywidget_test"));
+        let mut props = PropertyMap::new();
+        props.insert("class", Property::String("mywidget".into()));
+        props.insert("enabled", Property::Bool(true));
+        props.insert("count", Property::Int(42));
+        props.insert("dyn_id", Property::String("mywidget_test".into()));
 
         // Nested map
-        let mut nested = Map::new();
-        nested.insert("nested_key".into(), Dynamic::from("value"));
-        props.insert("nested".into(), Dynamic::from(nested));
+        let mut nested = PropertyMap::new();
+        nested.insert("nested_key", Property::String("value".into()));
+        props.insert("nested", Property::Map(nested));
 
         // Array
-        let arr = vec![Dynamic::from(1_i64), Dynamic::from(2_i64), Dynamic::from(3_i64)];
-        props.insert("arr".into(), Dynamic::from(arr));
+        let arr = vec![Property::Int(1), Property::Int(2), Property::Int(3)];
+        props.insert("arr", Property::Array(arr));
 
         let widget_type = "Box";
 
+        // Hash checks
         let hash1 = hash_props_and_type(&props, widget_type);
         let hash2 = hash_props_and_type(&props, widget_type);
 
         assert_eq!(hash1, hash2, "Hashes should be consistent on same input");
 
-        // Change one prop and expect different hash
+        // Change one prop (non-identity prop)
         let mut props_modified = props.clone();
-        props_modified.insert("count".into(), Dynamic::from(43_i64));
+        props_modified.insert("count", Property::Int(43));
 
         let hash3 = hash_props_and_type(&props_modified, widget_type);
-        assert_eq!(hash1, hash3, "Hashes should be consistent even when props change");
+        assert_eq!(hash1, hash3, "Identity hash remains stable when data changes");
 
         // Different widget type string
         let hash4 = hash_props_and_type(&props, "Button");
-        assert_ne!(hash1, hash4, "Hashes should differ for different widget types");
+        assert_ne!(hash1, hash4, "Hashes must differ for different widget types");
     }
 }

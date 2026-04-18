@@ -544,8 +544,10 @@ dependencies = [
 name = "ewwii_shared_utils"
 version = "0.1.0"
 dependencies = [
+ "ahash",
  "anyhow",
  "log",
+ "rand 0.10.0",
  "rhai",
  "serde",
  "tokio",
