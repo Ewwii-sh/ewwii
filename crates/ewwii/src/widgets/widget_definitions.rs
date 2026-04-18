@@ -5,6 +5,7 @@ use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use crate::{apply_property, apply_property_watch, bind_property};
 use anyhow::{anyhow, bail, Result};
 use ewwii_shared_utils::ast::{hash_props_and_type, WidgetNode};
+use ewwii_shared_utils::prop::PropertyMap;
 use gtk4::gdk::DragAction;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
@@ -12,7 +13,6 @@ use gtk4::{
     DragSource, DropTarget, EventControllerKey, EventControllerLegacy, EventControllerMotion,
     EventControllerScroll, GestureClick,
 };
-use ewwii_shared_utils::prop::PropertyMap;
 
 use super::widget_definitions_helper::*;
 use ewwii_shared_utils::prop_utils::*;
@@ -854,7 +854,10 @@ pub(super) fn build_circular_progress_bar(
     Ok(widget)
 }
 
-pub(super) fn build_graph(props: &PropertyMap, widget_registry: &mut WidgetRegistry) -> Result<Graph> {
+pub(super) fn build_graph(
+    props: &PropertyMap,
+    widget_registry: &mut WidgetRegistry,
+) -> Result<Graph> {
     let widget = Graph::new();
 
     bind_property!(&props, "value", get_f64_prop, None, [widget], |value: f64| {
@@ -2138,7 +2141,10 @@ pub(super) fn build_gtk_scrolledwindow(
 //     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
 
 /// Code that applies css/scss to widgets.
-pub(super) fn resolve_rhai_widget_attrs(gtk_widget: &gtk4::Widget, props: &PropertyMap) -> Result<()> {
+pub(super) fn resolve_rhai_widget_attrs(
+    gtk_widget: &gtk4::Widget,
+    props: &PropertyMap,
+) -> Result<()> {
     // // checking deprecated keys
     // // see eww issue #251 (https://github.com/elkowar/eww/issues/251)
     // for deprecated in DEPRECATED_ATTRS.iter() {

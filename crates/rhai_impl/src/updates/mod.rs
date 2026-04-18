@@ -10,19 +10,19 @@
     as a workaround to this limitation.
 */
 
+pub mod api;
 mod listen;
 mod poll;
-pub mod api;
 
+use api::VarWatcherAPI;
 use ewwii_shared_utils::ast::WidgetNode;
+use ewwii_shared_utils::prop::PropertyMap;
 use listen::handle_listen;
 use once_cell::sync::Lazy;
 use poll::handle_poll;
 use std::process::Command;
 use std::sync::Mutex;
 use tokio::sync::watch;
-use api::VarWatcherAPI;
-use ewwii_shared_utils::prop::PropertyMap;
 
 pub static SHUTDOWN_REGISTRY: Lazy<Mutex<Vec<watch::Sender<bool>>>> =
     Lazy::new(|| Mutex::new(Vec::new()));
@@ -39,7 +39,7 @@ pub fn get_prefered_shell() -> String {
 
 pub enum SignalType {
     Poll,
-    Listen
+    Listen,
 }
 
 pub struct SignalProps {
@@ -90,7 +90,7 @@ pub fn handle_state_changes(signals: Vec<SignalProps>) {
             SignalType::Poll => {
                 VarWatcherAPI::register(&signal.name, String::new());
                 handle_poll(signal.name, &signal.props, shell.clone());
-            },
+            }
             SignalType::Listen => {
                 VarWatcherAPI::register(&signal.name, String::new());
                 handle_listen(signal.name, &signal.props, shell.clone());

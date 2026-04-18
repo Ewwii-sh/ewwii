@@ -1,10 +1,10 @@
 //! This module provides plugin requests and host proxy
 //! that are used to redirect API calls to host after serialization
 
+use crate::{EwwiiAPI, NativeFn, PluginError, PluginValue};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
-use crate::{NativeFn, EwwiiAPI, PluginValue, PluginError};
-use serde::{Serialize, Deserialize};
 
 static CALLBACKS: OnceLock<Mutex<HashMap<u64, NativeFn>>> = OnceLock::new();
 
@@ -21,11 +21,7 @@ pub enum PluginRequest {
     Warn((String, String)),
     Error((String, String)),
 
-    RegisterFn {
-        id: String,
-        name: String,
-        callback_id: u64,
-    },
+    RegisterFn { id: String, name: String, callback_id: u64 },
 }
 
 // This is provided on the host side
@@ -36,10 +32,10 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn plugin_callback_handler(
-    id: u64, 
-    arg_ptr: *const u8, 
+    id: u64,
+    arg_ptr: *const u8,
     arg_len: usize,
-    output_len: *mut usize
+    output_len: *mut usize,
 ) -> *mut u8 {
     let bytes = unsafe { std::slice::from_raw_parts(arg_ptr, arg_len) };
     let args: Vec<PluginValue> = bincode::deserialize(bytes).unwrap_or_default();
@@ -49,16 +45,16 @@ pub extern "C" fn plugin_callback_handler(
         let result = handler(args).unwrap_or(PluginValue::Null);
 
         let res_bytes = bincode::serialize(&result).unwrap_or_default();
-        
+
         unsafe {
             let len = res_bytes.len();
             *output_len = len;
-            
+
             let boxed_slice = res_bytes.into_boxed_slice();
             return Box::into_raw(boxed_slice) as *mut u8;
         }
     }
-    
+
     std::ptr::null_mut()
 }
 
@@ -77,11 +73,9 @@ pub struct HostProxy {
 }
 
 impl HostProxy {
-    /// The constructor the macro calls. 
+    /// The constructor the macro calls.
     pub fn new(id: &str) -> Self {
-        Self {
-            id: id.to_string(),
-        }
+        Self { id: id.to_string() }
     }
 
     /// Internal helper to get the ID for every request.
@@ -91,10 +85,10 @@ impl HostProxy {
     }
 
     fn call_host(&self, req: PluginRequest) -> Result<PluginValue, PluginError> {
-        let bytes = bincode::serialize(&req)
-            .map_err(|e| PluginError::BridgeError(e.to_string()))?;
+        let bytes =
+            bincode::serialize(&req).map_err(|e| PluginError::BridgeError(e.to_string()))?;
         let mut out_len: usize = 0;
-        
+
         unsafe {
             let res_ptr = ffi_gateway(bytes.as_ptr(), bytes.len(), &mut out_len);
             if res_ptr.is_null() {
@@ -133,11 +127,7 @@ impl EwwiiAPI for HostProxy {
         let _ = self.call_host(req);
     }
 
-    fn register_function(
-        &self,
-        name: &str,
-        handler: NativeFn,
-    ) -> Result<PluginValue, PluginError> {
+    fn register_function(&self, name: &str, handler: NativeFn) -> Result<PluginValue, PluginError> {
         // Register id
         let id = rand::random::<u64>();
         get_callbacks().lock().unwrap().insert(id, handler);

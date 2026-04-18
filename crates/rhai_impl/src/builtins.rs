@@ -1,7 +1,7 @@
-use rhai::{Array, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
-use ewwii_shared_utils::variables::GlobalCompare;
-use ewwii_shared_utils::prop::{Property, PropertyMap, Callback};
 use ewwii_shared_utils::ast::WidgetNode;
+use ewwii_shared_utils::prop::{Callback, Property, PropertyMap};
+use ewwii_shared_utils::variables::GlobalCompare;
+use rhai::{Array, Engine, EvalAltResult, FnPtr, Map, NativeCallContext};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -96,24 +96,14 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
         |variables: Array, closure: FnPtr| -> Result<GlobalCompare, Box<EvalAltResult>> {
             let handle = rand::random::<u64>();
             let unique_name = format!("\0__globalbound__{}", &handle);
-            let vars = variables
-                .into_iter()
-                .map(Property::from_dynamic)
-                .collect();
+            let vars = variables.into_iter().map(Property::from_dynamic).collect();
 
             crate::callback::register_callback(handle, closure.clone());
 
-            let callback = Callback {
-                name: closure.fn_name().to_string(),
-                handle: Some(handle),
-            };
+            let callback = Callback { name: closure.fn_name().to_string(), handle: Some(handle) };
 
-            Ok(GlobalCompare {
-                name: unique_name,
-                vars,
-                closure: callback,
-            })
-        }
+            Ok(GlobalCompare { name: unique_name, vars, closure: callback })
+        },
     );
 
     // == Top-level macros ==
@@ -121,10 +111,10 @@ pub fn register_all_widgets(engine: &mut Engine, all_nodes: &Rc<RefCell<Vec<Widg
         "defwindow",
         |name: &str, props: Map, node: WidgetNode| -> Result<WidgetNode, Box<EvalAltResult>> {
             let prop_map = PropertyMap::from_rhai(props);
-            Ok(WidgetNode::DefWindow { 
-                name: name.to_string(), 
-                props: prop_map, 
-                node: Box::new(node) 
+            Ok(WidgetNode::DefWindow {
+                name: name.to_string(),
+                props: prop_map,
+                node: Box::new(node),
             })
         },
     );

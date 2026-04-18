@@ -1,20 +1,21 @@
 use crate::{
     app::{self, App, DaemonCommand},
-    config, daemon_response,
+    config,
+    config::ewwii_config::EWWII_CONFIG_PARSER,
+    daemon_response,
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,
-    config::ewwii_config::EWWII_CONFIG_PARSER,
 };
 use anyhow::{Context, Result};
 use gtk4::prelude::{DisplayExt, ListModelExt};
 use std::{
     collections::{HashMap, HashSet},
+    ffi::OsString,
     io::Write,
     marker::PhantomData,
     os::unix::io::AsRawFd,
     path::Path,
     sync::{atomic::Ordering, Arc},
-    ffi::OsString,
 };
 use tokio::sync::mpsc::*;
 
@@ -30,7 +31,7 @@ pub fn initialize_server<B: DisplayBackend>(
     })?;
 
     log::info!("Loading paths: {}", &paths);
-    
+
     EWWII_CONFIG_PARSER.with(|p| {
         let config_parser = ewwii_rhai_impl::parser::RhaiParseConfig::new();
         *p.borrow_mut() = Some(config_parser);
@@ -122,12 +123,8 @@ pub fn initialize_server<B: DisplayBackend>(
     connect_monitor_added(ui_send.clone());
 
     let config_ext = {
-        EWWII_CONFIG_PARSER.with(|p| {
-            p.borrow()
-                .as_ref()
-                .expect("parser not initialized")
-                .extension()
-        })
+        EWWII_CONFIG_PARSER
+            .with(|p| p.borrow().as_ref().expect("parser not initialized").extension())
     };
 
     // initialize all the handlers and tasks running asyncronously
@@ -211,8 +208,8 @@ fn init_async_part(
                 let filewatch_join_handle = {
                     let ui_send = ui_send.clone();
                     let paths = paths.clone();
-                    tokio::spawn(async move { 
-                        run_filewatch(paths.config_dir, ui_send, config_ext).await 
+                    tokio::spawn(async move {
+                        run_filewatch(paths.config_dir, ui_send, config_ext).await
                     })
                 };
 

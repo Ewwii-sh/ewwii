@@ -1,10 +1,10 @@
 use super::{api::VarWatcherAPI, SHUTDOWN_REGISTRY};
+use ewwii_shared_utils::prop::PropertyMap;
+use ewwii_shared_utils::prop_utils::*;
 use nix::{
     sys::signal,
     unistd::{setpgid, Pid},
 };
-use ewwii_shared_utils::prop::PropertyMap;
-use ewwii_shared_utils::prop_utils::*;
 use std::process::Stdio;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;

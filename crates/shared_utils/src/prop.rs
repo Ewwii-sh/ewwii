@@ -1,5 +1,5 @@
-use crate::variables::{GlobalVar, GlobalCompare};
-use serde::{Serialize, Deserialize};
+use crate::variables::{GlobalCompare, GlobalVar};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
@@ -56,20 +56,32 @@ pub enum Property {
 #[derive(Debug, Clone, Serialize, Deserialize, Hash)]
 pub struct Callback {
     pub name: String,
-    pub handle: Option<u64>, 
+    pub handle: Option<u64>,
 }
 
 impl Property {
     pub fn from_dynamic(d: rhai::Dynamic) -> Self {
         // Handle Basic Types
-        if d.is_unit() { return Self::None; }
-        if d.is_bool() { return Self::Bool(d.as_bool().unwrap()); }
-        if d.is_int() { return Self::Int(d.as_int().unwrap()); }
-        if d.is_float() { return Self::Float(d.as_float().unwrap()); }
-        
+        if d.is_unit() {
+            return Self::None;
+        }
+        if d.is_bool() {
+            return Self::Bool(d.as_bool().unwrap());
+        }
+        if d.is_int() {
+            return Self::Int(d.as_int().unwrap());
+        }
+        if d.is_float() {
+            return Self::Float(d.as_float().unwrap());
+        }
+
         // Handle Specialized Strings
-        if d.is_char() { return Self::String(d.as_char().unwrap().to_string()); }
-        if d.is_string() { return Self::String(d.into_string().unwrap_or_default()); }
+        if d.is_char() {
+            return Self::String(d.as_char().unwrap().to_string());
+        }
+        if d.is_string() {
+            return Self::String(d.into_string().unwrap_or_default());
+        }
 
         // Handle Recursive Arrays
         if let Ok(arr) = d.clone().into_array() {
@@ -84,17 +96,14 @@ impl Property {
 
         // Handle Function Pointers
         if let Some(fn_ptr) = d.clone().try_cast::<rhai::FnPtr>() {
-            return Self::Callback(Callback {
-                name: fn_ptr.fn_name().to_string(),
-                handle: None, 
-            });
+            return Self::Callback(Callback { name: fn_ptr.fn_name().to_string(), handle: None });
         }
 
         // Handle Variants
         if let Some(var) = d.clone().try_cast::<GlobalVar>() {
             return Self::GlobalVar(Box::new(var));
         }
-        
+
         if let Some(comp) = d.clone().try_cast::<GlobalCompare>() {
             return Self::GlobalCompare(Box::new(comp));
         }
@@ -119,18 +128,26 @@ impl Property {
                 }
                 rhai_map.into()
             }
-            _ => rhai::Dynamic::UNIT, 
+            _ => rhai::Dynamic::UNIT,
         }
     }
 
     /// Returns the bool value if the property is a Bool
     pub fn as_bool(&self) -> Option<bool> {
-        if let Self::Bool(b) = self { Some(*b) } else { None }
+        if let Self::Bool(b) = self {
+            Some(*b)
+        } else {
+            None
+        }
     }
 
     /// Returns the i64 value if the property is an Int
     pub fn as_int(&self) -> Option<i64> {
-        if let Self::Int(i) = self { Some(*i) } else { None }
+        if let Self::Int(i) = self {
+            Some(*i)
+        } else {
+            None
+        }
     }
 
     /// Returns the f64 value if the property is a Float
@@ -144,32 +161,56 @@ impl Property {
 
     /// Returns a reference to the String if the property is a String
     pub fn as_str(&self) -> Option<&str> {
-        if let Self::String(s) = self { Some(s.as_str()) } else { None }
+        if let Self::String(s) = self {
+            Some(s.as_str())
+        } else {
+            None
+        }
     }
 
     /// Returns a reference to the Vec if the property is an Array
     pub fn as_array(&self) -> Option<&[Property]> {
-        if let Self::Array(a) = self { Some(a.as_slice()) } else { None }
+        if let Self::Array(a) = self {
+            Some(a.as_slice())
+        } else {
+            None
+        }
     }
 
     /// Returns a reference to the PropertyMap if the property is a Map
     pub fn as_map(&self) -> Option<&PropertyMap> {
-        if let Self::Map(m) = self { Some(m) } else { None }
+        if let Self::Map(m) = self {
+            Some(m)
+        } else {
+            None
+        }
     }
 
     /// Returns a reference to the Callback if the property is a Callback
     pub fn as_callback(&self) -> Option<&Callback> {
-        if let Self::Callback(c) = self { Some(c) } else { None }
+        if let Self::Callback(c) = self {
+            Some(c)
+        } else {
+            None
+        }
     }
 
     /// Returns a reference to the GlobalVar (unboxes automatically)
     pub fn as_global_var(&self) -> Option<&GlobalVar> {
-        if let Self::GlobalVar(v) = self { Some(v.as_ref()) } else { None }
+        if let Self::GlobalVar(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
     }
 
     /// Returns a reference to the GlobalCompare (unboxes automatically)
     pub fn as_global_compare(&self) -> Option<&GlobalCompare> {
-        if let Self::GlobalCompare(c) = self { Some(c.as_ref()) } else { None }
+        if let Self::GlobalCompare(c) = self {
+            Some(c.as_ref())
+        } else {
+            None
+        }
     }
 }
 

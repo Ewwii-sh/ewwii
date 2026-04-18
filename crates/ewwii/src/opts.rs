@@ -200,7 +200,7 @@ pub enum ActionWithServer {
     Update {
         /// Format: foo="val1" baz="val2"
         #[arg(required = true, value_parser = parse_inject_var_map)]
-        mappings: HashMap<String, String>
+        mappings: HashMap<String, String>,
     },
 
     /// Call rhai functions.

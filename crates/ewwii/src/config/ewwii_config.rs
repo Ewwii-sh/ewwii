@@ -5,19 +5,19 @@ use crate::{
     window::backend_window_options::BackendWindowOptionsDef,
 };
 use anyhow::{bail, Context, Result};
-use std::collections::HashMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
+use ewwii_plugin_api::CustomConfigEngine;
 use ewwii_rhai_impl::parser::RhaiParseConfig;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::PropertyMap;
-use ewwii_plugin_api::CustomConfigEngine;
 use rhai::AST;
 
 pub enum ConfigEngine {
     Default(RhaiParseConfig),
-    Custom(CustomConfigEngine)
+    Custom(CustomConfigEngine),
 }
 
 impl ConfigEngine {
@@ -34,9 +34,7 @@ thread_local! {
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_ewwii_paths(
-    ewwii_paths: &EwwiiPaths,
-) -> Result<EwwiiConfig> {
+pub fn read_from_ewwii_paths(ewwii_paths: &EwwiiPaths) -> Result<EwwiiConfig> {
     EwwiiConfig::read_from_dir(ewwii_paths)
 }
 
@@ -61,8 +59,7 @@ impl EwwiiConfig {
     pub fn read_from_dir(ewwii_paths: &EwwiiPaths) -> Result<Self> {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
-            let config_parser = parser.as_mut()
-                .context("Config parser not initialized")?;
+            let config_parser = parser.as_mut().context("Config parser not initialized")?;
 
             let mainfile = config_parser.main_file();
             let configlang_path = ewwii_paths.get_configlang_path(&mainfile);
@@ -75,10 +72,7 @@ impl EwwiiConfig {
             let configlang_path_opt_str = configlang_path.to_str();
 
             // get the rhai widget tree
-            let compiled_ast = config_parser.compile_code(
-                &config_code, 
-                configlang_path_opt_str
-            )?;
+            let compiled_ast = config_parser.compile_code(&config_code, configlang_path_opt_str)?;
 
             config_parser.register_poll_listen_globals(&config_code)?;
 

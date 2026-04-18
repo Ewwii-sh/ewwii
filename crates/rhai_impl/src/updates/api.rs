@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
-use tokio::sync::{watch, oneshot};
+use tokio::sync::{oneshot, watch};
 
 pub static GLOBAL_VAR_STORE: Lazy<Arc<RwLock<HashMap<String, String>>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
@@ -8,8 +8,9 @@ pub static GLOBAL_VAR_STORE: Lazy<Arc<RwLock<HashMap<String, String>>>> =
 pub static VAR_WATCHERS: Lazy<Arc<RwLock<HashMap<String, watch::Sender<String>>>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
-static PENDING_SUBSCRIBERS: Lazy<RwLock<HashMap<String, Vec<oneshot::Sender<watch::Receiver<String>>>>>> = 
-    Lazy::new(|| RwLock::new(HashMap::new()));
+static PENDING_SUBSCRIBERS: Lazy<
+    RwLock<HashMap<String, Vec<oneshot::Sender<watch::Receiver<String>>>>>,
+> = Lazy::new(|| RwLock::new(HashMap::new()));
 
 pub struct VarWatcherAPI;
 
@@ -43,12 +44,7 @@ impl VarWatcherAPI {
         }
 
         let (tx, rx) = oneshot::channel();
-        PENDING_SUBSCRIBERS
-            .write()
-            .unwrap()
-            .entry(var_name.to_string())
-            .or_default()
-            .push(tx);
+        PENDING_SUBSCRIBERS.write().unwrap().entry(var_name.to_string()).or_default().push(tx);
 
         rx.await.unwrap()
     }

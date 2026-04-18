@@ -5,11 +5,11 @@ use crate::{
     module_resolver::SimpleFileResolver,
     providers::register_all_providers,
 };
+use anyhow::{anyhow, Result};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Property;
-use anyhow::{anyhow, Result};
-use rhai::{Dynamic, Engine, ImmutableString, Module, Scope, AST, FuncArgs};
 use ewwii_shared_utils::variables::GlobalVar;
+use rhai::{Dynamic, Engine, FuncArgs, ImmutableString, Module, Scope, AST};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -174,11 +174,11 @@ impl RhaiParseConfig {
     }
 
     pub fn call_callback<T>(
-        &self, 
+        &self,
         handle: u64,
-        args: impl FuncArgs
+        args: impl FuncArgs,
     ) -> Result<T, Box<rhai::EvalAltResult>>
-    where 
+    where
         T: rhai::Variant + Clone,
     {
         let fnptr = crate::callback::get_callback(handle)

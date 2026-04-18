@@ -1,18 +1,18 @@
 //! # ewwii_plugin_api
 //!
-//! `ewwii_plugin_api` provides the core traits, types, and abstractions 
+//! `ewwii_plugin_api` provides the core traits, types, and abstractions
 //! that bridge the **ewwii** host and its plugins.
 //!
-//! This crate provides a safe and easy plugin development API 
+//! This crate provides a safe and easy plugin development API
 //! through a simple and flexible interface for cross-boundary communication.
 //!
 //! ## Usage
-//! 
-//! There are two ways to define a plugin: the **Recommended Macro** for 
+//!
+//! There are two ways to define a plugin: the **Recommended Macro** for
 //! standard plugins, and the **Manual Implementation** for full control.
 //!
 //! ### 1. Recommended: Using `auto_plugin!`
-//! For most use cases, the macro handles the boilerplate of exporting 
+//! For most use cases, the macro handles the boilerplate of exporting
 //! symbols and implementing traits.
 //!
 //! ```rust
@@ -29,7 +29,7 @@
 //! ```
 //!
 //! ### 2. Advanced: Manual Implementation
-//! Use this approach if your plugin needs to maintain internal state, 
+//! Use this approach if your plugin needs to maintain internal state,
 //! implement additional traits, or manage complex lifetimes.
 //!
 //! ```rust
@@ -54,8 +54,8 @@
 //! export_plugin!(MyPlugin);
 //! ```
 
-mod export_macros;
 mod bridge;
+mod export_macros;
 
 pub mod example;
 pub mod proxy;
@@ -78,7 +78,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// ```rust
     /// use ewwii_plugin_api::{
-    ///     EwwiiAPI, Plugin, 
+    ///     EwwiiAPI, Plugin,
     ///     PluginValue, PluginInfo,
     ///     NativeFn, NativeFnExt
     /// };
@@ -89,7 +89,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     fn metadata(&self) -> PluginInfo {
     ///         PluginInfo::new("test.example.register", "1.0")
     ///     }
-    /// 
+    ///
     ///     fn init(&self, host: &dyn EwwiiAPI) {
     ///         host.register_function(
     ///             "my_func",
@@ -111,11 +111,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```js
     /// print(my_func(["param1", "param2"]));
     /// ```
-    fn register_function(
-        &self,
-        name: &str,
-        handler: NativeFn,
-    ) -> Result<PluginValue, PluginError>;
+    fn register_function(&self, name: &str, handler: NativeFn) -> Result<PluginValue, PluginError>;
 
     // fn register_config(
     //     &self,
@@ -150,7 +146,7 @@ pub trait EwwiiAPI: Send + Sync {
 /// export_plugin!(MyStruct);
 /// ```
 pub trait Plugin: Send + Sync {
-/// Returns the unique identity and version of the plugin.
+    /// Returns the unique identity and version of the plugin.
     fn metadata(&self) -> PluginInfo;
 
     /// Function ran by host to startup plugin.

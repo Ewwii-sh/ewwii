@@ -101,7 +101,9 @@ impl EwwiiPaths {
         };
 
         for entry in discovered_entries {
-            let Ok(entry) = entry else { continue; };
+            let Ok(entry) = entry else {
+                continue;
+            };
             let path = entry.path();
 
             if !path.is_file() {
@@ -128,7 +130,6 @@ impl std::fmt::Display for EwwiiPaths {
         )
     }
 }
-
 
 pub fn code_from_file<P: AsRef<Path>>(file_path: P) -> Result<String> {
     Ok(std::fs::read_to_string(&file_path)

@@ -1,6 +1,6 @@
 use crate::config::EWWII_CONFIG_PARSER;
-use ewwii_plugin_api::{PluginValue, PluginError};
 use ewwii_plugin_api::proxy::PluginRequest;
+use ewwii_plugin_api::{PluginError, PluginValue};
 use once_cell::sync::Lazy;
 use std::sync::RwLock;
 
@@ -10,9 +10,7 @@ pub struct ActivePlugin {
     pub version: String,
 }
 
-pub static ACTIVE_PLUGINS: Lazy<RwLock<Vec<ActivePlugin>>> = Lazy::new(|| {
-    RwLock::new(Vec::new())
-});
+pub static ACTIVE_PLUGINS: Lazy<RwLock<Vec<ActivePlugin>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
 fn dynamic_to_plugin_value(any: rhai::Dynamic) -> PluginValue {
     if any.is_unit() {
@@ -33,7 +31,7 @@ fn dynamic_to_plugin_value(any: rhai::Dynamic) -> PluginValue {
     if let Some(v) = any.clone().try_cast::<rhai::Array>() {
         return PluginValue::Array(v.into_iter().map(dynamic_to_plugin_value).collect());
     }
-    
+
     PluginValue::Null
 }
 
@@ -51,21 +49,18 @@ fn plugin_value_to_dynamic(val: PluginValue) -> rhai::Dynamic {
     }
 }
 
-fn trigger_plugin_callback(
-    plugin_id: &str, 
-    callback_id: u64, 
-    args: rhai::Array,
-) -> PluginValue {
+fn trigger_plugin_callback(plugin_id: &str, callback_id: u64, args: rhai::Array) -> PluginValue {
     let plugins = ACTIVE_PLUGINS.read().unwrap();
-    
+
     if let Some(plugin) = plugins.iter().find(|p| p.id == plugin_id) {
         let plugin_args: Vec<PluginValue> = args.into_iter().map(dynamic_to_plugin_value).collect();
         let arg_bytes = bincode::serialize(&plugin_args).unwrap_or_default();
 
         unsafe {
-            let func: libloading::Symbol<unsafe extern "C" fn(u64, *const u8, usize, *mut usize) -> *mut u8> = 
-                plugin.library.get(b"plugin_callback_handler").unwrap();
-            
+            let func: libloading::Symbol<
+                unsafe extern "C" fn(u64, *const u8, usize, *mut usize) -> *mut u8,
+            > = plugin.library.get(b"plugin_callback_handler").unwrap();
+
             let mut res_len: usize = 0;
             let res_ptr = func(callback_id, arg_bytes.as_ptr(), arg_bytes.len(), &mut res_len);
 
@@ -77,7 +72,9 @@ fn trigger_plugin_callback(
             let result: PluginValue = bincode::deserialize(res_slice).unwrap_or(PluginValue::Null);
 
             // cleanup
-            if let Ok(free_fn) = plugin.library.get::<unsafe extern "C" fn(*mut u8, usize)>(b"plugin_free_buffer") {
+            if let Ok(free_fn) =
+                plugin.library.get::<unsafe extern "C" fn(*mut u8, usize)>(b"plugin_free_buffer")
+            {
                 free_fn(res_ptr, res_len);
             }
 
@@ -91,9 +88,7 @@ fn trigger_plugin_callback(
 pub(crate) struct HostImpl;
 
 impl HostImpl {
-    pub fn handle_request(&self, request: PluginRequest) 
-        -> Result<PluginValue, PluginError> 
-    {
+    pub fn handle_request(&self, request: PluginRequest) -> Result<PluginValue, PluginError> {
         match request {
             PluginRequest::Log((id, msg)) => {
                 log::info!("[{}] {}", id, msg);
@@ -109,11 +104,15 @@ impl HostImpl {
             }
             PluginRequest::RegisterFn { id, name, callback_id } => {
                 if name.trim().is_empty() {
-                    return Err(PluginError::RegistrationError("Function name cannot be empty".into()));
+                    return Err(PluginError::RegistrationError(
+                        "Function name cannot be empty".into(),
+                    ));
                 }
 
                 if name.contains(' ') {
-                    return Err(PluginError::RegistrationError("Function names cannot contain spaces".into()));
+                    return Err(PluginError::RegistrationError(
+                        "Function names cannot contain spaces".into(),
+                    ));
                 }
 
                 self.register_function_internal(id, name, callback_id);
@@ -122,37 +121,27 @@ impl HostImpl {
         }
     }
 
-    pub fn register_function_internal(
-        &self, 
-        plugin_id: String, 
-        name: String, 
-        callback_id: u64
-    ) {
+    pub fn register_function_internal(&self, plugin_id: String, name: String, callback_id: u64) {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
             let parser_ref = parser.as_mut().unwrap();
 
-            parser_ref.engine.register_fn(&name, move |args: rhai::Array| 
-                -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> 
-            {
-                let result = trigger_plugin_callback(&plugin_id, callback_id, args);
+            parser_ref.engine.register_fn(
+                &name,
+                move |args: rhai::Array| -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> {
+                    let result = trigger_plugin_callback(&plugin_id, callback_id, args);
 
-                Ok(plugin_value_to_dynamic(result))
-            });
+                    Ok(plugin_value_to_dynamic(result))
+                },
+            );
         });
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ffi_gateway(
-    ptr: *const u8, 
-    len: usize,
-    output_len: *mut usize
-) -> *mut u8 {
+pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize, output_len: *mut usize) -> *mut u8 {
     // SAFETY: Convert the raw pointer/len into a Rust slice
-    let bytes = unsafe { 
-        std::slice::from_raw_parts(ptr, len) 
-    };
+    let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
 
     let request: PluginRequest = match bincode::deserialize(bytes) {
         Ok(req) => req,
@@ -177,6 +166,8 @@ pub extern "C" fn ffi_gateway(
 #[unsafe(no_mangle)]
 pub extern "C" fn host_free_buffer(ptr: *mut u8, len: usize) {
     if !ptr.is_null() {
-        unsafe { let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len)); }
+        unsafe {
+            let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));
+        }
     }
 }
