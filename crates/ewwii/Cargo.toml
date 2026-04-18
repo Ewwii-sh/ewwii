@@ -5,7 +5,7 @@ authors = ["byson94 <byson94wastaken@gmail.com>"]
 description = "Widgets for everyone made better!"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/byson94/ewwii"
-homepage = "https://github.com/byson94/ewwii"
+homepage = "https://ewwii-sh.github.io/"
 edition = "2021"
 
 
