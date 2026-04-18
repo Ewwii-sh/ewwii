@@ -60,8 +60,8 @@ mod export_macros;
 pub mod example;
 pub mod proxy;
 
-pub use ewwii_shared_utils as shared_utils;
 pub use bridge::*;
+pub use ewwii_shared_utils as shared_utils;
 
 /// The shared trait defining the Ewwii plugin API
 pub trait EwwiiAPI: Send + Sync {
@@ -116,9 +116,9 @@ pub trait EwwiiAPI: Send + Sync {
 
     // TODO: Add doc comment here :D
     fn register_config_engine(
-        &self, 
-        info: ConfigInfo, 
-        parser: ParseFn
+        &self,
+        info: ConfigInfo,
+        parser: ParseFn,
     ) -> Result<PluginValue, PluginError>;
 }
 

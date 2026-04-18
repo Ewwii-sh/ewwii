@@ -1,9 +1,9 @@
 //! This module provides data structures and enumrates that are used
 //! as a bridge between the communication of both the plugin and the host.
 
+use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use ewwii_shared_utils::ast::WidgetNode;
 
 // === Shared Implementation === //
 

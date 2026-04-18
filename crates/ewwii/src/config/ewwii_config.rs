@@ -1,13 +1,12 @@
 use crate::{
-    plugin::CustomConfigEngine,
-    paths::EwwiiPaths,
+    paths::EwwiiPaths, plugin::CustomConfigEngine,
     window::backend_window_options::BackendWindowOptionsDef,
 };
 use anyhow::{bail, Context, Result};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 use ewwii_rhai_impl::parser::RhaiParseConfig;
 use ewwii_shared_utils::ast::WidgetNode;
@@ -34,9 +33,9 @@ impl ConfigEngine {
     }
 
     pub fn parse_source(
-        &mut self, 
-        source: String, 
-        config_path: PathBuf
+        &mut self,
+        source: String,
+        config_path: PathBuf,
     ) -> Result<WidgetNode, String> {
         match self {
             Self::Default(d) => parse_source(d, source, config_path),
@@ -52,16 +51,12 @@ fn parse_source(
     config_path: PathBuf,
 ) -> Result<WidgetNode, String> {
     let configlang_path_opt_str = config_path.to_str();
-    let compiled_ast = config_parser.compile_code(&source, configlang_path_opt_str)
+    let compiled_ast =
+        config_parser.compile_code(&source, configlang_path_opt_str).map_err(|e| e.to_string())?;
+    config_parser.register_poll_listen_globals(&source).map_err(|e| e.to_string())?;
+    let node = config_parser
+        .eval_code_with(&source, None, Some(&compiled_ast), configlang_path_opt_str)
         .map_err(|e| e.to_string())?;
-    config_parser.register_poll_listen_globals(&source)
-        .map_err(|e| e.to_string())?;
-    let node = config_parser.eval_code_with(
-        &source,
-        None,
-        Some(&compiled_ast),
-        configlang_path_opt_str,
-    ).map_err(|e| e.to_string())?;
     Ok(node)
 }
 
@@ -109,7 +104,8 @@ impl EwwiiConfig {
             let config_code = crate::paths::code_from_file(&configlang_path)?;
 
             // get the widget tree
-            let config_tree = config_parser.parse_source(config_code, configlang_path)
+            let config_tree = config_parser
+                .parse_source(config_code, configlang_path)
                 .map_err(|e| anyhow::anyhow!(e))?;
 
             let mut window_definitions = HashMap::new();
@@ -131,10 +127,7 @@ impl EwwiiConfig {
                 bail!("Expected root node to be `Enter`, but got something else.");
             }
 
-            Ok(EwwiiConfig {
-                windows: window_definitions,
-                root_node: Some(Rc::new(config_tree)),
-            })
+            Ok(EwwiiConfig { windows: window_definitions, root_node: Some(Rc::new(config_tree)) })
         })
     }
 
