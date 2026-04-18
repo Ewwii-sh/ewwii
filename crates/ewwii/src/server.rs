@@ -1,7 +1,7 @@
 use crate::{
     app::{self, App, DaemonCommand},
     config,
-    config::ewwii_config::{EWWII_CONFIG_PARSER, ConfigEngine},
+    config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER},
     daemon_response,
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,

@@ -1,5 +1,5 @@
 use crate::{
-    config::ewwii_config::{EWWII_CONFIG_PARSER, ConfigEngine},
+    config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER},
     daemon_response::DaemonResponseSender,
     display_backend::DisplayBackend,
     error_handling_ctx,
@@ -724,7 +724,7 @@ impl<B: DisplayBackend> App<B> {
                         rhai.call_rhai_fn(&fn_call, None)?;
                     }
                     Ok(())
-                },
+                }
                 ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
                     "Calling rhai functions is only supported with the Rhai config engine"
                 )),

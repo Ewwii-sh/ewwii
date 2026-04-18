@@ -1,11 +1,11 @@
 //! This module provides plugin requests and host proxy
 //! that are used to redirect API calls to host after serialization
 
-use crate::{EwwiiAPI, NativeFn, ParseFn, PluginError, PluginValue, ConfigInfo};
+use crate::{ConfigInfo, EwwiiAPI, NativeFn, ParseFn, PluginError, PluginValue};
+use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
-use ewwii_shared_utils::ast::WidgetNode;
 
 /// Represents the different types of callbacks that can be registered by a plugin.
 pub enum CallbackHandler {
@@ -38,7 +38,7 @@ pub enum PluginRequest {
 
     // Complex API
     RegisterFn { id: String, name: String, callback_id: u64 },
-    RegisterConfigEngine { id: String, extension: String, main_file: String, callback_id: u64 }
+    RegisterConfigEngine { id: String, extension: String, main_file: String, callback_id: u64 },
 }
 
 // This is provided on the host side
@@ -64,13 +64,13 @@ pub extern "C" fn plugin_callback_handler(
             bincode::serialize(&CallbackResponse::PluginValue(result)).unwrap_or_default()
         }
         Some(CallbackHandler::ParseFn(f)) => {
-            let (source, path): (String, String) = 
-                bincode::deserialize(bytes).unwrap_or_default();
+            let (source, path): (String, String) = bincode::deserialize(bytes).unwrap_or_default();
             match f(&source, &path) {
-                Ok(node) => bincode::serialize(&CallbackResponse::WidgetNode(node)).unwrap_or_default(),
-                Err(e) => bincode::serialize(
-                    &CallbackResponse::Error(PluginError::ParseError(e))
-                ).unwrap_or_default(),
+                Ok(node) => {
+                    bincode::serialize(&CallbackResponse::WidgetNode(node)).unwrap_or_default()
+                }
+                Err(e) => bincode::serialize(&CallbackResponse::Error(PluginError::ParseError(e)))
+                    .unwrap_or_default(),
             }
         }
         None => return std::ptr::null_mut(),
@@ -169,9 +169,9 @@ impl EwwiiAPI for HostProxy {
     }
 
     fn register_config_engine(
-        &self, 
-        info: ConfigInfo, 
-        parser: ParseFn
+        &self,
+        info: ConfigInfo,
+        parser: ParseFn,
     ) -> Result<PluginValue, PluginError> {
         // Register id
         let id = rand::random::<u64>();

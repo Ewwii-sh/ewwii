@@ -1,4 +1,4 @@
-use crate::config::ewwii_config::{EWWII_CONFIG_PARSER, ConfigEngine};
+use crate::config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use ewwii_rhai_impl::updates::api::VarWatcherAPI;
 use ewwii_rhai_impl::updates::SHUTDOWN_REGISTRY;
 use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
@@ -110,7 +110,6 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
                             .into_iter()
                             .map(|a| a.into_dynamic())
                             .collect();
-                            
                         Some(
                             match parser {
                                 ConfigEngine::Default(rhai) => {

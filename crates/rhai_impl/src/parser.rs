@@ -136,11 +136,11 @@ impl RhaiParseConfig {
     pub fn call_rhai_fn(&self, expr: &str, scope: Option<&mut Scope>) -> Result<()> {
         EWWII_CONFIG_AST.with(|ast_cell| {
             let ast_ref = ast_cell.borrow();
-            let ast = ast_ref.as_ref()
-                .ok_or_else(|| anyhow::anyhow!("AST not initialized"))?;
+            let ast = ast_ref.as_ref().ok_or_else(|| anyhow::anyhow!("AST not initialized"))?;
 
-            let (fn_name, args_str) =
-                expr.split_once('(').ok_or_else(|| anyhow::anyhow!("Invalid expression: {}", expr))?;
+            let (fn_name, args_str) = expr
+                .split_once('(')
+                .ok_or_else(|| anyhow::anyhow!("Invalid expression: {}", expr))?;
             let fn_name = fn_name.trim();
             let args_str = args_str.trim_end_matches(')');
 

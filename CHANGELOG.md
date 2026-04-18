@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Improved to and fro communication between plugin and host.
 - Safe and FFI compatible data transfer between plugin and host.
+- Rhai function registeration plugin API.
+- Config engine replacement plugin API.
 
 ## Changed
 

@@ -1,10 +1,10 @@
-use crate::config::{EWWII_CONFIG_PARSER, ConfigEngine};
-use ewwii_plugin_api::proxy::{PluginRequest, CallbackResponse};
+use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
+use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{PluginError, PluginValue};
 use ewwii_shared_utils::ast::WidgetNode;
 use once_cell::sync::Lazy;
-use std::sync::RwLock;
 use std::path::PathBuf;
+use std::sync::RwLock;
 
 pub struct ActivePlugin {
     pub library: libloading::Library,
@@ -81,7 +81,9 @@ fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) ->
 }
 
 fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: rhai::Array) -> PluginValue {
-    let arg_bytes = bincode::serialize(&args.into_iter().map(dynamic_to_plugin_value).collect::<Vec<_>>()).unwrap_or_default();
+    let arg_bytes =
+        bincode::serialize(&args.into_iter().map(dynamic_to_plugin_value).collect::<Vec<_>>())
+            .unwrap_or_default();
     let res = call_plugin_handler(plugin_id, callback_id, arg_bytes).unwrap_or_default();
     bincode::deserialize::<CallbackResponse>(&res)
         .ok()
@@ -90,8 +92,8 @@ fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: rhai::Array
 }
 
 fn trigger_plugin_config_parse(
-    plugin_id: &str, 
-    callback_id: u64, 
+    plugin_id: &str,
+    callback_id: u64,
     source: &str,
     config_path: &str,
 ) -> Result<WidgetNode, PluginError> {
@@ -121,18 +123,10 @@ impl CustomConfigEngine {
         self.main_file.clone()
     }
 
-    pub fn parse_source(
-        &self, 
-        source: String, 
-        config_path: PathBuf
-    ) -> Result<WidgetNode, String> {
+    pub fn parse_source(&self, source: String, config_path: PathBuf) -> Result<WidgetNode, String> {
         let path_str = config_path.to_str().unwrap_or("<unknown>");
-        trigger_plugin_config_parse(
-            &self.id,
-            self.callback_id,
-            &source,
-            path_str,
-        ).map_err(|e| e.to_string())
+        trigger_plugin_config_parse(&self.id, self.callback_id, &source, path_str)
+            .map_err(|e| e.to_string())
     }
 }
 
@@ -181,27 +175,22 @@ impl HostImpl {
                     ));
                 }
 
-                let custom_engine = CustomConfigEngine {
-                    id,
-                    extension, 
-                    main_file,
-                    callback_id,
-                };
+                let custom_engine = CustomConfigEngine { id, extension, main_file, callback_id };
 
                 EWWII_CONFIG_PARSER.with(|p| {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
                 });
-                
+
                 Ok(PluginValue::Null)
             }
         }
     }
 
     pub fn register_function_internal(
-        &self, 
-        plugin_id: String, 
-        name: String, 
-        callback_id: u64
+        &self,
+        plugin_id: String,
+        name: String,
+        callback_id: u64,
     ) -> Result<PluginValue, PluginError> {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
