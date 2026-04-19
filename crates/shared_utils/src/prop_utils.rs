@@ -392,7 +392,7 @@ mod tests {
     #[test]
     fn i32_prop_from_i64_in_range() {
         let mut map = PropertyMap::new();
-        map.insert("val".into(), rhai::Dynamic::from(100i64));
+        map.insert("val", Property::Int(100));
         let result = get_i32_prop(&map, "val", None);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().initial_value(), 100i32);
@@ -401,7 +401,7 @@ mod tests {
     #[test]
     fn i32_prop_from_i64_out_of_range() {
         let mut map = PropertyMap::new();
-        map.insert("val".into(), rhai::Dynamic::from(i32::MAX as i64 + 1));
+        map.insert("val", Property::Int(i32::MAX as i64 + 1));
         let result = get_i32_prop(&map, "val", None);
         assert!(result.is_err());
     }
@@ -409,7 +409,7 @@ mod tests {
     #[test]
     fn i32_prop_from_numeric_string() {
         let mut map = PropertyMap::new();
-        map.insert("val".into(), rhai::Dynamic::from("42".to_string()));
+        map.insert("val", Property::String("42".to_string()));
         let result = get_i32_prop(&map, "val", None);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().initial_value(), 42i32);
@@ -418,7 +418,7 @@ mod tests {
     #[test]
     fn i32_prop_from_non_numeric_string_errors() {
         let mut map = PropertyMap::new();
-        map.insert("val".into(), rhai::Dynamic::from("hello".to_string()));
+        map.insert("val", Property::String("hello".to_string()));
         let result = get_i32_prop(&map, "val", None);
         assert!(result.is_err());
     }
@@ -442,7 +442,7 @@ mod tests {
     #[test]
     fn f64_prop_from_i64_coerces() {
         let mut map = PropertyMap::new();
-        map.insert("val".into(), rhai::Dynamic::from(3i64));
+        map.insert("val", Property::Int(3i64));
         let result = get_f64_prop(&map, "val", None);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().initial_value(), 3.0f64);
@@ -451,7 +451,7 @@ mod tests {
     #[test]
     fn f64_prop_from_numeric_string() {
         let mut map = PropertyMap::new();
-        map.insert("val".into(), rhai::Dynamic::from("1.5".to_string()));
+        map.insert("val", Property::String("1.5".to_string()));
         let result = get_f64_prop(&map, "val", None);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().initial_value(), 1.5f64);

@@ -69,7 +69,7 @@ pub fn hash_props(props: &PropertyMap) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ewwii_shared_utils::prop::{Property, PropertyMap};
+    use crate::prop::{Property, PropertyMap};
 
     #[test]
     fn test_hash_props_and_type_consistency() {
