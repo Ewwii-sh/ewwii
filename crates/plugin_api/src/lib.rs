@@ -114,7 +114,52 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```
     fn register_function(&self, name: &str, handler: NativeFn) -> Result<PluginValue, PluginError>;
 
-    // TODO: Add doc comment here :D
+    /// Replace rhai with a custom configuration engine.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     EwwiiAPI, Plugin,
+    ///     PluginInfo, ConfigInfo,
+    ///     ParseFn, ParseFnExt,
+    ///     shared_utils::ast::WidgetNode,
+    /// };
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn metadata(&self) -> PluginInfo {
+    ///         PluginInfo::new("test.example.config", "1.0")
+    ///     }
+    ///
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         // example language: Lua
+    ///         host.register_config_engine(
+    ///             ConfigInfo {
+    ///                 extension: "lua",
+    ///                 main_file: "main.lua",
+    ///                 
+    ///             },
+    ///             ParseFn::new(|source, path| {
+    ///             // source (&str) - source code of main.lua
+    ///             // path (&str) - path to main.lua
+    ///
+    ///             // Parse Lua and construct WidgetNode
+    ///             
+    ///             Ok(WidgetNode::Tree(vec![])) // returning Dummy for now
+    ///         }));
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// This example will register a function with signature "my_func(Array)" in rhai.
+    ///
+    /// ## Example use in rhai
+    ///
+    /// ```js
+    /// print(my_func(["param1", "param2"]));
+    /// ```
     fn register_config_engine(
         &self,
         info: ConfigInfo,
