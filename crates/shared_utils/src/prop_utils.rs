@@ -124,10 +124,15 @@ pub fn get_bool_prop(
             return Ok(PropValue::Compare { comp: var.clone(), parser: parse_bool });
         }
 
-        value
-            .as_bool()
-            .map(PropValue::Static)
-            .ok_or_else(|| anyhow!("Expected property `{}` to be a bool", key))
+        if let Some(v) = value.as_bool() {
+            Ok(PropValue::Static(v))
+        } else if let Some(s) = value.as_str() {
+            s.parse::<bool>()
+                .map(PropValue::Static)
+                .map_err(|_| anyhow!("Expected property `{}` to be boolean or bollean string", key))
+        } else {
+            Err(anyhow!("Expected property `{}` to be boolean or bollean string", key))
+        }
     } else {
         default
             .map(PropValue::Static)
