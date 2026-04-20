@@ -46,6 +46,11 @@ macro_rules! auto_plugin {
 macro_rules! export_plugin {
     ($plugin_struct:ty) => {
         #[no_mangle]
+        pub extern "C" fn ewwii_api_version() -> *const u8 {
+            $crate::API_VERSION.as_ptr()
+        }
+
+        #[no_mangle]
         pub extern "C" fn ewwii_plugin_create() -> $crate::PluginInfo {
             let p = <$plugin_struct as ::std::default::Default>::default();
             $crate::Plugin::metadata(&p)

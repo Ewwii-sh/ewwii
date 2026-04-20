@@ -63,6 +63,8 @@ pub mod proxy;
 pub use bridge::*;
 pub use ewwii_shared_utils as shared_utils;
 
+pub const API_VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "\0");
+
 /// The shared trait defining the Ewwii plugin API
 pub trait EwwiiAPI: Send + Sync {
     // == General Stuff == //
