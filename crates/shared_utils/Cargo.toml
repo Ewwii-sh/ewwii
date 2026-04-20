@@ -16,3 +16,4 @@ serde.workspace = true
 tokio.workspace = true
 ahash.workspace = true
 rand.workspace = true
+regex.workspace = true
