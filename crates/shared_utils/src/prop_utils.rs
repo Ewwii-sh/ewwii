@@ -6,10 +6,13 @@ use std::time::Duration;
 
 pub enum PropValue<T> {
     Static(T),
-    Compare { comp: GlobalCompare, parser: fn(&str) -> Option<T> },
-    Bound { 
-        var_name: String, 
-        initial: T, 
+    Compare {
+        comp: GlobalCompare,
+        parser: fn(&str) -> Option<T>,
+    },
+    Bound {
+        var_name: String,
+        initial: T,
         parser: fn(&str) -> Option<T>,
         template: Option<TemplateExpr>,
     },
@@ -32,12 +35,7 @@ where
 {
     let initial_val = var.initial.as_str().and_then(|s| parser(s)).unwrap_or(default);
 
-    PropValue::Bound { 
-        var_name: var.name, 
-        initial: initial_val, 
-        parser,
-        template: var.template,
-    }
+    PropValue::Bound { var_name: var.name, initial: initial_val, parser, template: var.template }
 }
 
 // === Typed parsers with logging ===
@@ -183,9 +181,9 @@ pub fn get_f64_prop(
                 .as_float()
                 .or_else(|| var.initial.clone().as_int().map(|v| v as f64))
                 .unwrap_or(default.unwrap_or(0.0));
-            return Ok(PropValue::Bound { 
-                var_name: var.name.clone(), 
-                initial, 
+            return Ok(PropValue::Bound {
+                var_name: var.name.clone(),
+                initial,
                 parser: parse_f64,
                 template: var.template.clone(),
             });
@@ -222,9 +220,9 @@ pub fn get_i32_prop(
         if let Some(var) = value.as_global_var() {
             let initial =
                 var.initial.clone().as_int().map(|v| v as i32).unwrap_or(default.unwrap_or(0));
-            return Ok(PropValue::Bound { 
-                var_name: var.name.clone(), 
-                initial, 
+            return Ok(PropValue::Bound {
+                var_name: var.name.clone(),
+                initial,
                 parser: parse_i32,
                 template: var.template.clone(),
             });

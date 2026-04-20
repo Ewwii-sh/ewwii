@@ -1,8 +1,8 @@
 use crate::config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use ewwii_rhai_impl::updates::api::VarWatcherAPI;
 use ewwii_rhai_impl::updates::SHUTDOWN_REGISTRY;
-use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
 use ewwii_shared_utils::template::TemplateExpr;
+use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
 use gtk4::glib;
 use tokio::sync::watch;
 
@@ -149,7 +149,8 @@ pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> 
 
 pub fn handle_template(template: TemplateExpr) -> watch::Receiver<String> {
     let watched_vars = template.collect_vars();
-    let watched_vars: Vec<String> = watched_vars.into_iter().collect::<std::collections::HashSet<_>>().into_iter().collect();
+    let watched_vars: Vec<String> =
+        watched_vars.into_iter().collect::<std::collections::HashSet<_>>().into_iter().collect();
 
     let (tx, _) = watch::channel(String::new());
     let (notify_tx, mut notify_rx) = tokio::sync::mpsc::unbounded_channel::<()>();
@@ -232,7 +233,7 @@ macro_rules! apply_property {
 
                 if let Some(tmpl) = template {
                     // quick template handling
-                    // (template can only be passed by plugins as of rn) 
+                    // (template can only be passed by plugins as of rn)
                     let mut recv = crate::property::handle_template(tmpl);
                     glib::MainContext::default().spawn_local(async move {
                         while recv.changed().await.is_ok() {
@@ -250,7 +251,9 @@ macro_rules! apply_property {
                         setter(initial);
                     }
 
-                    if let Some(mut receiver) = ewwii_rhai_impl::updates::api::VarWatcherAPI::subscribe(&var_name) {
+                    if let Some(mut receiver) =
+                        ewwii_rhai_impl::updates::api::VarWatcherAPI::subscribe(&var_name)
+                    {
                         glib::MainContext::default().spawn_local(async move {
                             while receiver.changed().await.is_ok() {
                                 let raw = receiver.borrow().clone();

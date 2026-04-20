@@ -751,6 +751,36 @@ impl<B: DisplayBackend> App<B> {
                     }
                 };
 
+                let version_symbol: Result<
+                    libloading::Symbol<unsafe extern "C" fn() -> *const u8>,
+                    _,
+                > = lib.get(b"ewwii_api_version");
+
+                match version_symbol {
+                    Ok(get_version) => {
+                        let c_str =
+                            std::ffi::CStr::from_ptr(get_version() as *const std::os::raw::c_char);
+                        let plugin_api_ver = c_str.to_str().unwrap_or("0.0.0");
+
+                        if !plugin::is_compatible(plugin_api_ver, epapi::API_VERSION) {
+                            log::error!(
+                                "Plugin {:?} rejected: API mismatch (Plugin: {}, Host: {})",
+                                plugin_path,
+                                plugin_api_ver,
+                                epapi::API_VERSION
+                            );
+                            continue;
+                        }
+                    }
+                    Err(_) => {
+                        log::error!(
+                            "Plugin {:?} rejected: No API version symbol found",
+                            plugin_path
+                        );
+                        continue;
+                    }
+                }
+
                 // Create the plugin and receive metadata
                 let create_result: Result<
                     libloading::Symbol<unsafe extern "C" fn() -> epapi::PluginInfo>,

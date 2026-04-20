@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -7,24 +7,26 @@ pub enum TemplateExpr {
     Literal(String),
     Var(String),
     Concat(Vec<TemplateExpr>),
-    IfElse {
-        condition: Box<TemplateExpr>,
-        if_true: Box<TemplateExpr>,
-        if_false: Box<TemplateExpr>,
-    },
-    BinOp {
-        op: TemplateOp,
-        left: Box<TemplateExpr>,
-        right: Box<TemplateExpr>,
-    },
+    IfElse { condition: Box<TemplateExpr>, if_true: Box<TemplateExpr>, if_false: Box<TemplateExpr> },
+    BinOp { op: TemplateOp, left: Box<TemplateExpr>, right: Box<TemplateExpr> },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash)]
 pub enum TemplateOp {
-    Add, Sub, Mul, Div,
-    Eq, NotEq, Mod,
-    Gt, Lt, Gte, Lte,
-    And, Or, Elvis,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Eq,
+    NotEq,
+    Mod,
+    Gt,
+    Lt,
+    Gte,
+    Lte,
+    And,
+    Or,
+    Elvis,
     RegexMatch,
 }
 
@@ -34,9 +36,7 @@ impl TemplateExpr {
         match self {
             TemplateExpr::Var(name) => vec![name.clone()],
             TemplateExpr::Literal(_) => vec![],
-            TemplateExpr::Concat(parts) => parts.iter()
-                .flat_map(|p| p.collect_vars())
-                .collect(),
+            TemplateExpr::Concat(parts) => parts.iter().flat_map(|p| p.collect_vars()).collect(),
             TemplateExpr::IfElse { condition, if_true, if_false } => {
                 let mut vars = condition.collect_vars();
                 vars.extend(if_true.collect_vars());
@@ -57,17 +57,14 @@ impl TemplateExpr {
             TemplateExpr::Literal(s) => Ok(s.clone()),
 
             TemplateExpr::Var(name) => {
-                vars.get(name)
-                    .cloned()
-                    .ok_or_else(|| format!("Variable not found: {}", name))
+                vars.get(name).cloned().ok_or_else(|| format!("Variable not found: {}", name))
             }
 
-            TemplateExpr::Concat(parts) => {
-                parts.iter()
-                    .map(|p| p.eval(vars))
-                    .collect::<Result<Vec<_>, _>>()
-                    .map(|parts| parts.join(""))
-            }
+            TemplateExpr::Concat(parts) => parts
+                .iter()
+                .map(|p| p.eval(vars))
+                .collect::<Result<Vec<_>, _>>()
+                .map(|parts| parts.join("")),
 
             TemplateExpr::IfElse { condition, if_true, if_false } => {
                 let cond = condition.eval_as_bool(vars)?;
@@ -101,10 +98,10 @@ impl TemplateExpr {
                             Ok(format_number(lf / rf))
                         }
                     }
-                    TemplateOp::Eq  => Ok((l == r).to_string()),
+                    TemplateOp::Eq => Ok((l == r).to_string()),
                     TemplateOp::NotEq => Ok((l != r).to_string()),
-                    TemplateOp::Gt  => eval_cmp(l, r, |a, b| a > b),
-                    TemplateOp::Lt  => eval_cmp(l, r, |a, b| a < b),
+                    TemplateOp::Gt => eval_cmp(l, r, |a, b| a > b),
+                    TemplateOp::Lt => eval_cmp(l, r, |a, b| a < b),
                     TemplateOp::Gte => eval_cmp(l, r, |a, b| a >= b),
                     TemplateOp::Lte => eval_cmp(l, r, |a, b| a <= b),
                     TemplateOp::And => {
@@ -126,7 +123,8 @@ impl TemplateExpr {
                         }
                     }
                     TemplateOp::RegexMatch => {
-                        let re = regex::Regex::new(&r).map_err(|e| format!("Invalid regex: {}", e))?;
+                        let re =
+                            regex::Regex::new(&r).map_err(|e| format!("Invalid regex: {}", e))?;
                         Ok(re.is_match(&l).to_string())
                     }
                 }
@@ -139,9 +137,10 @@ impl TemplateExpr {
         match s.as_str() {
             "true" => Ok(true),
             "false" => Ok(false),
-            _ => s.parse::<f64>()
+            _ => s
+                .parse::<f64>()
                 .map(|n| n != 0.0)
-                .map_err(|_| format!("Cannot interpret '{}' as bool", s))
+                .map_err(|_| format!("Cannot interpret '{}' as bool", s)),
         }
     }
 }

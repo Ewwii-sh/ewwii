@@ -53,6 +53,7 @@ rhai = { workspace = true, features = ["internals"] }
 shell-words.workspace = true
 # Plugin loading
 libloading = "0.8.9"
+semver = "1.0.28"
 
 [dev-dependencies]
 pretty_assertions.workspace = true

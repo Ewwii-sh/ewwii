@@ -111,29 +111,29 @@ impl BackendWindowOptionsDef {
     pub fn from_map(map: &PropertyMap) -> Result<Self> {
         // let get = |key: &str| map.get(key).cloned();
 
-        let struts = Self::get_optional(map, "reserve")?;
-        let window_type = Self::get_optional(map, "windowtype")?;
-        let focusable = Self::get_optional(map, "focusable")?;
+        let struts = Self::get_optional(map, "reserve");
+        let window_type = Self::get_optional(map, "windowtype");
+        let focusable = Self::get_optional(map, "focusable");
 
         let x11 = X11BackendWindowOptionsDef {
-            sticky: Self::get_optional(map, "sticky")?,
+            sticky: Self::get_optional(map, "sticky"),
             struts,
             window_type,
-            wm_ignore: Self::get_optional(map, "wm_ignore")?,
+            wm_ignore: Self::get_optional(map, "wm_ignore"),
         };
 
         let wayland = WlBackendWindowOptionsDef {
-            exclusive: Self::get_optional(map, "exclusive")?,
+            exclusive: Self::get_optional(map, "exclusive"),
             focusable,
-            namespace: Self::get_optional(map, "namespace")?,
-            force_normal: Self::get_optional(map, "force_normal")?,
+            namespace: Self::get_optional(map, "namespace"),
+            force_normal: Self::get_optional(map, "force_normal"),
         };
 
         Ok(Self { wayland, x11 })
     }
 
-    fn get_optional<T: TryFromProperty>(map: &PropertyMap, key: &str) -> Result<Option<T>> {
-        Ok(map.get(key).and_then(|v| T::try_from_prop(v)))
+    fn get_optional<T: TryFromProperty>(map: &PropertyMap, key: &str) -> Option<T> {
+        map.get(key).and_then(|v| T::try_from_prop(v))
     }
 }
 
