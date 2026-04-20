@@ -1,12 +1,18 @@
 use super::variables::{GlobalCompare, GlobalVar};
 use crate::prop::PropertyMap;
+use crate::template::TemplateExpr;
 use anyhow::{anyhow, Result};
 use std::time::Duration;
 
 pub enum PropValue<T> {
     Static(T),
     Compare { comp: GlobalCompare, parser: fn(&str) -> Option<T> },
-    Bound { var_name: String, initial: T, parser: fn(&str) -> Option<T> },
+    Bound { 
+        var_name: String, 
+        initial: T, 
+        parser: fn(&str) -> Option<T>,
+        template: Option<TemplateExpr>,
+    },
 }
 
 impl<T: Clone + Default> PropValue<T> {
@@ -26,7 +32,12 @@ where
 {
     let initial_val = var.initial.as_str().and_then(|s| parser(s)).unwrap_or(default);
 
-    PropValue::Bound { var_name: var.name, initial: initial_val, parser }
+    PropValue::Bound { 
+        var_name: var.name, 
+        initial: initial_val, 
+        parser,
+        template: var.template,
+    }
 }
 
 // === Typed parsers with logging ===
@@ -167,7 +178,12 @@ pub fn get_f64_prop(
                 .as_float()
                 .or_else(|| var.initial.clone().as_int().map(|v| v as f64))
                 .unwrap_or(default.unwrap_or(0.0));
-            return Ok(PropValue::Bound { var_name: var.name.clone(), initial, parser: parse_f64 });
+            return Ok(PropValue::Bound { 
+                var_name: var.name.clone(), 
+                initial, 
+                parser: parse_f64,
+                template: var.template.clone(),
+            });
         }
         if let Some(var) = value.as_global_compare() {
             return Ok(PropValue::Compare { comp: var.clone(), parser: parse_f64 });
@@ -201,7 +217,12 @@ pub fn get_i32_prop(
         if let Some(var) = value.as_global_var() {
             let initial =
                 var.initial.clone().as_int().map(|v| v as i32).unwrap_or(default.unwrap_or(0));
-            return Ok(PropValue::Bound { var_name: var.name.clone(), initial, parser: parse_i32 });
+            return Ok(PropValue::Bound { 
+                var_name: var.name.clone(), 
+                initial, 
+                parser: parse_i32,
+                template: var.template.clone(),
+            });
         }
         if let Some(var) = value.as_global_compare() {
             return Ok(PropValue::Compare { comp: var.clone(), parser: parse_i32 });
@@ -246,6 +267,7 @@ pub fn get_vec_string_prop(
                         var_name: var.name.clone(),
                         initial,
                         parser: parse_string,
+                        template: var.template.clone(),
                     })
                 } else if let Some(var) = d.as_global_compare() {
                     return Ok(PropValue::Compare { comp: var.clone(), parser: parse_string });

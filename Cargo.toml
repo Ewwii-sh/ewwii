@@ -1,6 +1,5 @@
 [workspace]
 members = ["crates/*", "tools/*"]
-exclude = ["veryimptest"]
 resolver = "2"
 
 [workspace.dependencies]
