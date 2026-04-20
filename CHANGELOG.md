@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Poll's interval detection without duration type panicing. #32
 - Large program size. #30
 - Logging issues with rhai implementation crate.
+- Property not working if its boolean string.
 
 ## Removed
 
