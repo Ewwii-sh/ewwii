@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - The Plugin API.
 - The handling of requests from plugins.
+- `show_truncated` property of label widget to true by default.
 
 ## Fixed
 
