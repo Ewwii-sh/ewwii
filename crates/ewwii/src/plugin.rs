@@ -3,23 +3,22 @@ use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{PluginError, PluginValue};
 use ewwii_shared_utils::ast::WidgetNode;
 use once_cell::sync::Lazy;
-use semver::{Version, VersionReq};
 use std::path::PathBuf;
 use std::sync::RwLock;
 
-pub fn is_compatible(plugin_api_ver: &str, host_api_ver: &str) -> bool {
-    let p_ver = Version::parse(plugin_api_ver).unwrap_or(Version::new(0, 0, 0));
+pub fn is_compatible(plugin_ver: &str, host_ver: &str) -> bool {
+    let p = semver::Version::parse(plugin_ver);
+    let h = semver::Version::parse(host_ver);
 
-    // ^ means compatible with this version
-    let requirement_str = format!("^{}", host_api_ver);
-
-    if let Ok(req) = VersionReq::parse(&requirement_str) {
-        req.matches(&p_ver)
-    } else {
-        false
+    match (p, h) {
+        (Ok(p_ver), Ok(h_ver)) => {
+            p_ver == h_ver
+        }
+        _ => {
+            false
+        }
     }
 }
-
 pub struct ActivePlugin {
     pub library: libloading::Library,
     pub id: String,
