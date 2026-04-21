@@ -11,6 +11,7 @@ use tokio::io::BufReader;
 use tokio::process::Command;
 use tokio::signal as tokio_signal;
 use tokio::sync::watch;
+use nix::libc;
 
 pub fn handle_listen(var_name: String, props: &PropertyMap, shell: String) {
     let cmd = match get_string_prop(props, "cmd", Some("")) {

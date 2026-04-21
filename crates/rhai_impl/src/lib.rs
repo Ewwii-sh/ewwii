@@ -9,4 +9,3 @@ pub mod helper;
 pub mod module_resolver;
 pub mod parser;
 pub mod providers;
-pub mod updates;

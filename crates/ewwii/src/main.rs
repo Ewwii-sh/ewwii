@@ -54,6 +54,7 @@ mod server;
 mod util;
 mod widgets;
 mod window;
+mod updates;
 mod window_arguments;
 mod window_initiator;
 

@@ -24,7 +24,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
-use ewwii_rhai_impl::updates::api::VarWatcherAPI;
+use crate::updates::api::VarWatcherAPI;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
@@ -352,7 +352,7 @@ impl<B: DisplayBackend> App<B> {
             }
             DaemonCommand::ShowState(sender) => {
                 let output =
-                    format!("{:#?}", ewwii_rhai_impl::updates::api::VarWatcherAPI::state());
+                    format!("{:#?}", crate::updates::api::VarWatcherAPI::state());
                 sender.send_success(output)?
             }
             DaemonCommand::Update { mappings, sender } => {
@@ -380,7 +380,7 @@ impl<B: DisplayBackend> App<B> {
     /// Fully stop ewwii:
     /// close all windows, kill the poll/listen state handler, quit the gtk appliaction and send the exit instruction to the lifecycle manager
     fn stop_application(&mut self) {
-        ewwii_rhai_impl::updates::kill_state_change_handler();
+        crate::updates::kill_state_change_handler();
         for (_, window) in self.open_windows.drain() {
             window.close();
         }
@@ -415,7 +415,7 @@ impl<B: DisplayBackend> App<B> {
         // stop poll/listen handlers if no windows are open
         if self.open_windows.is_empty() || self.reloading {
             log::trace!("Killing ewwii state change handler.");
-            ewwii_rhai_impl::updates::kill_state_change_handler();
+            crate::updates::kill_state_change_handler();
             VarWatcherAPI::clear_all()
         }
 
@@ -447,11 +447,11 @@ impl<B: DisplayBackend> App<B> {
 
             if self.open_windows.is_empty() || self.reloading {
                 // Start the global variables
-                let signals_vec = ewwii_rhai_impl::updates::retreive_signals(
+                let signals_vec = crate::updates::retreive_signals(
                     self.ewwii_config.get_root_node()?.as_ref(),
                 );
 
-                ewwii_rhai_impl::updates::handle_state_changes(signals_vec);
+                crate::updates::handle_state_changes(signals_vec);
             }
 
             let root_widget = {
