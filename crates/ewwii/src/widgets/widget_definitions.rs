@@ -1346,7 +1346,7 @@ pub(super) fn build_gtk_label(
     let truncate_prop = get_bool_prop(&props, "truncate", Some(false))?;
     let limit_width_prop = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
     let truncate_left_prop = get_bool_prop(&props, "truncate_left", Some(false))?;
-    let show_truncated_prop = get_bool_prop(&props, "show_truncated", Some(false))?;
+    let show_truncated_prop = get_bool_prop(&props, "show_truncated", Some(true))?;
     let unindent_prop = get_bool_prop(&props, "unindent", Some(true))?;
 
     let text_params = Rc::new(RefCell::new(LabelTextParams {

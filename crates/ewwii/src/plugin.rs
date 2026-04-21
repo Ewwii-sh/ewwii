@@ -7,18 +7,22 @@ use std::path::PathBuf;
 use std::sync::RwLock;
 
 pub fn is_compatible(plugin_ver: &str, host_ver: &str) -> bool {
-    let p = semver::Version::parse(plugin_ver);
-    let h = semver::Version::parse(host_ver);
+    let p_str = plugin_ver.trim_matches('\0');
+    let h_str = host_ver.trim_matches('\0');
+
+    let p = semver::Version::parse(p_str);
+    let h = semver::Version::parse(h_str);
 
     match (p, h) {
-        (Ok(p_ver), Ok(h_ver)) => {
-            p_ver == h_ver
-        }
-        _ => {
+        (Ok(pv), Ok(hv)) => pv == hv,
+        (Err(pe), Err(he)) => {
+            log::error!("Both versions failed to parse: P_Err: {}, H_Err: {}", pe, he);
             false
         }
+        _ => false,
     }
 }
+
 pub struct ActivePlugin {
     pub library: libloading::Library,
     pub id: String,
