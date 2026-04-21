@@ -1,6 +1,6 @@
 use crate::config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER};
-use ewwii_rhai_impl::updates::api::VarWatcherAPI;
-use ewwii_rhai_impl::updates::SHUTDOWN_REGISTRY;
+use crate::updates::api::VarWatcherAPI;
+use crate::updates::SHUTDOWN_REGISTRY;
 use ewwii_shared_utils::template::TemplateExpr;
 use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
 use gtk4::glib;
@@ -229,7 +229,7 @@ macro_rules! apply_property {
                 setter(val);
             }
             PropValue::Bound { var_name, initial, parser, template } => {
-                let var_value = ewwii_rhai_impl::updates::api::VarWatcherAPI::state_of(&var_name);
+                let var_value = crate::updates::api::VarWatcherAPI::state_of(&var_name);
 
                 if let Some(tmpl) = template {
                     // quick template handling
@@ -252,7 +252,7 @@ macro_rules! apply_property {
                     }
 
                     if let Some(mut receiver) =
-                        ewwii_rhai_impl::updates::api::VarWatcherAPI::subscribe(&var_name)
+                        crate::updates::api::VarWatcherAPI::subscribe(&var_name)
                     {
                         glib::MainContext::default().spawn_local(async move {
                             while receiver.changed().await.is_ok() {
@@ -287,7 +287,7 @@ macro_rules! apply_property_watch {
 
         match $prop {
             PropValue::Bound { var_name, initial, parser, template } => {
-                let var_value = ewwii_rhai_impl::updates::api::VarWatcherAPI::state_of(&var_name);
+                let var_value = crate::updates::api::VarWatcherAPI::state_of(&var_name);
 
                 if let Some(tmpl) = template {
                     let mut recv = crate::property::handle_template(tmpl);
@@ -307,7 +307,7 @@ macro_rules! apply_property_watch {
                         $body
                     }
 
-                    if let Some(mut receiver) = ewwii_rhai_impl::updates::api::VarWatcherAPI::subscribe(&var_name) {
+                    if let Some(mut receiver) = crate::updates::api::VarWatcherAPI::subscribe(&var_name) {
                         gtk4::glib::MainContext::default().spawn_local(async move {
                             while receiver.changed().await.is_ok() {
                                 let raw = receiver.borrow().clone();

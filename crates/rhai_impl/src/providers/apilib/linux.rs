@@ -1,6 +1,6 @@
 //! Linux API crate
 
-use libc::{c_char, statvfs};
+use nix::libc::{c_char, statvfs};
 use rhai::{plugin::*, Array, Dynamic, EvalAltResult, Map};
 use std::ffi::CString;
 use std::fs;

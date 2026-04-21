@@ -531,7 +531,6 @@ dependencies = [
  "codespan-reporting",
  "ewwii_shared_utils",
  "gtk4",
- "libc",
  "log",
  "nix",
  "once_cell",
