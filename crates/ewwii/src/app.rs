@@ -1,3 +1,4 @@
+use crate::updates::api::VarWatcherAPI;
 use crate::{
     config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER},
     daemon_response::DaemonResponseSender,
@@ -24,7 +25,6 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
-use crate::updates::api::VarWatcherAPI;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
@@ -351,8 +351,7 @@ impl<B: DisplayBackend> App<B> {
                 sender.send_success(output)?
             }
             DaemonCommand::ShowState(sender) => {
-                let output =
-                    format!("{:#?}", crate::updates::api::VarWatcherAPI::state());
+                let output = format!("{:#?}", crate::updates::api::VarWatcherAPI::state());
                 sender.send_success(output)?
             }
             DaemonCommand::Update { mappings, sender } => {
@@ -447,9 +446,8 @@ impl<B: DisplayBackend> App<B> {
 
             if self.open_windows.is_empty() || self.reloading {
                 // Start the global variables
-                let signals_vec = crate::updates::retreive_signals(
-                    self.ewwii_config.get_root_node()?.as_ref(),
-                );
+                let signals_vec =
+                    crate::updates::retreive_signals(self.ewwii_config.get_root_node()?.as_ref());
 
                 crate::updates::handle_state_changes(signals_vec);
             }
