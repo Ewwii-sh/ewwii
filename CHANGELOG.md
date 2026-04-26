@@ -7,27 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.6.0] - 2026-04-26
 
-## Added
+### Added
 
 - Improved to and fro communication between plugin and host.
 - Safe and FFI compatible data transfer between plugin and host.
 - Rhai function registeration plugin API.
 - Config engine replacement plugin API.
 
-## Changed
+### Changed
 
 - The Plugin API.
 - The handling of requests from plugins.
 - `show_truncated` property of label widget to true by default.
 
-## Fixed
+### Fixed
 
 - Poll's interval detection without duration type panicing. #32
 - Large program size. #30
 - Logging issues with rhai implementation crate.
 - Property not working if its boolean string.
 
-## Removed
+### Removed
 
 - Tight coupling of rhai into core engine.
 - Gtk related API from the plugin API.
