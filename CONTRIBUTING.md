@@ -2,11 +2,13 @@
 
 **General things to keep in mind:**
 
--   Run `cargo fmt` for formatting your code.
--   Always do PR (Pull Request) to iidev branch if it is a new feature.
+- Run `cargo fmt` for formatting your code.
+- Note down your changes in `CHANGELOG.md` once you're done.
+- Ensure the code compiles correctly.
 
 ## Codebase
 
--   `crates/ewwii`: Core of ewwii (ipc, daemon, options, rt engine, gtk, etc.)
--   `crates/rhai_impl`: Rhai implementation (parsing, modules, poll/listen handlers)
--   `crates/shared_utils`: Utility functions shared between rhai and ewwii (spans, helpers)
+- `crates/ewwii`: Core of ewwii (ipc, daemon, options, globalvar handlers, gtk, etc.)
+- `crates/plugin_api`: Plugin API (used by both ewwii and plugin for communication)
+- `crates/rhai_impl`: Rhai implementation (parsing, modules)
+- `crates/shared_utils`: Utility functions shared between rhai and ewwii (spans, helpers)
