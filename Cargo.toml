@@ -3,9 +3,9 @@ members = ["crates/*", "tools/*"]
 resolver = "2"
 
 [workspace.dependencies]
-ewwii_shared_utils = { version = "0.1.0", path = "crates/shared_utils" }
+ewwii_shared_utils = { version = "0.2.0", path = "crates/shared_utils" }
 ewwii_rhai_impl = { version = "0.1.0", path = "crates/rhai_impl" }
-ewwii_plugin_api = { version = "1.0.0", path = "crates/plugin_api" }
+ewwii_plugin_api = { version = "1.1.0", path = "crates/plugin_api" }
 
 anyhow = "1.0.86"
 ahash = "0.8.12"

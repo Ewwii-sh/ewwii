@@ -9,6 +9,7 @@ pub enum TemplateExpr {
     Concat(Vec<TemplateExpr>),
     IfElse { condition: Box<TemplateExpr>, if_true: Box<TemplateExpr>, if_false: Box<TemplateExpr> },
     BinOp { op: TemplateOp, left: Box<TemplateExpr>, right: Box<TemplateExpr> },
+    Index { expr: Box<TemplateExpr>, key: Box<TemplateExpr> },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Hash)]
@@ -46,6 +47,11 @@ impl TemplateExpr {
             TemplateExpr::BinOp { left, right, .. } => {
                 let mut vars = left.collect_vars();
                 vars.extend(right.collect_vars());
+                vars
+            }
+            TemplateExpr::Index { expr, key } => {
+                let mut vars = expr.collect_vars();
+                vars.extend(key.collect_vars());
                 vars
             }
         }
@@ -127,6 +133,25 @@ impl TemplateExpr {
                             regex::Regex::new(&r).map_err(|e| format!("Invalid regex: {}", e))?;
                         Ok(re.is_match(&l).to_string())
                     }
+                }
+            }
+            TemplateExpr::Index { expr, key } => {
+                let base = expr.eval(vars)?;
+                let key_str = key.eval(vars)?;
+
+                let json: serde_json::Value = serde_json::from_str(&base)
+                    .map_err(|e| format!("Not valid JSON: {}", e))?;
+
+                let result = if let Ok(idx) = key_str.parse::<usize>() {
+                    json.get(idx)
+                } else {
+                    json.get(&key_str)
+                };
+
+                match result {
+                    Some(serde_json::Value::String(s)) => Ok(s.clone()),
+                    Some(v) => Ok(v.to_string()),
+                    None => Err(format!("Index '{}' not found", key_str)),
                 }
             }
         }
