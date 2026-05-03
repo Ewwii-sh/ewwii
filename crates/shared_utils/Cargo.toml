@@ -1,6 +1,6 @@
 [package]
 name = "ewwii_shared_utils"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -13,6 +13,7 @@ anyhow.workspace = true
 log.workspace = true
 rhai = { workspace = true, features = ["internals"] }
 serde.workspace = true
+serde_json.workspace = true
 tokio.workspace = true
 ahash.workspace = true
 rand.workspace = true
