@@ -1,3 +1,11 @@
+/*
+* IMPORTANT:
+* 
+* Modifying WidgetNode requires specific steps and it is
+* easy to mess everything up. Avoid touching WidgetNode 
+* unless you know what you are doing.
+*/
+
 use crate::prop::PropertyMap;
 use crate::prop_utils::{get_string_prop, unwrap_static};
 use ahash::AHasher;

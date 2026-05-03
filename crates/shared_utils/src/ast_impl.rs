@@ -1,3 +1,10 @@
+/*
+* Highly probable to cause hidden bugs/issues.
+* It would be better if I replaced it with a procedural macro,
+* but then, I would have to publish it to crates.io as shared_utils 
+* is a public library that is a dependency of plugin_api.
+*/
+
 use crate::ast::WidgetNode;
 use crate::prop::{Property, PropertyMap};
 
