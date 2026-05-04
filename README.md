@@ -1,10 +1,10 @@
 <br/>
 <div align="center">
-  <img src="./.github/EwwiiLogo.png" height="70"/>
+  <img src="./.github/EwwiiLogo.png" height="90"/>
   <br/>
-  <strong><big>Ewwii</big></strong>
+  <strong><big><big><big>Ewwii</big></big></big></strong>
   <br/>
-  <sub>Building Widgets Made Better</sub>
+  <big><sub>Building Widgets Made Better</sub></big>
   <br/><br/>
 
   [![dependency status](https://deps.rs/repo/github/byson94/ewwii/status.svg)](https://deps.rs/repo/github/byson94/ewwii)
