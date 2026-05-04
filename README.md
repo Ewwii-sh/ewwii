@@ -6,7 +6,8 @@
   <p>Building Widgets Made Better!</p>
 
   [![dependency status](https://deps.rs/repo/github/ewwii-sh/ewwii/status.svg)](https://deps.rs/repo/github/ewwii-sh/ewwii)
-  [![docs](https://img.shields.io/badge/documentation-link-blue)](https://ewwii-sh.github.io/docs)
+  [![build](https://img.shields.io/github/actions/workflow/status/Ewwii-sh/Ewwii/build.yml)](https://github.com/Ewwii-sh/ewwii/actions/workflows/build.yml)
+  [![downloads](https://img.shields.io/github/downloads/Ewwii-sh/ewwii/total)](https://github.com/Ewwii-sh/releases)
 </div>
 <br/>
 
