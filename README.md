@@ -1,6 +1,6 @@
 <br/>
 <div align="center">
-  <img src="./.github/EwwiiLogo.png" height="90"/>
+  <img src="./.github/EwwiiLogo.png" height="128"/>
   <br/>
   <img src="./.github/ewwii_heading.svg">
   <p>Building Widgets Made Better</p>
