@@ -3,9 +3,9 @@
   <img src="./.github/EwwiiLogo.png" height="128"/>
   <br/>
   <img src="./.github/ewwii_heading.svg">
-  <p>Building Widgets Made Better</p>
+  <p>Building Widgets Made Better!</p>
 
-  [![dependency status](https://deps.rs/repo/github/byson94/ewwii/status.svg)](https://deps.rs/repo/github/byson94/ewwii)
+  [![dependency status](https://deps.rs/repo/github/ewwii-sh/ewwii/status.svg)](https://deps.rs/repo/github/ewwii-sh/ewwii)
   [![docs](https://img.shields.io/badge/documentation-link-blue)](https://ewwii-sh.github.io/docs)
 </div>
 <br/>
