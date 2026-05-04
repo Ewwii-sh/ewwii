@@ -2,10 +2,8 @@
 <div align="center">
   <img src="./.github/EwwiiLogo.png" height="90"/>
   <br/>
-  <strong><big><big><big>Ewwii</big></big></big></strong>
-  <br/>
-  <big><sub>Building Widgets Made Better</sub></big>
-  <br/><br/>
+  <h3>Ewwii</h3>
+  <p><em>Building Widgets Made Better</em></p>
 
   [![dependency status](https://deps.rs/repo/github/byson94/ewwii/status.svg)](https://deps.rs/repo/github/byson94/ewwii)
   [![docs](https://img.shields.io/badge/documentation-link-blue)](https://ewwii-sh.github.io/docs)
