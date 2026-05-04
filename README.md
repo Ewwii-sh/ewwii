@@ -8,6 +8,8 @@
   [![dependency status](https://deps.rs/repo/github/ewwii-sh/ewwii/status.svg)](https://deps.rs/repo/github/ewwii-sh/ewwii)
   [![build](https://img.shields.io/github/actions/workflow/status/Ewwii-sh/Ewwii/build.yml)](https://github.com/Ewwii-sh/ewwii/actions/workflows/build.yml)
   [![downloads](https://img.shields.io/github/downloads/Ewwii-sh/ewwii/total)](https://github.com/Ewwii-sh/releases)
+
+  [Website](https://ewwii-sh.github.io/) · [Documentation](https://ewwii-sh.github.io/docs)
 </div>
 <br/>
 
