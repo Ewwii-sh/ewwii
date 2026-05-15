@@ -11,13 +11,13 @@ use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
 use gtk4::{
     DragSource, DropTarget, EventControllerKey, EventControllerLegacy, EventControllerMotion,
-    EventControllerScroll, GestureClick,
+    EventControllerScroll, GestureClick, GestureDrag,
 };
 
 use super::widget_definitions_helper::*;
 use ewwii_shared_utils::prop_utils::*;
 use std::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::HashMap,
     // cmp::Ordering,
     rc::Rc,
@@ -332,6 +332,7 @@ pub(super) fn build_event_box(
     let hover_controller = EventControllerMotion::new();
     let gesture_controller = GestureClick::new();
     gesture_controller.set_button(0);
+    let gesture_drag_controller = GestureDrag::new();
     let scroll_controller = EventControllerScroll::new(gtk4::EventControllerScrollFlags::BOTH_AXES);
     let drop_text_target = DropTarget::new(String::static_type(), gdk::DragAction::COPY);
     let drop_uri_target = DropTarget::new(String::static_type(), gdk::DragAction::COPY);
@@ -403,19 +404,46 @@ pub(super) fn build_event_box(
         }
     ));
 
+    let drag_occurred = Rc::new(Cell::new(false));
+
+    gesture_drag_controller.connect_drag_begin(glib::clone!(
+        #[strong] drag_occurred,
+        move |drag, _, _| {
+            drag_occurred.set(true);
+            drag.set_state(gtk4::EventSequenceState::Claimed);
+        }
+    ));
+
+    let pending_button = Rc::new(Cell::new(0u32));
+
     // Support :active selector and onclick variant commands
     gesture_controller.connect_pressed(glib::clone!(
         #[weak]
         gtk_widget,
-        #[strong]
-        controller_data,
+        #[strong] drag_occurred,
+        #[strong] pending_button,
         move |gesture, _, _, _| {
+            drag_occurred.set(false);
             gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
+            pending_button.set(gesture.current_button());
+        }
+    ));
+
+    gesture_controller.connect_released(glib::clone!(
+        #[weak]
+        gtk_widget,
+        #[strong] controller_data,
+        #[strong] drag_occurred,
+        #[strong] pending_button,
+        move |_, _, _, _| {
+            gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
+
+            if drag_occurred.get() {
+                return; // swallow the click
+            }
 
             let controller = controller_data.borrow();
-            let button = gesture.current_button();
-
-            match button {
+            match pending_button.get() {
                 1 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
                 2 => run_command(
                     controller.cmd_timeout,
@@ -429,14 +457,6 @@ pub(super) fn build_event_box(
                 ),
                 _ => {}
             }
-        }
-    ));
-
-    gesture_controller.connect_released(glib::clone!(
-        #[weak]
-        gtk_widget,
-        move |_, _, _, _| {
-            gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
         }
     ));
 
@@ -550,7 +570,10 @@ pub(super) fn build_event_box(
         }
     ));
 
+    gesture_drag_controller.group_with(&gesture_controller);
+
     gtk_widget.add_controller(gesture_controller);
+    gtk_widget.add_controller(gesture_drag_controller);
     gtk_widget.add_controller(hover_controller);
     gtk_widget.add_controller(scroll_controller);
     gtk_widget.add_controller(drop_text_target);
@@ -2118,17 +2141,6 @@ pub(super) fn build_gtk_scrolledwindow(
             gtk_widget.set_propagate_natural_height(natural_height);
         }
     );
-
-    for controller in gtk_widget.observe_controllers().iter::<glib::Object>() {
-        if let Ok(ctrl) = controller {
-            if let Ok(scroll) = ctrl.downcast::<gtk4::EventControllerScroll>() {
-                scroll.set_propagation_phase(gtk4::PropagationPhase::Capture);
-                scroll.connect_scroll(move |_, _dx, _dy| {
-                    glib::Propagation::Stop
-                });
-            }
-        }
-    }
 
     let count = children.len();
 
