@@ -310,7 +310,7 @@ struct EventBoxCtrlData {
 
     // drop controller data
     ondropped_cmd: String,
-    dragvalue: String,
+    dragvalue: Option<String>,
     dragtype: DragEntryType,
 
     // key controller data
@@ -347,7 +347,7 @@ pub(super) fn build_event_box(
         onrightclick_cmd: String::new(),
         onscroll_cmd: String::new(),
         ondropped_cmd: String::new(),
-        dragvalue: String::new(),
+        dragvalue: None,
         dragtype: DragEntryType::File,
         onkeypress_cmd: None,
         onkeyrelease_cmd: None,
@@ -511,13 +511,17 @@ pub(super) fn build_event_box(
         move |_, _, _| {
             let controller = controller_data.borrow();
 
-            match controller.dragtype {
-                DragEntryType::File => Some(gdk::ContentProvider::for_value(&glib::Value::from(
-                    &[controller.dragvalue.as_str()][..],
-                ))),
-                DragEntryType::Text => {
-                    Some(gdk::ContentProvider::for_value(&glib::Value::from(&controller.dragvalue)))
+            if let Some(drag_value) = &controller.dragvalue {
+                match controller.dragtype {
+                    DragEntryType::File => Some(gdk::ContentProvider::for_value(&glib::Value::from(
+                        &[drag_value.as_str()][..],
+                    ))),
+                    DragEntryType::Text => {
+                        Some(gdk::ContentProvider::for_value(&glib::Value::from(&drag_value)))
+                    }
                 }
+            } else {
+                None
             }
         }
     ));
@@ -573,7 +577,7 @@ pub(super) fn build_event_box(
         controller_data.borrow_mut().onhoverlost_cmd = v;
     });
 
-    // cursor - Cursor to show while hovering (see [gtk3-cursors](https://docs.gtk.org/gdk3/ctor.Cursor.new_from_name.html) for possible names)
+    // cursor - Cursor to show while hovering
     bind_property!(
         &props,
         "cursor",
@@ -606,7 +610,7 @@ pub(super) fn build_event_box(
 
     // dragvalue - URI that will be provided when dragging from this widget
     bind_property!(&props, "dragvalue", get_string_prop, None, [controller_data], |v: String| {
-        controller_data.borrow_mut().dragvalue = v;
+        controller_data.borrow_mut().dragvalue = Some(v);
     });
 
     // onclick - command to run when the widget is clicked
@@ -2087,7 +2091,6 @@ pub(super) fn build_gtk_scrolledwindow(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ScrolledWindow> {
-    // I don't have single idea of what those two generics are supposed to be, but this works.
     let gtk_widget = gtk4::ScrolledWindow::new();
 
     bind_property!(&props, "hscroll", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
@@ -2115,6 +2118,14 @@ pub(super) fn build_gtk_scrolledwindow(
             gtk_widget.set_propagate_natural_height(natural_height);
         }
     );
+
+    for controller in gtk_widget.observe_controllers().iter::<glib::Object>() {
+        if let Ok(ctrl) = controller {
+            if let Ok(scroll) = ctrl.downcast::<gtk4::EventControllerScroll>() {
+                scroll.set_propagation_phase(gtk4::PropagationPhase::Capture);
+            }
+        }
+    }
 
     let count = children.len();
 
