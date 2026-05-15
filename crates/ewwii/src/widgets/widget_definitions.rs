@@ -2123,6 +2123,9 @@ pub(super) fn build_gtk_scrolledwindow(
         if let Ok(ctrl) = controller {
             if let Ok(scroll) = ctrl.downcast::<gtk4::EventControllerScroll>() {
                 scroll.set_propagation_phase(gtk4::PropagationPhase::Capture);
+                scroll.connect_scroll(move |_, _dx, _dy| {
+                    glib::Propagation::Stop
+                });
             }
         }
     }
