@@ -422,6 +422,8 @@ pub(super) fn build_event_box(
         gtk_widget,
         #[strong]
         controller_data,
+        #[strong]
+        press_coords,
         move |gesture, _, x, y| {
             gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
 
@@ -1251,12 +1253,35 @@ pub(super) fn build_gtk_button(
         }
     ));
 
+
+    let press_coords = Rc::new(Cell::new((0.0f64, 0.0f64)));
+
     gesture_controller.connect_pressed(glib::clone!(
         #[strong]
+        press_coords,
+        move |_, _, x, y| {
+            press_coords.set((x, y));
+        }
+    ));
+
+    gesture_controller.connect_released(glib::clone!(
+        #[weak]
+        gtk_widget,
+        #[strong]
         controller_data,
-        move |gesture, _, _, _| {
-            let button = gesture.current_button();
+        #[strong]
+        press_coords,
+        move |gesture, _, x, y| {
+            gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
+
+            // return if press is long
+            let (px, py) = press_coords.get();
+            let dist = ((x - px).powi(2) + (y - py).powi(2)).sqrt();
+            if dist > 8.0 { return; }
+    
             let controller = controller_data.borrow();
+            let button = gesture.current_button();
+
             match button {
                 1 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
                 2 => run_command(
