@@ -2026,7 +2026,7 @@ pub(super) fn build_gtk_scale(
 ) -> Result<gtk4::Scale> {
     let gtk_widget = gtk4::Scale::new(
         gtk4::Orientation::Horizontal,
-        Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 1.0, 1.0)),
+        Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0)),
     );
 
     // only allow changing the value via the value property if the user isn't currently dragging
@@ -2286,6 +2286,15 @@ pub(super) fn resolve_range_attrs(
     gtk_widget: &gtk4::Range,
     range_dat: Rc<RefCell<RangeCtrlData>>,
 ) -> Result<()> {
+    bind_property!(&props, "min", get_f64_prop, None, [gtk_widget], |min: f64| {
+        gtk_widget.adjustment().set_lower(min);
+    });
+
+    bind_property!(&props, "max", get_f64_prop, None, [gtk_widget], |max: f64| {
+        gtk_widget.adjustment().set_upper(max);
+    });
+
+
     // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
     // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler
     // and only run on_change when it's caused by manual user input
@@ -2294,14 +2303,6 @@ pub(super) fn resolve_range_attrs(
             range_dat.borrow_mut().last_set_value = Some(v);
             gtk_widget.set_value(v);
         }
-    });
-
-    bind_property!(&props, "min", get_f64_prop, None, [gtk_widget], |min: f64| {
-        gtk_widget.adjustment().set_lower(min);
-    });
-
-    bind_property!(&props, "max", get_f64_prop, None, [gtk_widget], |max: f64| {
-        gtk_widget.adjustment().set_upper(max);
     });
 
     let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
