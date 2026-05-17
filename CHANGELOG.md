@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `onclick` conflicting with scroll.
+- Scale substracting 1 if value is 100.
 
 ## [0.6.0] - 2026-04-26
 
