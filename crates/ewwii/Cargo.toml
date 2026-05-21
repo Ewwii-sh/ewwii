@@ -39,6 +39,7 @@ gtk4.workspace = true
 itertools.workspace = true
 log.workspace = true
 nix = { workspace = true, features = ["process", "fs", "signal"] }
+nbcl.workspace = true
 notify.workspace = true
 once_cell.workspace = true
 pretty_env_logger.workspace = true

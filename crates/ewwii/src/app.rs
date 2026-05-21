@@ -611,14 +611,14 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::Create { rhai_codes, parent_name } => {
-                for rhai_code in rhai_codes {
+            crate::opts::WidgetControlAction::Create { nbcl_codes, parent_name } => {
+                for nbcl_code in nbcl_codes {
                     let widget_node = EWWII_CONFIG_PARSER.with(|p| {
                         let mut parser = p.borrow_mut();
                         match parser.as_mut().unwrap() {
-                            ConfigEngine::Default(rhai) => rhai.eval_code_snippet(&rhai_code),
+                            ConfigEngine::Default(nbcl) => nbcl.eval_code_snippet(&nbcl_code),
                             ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
-                                "Dynamic widget creation is only supported with the Rhai config engine"
+                                "Dynamic widget creation is only supported with the Nbcl config engine"
                             )),
                         }
                     })?;
