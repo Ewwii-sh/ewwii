@@ -203,10 +203,10 @@ pub enum ActionWithServer {
         mappings: HashMap<String, String>,
     },
 
-    /// Call rhai functions.
+    /// Call nbcl functions.
     #[command(name = "call-fns")]
-    CallRhaiFns {
-        /// Rhai functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
+    CallNbclFns {
+        /// Nbcl functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
         #[arg(required = true)]
         calls: Vec<String>,
     },
@@ -346,8 +346,8 @@ impl ActionWithServer {
                     sender,
                 })
             }
-            ActionWithServer::CallRhaiFns { calls } => {
-                return with_response_channel(|sender| app::DaemonCommand::CallRhaiFns {
+            ActionWithServer::CallNbclFns { calls } => {
+                return with_response_channel(|sender| app::DaemonCommand::CallNbclFns {
                     calls,
                     sender,
                 })

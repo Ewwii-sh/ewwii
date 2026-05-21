@@ -1,8 +1,3 @@
-// -- 1. compile code -- (maybe not)
-// 2. eval_code_with
-// 3. eval_code_snippet
-// --  4. register_poll_listen_globals -- (maybe not)
-// 5. call_nbcl_function
 use nbcl::{NbclEngine, context::Context, Value};
 use crate::{builtins, errors, translate};
 use ewwii_shared_utils::ast::WidgetNode;

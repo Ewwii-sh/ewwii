@@ -98,7 +98,7 @@ pub enum DaemonCommand {
         mappings: HashMap<String, String>,
         sender: DaemonResponseSender,
     },
-    CallRhaiFns {
+    CallNbclFns {
         calls: Vec<String>,
         sender: DaemonResponseSender,
     },
@@ -366,7 +366,7 @@ impl<B: DisplayBackend> App<B> {
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
-            DaemonCommand::CallRhaiFns { calls, sender } => {
+            DaemonCommand::CallNbclFns { calls, sender } => {
                 match self.call_nbcl_fns(calls) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
