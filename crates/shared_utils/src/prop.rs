@@ -1,4 +1,4 @@
-use crate::variables::{GlobalCompare, GlobalVar};
+use crate::variables::GlobalVar;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::hash::{Hash, Hasher};
@@ -59,7 +59,6 @@ pub enum Property {
 
     // Custom Variants
     GlobalVar(Box<GlobalVar>),
-    GlobalCompare(Box<GlobalCompare>),
 }
 
 /// Alternative to [`rhai::FnPtr`]
@@ -87,10 +86,6 @@ impl Property {
         // // Handle Variants
         // if let Some(var) = d.clone().try_cast::<GlobalVar>() {
         //     return Self::GlobalVar(Box::new(var));
-        // }
-
-        // if let Some(comp) = d.clone().try_cast::<GlobalCompare>() {
-        //     return Self::GlobalCompare(Box::new(comp));
         // }
     }
 
@@ -165,15 +160,6 @@ impl Property {
             None
         }
     }
-
-    /// Returns a reference to the GlobalCompare (unboxes automatically)
-    pub fn as_global_compare(&self) -> Option<&GlobalCompare> {
-        if let Self::GlobalCompare(c) = self {
-            Some(c.as_ref())
-        } else {
-            None
-        }
-    }
 }
 
 impl From<bool> for Property {
@@ -224,12 +210,6 @@ impl From<GlobalVar> for Property {
     }
 }
 
-impl From<GlobalCompare> for Property {
-    fn from(c: GlobalCompare) -> Self {
-        Self::GlobalCompare(Box::new(c))
-    }
-}
-
 impl Hash for Property {
     fn hash<H: Hasher>(&self, state: &mut H) {
         core::mem::discriminant(self).hash(state);
@@ -244,7 +224,6 @@ impl Hash for Property {
             Self::Map(m) => m.hash(state),
             Self::Callback(c) => c.hash(state),
             Self::GlobalVar(v) => v.hash(state),
-            Self::GlobalCompare(c) => c.hash(state),
         }
     }
 }
