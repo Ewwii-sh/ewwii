@@ -367,7 +367,7 @@ impl<B: DisplayBackend> App<B> {
                 };
             }
             DaemonCommand::CallRhaiFns { calls, sender } => {
-                match self.call_rhai_fns(calls) {
+                match self.call_nbcl_fns(calls) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
@@ -713,18 +713,18 @@ impl<B: DisplayBackend> App<B> {
         Ok(())
     }
 
-    pub fn call_rhai_fns(&self, calls: Vec<String>) -> Result<()> {
+    pub fn call_nbcl_fns(&self, calls: Vec<String>) -> Result<()> {
         EWWII_CONFIG_PARSER.with(move |p| -> anyhow::Result<()> {
             let parser = p.borrow();
             match parser.as_ref().unwrap() {
-                ConfigEngine::Default(rhai) => {
+                ConfigEngine::Default(nbcl) => {
                     for fn_call in calls {
-                        rhai.call_rhai_fn(&fn_call, None)?;
+                        nbcl.call_nbcl_function(&fn_call)?;
                     }
                     Ok(())
                 }
                 ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
-                    "Calling rhai functions is only supported with the Rhai config engine"
+                    "Calling nbcl functions is only supported with the Nbcl config engine"
                 )),
             }
         })?;
