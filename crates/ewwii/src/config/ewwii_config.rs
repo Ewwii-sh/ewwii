@@ -8,12 +8,12 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-use ewwii_rhai_impl::parser::RhaiParseConfig;
+use ewwii_nbcl_impl::parser::NbclConfigParser;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::PropertyMap;
 
 pub enum ConfigEngine {
-    Default(RhaiParseConfig),
+    Default(NbclConfigParser),
     Custom(CustomConfigEngine),
 }
 
@@ -46,16 +46,16 @@ impl ConfigEngine {
 
 // Extending RhaiParseConfig for parsing
 fn parse_source(
-    config_parser: &mut RhaiParseConfig,
+    config_parser: &mut NbclConfigParser,
     source: String,
     config_path: PathBuf,
 ) -> Result<WidgetNode, String> {
     let configlang_path_opt_str = config_path.to_str();
-    let compiled_ast =
-        config_parser.compile_code(&source, configlang_path_opt_str).map_err(|e| e.to_string())?;
-    config_parser.register_poll_listen_globals(&source).map_err(|e| e.to_string())?;
+
+    // config_parser.register_poll_listen_globals(&source).map_err(|e| e.to_string())?;
+
     let node = config_parser
-        .eval_code_with(&source, None, Some(&compiled_ast), configlang_path_opt_str)
+        .eval_code(&source, configlang_path_opt_str)
         .map_err(|e| e.to_string())?;
     Ok(node)
 }

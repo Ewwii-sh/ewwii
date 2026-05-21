@@ -36,7 +36,7 @@ pub(super) struct RawOpt {
     #[arg(long = "force-wayland", global = true)]
     force_wayland: bool,
 
-    /// override path to configuration directory (directory that contains ewwii.rhai and eww.(s)css)
+    /// override path to configuration directory (directory that contains ewwii.nbcl and ewwii.(s)css)
     #[arg(short, long, global = true)]
     config: Option<std::path::PathBuf>,
 
@@ -223,8 +223,8 @@ pub enum WidgetControlAction {
 
     /// Create widgets
     Create {
-        /// Rhai code to create widgets from
-        rhai_codes: Vec<String>,
+        /// Nbcl code to create widgets from
+        nbcl_codes: Vec<String>,
 
         /// Name of the widget to add these widgets as a child to
         #[arg(long = "parent", short = 'p')]

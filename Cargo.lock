@@ -398,6 +398,7 @@ dependencies = [
  "itertools",
  "libloading",
  "log",
+ "nbcl",
  "nix",
  "notify",
  "once_cell",

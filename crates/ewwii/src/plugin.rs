@@ -5,6 +5,7 @@ use ewwii_shared_utils::ast::WidgetNode;
 use once_cell::sync::Lazy;
 use std::path::PathBuf;
 use std::sync::RwLock;
+use nbcl::Value as NbclValue;
 
 pub fn is_compatible(plugin_ver: &str, host_ver: &str) -> bool {
     let p_str = plugin_ver.trim_matches('\0');
@@ -31,40 +32,31 @@ pub struct ActivePlugin {
 
 pub static ACTIVE_PLUGINS: Lazy<RwLock<Vec<ActivePlugin>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
-fn dynamic_to_plugin_value(any: rhai::Dynamic) -> PluginValue {
-    if any.is_unit() {
-        return PluginValue::Null;
-    }
-    if let Some(v) = any.clone().try_cast::<String>() {
-        return PluginValue::String(v);
-    }
-    if let Some(v) = any.clone().try_cast::<i64>() {
-        return PluginValue::Int(v);
-    }
-    if let Some(v) = any.clone().try_cast::<f64>() {
-        return PluginValue::Float(v);
-    }
-    if let Some(v) = any.clone().try_cast::<bool>() {
-        return PluginValue::Bool(v);
-    }
-    if let Some(v) = any.clone().try_cast::<rhai::Array>() {
-        return PluginValue::Array(v.into_iter().map(dynamic_to_plugin_value).collect());
-    }
+fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
+    let res = match any {
+        NbclValue::Null => PluginValue::Null,
+        NbclValue::Str(v) => PluginValue::String(v),
+        NbclValue::Int(v) => PluginValue::Int(v),
+        NbclValue::Float(v) => PluginValue::Float(v),
+        NbclValue::Bool(v) => PluginValue::Bool(v),
+        NbclValue::List(v) => PluginValue::Array(v.into_iter().map(nbclvalue_to_plugin_value).collect()),
+        _ => PluginValue::Null
+    };
 
-    PluginValue::Null
+    return res;
 }
 
-fn plugin_value_to_dynamic(val: PluginValue) -> rhai::Dynamic {
+fn plugin_value_to_nbcl(val: PluginValue) -> NbclValue {
     match val {
-        PluginValue::String(s) => s.into(),
-        PluginValue::Int(i) => i.into(),
-        PluginValue::Float(f) => f.into(),
-        PluginValue::Bool(b) => b.into(),
+        PluginValue::String(s) => NbclValue::Str(s),
+        PluginValue::Int(i) => NbclValue::Int(i),
+        PluginValue::Float(f) => NbclValue::Float(f),
+        PluginValue::Bool(b) => NbclValue::Bool(b),
         PluginValue::Array(arr) => {
-            let vec: Vec<rhai::Dynamic> = arr.into_iter().map(plugin_value_to_dynamic).collect();
-            vec.into()
+            let vec: Vec<NbclValue> = arr.into_iter().map(plugin_value_to_nbcl).collect();
+            NbclValue::List(vec)
         }
-        PluginValue::Null => rhai::Dynamic::UNIT,
+        PluginValue::Null => NbclValue::Null,
     }
 }
 
@@ -97,9 +89,14 @@ fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) ->
     }
 }
 
-fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: rhai::Array) -> PluginValue {
+fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: NbclValue) -> PluginValue {
+    let args = match args {
+        NbclValue::List(v) => v,
+        _ => unreachable!(),
+    };
+
     let arg_bytes =
-        bincode::serialize(&args.into_iter().map(dynamic_to_plugin_value).collect::<Vec<_>>())
+        bincode::serialize(&args.into_iter().map(nbclvalue_to_plugin_value).collect::<Vec<_>>())
             .unwrap_or_default();
     let res = call_plugin_handler(plugin_id, callback_id, arg_bytes).unwrap_or_default();
     bincode::deserialize::<CallbackResponse>(&res)
@@ -213,20 +210,22 @@ impl HostImpl {
             let mut parser = p.borrow_mut();
 
             match parser.as_mut().unwrap() {
-                ConfigEngine::Default(rhai) => {
-                    rhai.engine.register_fn(
+                ConfigEngine::Default(nbcl) => {
+                    nbcl.engine.register_native_fn(
                         &name,
-                        move |args: rhai::Array| -> Result<rhai::Dynamic, Box<rhai::EvalAltResult>> {
-                            let result = trigger_plugin_func_call(&plugin_id, callback_id, args);
+                        vec![nbcl::Type::List],
+                        nbcl::Type::Any,
+                        move |mut args| {
+                            let result = trigger_plugin_func_call(&plugin_id, callback_id, args.remove(0));
 
-                            Ok(plugin_value_to_dynamic(result))
-                        },
+                            Ok(plugin_value_to_nbcl(result))
+                        }
                     );
 
                     Ok(PluginValue::Null)
                 },
                 ConfigEngine::Custom(_) => Err(PluginError::RegistrationError(
-                    "Registering rhai functions is only supported with the Rhai config engine"
+                    "Registering rhai functions is only supported with the Nbcl config engine"
                         .to_string()
                 )),
             }
