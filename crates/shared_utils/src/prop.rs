@@ -1,7 +1,8 @@
 use crate::variables::{GlobalCompare, GlobalVar};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::hash::{Hash, Hasher};
+use nbcl::Value;
 
 /// A deterministic, serializable collection of widget properties.
 /// Replaces rhai::Map in your WidgetNode.
@@ -13,11 +14,20 @@ impl PropertyMap {
         Self(BTreeMap::new())
     }
 
-    /// Converts a Rhai Map into stable PropertyMap.
-    pub fn from_rhai(rhai_map: rhai::Map) -> Self {
+    /// Converts an Nbcl property map into stable PropertyMap.
+    pub fn from_nbcl(nbcl_map: HashMap<String, Value>) -> Self {
         let mut map = BTreeMap::new();
-        for (k, v) in rhai_map {
-            map.insert(k.to_string(), Property::from_dynamic(v));
+        for (k, v) in nbcl_map {
+            map.insert(k.to_string(), Property::from_value(v));
+        }
+        Self(map)
+    }
+
+    /// Converts an actual Nbcl map into stable PropertyMap.
+    pub fn from_nbcl_map(nbcl_map: Vec<(String, Value)>) -> Self {
+        let mut map = BTreeMap::new();
+        for (k, v) in nbcl_map {
+            map.insert(k.to_string(), Property::from_value(v));
         }
         Self(map)
     }
@@ -60,76 +70,28 @@ pub struct Callback {
 }
 
 impl Property {
-    pub fn from_dynamic(d: rhai::Dynamic) -> Self {
-        // Handle Basic Types
-        if d.is_unit() {
-            return Self::None;
-        }
-        if d.is_bool() {
-            return Self::Bool(d.as_bool().unwrap());
-        }
-        if d.is_int() {
-            return Self::Int(d.as_int().unwrap());
-        }
-        if d.is_float() {
-            return Self::Float(d.as_float().unwrap());
+    pub fn from_value(value: Value) -> Self {
+        return match value {
+            Value::Int(v) => Self::Int(v),
+            Value::Bool(v) => Self::Bool(v),
+            Value::Float(v) => Self::Float(v),
+            Value::Str(v) => Self::String(v),
+            Value::List(v) => Self::Array(v.into_iter().map(|inner| Self::from_value(inner)).collect()),
+            Value::Map(v) => Self::Map(PropertyMap::from_nbcl_map(v)),
+            Value::Lambda(v) => Self::Callback(Callback { name: v, handle: None }),
+            Value::Null => Self::None,
+            _ => Self::None,
         }
 
-        // Handle Specialized Strings
-        if d.is_char() {
-            return Self::String(d.as_char().unwrap().to_string());
-        }
-        if d.is_string() {
-            return Self::String(d.into_string().unwrap_or_default());
-        }
+        // Probably commented out temporarily (21-05-2026)
+        // // Handle Variants
+        // if let Some(var) = d.clone().try_cast::<GlobalVar>() {
+        //     return Self::GlobalVar(Box::new(var));
+        // }
 
-        // Handle Recursive Arrays
-        if let Ok(arr) = d.clone().into_array() {
-            return Self::Array(arr.into_iter().map(Self::from_dynamic).collect());
-        }
-
-        // Handle Property Maps
-        if d.is_map() {
-            let map = d.clone().cast::<rhai::Map>();
-            return Self::Map(PropertyMap::from_rhai(map));
-        }
-
-        // Handle Function Pointers
-        if let Some(fn_ptr) = d.clone().try_cast::<rhai::FnPtr>() {
-            return Self::Callback(Callback { name: fn_ptr.fn_name().to_string(), handle: None });
-        }
-
-        // Handle Variants
-        if let Some(var) = d.clone().try_cast::<GlobalVar>() {
-            return Self::GlobalVar(Box::new(var));
-        }
-
-        if let Some(comp) = d.clone().try_cast::<GlobalCompare>() {
-            return Self::GlobalCompare(Box::new(comp));
-        }
-
-        Self::None
-    }
-
-    pub fn into_dynamic(self) -> rhai::Dynamic {
-        match self {
-            Self::String(s) => s.into(),
-            Self::Int(i) => i.into(),
-            Self::Float(f) => f.into(),
-            Self::Bool(b) => b.into(),
-            Self::Array(arr) => {
-                let vec: Vec<rhai::Dynamic> = arr.into_iter().map(|p| p.into_dynamic()).collect();
-                vec.into()
-            }
-            Self::Map(map) => {
-                let mut rhai_map = rhai::Map::new();
-                for (k, v) in map.0 {
-                    rhai_map.insert(k.into(), v.into_dynamic());
-                }
-                rhai_map.into()
-            }
-            _ => rhai::Dynamic::UNIT,
-        }
+        // if let Some(comp) = d.clone().try_cast::<GlobalCompare>() {
+        //     return Self::GlobalCompare(Box::new(comp));
+        // }
     }
 
     /// Returns the bool value if the property is a Bool

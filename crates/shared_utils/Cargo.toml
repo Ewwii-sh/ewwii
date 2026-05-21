@@ -11,7 +11,7 @@ homepage = "https://ewwii-sh.github.io/"
 [dependencies]
 anyhow.workspace = true
 log.workspace = true
-rhai = { workspace = true, features = ["internals"] }
+nbcl.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
