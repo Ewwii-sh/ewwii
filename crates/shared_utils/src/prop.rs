@@ -45,7 +45,7 @@ impl PropertyMap {
     }
 }
 
-/// Alternative to [`rhai::Dynamic`]
+/// A property
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Property {
     None,
@@ -61,7 +61,7 @@ pub enum Property {
     GlobalVar(Box<GlobalVar>),
 }
 
-/// Alternative to [`rhai::FnPtr`]
+/// A callback function
 #[derive(Debug, Clone, Serialize, Deserialize, Hash)]
 pub struct Callback {
     pub name: String,
@@ -78,15 +78,32 @@ impl Property {
             Value::List(v) => Self::Array(v.into_iter().map(|inner| Self::from_value(inner)).collect()),
             Value::Map(v) => Self::Map(PropertyMap::from_nbcl_map(v)),
             Value::Lambda(v) => Self::Callback(Callback { name: v, handle: None }),
+            Value::Object(n, v) => {
+                // Handle Variants
+                match n.as_ref() {
+                    "GlobalVar" => {
+                        let Value::List(mut data) = *v else {
+                            return Self::None
+                        };
+
+                        let name = match data.remove(0) {
+                            Value::Str(v) => v,
+                            _ => String::new(),
+                        };
+                        let initial = Self::from_value(data.remove(0));
+
+                        Self::GlobalVar(Box::new(GlobalVar {
+                            name,
+                            initial,
+                            template: None,
+                        }))
+                    }
+                    _ => Self::None,
+                }
+            }
             Value::Null => Self::None,
             _ => Self::None,
         }
-
-        // Probably commented out temporarily (21-05-2026)
-        // // Handle Variants
-        // if let Some(var) = d.clone().try_cast::<GlobalVar>() {
-        //     return Self::GlobalVar(Box::new(var));
-        // }
     }
 
     /// Returns the bool value if the property is a Bool

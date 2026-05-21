@@ -64,6 +64,26 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
             "GtkUI" => handle_primitive!(GtkUI, node),
 
             // Main
+            "Poll" => {
+                let name = node.id.with_context(|| format!("Poll has no <id>"))?;
+                let props = PropertyMap::from_nbcl(node.props);
+
+                WidgetNode::Poll {
+                    var: name,
+                    props,
+                }
+            }
+
+            "Listen" => {
+                let name = node.id.with_context(|| format!("Listen has no <id>"))?;
+                let props = PropertyMap::from_nbcl(node.props);
+
+                WidgetNode::Listen {
+                    var: name,
+                    props,
+                }
+            }
+
             "Window" => {
                 let name = node.id.with_context(|| format!("Window has no <id>"))?;
                 let props = PropertyMap::from_nbcl(node.props);

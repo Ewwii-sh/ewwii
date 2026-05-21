@@ -1,4 +1,5 @@
-use nbcl::{NbclEngine, NativeNodeSchema, PropValidation};
+use nbcl::{NbclEngine, NativeNodeSchema, PropValidation, Value, Type};
+use std::collections::HashMap;
 
 pub fn register_all_nodes(engine: &mut NbclEngine) {
     // == Primitive nodes (nodes that does not take in children) ==
@@ -58,42 +59,52 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
         child_count: Some((0, 0))
     });
 
-    // Got rid if it during the migration to nbcl.
-    // engine.register_fn(
-    //     "bound",
-    //     |variables: Array, closure: FnPtr| -> Result<GlobalCompare, Box<EvalAltResult>> {
-    //         let handle = rand::random::<u64>();
-    //         let unique_name = format!("\0__globalbound__{}", &handle);
-    //         let vars = variables.into_iter().map(Property::from_dynamic).collect();
-
-    //         crate::callback::register_callback(handle, closure.clone());
-
-    //         let callback = Callback { name: closure.fn_name().to_string(), handle: Some(handle) };
-
-    //         Ok(GlobalCompare { name: unique_name, vars, closure: callback })
-    //     },
-    // );
-
     // == Top-level macros ==
+    let mut poll_args = HashMap::new();
+    let mut listen_args = HashMap::new();
+
+    poll_args.insert("cmd".to_string(), Type::Str);
+    poll_args.insert("initial".to_string(), Type::Str);
+    poll_args.insert("interval".to_string(), Type::Str);
+    poll_args.insert("skip_unchanged".to_string(), Type::Bool);
+
+    listen_args.insert("cmd".to_string(), Type::Str);
+    listen_args.insert("initial".to_string(), Type::Str);
+
+    engine.register_node(NativeNodeSchema {
+        type_name: "Poll".into(),
+        enforce_id: true,
+        validation: PropValidation::Strict(poll_args),
+        child_count: Some((0, 0))
+    });
+
+    engine.register_node(NativeNodeSchema {
+        type_name: "Listen".into(),
+        enforce_id: true,
+        validation: PropValidation::Strict(listen_args),
+        child_count: Some((0, 0))
+    });
+
     engine.register_node(NativeNodeSchema {
         type_name: "Window".into(),
         enforce_id: true,
         validation: PropValidation::Loose,
         child_count: Some((1, 1))
     });
+}
 
-    // Need to think about it.
-    //
-    // engine.register_fn("poll", |var: &str, props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
-    //     let prop_map = PropertyMap::from_rhai(props);
-    //     Ok(WidgetNode::Poll { var: var.to_string(), props: prop_map })
-    // });
+pub fn register_all_fns(engine: &mut NbclEngine) {
+    engine.register_native_fn(
+        "global",
+        vec![Type::Str],
+        Type::Object("GlobalVar".to_string()),
+        |mut args| {
+            let mut data = Vec::new();
 
-    // engine.register_fn(
-    //     "listen",
-    //     |var: &str, props: Map| -> Result<WidgetNode, Box<EvalAltResult>> {
-    //         let prop_map = PropertyMap::from_rhai(props);
-    //         Ok(WidgetNode::Listen { var: var.to_string(), props: prop_map })
-    //     },
-    // );
+            data.push(args.remove(0));
+            data.push(Value::Str(String::new()));
+
+            Ok(Value::Object("GlobalVar".to_string(), Box::new(Value::List(data))))
+        }
+    );
 }

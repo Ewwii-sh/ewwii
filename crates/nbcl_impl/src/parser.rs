@@ -13,6 +13,7 @@ impl NbclConfigParser {
         let mut engine = NbclEngine::new();
 
         builtins::register_all_nodes(&mut engine);
+        builtins::register_all_fns(&mut engine);
 
         Self {
             engine,
