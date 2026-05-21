@@ -1,8 +1,8 @@
 /*
 * IMPORTANT:
-* 
+*
 * Modifying WidgetNode requires specific steps and it is
-* easy to mess everything up. Avoid touching WidgetNode 
+* easy to mess everything up. Avoid touching WidgetNode
 * unless you know what you are doing.
 */
 

@@ -1,10 +1,10 @@
 [workspace]
-members = ["crates/*", "tools/*"]
+members = ["crates/*"]
 resolver = "2"
 
 [workspace.dependencies]
 ewwii_shared_utils = { version = "0.2.0", path = "crates/shared_utils" }
-ewwii_rhai_impl = { version = "0.1.0", path = "crates/rhai_impl" }
+ewwii_nbcl_impl = { version = "0.1.0", path = "crates/nbcl_impl" }
 ewwii_plugin_api = { version = "1.1.0", path = "crates/plugin_api" }
 
 anyhow = "1.0.86"
@@ -34,7 +34,7 @@ pretty_assertions = "1.4.0"
 pretty_env_logger = "0.5.0"
 rand = "0.10.0"
 regex = "1.10.5"
-rhai = "1.23.6"
+nbcl = "0.3.2"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 simple-signal = "1.1"

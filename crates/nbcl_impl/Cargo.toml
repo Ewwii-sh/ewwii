@@ -1,17 +1,17 @@
 [package]
-name = "ewwii_rhai_impl"
+name = "ewwii_nbcl_impl"
 version = "0.1.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
-description = "The rhai embedded language implementation of ewwii"
+description = "The nbcl embedded language implementation of ewwii"
 repository = "https://github.com/byson94/ewwii"
 homepage = "https://ewwii-sh.github.io/"
 
 [dependencies]
 ewwii_shared_utils.workspace = true
 
-rhai = { workspace = true, features = ["internals"] }
+nbcl.workspace = true
 gtk4.workspace = true
 anyhow.workspace = true
 tokio = { workspace = true, features = ["full"] }
@@ -21,6 +21,5 @@ ahash.workspace = true
 nix.workspace = true
 # error handling
 rand.workspace = true
-rhai_trace = "0.3.1"
 codespan-reporting.workspace = true
 regex.workspace = true
