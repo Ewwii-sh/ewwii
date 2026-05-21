@@ -1,4 +1,4 @@
-use super::variables::{GlobalCompare, GlobalVar};
+use super::variables::GlobalVar;
 use crate::prop::PropertyMap;
 use crate::template::TemplateExpr;
 use anyhow::{anyhow, Result};
@@ -6,10 +6,6 @@ use std::time::Duration;
 
 pub enum PropValue<T> {
     Static(T),
-    Compare {
-        comp: GlobalCompare,
-        parser: fn(&str) -> Option<T>,
-    },
     Bound {
         var_name: String,
         initial: T,
@@ -23,7 +19,6 @@ impl<T: Clone + Default> PropValue<T> {
         match self {
             PropValue::Static(v) => v.clone(),
             PropValue::Bound { initial, .. } => initial.clone(),
-            PropValue::Compare { .. } => T::default(),
         }
     }
 }
@@ -93,9 +88,6 @@ pub fn get_string_prop(
         if let Some(var) = value.as_global_var() {
             return Ok(make_bound(var.clone(), default.unwrap_or("").to_string(), parse_string));
         }
-        if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_string });
-        }
 
         value
             .as_str()
@@ -117,9 +109,6 @@ pub fn get_bool_prop(
     if let Some(value) = props.get(key) {
         if let Some(var) = value.as_global_var() {
             return Ok(make_bound(var.clone(), default.unwrap_or(false), parse_bool));
-        }
-        if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_bool });
         }
 
         if let Some(v) = value.as_bool() {
@@ -146,9 +135,6 @@ pub fn get_i64_prop(
     if let Some(value) = props.get(key) {
         if let Some(var) = value.as_global_var() {
             return Ok(make_bound(var.clone(), default.unwrap_or(0), parse_i64));
-        }
-        if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_i64 });
         }
 
         // as_int is i64
@@ -188,9 +174,6 @@ pub fn get_f64_prop(
                 template: var.template.clone(),
             });
         }
-        if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_f64 });
-        }
 
         // as_float is f64
         if let Some(v) = value.as_float() {
@@ -226,9 +209,6 @@ pub fn get_i32_prop(
                 parser: parse_i32,
                 template: var.template.clone(),
             });
-        }
-        if let Some(var) = value.as_global_compare() {
-            return Ok(PropValue::Compare { comp: var.clone(), parser: parse_i32 });
         }
 
         // as_int is i64
@@ -272,8 +252,6 @@ pub fn get_vec_string_prop(
                         parser: parse_string,
                         template: var.template.clone(),
                     })
-                } else if let Some(var) = d.as_global_compare() {
-                    return Ok(PropValue::Compare { comp: var.clone(), parser: parse_string });
                 } else {
                     d.as_str().map(String::from).map(PropValue::Static).ok_or_else(|| {
                         anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key)
@@ -336,13 +314,6 @@ pub fn unwrap_static<T: Default>(key: &str, prop: PropValue<T>) -> T {
                 "Property `{}` does not support variable binding (got GlobalVar `{}`), using default as fallback",
                 key,
                 var_name
-            );
-            T::default()
-        }
-        PropValue::Compare { .. } => {
-            log::error!(
-                "Property `{}` does not support variable binding comparision (got GlobalCompare), using default as fallback",
-                key,
             );
             T::default()
         }

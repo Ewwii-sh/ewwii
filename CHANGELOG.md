@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+### Changed
+
+- Replaced rhai with nbcl.
+
 ### Fixed
 
 - `onclick` conflicting with scroll.
