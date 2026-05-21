@@ -3,7 +3,7 @@
 // 3. eval_code_snippet
 // --  4. register_poll_listen_globals -- (maybe not)
 // 5. call_nbcl_function
-use nbcl::{NbclEngine, context::Context};
+use nbcl::{NbclEngine, context::Context, Value};
 use crate::{builtins, errors, translate};
 use ewwii_shared_utils::ast::WidgetNode;
 use anyhow::{anyhow, Result};
@@ -37,6 +37,56 @@ impl NbclConfigParser {
         // translate the tree
         let wnode = WidgetNode::Tree(translate::to_widgetnode(tree.root_nodes)?);
         Ok(wnode.setup_dyn_ids("root"))
+    }
+
+    pub fn eval_code_snippet(&mut self, code: &str) -> Result<WidgetNode> {
+        let tree = self.engine.evaluate(code)
+            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, Some("<dyn_eval>"))))?;
+
+        // translate the tree
+        let mut all_nodes = translate::to_widgetnode(tree.root_nodes)?;
+
+        if all_nodes.len() <= 1 {
+            anyhow::bail!("Snippet must resolve to exactly 1 widget.");
+        }
+
+        let node = all_nodes.remove(0);
+        Ok(node.setup_dyn_ids("root"))
+    }
+
+    pub fn call_nbcl_function(&self, expr: &str) -> Result<()> {
+        let Some(ref ctx) = self.ctx else {
+            anyhow::bail!("Nbcl context not found.");
+        };
+
+        let (fn_name, args_str) = expr
+            .split_once('(')
+            .ok_or_else(|| anyhow::anyhow!("Invalid expression: {}", expr))?;
+        let fn_name = fn_name.trim();
+        let args_str = args_str.trim_end_matches(')');
+
+        let args: Vec<Value> = args_str
+            .split(',')
+            .filter(|s| !s.trim().is_empty())
+            .map(|s| {
+                let s = s.trim();
+                if let Ok(i) = s.parse::<i64>() {
+                    Value::Int(i)
+                } else if let Ok(f) = s.parse::<f64>() {
+                    Value::Float(f)
+                } else {
+                    Value::Str(s.to_string())
+                }
+            })
+            .collect();
+
+        self.engine.call_function(
+            fn_name,
+            args,
+            ctx,
+        )?;
+
+        Ok(())
     }
 
     pub fn extension(&self) -> String {
