@@ -103,8 +103,29 @@ pub fn register_all_fns(engine: &mut NbclEngine) {
 
             data.push(args.remove(0));
             data.push(Value::Str(String::new()));
+            data.push(Value::Str(String::new()));
 
             Ok(Value::Object("GlobalVar".to_string(), Box::new(Value::List(data))))
+        }
+    );
+
+    engine.register_native_fn(
+        "mutate",
+        vec![Type::Object("GlobalVar".to_string()), Type::Str],
+        Type::Object("GlobalVar".to_string()),
+        |mut args| {
+            let mut glob_var = args.remove(0);
+            let str_interpol = args.remove(0);
+
+            match glob_var {
+                Value::Object(_, ref mut data) => {
+                    if let Value::List(ref mut inner_data) = **data {
+                        inner_data[2] = str_interpol;
+                    }
+                    Ok(glob_var)
+                }
+                _ => Ok(glob_var)
+            }
         }
     );
 }
