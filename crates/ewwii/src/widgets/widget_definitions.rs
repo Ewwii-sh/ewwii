@@ -431,7 +431,7 @@ pub(super) fn build_event_box(
             let (px, py) = press_coords.get();
             let dist = ((x - px).powi(2) + (y - py).powi(2)).sqrt();
             if dist > 8.0 { return; }
-    
+
             let controller = controller_data.borrow();
             let button = gesture.current_button();
 
@@ -1278,7 +1278,7 @@ pub(super) fn build_gtk_button(
             let (px, py) = press_coords.get();
             let dist = ((x - px).powi(2) + (y - py).powi(2)).sqrt();
             if dist > 8.0 { return; }
-    
+
             let controller = controller_data.borrow();
             let button = gesture.current_button();
 

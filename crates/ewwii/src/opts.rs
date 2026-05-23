@@ -36,7 +36,7 @@ pub(super) struct RawOpt {
     #[arg(long = "force-wayland", global = true)]
     force_wayland: bool,
 
-    /// override path to configuration directory (directory that contains ewwii.rhai and eww.(s)css)
+    /// override path to configuration directory (directory that contains ewwii.nbcl and ewwii.(s)css)
     #[arg(short, long, global = true)]
     config: Option<std::path::PathBuf>,
 
@@ -203,10 +203,10 @@ pub enum ActionWithServer {
         mappings: HashMap<String, String>,
     },
 
-    /// Call rhai functions.
+    /// Call nbcl functions.
     #[command(name = "call-fns")]
-    CallRhaiFns {
-        /// Rhai functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
+    CallNbclFns {
+        /// Nbcl functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
         #[arg(required = true)]
         calls: Vec<String>,
     },
@@ -223,8 +223,8 @@ pub enum WidgetControlAction {
 
     /// Create widgets
     Create {
-        /// Rhai code to create widgets from
-        rhai_codes: Vec<String>,
+        /// Nbcl code to create widgets from
+        nbcl_codes: Vec<String>,
 
         /// Name of the widget to add these widgets as a child to
         #[arg(long = "parent", short = 'p')]
@@ -346,8 +346,8 @@ impl ActionWithServer {
                     sender,
                 })
             }
-            ActionWithServer::CallRhaiFns { calls } => {
-                return with_response_channel(|sender| app::DaemonCommand::CallRhaiFns {
+            ActionWithServer::CallNbclFns { calls } => {
+                return with_response_channel(|sender| app::DaemonCommand::CallNbclFns {
                     calls,
                     sender,
                 })
