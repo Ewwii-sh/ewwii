@@ -107,9 +107,9 @@ pub trait EwwiiAPI: Send + Sync {
     /// }
     /// ```
     ///
-    /// This example will register a function with signature "my_func(Array)" in rhai.
+    /// This example will register a function with signature "my_func(List)" in nbcl.
     ///
-    /// ## Example use in rhai
+    /// ## Example use in nbcl
     ///
     /// ```js
     /// print(my_func(["param1", "param2"]));
@@ -153,14 +153,6 @@ pub trait EwwiiAPI: Send + Sync {
     ///         }));
     ///     }
     /// }
-    /// ```
-    ///
-    /// This example will register a function with signature "my_func(Array)" in nbcl.
-    ///
-    /// ## Example use in nbcl
-    ///
-    /// ```js
-    /// print(my_func(["param1", "param2"]));
     /// ```
     fn register_config_engine(
         &self,
