@@ -98,7 +98,7 @@ pub enum DaemonCommand {
         mappings: HashMap<String, String>,
         sender: DaemonResponseSender,
     },
-    CallRhaiFns {
+    CallNbclFns {
         calls: Vec<String>,
         sender: DaemonResponseSender,
     },
@@ -366,8 +366,8 @@ impl<B: DisplayBackend> App<B> {
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
-            DaemonCommand::CallRhaiFns { calls, sender } => {
-                match self.call_rhai_fns(calls) {
+            DaemonCommand::CallNbclFns { calls, sender } => {
+                match self.call_nbcl_fns(calls) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
@@ -611,14 +611,14 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::Create { rhai_codes, parent_name } => {
-                for rhai_code in rhai_codes {
+            crate::opts::WidgetControlAction::Create { nbcl_codes, parent_name } => {
+                for nbcl_code in nbcl_codes {
                     let widget_node = EWWII_CONFIG_PARSER.with(|p| {
                         let mut parser = p.borrow_mut();
                         match parser.as_mut().unwrap() {
-                            ConfigEngine::Default(rhai) => rhai.eval_code_snippet(&rhai_code),
+                            ConfigEngine::Default(nbcl) => nbcl.eval_code_snippet(&nbcl_code),
                             ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
-                                "Dynamic widget creation is only supported with the Rhai config engine"
+                                "Dynamic widget creation is only supported with the Nbcl config engine"
                             )),
                         }
                     })?;
@@ -713,18 +713,18 @@ impl<B: DisplayBackend> App<B> {
         Ok(())
     }
 
-    pub fn call_rhai_fns(&self, calls: Vec<String>) -> Result<()> {
+    pub fn call_nbcl_fns(&self, calls: Vec<String>) -> Result<()> {
         EWWII_CONFIG_PARSER.with(move |p| -> anyhow::Result<()> {
             let parser = p.borrow();
             match parser.as_ref().unwrap() {
-                ConfigEngine::Default(rhai) => {
+                ConfigEngine::Default(nbcl) => {
                     for fn_call in calls {
-                        rhai.call_rhai_fn(&fn_call, None)?;
+                        nbcl.call_nbcl_function(&fn_call)?;
                     }
                     Ok(())
                 }
                 ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
-                    "Calling rhai functions is only supported with the Rhai config engine"
+                    "Calling nbcl functions is only supported with the Nbcl config engine"
                 )),
             }
         })?;

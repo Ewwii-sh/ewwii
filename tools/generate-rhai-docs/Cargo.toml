@@ -1,9 +1,0 @@
-[package]
-name = "generate-rhai-docs"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-ewwii_rhai_impl.workspace = true
-rhai.workspace = true
-rhai-autodocs = "0.9.0"

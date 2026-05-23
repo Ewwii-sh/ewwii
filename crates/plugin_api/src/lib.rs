@@ -75,7 +75,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// Log an error from the host
     fn error(&self, msg: &str);
 
-    /// Expose a function that rhai configuration can call.
+    /// Expose a function that nbcl configuration can call.
     ///
     /// # Example
     ///
@@ -100,23 +100,23 @@ pub trait EwwiiAPI: Send + Sync {
     ///             // Do stuff
     ///             // - Perform things on the args (if needed)
     ///             // - And return a value
-    ///             
+    ///
     ///             Ok(PluginValue::Null) // return empty
     ///         }));
     ///     }
     /// }
     /// ```
     ///
-    /// This example will register a function with signature "my_func(Array)" in rhai.
+    /// This example will register a function with signature "my_func(List)" in nbcl.
     ///
-    /// ## Example use in rhai
+    /// ## Example use in nbcl
     ///
     /// ```js
     /// print(my_func(["param1", "param2"]));
     /// ```
     fn register_function(&self, name: &str, handler: NativeFn) -> Result<PluginValue, PluginError>;
 
-    /// Replace rhai with a custom configuration engine.
+    /// Replace nbcl with a custom configuration engine.
     ///
     /// # Example
     ///
@@ -141,26 +141,18 @@ pub trait EwwiiAPI: Send + Sync {
     ///             ConfigInfo {
     ///                 extension: "lua",
     ///                 main_file: "main.lua",
-    ///                 
+    ///
     ///             },
     ///             ParseFn::new(|source, path| {
     ///             // source (&str) - source code of main.lua
     ///             // path (&str) - path to main.lua
     ///
     ///             // Parse Lua and construct WidgetNode
-    ///             
+    ///
     ///             Ok(WidgetNode::Tree(vec![])) // returning Dummy for now
     ///         }));
     ///     }
     /// }
-    /// ```
-    ///
-    /// This example will register a function with signature "my_func(Array)" in rhai.
-    ///
-    /// ## Example use in rhai
-    ///
-    /// ```js
-    /// print(my_func(["param1", "param2"]));
     /// ```
     fn register_config_engine(
         &self,
@@ -188,7 +180,7 @@ pub trait EwwiiAPI: Send + Sync {
 ///     }
 ///
 ///     fn init(&self, host: &dyn EwwiiAPI) {
-///         /* Implementation Skipped */   
+///         /* Implementation Skipped */
 ///      }
 /// }
 ///

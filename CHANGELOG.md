@@ -5,12 +5,27 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [UNRELEASED]
+## [0.7.0] - 2026-05-23
+
+### Added
+
+- Nbcl as the new configuration language.
+- `global` function for accessing globals.
+- `mutate` function for temporary global variable mutation.
+
+### Changed
+
+- Plugin API version system to follow the binary version.
 
 ### Fixed
 
 - `onclick` conflicting with scroll.
 - Scale substracting 1 if value is 100.
+
+### Removed
+
+- Rhai as configuration language.
+- `bind` function.
 
 ## [0.6.0] - 2026-04-26
 

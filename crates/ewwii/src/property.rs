@@ -1,151 +1,8 @@
-use crate::config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use crate::updates::api::VarWatcherAPI;
 use crate::updates::SHUTDOWN_REGISTRY;
 use ewwii_shared_utils::template::TemplateExpr;
-use ewwii_shared_utils::variables::{GlobalCompare, GlobalVar};
 use gtk4::glib;
 use tokio::sync::watch;
-
-pub fn handle_global_compare(compare: GlobalCompare) -> watch::Receiver<String> {
-    let mut global_vars: Vec<(usize, GlobalVar)> = Vec::new();
-    let mut idx = 0;
-
-    for var in &compare.vars {
-        if let Some(val) = var.as_global_var() {
-            global_vars.push((idx, val.clone()));
-        }
-        idx += 1
-    }
-
-    let (tx, _) = watch::channel(String::new());
-
-    let (notify_tx, mut notify_rx) = tokio::sync::mpsc::unbounded_channel::<()>();
-    let _ = notify_tx.send(()); // Init
-
-    // Shutdown registry
-    let (shutdown_tx, shutdown_rx) = watch::channel(false);
-    SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx);
-
-    // Handle GlobalVar's
-    for (_, var) in global_vars.clone() {
-        let notify_tx = notify_tx.clone();
-        let mut shutdown_rx = shutdown_rx.clone();
-
-        tokio::spawn(async move {
-            let mut rx = match VarWatcherAPI::subscribe(&var.name) {
-                Some(rx) => rx,
-                None => {
-                    log::error!("Failed to subscribe to global var: {}", var.name);
-                    return;
-                }
-            };
-
-            loop {
-                tokio::select! {
-                    result = rx.changed() => {
-                        if result.is_err() {
-                            log::debug!("Watcher closed for global var: {}", var.name);
-                            break;
-                        }
-                        let _ = notify_tx.send(());
-                    }
-                    _ = shutdown_rx.changed() => {
-                        if *shutdown_rx.borrow() {
-                            log::trace!("Shutdown received, stopping watcher for: {}", var.name);
-                            break;
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // aggregator task
-    let tx_clone = tx.clone();
-    let compare_closure = compare.closure.clone();
-    let compare_array = compare.vars.clone();
-    let global_vars = global_vars.clone();
-    let mut shutdown_rx = shutdown_rx.clone();
-
-    glib::MainContext::default().spawn_local(async move {
-        loop {
-            tokio::select! {
-                msg = notify_rx.recv() => {
-                    if msg.is_none() {
-                        break;
-                    }
-
-                    let maybe_result: Option<String> = EWWII_CONFIG_PARSER.with(|parser_cell| {
-                        let parser_ref = parser_cell.borrow();
-                        let parser = match parser_ref.as_ref() {
-                            Some(p) => p,
-                            None => {
-                                log::error!("Parser not initialized");
-                                return None;
-                            }
-                        };
-                        let mut args = compare_array.clone();
-                        let state = VarWatcherAPI::state();
-                        for (idx, gvar) in &global_vars {
-                            let value = match state.get(&gvar.name) {
-                                Some(v) => v,
-                                None => {
-                                    log::error!("Global var '{}' not found", gvar.name);
-                                    return None;
-                                }
-                            };
-                            if let Some(slot) = args.get_mut(*idx) {
-                                *slot = value.clone().into();
-                            } else {
-                                log::error!("Index {} out of bounds", idx);
-                            }
-                        }
-                        let callback_handle = match compare_closure.handle {
-                            Some(h) => h,
-                            None => {
-                                log::error!("Unexpected callback handle received: None");
-                                return None;
-                            }
-                        };
-                        let args_dyn: rhai::Array = args
-                            .into_iter()
-                            .map(|a| a.into_dynamic())
-                            .collect();
-                        Some(
-                            match parser {
-                                ConfigEngine::Default(rhai) => {
-                                    match rhai.call_callback::<String>(callback_handle, (args_dyn,)) {
-                                        Ok(v) => v,
-                                        Err(e) => {
-                                            log::error!("Closure execution failed: {:?}", e);
-                                            return None;
-                                        }
-                                    }
-                                }
-                                ConfigEngine::Custom(_) => {
-                                    log::error!("Callbacks are only supported with the Rhai config engine");
-                                    return None;
-                                }
-                            }
-                        )
-                    });
-
-                    if let Some(result) = maybe_result {
-                        let _ = tx_clone.send(result);
-                    }
-                }
-                _ = shutdown_rx.changed() => {
-                    if *shutdown_rx.borrow() {
-                        log::trace!("Shutdown received, stopping aggregator");
-                        break;
-                    }
-                }
-            }
-        }
-    });
-
-    tx.subscribe()
-}
 
 pub fn handle_template(template: TemplateExpr) -> watch::Receiver<String> {
     let watched_vars = template.collect_vars();
@@ -265,17 +122,6 @@ macro_rules! apply_property {
                     }
                 }
             }
-            PropValue::Compare { comp, parser } => {
-                let mut recv = crate::property::handle_global_compare(comp);
-                glib::MainContext::default().spawn_local(async move {
-                    while recv.changed().await.is_ok() {
-                        let raw = recv.borrow().clone();
-                        if let Some(v) = parser(&raw) {
-                            setter(v);
-                        }
-                    }
-                });
-            }
         }
     }};
 }
@@ -318,17 +164,6 @@ macro_rules! apply_property_watch {
                         });
                     }
                 }
-            }
-            PropValue::Compare { comp, parser } => {
-                let mut recv = crate::property::handle_global_compare(comp);
-                glib::MainContext::default().spawn_local(async move {
-                    while recv.changed().await.is_ok() {
-                        let raw = recv.borrow().clone();
-                        if let Some($v) = parser(&raw) {
-                            $body
-                        }
-                    }
-                });
             }
             PropValue::Static(_) => {}
         }
