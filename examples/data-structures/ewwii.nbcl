@@ -1,0 +1,83 @@
+# Array of emoji
+let stringArray = [
+    "🦝", "🐱", "🐵", "🦁", "🐹", "🦊"
+]
+
+# Widget (in a function): a single animal button
+component AnimalButton (emoji) {
+    Box {
+        class = "animalLayout"
+
+        EventBox {
+            class = "animal"
+            cursor = "pointer"
+            onclick = "echo " + emoji + " >> /tmp/selected_emoji.txt"
+
+            Label {
+                text = emoji
+            }
+        }
+    }
+}
+
+# Widget: the row of animal buttons
+component AnimalRow () {
+    Box {
+        class = "animals"
+        orientation = "h"
+        halign = "center"
+
+        # for emoji in stringArray {
+        # }
+
+        AnimalButton  { emoji = stringArray[0] }
+        AnimalButton  { emoji = stringArray[1] }
+        AnimalButton  { emoji = stringArray[2] }
+        AnimalButton  { emoji = stringArray[3] }
+        AnimalButton  { emoji = stringArray[4] }
+        AnimalButton  { emoji = stringArray[5] }
+    }
+}
+
+# Widget: currently selected animal display
+component CurrentAnimal () {
+    Box {
+        Label {
+            text = global("selected")
+        }
+    }
+}
+
+# Layout widget
+component Layout () {
+    Box {
+        class = "layout"
+        orientation = "v"
+        halign = "center"
+
+        AnimalRow {}
+        CurrentAnimal {}
+    }
+}
+
+# Track the selected emoji
+Listen "selected" {
+    cmd = "scripts/readlast_and_truncate.sh"
+    initial = "🦝"
+}
+
+Window "data-structures" {
+    monitor = 0
+    exclusive = false
+    focusable = "none"
+    windowtype = "normal"
+    geometry = {
+        anchor = "center"
+        x = "0px"
+        y = "0px"
+        width = "100px"
+        height = "10px"
+    }
+
+    Layout {}
+}

@@ -1,0 +1,121 @@
+component Bar () {
+    Box {
+        orientation = "h"
+
+        Workspaces {}
+        Music {}
+        SideStuff {}
+    }
+}
+
+component SideStuff () {
+    Box {
+        class = "sidestuff"
+        orientation = "h"
+        space_evenly = false
+        halign = "end"
+
+        Metric {
+            label = "🔊"
+            value = global("volume")
+            onchange = "pamixer --set-volume {}"
+        }
+
+        Label {
+            text = global("time")
+        }
+    }
+}
+
+component Workspaces () {
+    Box {
+        class = "workspaces"
+        orientation = "h"
+        space_evenly = true
+        halign = "start"
+        spacing = 10
+
+        # use a loop instead
+        Button {
+            onclick = "i3-msg workspace 1"
+            label = "1"
+        }
+        Button {
+            onclick = "i3-msg workspace 2"
+            label = "2"
+        }
+        Button {
+            onclick = "i3-msg workspace 3"
+            label = "3"
+        }
+    }
+}
+
+component Music () {
+    Box {
+        class = "music"
+        orientation = "h"
+        space_evenly = false
+        halign = "center"
+
+        Label {
+            text = global("music_var").mutate("🎵 {self}")
+        }
+    }
+}
+
+component Metric (label, value, onchange) {
+    Box {
+        orientation = "h"
+        class = "metric"
+        space_evenly = false
+
+        Box {
+            class = "label"
+
+            Label {
+                text = label
+            }
+        }
+
+        Scale {
+            min = 0
+            max = 101
+            active = onchange != ""
+            value = value
+            onchange = onchange
+        }
+    }
+}
+
+Listen "music_var" {
+    cmd = "echo Playing Ewwii"
+    initial = ""
+}
+
+Listen "volume" {
+    cmd = "scripts/getvol"
+    initial = ""
+}
+
+Poll "time" {
+    interval = "10s"
+    cmd = "date '+%H:%M %b %d, %Y'"
+    initial = ""
+}
+
+Window "bar" {
+    monitor = 0
+    windowtype = "dock"
+    exclusive = true
+    geometry = {
+        x = "0%"
+        y = "0%"
+        width = "90%"
+        height = "10px"
+        anchor = "top center"
+    }
+    reserve = { side = "top" distance = "4%" }
+
+    Bar {}
+}
