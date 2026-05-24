@@ -13,7 +13,7 @@
 </div>
 <br/>
 
-Ewwii is a Gtk4 based widget system for Linux that lets you build fully custom desktop widgets using the [Rhai](https://rhai.rs) scripting language. It is a hard fork of [Eww](https://github.com/elkowar/eww), rewritten from the ground up to drop the Yuck/Simplexpr syntax in favor of a modular, programmable, expression-based configuration system.
+Ewwii is a Gtk4 based widget system for Linux that lets you build fully custom desktop widgets using the [Nbcl](https://nbcl-lang.github.io) configuration language. It is a hard fork of [Eww](https://github.com/elkowar/eww), rewritten from the ground up to drop the Yuck/Simplexpr syntax in favor of a modular, programmable, expression-based configuration system.
 
 ## Features
 
