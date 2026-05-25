@@ -4,3 +4,4 @@ pub mod builtins;
 pub mod errors;
 pub mod parser;
 pub mod translate;
+pub mod libraries;
