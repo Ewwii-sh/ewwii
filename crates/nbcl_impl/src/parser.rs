@@ -1,5 +1,5 @@
 use nbcl::{NbclEngine, context::Context, Value};
-use crate::{builtins, errors, translate};
+use crate::{builtins, libraries, errors, translate};
 use ewwii_shared_utils::ast::WidgetNode;
 use anyhow::{anyhow, Result};
 
@@ -14,6 +14,9 @@ impl NbclConfigParser {
 
         builtins::register_all_nodes(&mut engine);
         builtins::register_all_fns(&mut engine);
+
+        // libraries::register_apilib(&mut engine);
+        libraries::register_core_lib(&mut engine);
 
         Self {
             engine,
