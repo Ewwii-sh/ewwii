@@ -1,5 +1,5 @@
-use nbcl::{Value, error::Result};
 use crate::runtime_err;
+use nbcl::{error::Result, Value};
 
 pub fn set_env(args: Vec<Value>) -> Result<Value> {
     if let Value::Str(var) = &args[0] {
@@ -12,20 +12,17 @@ pub fn set_env(args: Vec<Value>) -> Result<Value> {
 
 pub fn get_env(args: Vec<Value>) -> Result<Value> {
     if let Value::Str(var) = &args[0] {
-        let output = std::env::var(var).map_err(|e| {
-            runtime_err!("Failed to get env: {e}")
-        })?;
+        let output = std::env::var(var).map_err(|e| runtime_err!("Failed to get env: {e}"))?;
 
-        return Ok(Value::Str(output.to_string()))
+        return Ok(Value::Str(output.to_string()));
     }
 
     Ok(Value::Str("".into()))
 }
 
 pub fn get_home_dir(_args: Vec<Value>) -> Result<Value> {
-    let output = std::env::var("HOME").map_err(|e| {
-        runtime_err!("Failed to get home directory: {e}")
-    })?;
+    let output =
+        std::env::var("HOME").map_err(|e| runtime_err!("Failed to get home directory: {e}"))?;
 
     Ok(Value::Str(output))
 }
@@ -38,9 +35,8 @@ pub fn get_current_dir(_args: Vec<Value>) -> Result<Value> {
 }
 
 pub fn get_username(_args: Vec<Value>) -> Result<Value> {
-    let output = std::env::var("USER").map_err(|e| {
-        runtime_err!("Failed to get home directory: {e}")
-    })?;
+    let output =
+        std::env::var("USER").map_err(|e| runtime_err!("Failed to get home directory: {e}"))?;
 
     Ok(Value::Str(output))
 }

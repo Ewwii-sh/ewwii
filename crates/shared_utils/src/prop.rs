@@ -1,9 +1,9 @@
-use crate::variables::GlobalVar;
 use crate::template::TemplateExpr;
+use crate::variables::GlobalVar;
+use nbcl::Value;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::hash::{Hash, Hasher};
-use nbcl::Value;
 
 /// A deterministic, serializable collection of widget properties.
 /// Replaces rhai::Map in your WidgetNode.
@@ -76,16 +76,16 @@ impl Property {
             Value::Bool(v) => Self::Bool(v),
             Value::Float(v) => Self::Float(v),
             Value::Str(v) => Self::String(v),
-            Value::List(v) => Self::Array(v.into_iter().map(|inner| Self::from_value(inner)).collect()),
+            Value::List(v) => {
+                Self::Array(v.into_iter().map(|inner| Self::from_value(inner)).collect())
+            }
             Value::Map(v) => Self::Map(PropertyMap::from_nbcl_map(v)),
             Value::Lambda(v) => Self::Callback(Callback { name: v, handle: None }),
             Value::Object(n, v) => {
                 // Handle Variants
                 match n.as_ref() {
                     "GlobalVar" => {
-                        let Value::List(mut data) = *v else {
-                            return Self::None
-                        };
+                        let Value::List(mut data) = *v else { return Self::None };
 
                         let name = match data.remove(0) {
                             Value::Str(v) => v,
@@ -121,18 +121,14 @@ impl Property {
                             Some(TemplateExpr::Literal(raw_string))
                         };
 
-                        Self::GlobalVar(Box::new(GlobalVar {
-                            name,
-                            initial,
-                            template,
-                        }))
+                        Self::GlobalVar(Box::new(GlobalVar { name, initial, template }))
                     }
                     _ => Self::None,
                 }
             }
             Value::Null => Self::None,
             _ => Self::None,
-        }
+        };
     }
 
     /// Returns the bool value if the property is a Bool

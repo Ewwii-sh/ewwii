@@ -54,9 +54,8 @@ fn parse_source(
 
     // config_parser.register_poll_listen_globals(&source).map_err(|e| e.to_string())?;
 
-    let node = config_parser
-        .eval_code(&source, configlang_path_opt_str)
-        .map_err(|e| e.to_string())?;
+    let node =
+        config_parser.eval_code(&source, configlang_path_opt_str).map_err(|e| e.to_string())?;
     Ok(node)
 }
 

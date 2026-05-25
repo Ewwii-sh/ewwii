@@ -2,7 +2,10 @@ mod command;
 mod env;
 mod regex;
 
-use nbcl::{NbclEngine, Type, library::{Library, LibraryItem}};
+use nbcl::{
+    library::{Library, LibraryItem},
+    NbclEngine, Type,
+};
 
 pub fn register_core_lib(engine: &mut NbclEngine) {
     let command = LibraryItem::define("command")
