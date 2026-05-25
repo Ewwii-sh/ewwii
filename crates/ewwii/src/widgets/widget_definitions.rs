@@ -430,7 +430,9 @@ pub(super) fn build_event_box(
             // return if press is long
             let (px, py) = press_coords.get();
             let dist = ((x - px).powi(2) + (y - py).powi(2)).sqrt();
-            if dist > 8.0 { return; }
+            if dist > 8.0 {
+                return;
+            }
 
             let controller = controller_data.borrow();
             let button = gesture.current_button();
@@ -525,9 +527,9 @@ pub(super) fn build_event_box(
 
             if let Some(drag_value) = &controller.dragvalue {
                 match controller.dragtype {
-                    DragEntryType::File => Some(gdk::ContentProvider::for_value(&glib::Value::from(
-                        &[drag_value.as_str()][..],
-                    ))),
+                    DragEntryType::File => Some(gdk::ContentProvider::for_value(
+                        &glib::Value::from(&[drag_value.as_str()][..]),
+                    )),
                     DragEntryType::Text => {
                         Some(gdk::ContentProvider::for_value(&glib::Value::from(&drag_value)))
                     }
@@ -1253,7 +1255,6 @@ pub(super) fn build_gtk_button(
         }
     ));
 
-
     let press_coords = Rc::new(Cell::new((0.0f64, 0.0f64)));
 
     gesture_controller.connect_pressed(glib::clone!(
@@ -1277,7 +1278,9 @@ pub(super) fn build_gtk_button(
             // return if press is long
             let (px, py) = press_coords.get();
             let dist = ((x - px).powi(2) + (y - py).powi(2)).sqrt();
-            if dist > 8.0 { return; }
+            if dist > 8.0 {
+                return;
+            }
 
             let controller = controller_data.borrow();
             let button = gesture.current_button();
@@ -2293,7 +2296,6 @@ pub(super) fn resolve_range_attrs(
     bind_property!(&props, "max", get_f64_prop, None, [gtk_widget], |max: f64| {
         gtk_widget.adjustment().set_upper(max);
     });
-
 
     // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
     // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler

@@ -1,7 +1,7 @@
-use nbcl::{NbclEngine, context::Context, Value};
-use crate::{builtins, libraries, errors, translate};
-use ewwii_shared_utils::ast::WidgetNode;
+use crate::{builtins, errors, libraries, translate};
 use anyhow::{anyhow, Result};
+use ewwii_shared_utils::ast::WidgetNode;
+use nbcl::{context::Context, NbclEngine, Value};
 
 pub struct NbclConfigParser {
     pub engine: NbclEngine,
@@ -18,16 +18,17 @@ impl NbclConfigParser {
         // libraries::register_apilib(&mut engine);
         libraries::register_core_lib(&mut engine);
 
-        Self {
-            engine,
-            ctx: None,
-        }
+        Self { engine, ctx: None }
     }
 
     pub fn eval_code(&mut self, code: &str, file_id: Option<&str>) -> Result<WidgetNode> {
-        let source_ast = self.engine.parse_str(&code)
+        let source_ast = self
+            .engine
+            .parse_str(&code)
             .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id)))?;
-        let (tree, ctx) = self.engine.evaluate_ast_for_ctx(source_ast)
+        let (tree, ctx) = self
+            .engine
+            .evaluate_ast_for_ctx(source_ast)
             .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id)))?;
 
         // set the context
@@ -39,7 +40,9 @@ impl NbclConfigParser {
     }
 
     pub fn eval_code_snippet(&mut self, code: &str) -> Result<WidgetNode> {
-        let tree = self.engine.evaluate(code)
+        let tree = self
+            .engine
+            .evaluate(code)
             .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, Some("<dyn_eval>"))))?;
 
         // translate the tree
@@ -58,9 +61,8 @@ impl NbclConfigParser {
             anyhow::bail!("Nbcl context not found.");
         };
 
-        let (fn_name, args_str) = expr
-            .split_once('(')
-            .ok_or_else(|| anyhow::anyhow!("Invalid expression: {}", expr))?;
+        let (fn_name, args_str) =
+            expr.split_once('(').ok_or_else(|| anyhow::anyhow!("Invalid expression: {}", expr))?;
         let fn_name = fn_name.trim();
         let args_str = args_str.trim_end_matches(')');
 
@@ -79,11 +81,7 @@ impl NbclConfigParser {
             })
             .collect();
 
-        self.engine.call_function(
-            fn_name,
-            args,
-            ctx,
-        )?;
+        self.engine.call_function(fn_name, args, ctx)?;
 
         Ok(())
     }

@@ -1,8 +1,8 @@
-mod corelib;
 mod apilib;
+mod corelib;
 
-pub use corelib::*;
 pub use apilib::*;
+pub use corelib::*;
 
 #[macro_export]
 macro_rules! runtime_err {

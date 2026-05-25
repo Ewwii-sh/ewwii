@@ -5,14 +5,33 @@ use nbcl::error::{NbclError, Span};
 
 pub fn handle_nbcl_err(err: NbclError, code: &str, file_id: Option<&str>) -> String {
     match err {
-        NbclError::Parse { message, hint, span } =>
-            format_codespan_error("Parse Error", code, message, hint, span.unwrap_or(Span::dummy()), file_id),
-        NbclError::Ast { message, hint, span } =>
-            format_codespan_error("Ast Error", code, message, hint, span.unwrap_or(Span::dummy()), file_id),
-        NbclError::IO { message, hint, path: _ } =>
-            format_codespan_error("IO Error", code, message, hint, Span::dummy(), file_id),
-        NbclError::Runtime { message, hint, span } =>
-            format_codespan_error("Runtime Error", code, message, hint, span.unwrap_or(Span::dummy()), file_id),
+        NbclError::Parse { message, hint, span } => format_codespan_error(
+            "Parse Error",
+            code,
+            message,
+            hint,
+            span.unwrap_or(Span::dummy()),
+            file_id,
+        ),
+        NbclError::Ast { message, hint, span } => format_codespan_error(
+            "Ast Error",
+            code,
+            message,
+            hint,
+            span.unwrap_or(Span::dummy()),
+            file_id,
+        ),
+        NbclError::IO { message, hint, path: _ } => {
+            format_codespan_error("IO Error", code, message, hint, Span::dummy(), file_id)
+        }
+        NbclError::Runtime { message, hint, span } => format_codespan_error(
+            "Runtime Error",
+            code,
+            message,
+            hint,
+            span.unwrap_or(Span::dummy()),
+            file_id,
+        ),
     }
 }
 
@@ -23,7 +42,7 @@ fn format_codespan_error(
     message: String,
     hint: Option<String>,
     span: Span,
-    file_id: Option<&str>
+    file_id: Option<&str>,
 ) -> String {
     let mut files = SimpleFiles::new();
     let file_id = files.add(file_id.unwrap_or("<nbcl>"), code);
@@ -39,9 +58,7 @@ fn format_codespan_error(
     // build the diagnostic error
     let mut labels = Vec::new();
     if span.start != span.end {
-        labels.push(
-            Label::primary(file_id, span.start..span.end).with_message(&new_msg),
-        );
+        labels.push(Label::primary(file_id, span.start..span.end).with_message(&new_msg));
     }
 
     let diagnostic =

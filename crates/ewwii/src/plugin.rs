@@ -2,10 +2,10 @@ use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{PluginError, PluginValue};
 use ewwii_shared_utils::ast::WidgetNode;
+use nbcl::Value as NbclValue;
 use once_cell::sync::Lazy;
 use std::path::PathBuf;
 use std::sync::RwLock;
-use nbcl::Value as NbclValue;
 
 pub fn is_compatible(plugin_ver: &str, host_ver: &str) -> bool {
     let p_str = plugin_ver.trim_matches('\0');
@@ -39,8 +39,10 @@ fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
         NbclValue::Int(v) => PluginValue::Int(v),
         NbclValue::Float(v) => PluginValue::Float(v),
         NbclValue::Bool(v) => PluginValue::Bool(v),
-        NbclValue::List(v) => PluginValue::Array(v.into_iter().map(nbclvalue_to_plugin_value).collect()),
-        _ => PluginValue::Null
+        NbclValue::List(v) => {
+            PluginValue::Array(v.into_iter().map(nbclvalue_to_plugin_value).collect())
+        }
+        _ => PluginValue::Null,
     };
 
     return res;
@@ -216,17 +218,18 @@ impl HostImpl {
                         vec![nbcl::Type::List],
                         nbcl::Type::Any,
                         move |mut args| {
-                            let result = trigger_plugin_func_call(&plugin_id, callback_id, args.remove(0));
+                            let result =
+                                trigger_plugin_func_call(&plugin_id, callback_id, args.remove(0));
 
                             Ok(plugin_value_to_nbcl(result))
-                        }
+                        },
                     );
 
                     Ok(PluginValue::Null)
-                },
+                }
                 ConfigEngine::Custom(_) => Err(PluginError::RegistrationError(
                     "Registering rhai functions is only supported with the Nbcl config engine"
-                        .to_string()
+                        .to_string(),
                 )),
             }
         })

@@ -139,8 +139,8 @@ impl TemplateExpr {
                 let base = expr.eval(vars)?;
                 let key_str = key.eval(vars)?;
 
-                let json: serde_json::Value = serde_json::from_str(&base)
-                    .map_err(|e| format!("Not valid JSON: {}", e))?;
+                let json: serde_json::Value =
+                    serde_json::from_str(&base).map_err(|e| format!("Not valid JSON: {}", e))?;
 
                 let result = if let Ok(idx) = key_str.parse::<usize>() {
                     json.get(idx)

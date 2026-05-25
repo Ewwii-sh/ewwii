@@ -1,4 +1,4 @@
-use nbcl::{NbclEngine, NativeNodeSchema, PropValidation, Value, Type};
+use nbcl::{NativeNodeSchema, NbclEngine, PropValidation, Type, Value};
 use std::collections::HashMap;
 
 pub fn register_all_nodes(engine: &mut NbclEngine) {
@@ -56,7 +56,7 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
         type_name: "GtkUI".into(),
         enforce_id: false,
         validation: PropValidation::Loose,
-        child_count: Some((0, 0))
+        child_count: Some((0, 0)),
     });
 
     // == Top-level macros ==
@@ -75,21 +75,21 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
         type_name: "Poll".into(),
         enforce_id: true,
         validation: PropValidation::Strict(poll_args),
-        child_count: Some((0, 0))
+        child_count: Some((0, 0)),
     });
 
     engine.register_node(NativeNodeSchema {
         type_name: "Listen".into(),
         enforce_id: true,
         validation: PropValidation::Strict(listen_args),
-        child_count: Some((0, 0))
+        child_count: Some((0, 0)),
     });
 
     engine.register_node(NativeNodeSchema {
         type_name: "Window".into(),
         enforce_id: true,
         validation: PropValidation::Loose,
-        child_count: Some((1, 1))
+        child_count: Some((1, 1)),
     });
 }
 
@@ -106,7 +106,7 @@ pub fn register_all_fns(engine: &mut NbclEngine) {
             data.push(Value::Str(String::new()));
 
             Ok(Value::Object("GlobalVar".to_string(), Box::new(Value::List(data))))
-        }
+        },
     );
 
     engine.register_native_fn(
@@ -124,8 +124,8 @@ pub fn register_all_fns(engine: &mut NbclEngine) {
                     }
                     Ok(glob_var)
                 }
-                _ => Ok(glob_var)
+                _ => Ok(glob_var),
             }
-        }
+        },
     );
 }

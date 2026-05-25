@@ -2,6 +2,6 @@
 
 pub mod builtins;
 pub mod errors;
+pub mod libraries;
 pub mod parser;
 pub mod translate;
-pub mod libraries;
