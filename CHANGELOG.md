@@ -5,6 +5,12 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [UNRELEASED]
+
+### Added
+
+- `core` library that implements all the features that existed in rhai `std`.
+
 ## [0.7.0] - 2026-05-23
 
 ### Added
