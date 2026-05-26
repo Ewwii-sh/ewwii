@@ -116,7 +116,7 @@ pub fn get_bool_prop(
         } else if let Some(s) = value.as_str() {
             s.parse::<bool>()
                 .map(PropValue::Static)
-                .map_err(|_| anyhow!("Expected property `{}` to be boolean or bollean string", key))
+                .map_err(|_| anyhow!("Expected property `{}` to be boolean or boolean string", key))
         } else {
             Err(anyhow!("Expected property `{}` to be boolean or bollean string", key))
         }
