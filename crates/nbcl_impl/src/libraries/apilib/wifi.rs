@@ -1,359 +1,153 @@
 use std::process::Command;
 use nbcl::{error::Result, Value};
+use crate::runtime_err;
 
-#[cfg(target_os = "linux")]
-fn scan_linux() -> Result<Array, Box<EvalAltResult>> {
+pub fn scan(_args: Vec<Value>) -> Result<Value> {
     let output = Command::new("nmcli")
         .args(&["-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi"])
         .output()
-        .map_err(|e| format!("Failed to run nmcli: {e}"))?;
+        .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
 
     let stdout = String::from_utf8(output.stdout)
-        .map_err(|e| format!("Invalid UTF-8 output from nmcli: {e}"))?;
+        .map_err(|e| runtime_err!("Invalid UTF-8 output from nmcli: {e}"))?;
 
-    let mut result = Array::new();
+    let mut result = Vec::new();
     for line in stdout.lines() {
         let parts: Vec<&str> = line.split(':').collect();
         if parts.len() != 3 {
             continue;
         }
-        let mut map = Map::new();
-        map.insert("ssid".into(), parts[0].into());
-        map.insert("signal".into(), parts[1].into());
-        map.insert("security".into(), parts[2].into());
-        result.push(Dynamic::from(map));
+        let mut map = Vec::new();
+        map.push(("ssid".into(), Value::Str(parts[0].into())));
+        map.push(("signal".into(), Value::Str(parts[1].into())));
+        map.push(("security".into(), Value::Str(parts[2].into())));
+        result.push(Value::Map(map));
     }
-    Ok(result)
+    Ok(Value::List(result))
 }
 
-#[cfg(target_os = "macos")]
-fn scan_macos() -> Result<Array, Box<EvalAltResult>> {
-    let output = Command::new("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport")
-        .arg("-s")
-        .output()
-        .map_err(|e| format!("Failed to run airport: {e}"))?;
-
-    let stdout = String::from_utf8(output.stdout)
-        .map_err(|e| format!("Invalid UTF-8 output from airport: {e}"))?;
-
-    let mut result = Array::new();
-    for line in stdout.lines().skip(1) {
-        let ssid = line.get(0..32).unwrap_or("").trim().to_string();
-        let rssi = line.get(33..36).unwrap_or("").trim().to_string();
-        let security = line.get(61..).unwrap_or("").trim().to_string();
-
-        let mut map = Map::new();
-        map.insert("ssid".into(), ssid.into());
-        map.insert("signal".into(), rssi.into());
-        map.insert("security".into(), security.into());
-        result.push(Dynamic::from(map));
-    }
-    Ok(result)
-}
-
-pub fn scan() -> Result<Array, Box<EvalAltResult>> {
-    #[cfg(target_os = "linux")]
-    {
-        scan_linux()
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        scan_macos()
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        Err("wifi::scan not supported on this OS".into())
-    }
-}
-
-pub fn current_connection() -> Result<Map, Box<EvalAltResult>> {
-    #[cfg(target_os = "linux")]
-    {
-        current_connection_linux()
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        current_connection_macos()
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        Err("wifi::current_connection not supported on this OS".into())
-    }
-}
-
-#[cfg(target_os = "linux")]
-fn current_connection_linux() -> Result<Map, Box<EvalAltResult>> {
+pub fn current_connection(_args: Vec<Value>) -> Result<Value> {
     let output = Command::new("nmcli")
         .args(&["-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"])
         .output()
-        .map_err(|e| format!("Failed to run nmcli: {e}"))?;
+        .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
     let stdout =
-        String::from_utf8(output.stdout).map_err(|e| format!("Invalid UTF-8 output: {}", e))?;
-    let mut map = Map::new();
+        String::from_utf8(output.stdout).map_err(|e| runtime_err!("Invalid UTF-8 output: {}", e))?;
+    let mut map = Vec::new();
     if let Some(line) = stdout.lines().find(|l| l.starts_with("yes:")) {
         let parts: Vec<&str> = line.split(':').collect();
         if parts.len() == 4 {
-            map.insert("ssid".into(), parts[1].into());
-            map.insert("signal".into(), parts[2].into());
-            map.insert("security".into(), parts[3].into());
+            map.push(("ssid".into(), Value::Str(parts[1].into())));
+            map.push(("signal".into(), Value::Str(parts[2].into())));
+            map.push(("security".into(), Value::Str(parts[3].into())));
         }
     }
-    Ok(map)
+    Ok(Value::Map(map))
 }
 
-#[cfg(target_os = "macos")]
-fn current_connection_macos() -> Result<Map, Box<EvalAltResult>> {
-    let output = Command::new("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport")
-        .args(&["-I"])
+// ssid: &str, password: &str
+pub fn connect(args: Vec<Value>) -> Result<Value> {
+    let Value::Str(ssid) = &args[0] else {
+        return Err(runtime_err!("SSID must be a string"));
+    };
+    let Value::Str(password) = &args[1] else {
+        return Err(runtime_err!("PASSWORD must be a string"));
+    };
+
+    let args = vec!["dev", "wifi", "connect", ssid, "password", password];
+    let status = Command::new("nmcli")
+        .args(&args)
+        .status()
+        .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
+    if status.success() {
+        Ok(Value::Null)
+    } else {
+        Err(runtime_err!("Failed to connect to {}", ssid).into())
+    }
+}
+
+// ssid: &str
+pub fn connect_without_password(args: Vec<Value>) -> Result<Value> {
+    let Value::Str(ssid) = &args[0] else {
+        return Err(runtime_err!("SSID must be a string"));
+    };
+
+    let args = vec!["dev", "wifi", "connect", ssid];
+    let status = Command::new("nmcli")
+        .args(&args)
+        .status()
+        .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
+    if status.success() {
+        Ok(Value::Null)
+    } else {
+        Err(runtime_err!("Failed to connect to {}", ssid).into())
+    }
+}
+
+pub fn disconnect(_args: Vec<Value>) -> Result<Value> {
+    use std::process::Command;
+
+    // Get current active SSID
+    let output = Command::new("nmcli")
+        .args(&["-t", "-f", "active,ssid", "dev", "wifi"])
         .output()
-        .map_err(|e| format!("Failed to run airport: {e}"))?;
+        .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
 
-    let stdout = String::from_utf8(output.stdout)?;
-    let mut map = Map::new();
+    let stdout = String::from_utf8(output.stdout)
+        .map_err(|e| runtime_err!("Invalid UTF-8 from nmcli: {e}"))?;
 
-    for line in stdout.lines() {
-        if let Some(idx) = line.find(':') {
-            let key = line[..idx].trim().to_lowercase();
-            let value = line[idx + 1..].trim().to_string();
-            map.insert(key.into(), value.into());
-        }
-    }
+    let ssid = stdout
+        .lines()
+        .find(|line| line.starts_with("yes:"))
+        .and_then(|line| line.split(':').nth(1))
+        .ok_or(runtime_err!("No active Wi-Fi connection"))?;
 
-    Ok(map)
-}
+    let status = Command::new("nmcli")
+        .args(&["connection", "down", "id", ssid])
+        .status()
+        .map_err(|e| runtime_err!("Failed to disconnect from {}: {e}", ssid))?;
 
-pub fn connect(ssid: &str, password: &str) -> Result<(), Box<EvalAltResult>> {
-    #[cfg(target_os = "linux")]
-    {
-        let args = vec!["dev", "wifi", "connect", ssid, "password", password];
-        let status = Command::new("nmcli")
-            .args(&args)
-            .status()
-            .map_err(|e| format!("Failed to run nmcli: {e}"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err(format!("Failed to connect to {}", ssid).into())
-        }
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let status = Command::new("networksetup")
-            .args(&["-setairportnetwork", "en0", ssid, password])
-            .status()
-            .map_err(|e| format!("Failed to run networksetup: {e}"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err(format!("Failed to connect to {}", ssid).into())
-        }
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        Err("wifi::connect not supported on this OS".into())
+    if status.success() {
+        Ok(Value::Null)
+    } else {
+        Err(runtime_err!("Failed to disconnect from {}", ssid))
     }
 }
 
-pub fn connect_without_password(ssid: &str) -> Result<(), Box<EvalAltResult>> {
-    #[cfg(target_os = "linux")]
-    {
-        let args = vec!["dev", "wifi", "connect", ssid];
-        let status = Command::new("nmcli")
-            .args(&args)
-            .status()
-            .map_err(|e| format!("Failed to run nmcli: {e}"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err(format!("Failed to connect to {}", ssid).into())
-        }
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let status = Command::new("networksetup")
-            .args(&["-setairportnetwork", "en0", ssid])
-            .status()
-            .map_err(|e| format!("Failed to run networksetup: {e}"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err(format!("Failed to connect to {}", ssid).into())
-        }
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        Err("wifi::connect not supported on this OS".into())
+pub fn disable_adapter(_args: Vec<Value>) -> Result<Value> {
+    let status = Command::new("nmcli")
+        .args(&["networking", "off"])
+        .status()
+        .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
+    if status.success() {
+        Ok(Value::Null)
+    } else {
+        Err(runtime_err!("Failed to disable adapter"))
     }
 }
 
-pub fn disconnect() -> Result<(), Box<EvalAltResult>> {
-    #[cfg(target_os = "linux")]
-    {
-        use std::process::Command;
-
-        // Get current active SSID
-        let output = Command::new("nmcli")
-            .args(&["-t", "-f", "active,ssid", "dev", "wifi"])
-            .output()
-            .map_err(|e| format!("Failed to run nmcli: {e}"))?;
-
-        let stdout = String::from_utf8(output.stdout)
-            .map_err(|e| format!("Invalid UTF-8 from nmcli: {e}"))?;
-
-        let ssid = stdout
-            .lines()
-            .find(|line| line.starts_with("yes:"))
-            .and_then(|line| line.split(':').nth(1))
-            .ok_or("No active Wi-Fi connection")?;
-
-        let status = Command::new("nmcli")
-            .args(&["connection", "down", "id", ssid])
-            .status()
-            .map_err(|e| format!("Failed to disconnect from {}: {e}", ssid))?;
-
-        if status.success() {
-            Ok(())
-        } else {
-            Err(format!("Failed to disconnect from {}", ssid).into())
-        }
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        use std::process::Command;
-
-        let status =
-            Command::new("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport")
-                .arg("-z")
-                .status()
-                .map_err(|e| format!("Failed to run airport: {e}"))?;
-
-        if status.success() {
-            Ok(())
-        } else {
-            Err("Failed to disconnect from current Wi-Fi".into())
-        }
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        Err("wifi::disconnect not supported on this OS".into())
+pub fn enable_adapter(_args: Vec<Value>) -> Result<Value> {
+    let status = Command::new("nmcli")
+        .args(&["networking", "on"])
+        .status()
+        .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
+    if status.success() {
+        Ok(Value::Null)
+    } else {
+        Err(runtime_err!("Failed to enable"))
     }
 }
 
-pub fn disable_adapter() -> Result<(), Box<EvalAltResult>> {
-    #[cfg(target_os = "linux")]
-    {
-        let status = Command::new("nmcli")
-            .args(&["networking", "off"])
-            .status()
-            .map_err(|e| format!("Failed to run nmcli: {e}"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err("Failed to disable adapter".into())
-        }
-    }
+pub fn get_adapter_connectivity(_args: Vec<Value>) -> Result<Value> {
+    let output = Command::new("nmcli")
+        .args(&["networking", "connectivity"])
+        .output()
+        .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
 
-    #[cfg(target_os = "macos")]
-    {
-        let status = Command::new("networksetup")
-            .args(&["-setairportpower", "en0", "off"])
-            .status()
-            .map_err(|e| format!("Failed to run networksetup: {e}"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err("Failed to disable adapter".into())
-        }
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        Err("wifi::disable_adapter not supported on this OS".into())
-    }
-}
-
-pub fn enable_adapter() -> Result<(), Box<EvalAltResult>> {
-    #[cfg(target_os = "linux")]
-    {
-        let status = Command::new("nmcli")
-            .args(&["networking", "on"])
-            .status()
-            .map_err(|e| format!("Failed to run nmcli: {e}"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err("Failed to enable".into())
-        }
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let status = Command::new("networksetup")
-            .args(&["-setairportpower", "en0", "on"])
-            .status()
-            .map_err(|e| format!("Failed to run networksetup: {e}"))?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err("Failed to enable".into())
-        }
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        Err("wifi::enable_adapter not supported on this OS".into())
-    }
-}
-
-pub fn get_adapter_connectivity() -> Result<String, Box<EvalAltResult>> {
-    #[cfg(target_os = "linux")]
-    {
-        let output = Command::new("nmcli")
-            .args(&["networking", "connectivity"])
-            .output()
-            .map_err(|e| format!("Failed to run nmcli: {e}"))?;
-
-        if output.status.success() {
-            let connectivity = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            Ok(connectivity)
-        } else {
-            Err("Failed to get connectivity".into())
-        }
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let output = Command::new("networksetup")
-            .args(&["-getairportnetwork", "en0"])
-            .output()
-            .map_err(|e| format!("Failed to run networksetup: {e}"))?;
-
-        if output.status.success() {
-            let network_info = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-            // Normalize to "full" or "none"
-            if network_info.contains("You are not associated") {
-                Ok("none".to_string())
-            } else {
-                Ok("full".to_string())
-            }
-        } else {
-            Err("Failed to get connectivity".into())
-        }
-    }
-
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        Err("wifi::get_adapter_connectivity not supported on this OS".into())
+    if output.status.success() {
+        let connectivity = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        Ok(Value::Str(connectivity))
+    } else {
+        Err(runtime_err!("Failed to get connectivity"))
     }
 }

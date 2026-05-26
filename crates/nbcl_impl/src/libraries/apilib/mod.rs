@@ -1,5 +1,5 @@
 mod linux;
-// mod wifi;
+mod wifi;
 
 use nbcl::{
     library::{Library, LibraryItem},
@@ -15,16 +15,16 @@ pub fn register_api_lib(engine: &mut NbclEngine) {
         .with_fn("get_gpu_info", vec![], Type::List, linux::get_gpu_info)
         .with_fn("get_disk_info", vec![], Type::Map, linux::get_disk_info);
 
-    // let wifi = LibraryItem::define("wifi")
-    //     .with_fn("scan", vec![], Type::List, wifi::scan)
-    //     .with_fn("current_connection", vec![], Type::Map, wifi::current_connection)
-    //     .with_fn("connect", vec![Type::Str, Type::Str], Type::Null, wifi::connect)
-    //     .with_fn("connect_without_password", vec![Type::Str], Type::Null, wifi::connect_without_password)
-    //     .with_fn("disconnect", vec![], Type::Null, wifi::disconnect)
-    //     .with_fn("disable_adapter", vec![], Type::Null, wifi::disable_adapter)
-    //     .with_fn("enable_adapter", vec![], Type::Null, wifi::enable_adapter)
-    //     .with_fn("get_adapter_connectivity", vec![], Type::Null, wifi::get_adapter_connectivity)
+    let wifi = LibraryItem::define("wifi")
+        .with_fn("scan", vec![], Type::List, wifi::scan)
+        .with_fn("current_connection", vec![], Type::Map, wifi::current_connection)
+        .with_fn("connect", vec![Type::Str, Type::Str], Type::Null, wifi::connect)
+        .with_fn("connect_without_password", vec![Type::Str], Type::Null, wifi::connect_without_password)
+        .with_fn("disconnect", vec![], Type::Null, wifi::disconnect)
+        .with_fn("disable_adapter", vec![], Type::Null, wifi::disable_adapter)
+        .with_fn("enable_adapter", vec![], Type::Null, wifi::enable_adapter)
+        .with_fn("get_adapter_connectivity", vec![], Type::Null, wifi::get_adapter_connectivity);
 
-    let api_lib = Library::new("api".into(), vec![linux]);
+    let api_lib = Library::new("api".into(), vec![linux, wifi]);
     engine.register_library(api_lib);
 }
