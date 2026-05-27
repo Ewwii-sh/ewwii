@@ -27,15 +27,9 @@ component AnimalRow () {
         orientation = "h"
         halign = "center"
 
-        # for emoji in stringArray {
-        # }
-
-        AnimalButton  { emoji = stringArray[0] }
-        AnimalButton  { emoji = stringArray[1] }
-        AnimalButton  { emoji = stringArray[2] }
-        AnimalButton  { emoji = stringArray[3] }
-        AnimalButton  { emoji = stringArray[4] }
-        AnimalButton  { emoji = stringArray[5] }
+        for emoji in stringArray {
+            AnimalButton { emoji = emoji }
+        }
     }
 }
 
