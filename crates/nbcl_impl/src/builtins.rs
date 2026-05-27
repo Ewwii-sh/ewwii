@@ -62,6 +62,7 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     // == Top-level macros ==
     let mut poll_args = HashMap::new();
     let mut listen_args = HashMap::new();
+    let mut script_args = HashMap::new();
 
     poll_args.insert("cmd".to_string(), Type::Str);
     poll_args.insert("initial".to_string(), Type::Str);
@@ -70,6 +71,10 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
 
     listen_args.insert("cmd".to_string(), Type::Str);
     listen_args.insert("initial".to_string(), Type::Str);
+
+    script_args.insert("every".to_string(), Type::Str);
+    script_args.insert("on".to_string(), Type::Str);
+    script_args.insert("run".to_string(), Type::Lambda);
 
     engine.register_node(NativeNodeSchema {
         type_name: "Poll".into(),
@@ -82,6 +87,13 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
         type_name: "Listen".into(),
         enforce_id: true,
         validation: PropValidation::Strict(listen_args),
+        child_count: Some((0, 0)),
+    });
+
+    engine.register_node(NativeNodeSchema {
+        type_name: "Script".into(),
+        enforce_id: false,
+        validation: PropValidation::Strict(script_args),
         child_count: Some((0, 0)),
     });
 
@@ -110,7 +122,7 @@ pub fn register_all_fns(engine: &mut NbclEngine) {
     );
 
     engine.register_native_fn(
-        "mutate",
+        "template",
         vec![Type::Object("GlobalVar".to_string()), Type::Str],
         Type::Object("GlobalVar".to_string()),
         |mut args| {
