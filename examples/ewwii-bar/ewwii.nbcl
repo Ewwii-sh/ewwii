@@ -35,18 +35,11 @@ component Workspaces () {
         halign = "start"
         spacing = 10
 
-        # use a loop instead
-        Button {
-            onclick = "i3-msg workspace 1"
-            label = "1"
-        }
-        Button {
-            onclick = "i3-msg workspace 2"
-            label = "2"
-        }
-        Button {
-            onclick = "i3-msg workspace 3"
-            label = "3"
+        for i in 1..9 {
+            Button {
+                onclick = "i3-msg workspace ${i}"
+                label = "${i}"
+            }
         }
     }
 }

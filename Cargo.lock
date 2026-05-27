@@ -439,7 +439,7 @@ dependencies = [
 
 [[package]]
 name = "ewwii_plugin_api"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "bincode",
  "ewwii_shared_utils",
@@ -449,7 +449,7 @@ dependencies = [
 
 [[package]]
 name = "ewwii_shared_utils"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ahash",
  "anyhow",
