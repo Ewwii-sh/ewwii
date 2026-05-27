@@ -74,6 +74,11 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
                 WidgetNode::Listen { var: name, props }
             }
 
+            "Script" => {
+                let props = PropertyMap::from_nbcl(node.props);
+                WidgetNode::Script { props }
+            }
+
             "Window" => {
                 let name = node.id.with_context(|| format!("Window has no <id>"))?;
                 let props = PropertyMap::from_nbcl(node.props);
