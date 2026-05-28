@@ -1,6 +1,7 @@
 use nbcl::{NativeNodeSchema, NbclEngine, PropValidation, Type, Value};
+use tokio::sync::mpsc::UnboundedSender;
+use ewwii_plugin_api::{IpcRequest, WidgetControlType};
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 pub fn register_all_nodes(engine: &mut NbclEngine) {
     // == Primitive nodes (nodes that does not take in children) ==
@@ -106,7 +107,7 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     });
 }
 
-pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
+pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequest>) {
     engine.register_native_fn(
         "global",
         vec![Type::Str],
@@ -166,7 +167,7 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
         }
     );
 
-    let cd = config_dir.clone();
+    let tx = ipc_tx.clone();
     engine.register_native_fn(
         "set_property",
         vec![Type::Object("WidgetCtrl".into()), Type::Str, Type::Str],
@@ -178,8 +179,6 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
 
             match global_var {
                 Value::Object(_, ref data) => {
-                    let bin = std::env::current_exe().map_err(|_| crate::runtime_err!("Failed to get bin"))?;
-
                     let prop_str = match prop {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
@@ -192,18 +191,15 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
                     let data = match &**data {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
-                    };
+                    }.clone();
 
-                    std::process::Command::new(&bin)
-                        .arg("widget-control")
-                        .arg("property-update")
-                        .arg(format!("{}={}", prop_str, value_str))
-                        .arg("--widget")
-                        .arg(data)
-                        .arg("-c")
-                        .arg(&cd)
-                        .spawn()
-                        .map_err(|e| crate::runtime_err!("{}", e.to_string()))?;
+                    let req = IpcRequest::WidgetControl(WidgetControlType::PropertyUpdate {
+                        prop: prop_str,
+                        value: value_str,
+                        widget: data,
+                    });
+
+                    let _ = tx.send(req);
 
                     Ok(global_var)
                 }
@@ -212,8 +208,7 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
         }
     );
 
-
-    let cd = config_dir.clone();
+    let tx = ipc_tx.clone();
     engine.register_native_fn(
         "get_property",
         vec![Type::Object("WidgetCtrl".into()), Type::Str],
@@ -224,8 +219,6 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
 
             match global_var {
                 Value::Object(_, ref data) => {
-                    let bin = std::env::current_exe().map_err(|_| crate::runtime_err!("Failed to get bin"))?;
-
                     let prop_str = match prop {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
@@ -233,18 +226,14 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
                     let data = match &**data {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
-                    };
+                    }.clone();
 
-                    std::process::Command::new(&bin)
-                        .arg("widget-control")
-                        .arg("property-get")
-                        .arg("--widget")
-                        .arg(data)
-                        .arg(prop_str)
-                        .arg("-c")
-                        .arg(&cd)
-                        .spawn()
-                        .map_err(|e| crate::runtime_err!("{}", e.to_string()))?;
+                    let req = IpcRequest::WidgetControl(WidgetControlType::PropertyGet {
+                        prop: prop_str,
+                        widget: data,
+                    });
+
+                    let _ = tx.send(req);
 
                     Ok(global_var)
                 }
@@ -253,8 +242,7 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
         }
     );
 
-
-    let cd = config_dir.clone();
+    let tx = ipc_tx.clone();
     engine.register_native_fn(
         "add_class",
         vec![Type::Object("WidgetCtrl".into()), Type::Str],
@@ -265,8 +253,6 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
 
             match global_var {
                 Value::Object(_, ref data) => {
-                    let bin = std::env::current_exe().map_err(|_| crate::runtime_err!("Failed to get bin"))?;
-
                     let class_str = match class {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
@@ -275,18 +261,14 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
                     let data = match &**data {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
-                    };
+                    }.clone();
 
-                    std::process::Command::new(&bin)
-                        .arg("widget-control")
-                        .arg("add-class")
-                        .arg("--widget")
-                        .arg(data)
-                        .arg(class_str)
-                        .arg("-c")
-                        .arg(&cd)
-                        .spawn()
-                        .map_err(|e| crate::runtime_err!("{}", e.to_string()))?;
+                    let req = IpcRequest::WidgetControl(WidgetControlType::AddClass {
+                        class: class_str,
+                        widget: data,
+                    });
+
+                    let _ = tx.send(req);
 
                     Ok(global_var)
                 }
@@ -305,8 +287,6 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
 
             match global_var {
                 Value::Object(_, ref data) => {
-                    let bin = std::env::current_exe().map_err(|_| crate::runtime_err!("Failed to get bin"))?;
-
                     let class_str = match class {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
@@ -315,18 +295,14 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
                     let data = match &**data {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
-                    };
+                    }.clone();
 
-                    std::process::Command::new(&bin)
-                        .arg("widget-control")
-                        .arg("remove-class")
-                        .arg("--widget")
-                        .arg(data)
-                        .arg(class_str)
-                        .arg("-c")
-                        .arg(&config_dir)
-                        .spawn()
-                        .map_err(|e| crate::runtime_err!("{}", e.to_string()))?;
+                    let req = IpcRequest::WidgetControl(WidgetControlType::RemoveClass {
+                        class: class_str,
+                        widget: data,
+                    });
+
+                    let _ = ipc_tx.send(req);
 
                     Ok(global_var)
                 }

@@ -1,9 +1,10 @@
 use crate::{builtins, errors, libraries, translate};
+use ewwii_plugin_api::IpcRequest;
 use anyhow::{anyhow, Result};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
 use nbcl::{context::Context, NbclEngine, Value};
-use std::path::PathBuf;
+use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Clone)]
 pub struct NbclConfigParser {
@@ -12,11 +13,11 @@ pub struct NbclConfigParser {
 }
 
 impl NbclConfigParser {
-    pub fn new(config_dir: PathBuf) -> Self {
+    pub fn new(ipc_tx: UnboundedSender<IpcRequest>) -> Self {
         let mut engine = NbclEngine::new();
 
         builtins::register_all_nodes(&mut engine);
-        builtins::register_all_fns(&mut engine, config_dir);
+        builtins::register_all_fns(&mut engine, ipc_tx);
 
         libraries::register_api_lib(&mut engine);
         libraries::register_core_lib(&mut engine);

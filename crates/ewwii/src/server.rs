@@ -6,6 +6,7 @@ use crate::{
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,
 };
+use ewwii_plugin_api::IpcRequest;
 use anyhow::{Context, Result};
 use gtk4::prelude::{DisplayExt, ListModelExt};
 use std::{
@@ -33,9 +34,11 @@ pub fn initialize_server<B: DisplayBackend>(
 
     log::info!("Loading paths: {}", &paths);
 
+    // ipc_(tx/rx) is used to allow config parser
+    // to send ipc requests during evaluation.
+    let (ipc_tx, mut ipc_rx) = tokio::sync::mpsc::unbounded_channel::<IpcRequest>();
     EWWII_CONFIG_PARSER.with(|p| {
-        let config_dir = paths.config_dir.clone();
-        let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new(config_dir);
+        let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new(ipc_tx);
         *p.borrow_mut() = Some(ConfigEngine::Default(config_parser));
     });
 
@@ -152,6 +155,9 @@ pub fn initialize_server<B: DisplayBackend>(
                 Some((request, resp_tx)) = plugin_rx.recv() => {
                     let response = app.handle_plugin_request(request);
                     let _ = resp_tx.send(response);
+                }
+                Some(ipc_req)  = ipc_rx.recv() => {
+                    app.handle_plugin_ipc(ipc_req);
                 }
                 else => break,
             }
