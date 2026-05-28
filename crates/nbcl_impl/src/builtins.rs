@@ -166,6 +166,7 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
         }
     );
 
+    let cd = config_dir.clone();
     engine.register_native_fn(
         "set_property",
         vec![Type::Object("WidgetCtrl".into()), Type::Str, Type::Str],
@@ -199,6 +200,129 @@ pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
                         .arg(format!("{}={}", prop_str, value_str))
                         .arg("--widget")
                         .arg(data)
+                        .arg("-c")
+                        .arg(&cd)
+                        .spawn()
+                        .map_err(|e| crate::runtime_err!("{}", e.to_string()))?;
+
+                    Ok(global_var)
+                }
+                _ => Ok(global_var)
+            }
+        }
+    );
+
+
+    let cd = config_dir.clone();
+    engine.register_native_fn(
+        "get_property",
+        vec![Type::Object("WidgetCtrl".into()), Type::Str],
+        Type::Object("WidgetCtrl".into()),
+        move |mut args: Vec<Value>| {
+            let global_var = args.remove(0);
+            let prop = args.remove(0);
+
+            match global_var {
+                Value::Object(_, ref data) => {
+                    let bin = std::env::current_exe().map_err(|_| crate::runtime_err!("Failed to get bin"))?;
+
+                    let prop_str = match prop {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+                    let data = match &**data {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+
+                    std::process::Command::new(&bin)
+                        .arg("widget-control")
+                        .arg("property-get")
+                        .arg("--widget")
+                        .arg(data)
+                        .arg(prop_str)
+                        .arg("-c")
+                        .arg(&cd)
+                        .spawn()
+                        .map_err(|e| crate::runtime_err!("{}", e.to_string()))?;
+
+                    Ok(global_var)
+                }
+                _ => Ok(global_var)
+            }
+        }
+    );
+
+
+    let cd = config_dir.clone();
+    engine.register_native_fn(
+        "add_class",
+        vec![Type::Object("WidgetCtrl".into()), Type::Str],
+        Type::Object("WidgetCtrl".into()),
+        move |mut args: Vec<Value>| {
+            let global_var = args.remove(0);
+            let class = args.remove(0);
+
+            match global_var {
+                Value::Object(_, ref data) => {
+                    let bin = std::env::current_exe().map_err(|_| crate::runtime_err!("Failed to get bin"))?;
+
+                    let class_str = match class {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+
+                    let data = match &**data {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+
+                    std::process::Command::new(&bin)
+                        .arg("widget-control")
+                        .arg("add-class")
+                        .arg("--widget")
+                        .arg(data)
+                        .arg(class_str)
+                        .arg("-c")
+                        .arg(&cd)
+                        .spawn()
+                        .map_err(|e| crate::runtime_err!("{}", e.to_string()))?;
+
+                    Ok(global_var)
+                }
+                _ => Ok(global_var)
+            }
+        }
+    );
+
+    engine.register_native_fn(
+        "remove_class",
+        vec![Type::Object("WidgetCtrl".into()), Type::Str],
+        Type::Object("WidgetCtrl".into()),
+        move |mut args: Vec<Value>| {
+            let global_var = args.remove(0);
+            let class = args.remove(0);
+
+            match global_var {
+                Value::Object(_, ref data) => {
+                    let bin = std::env::current_exe().map_err(|_| crate::runtime_err!("Failed to get bin"))?;
+
+                    let class_str = match class {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+
+                    let data = match &**data {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+
+                    std::process::Command::new(&bin)
+                        .arg("widget-control")
+                        .arg("remove-class")
+                        .arg("--widget")
+                        .arg(data)
+                        .arg(class_str)
                         .arg("-c")
                         .arg(&config_dir)
                         .spawn()
