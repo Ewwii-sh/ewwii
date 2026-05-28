@@ -210,40 +210,6 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
 
     let tx = ipc_tx.clone();
     engine.register_native_fn(
-        "get_property",
-        vec![Type::Object("WidgetCtrl".into()), Type::Str],
-        Type::Object("WidgetCtrl".into()),
-        move |mut args: Vec<Value>| {
-            let global_var = args.remove(0);
-            let prop = args.remove(0);
-
-            match global_var {
-                Value::Object(_, ref data) => {
-                    let prop_str = match prop {
-                        Value::Str(s) => s,
-                        _ => return Err(crate::runtime_err!("expected string")),
-                    };
-                    let data = match &**data {
-                        Value::Str(s) => s,
-                        _ => return Err(crate::runtime_err!("expected string")),
-                    }.clone();
-
-                    let req = IpcRequest::WidgetControl(WidgetControlType::PropertyGet {
-                        prop: prop_str,
-                        widget: data,
-                    });
-
-                    let _ = tx.send(req);
-
-                    Ok(global_var)
-                }
-                _ => Ok(global_var)
-            }
-        }
-    );
-
-    let tx = ipc_tx.clone();
-    engine.register_native_fn(
         "add_class",
         vec![Type::Object("WidgetCtrl".into()), Type::Str],
         Type::Object("WidgetCtrl".into()),
