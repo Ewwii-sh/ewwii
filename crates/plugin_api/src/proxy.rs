@@ -1,7 +1,11 @@
 //! This module provides plugin requests and host proxy
 //! that are used to redirect API calls to host after serialization
 
-use crate::{ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, ParseFn, PluginError, PluginValue};
+use crate::{
+    ConfigInfo, EwwiiAPI, IpcRequest,
+    NativeFn, ParseFn, PluginError,
+    PluginValue, NbclType
+};
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -40,7 +44,13 @@ pub enum PluginRequest {
     Ipc((String, IpcRequest)),
 
     // Complex API
-    RegisterFn { id: String, name: String, callback_id: u64 },
+    RegisterFn {
+        id: String,
+        name: String,
+        types: Vec<NbclType>,
+        return_type: NbclType,
+        callback_id: u64
+    },
     RegisterConfigEngine { id: String, extension: String, main_file: String, callback_id: u64 },
 }
 
@@ -163,7 +173,13 @@ impl EwwiiAPI for HostProxy {
         let _ = self.call_host(req);
     }
 
-    fn register_function(&self, name: &str, handler: NativeFn) -> Result<PluginValue, PluginError> {
+    fn register_function(
+        &self,
+        name: &str,
+        types: Vec<NbclType>,
+        return_type: NbclType,
+        handler: NativeFn
+    ) -> Result<PluginValue, PluginError> {
         // Register id
         let id = rand::random::<u64>();
         get_callbacks().lock().unwrap().insert(id, CallbackHandler::NativeFn(handler));
@@ -172,6 +188,8 @@ impl EwwiiAPI for HostProxy {
         let req = PluginRequest::RegisterFn {
             id: self.get_id().to_string(),
             name: name.to_string(),
+            types,
+            return_type,
             callback_id: id,
         };
 

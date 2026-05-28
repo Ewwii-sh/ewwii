@@ -115,7 +115,8 @@ pub trait EwwiiAPI: Send + Sync {
     /// use ewwii_plugin_api::{
     ///     EwwiiAPI, Plugin,
     ///     PluginValue, PluginInfo,
-    ///     NativeFn, NativeFnExt
+    ///     NativeFn, NativeFnExt,
+    ///     NbclType,
     /// };
     ///
     /// pub struct DummyStructure;
@@ -127,13 +128,15 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     ///     fn init(&self, host: &dyn EwwiiAPI) {
     ///         host.register_function(
-    ///             "my_func",
+    ///             "my_func",             // function name
+    ///             vec![NbclType::String] // args we receive
+    ///             NbclType::Null,        // type we return
     ///             NativeFn::new(|args| {
     ///             // Do stuff
     ///             // - Perform things on the args (if needed)
     ///             // - And return a value
     ///
-    ///             Ok(PluginValue::Null) // return empty
+    ///             Ok(PluginValue::Null) // return empty (must match provided return type)
     ///         }));
     ///     }
     /// }
@@ -144,9 +147,15 @@ pub trait EwwiiAPI: Send + Sync {
     /// ## Example use in nbcl
     ///
     /// ```js
-    /// print(my_func(["param1", "param2"]));
+    /// print(my_func("param"));
     /// ```
-    fn register_function(&self, name: &str, handler: NativeFn) -> Result<PluginValue, PluginError>;
+    fn register_function(
+        &self,
+        name: &str,
+        types: Vec<NbclType>,
+        return_type: NbclType,
+        handler: NativeFn
+    ) -> Result<PluginValue, PluginError>;
 
     /// Replace nbcl with a custom configuration engine.
     ///

@@ -56,6 +56,18 @@ pub enum PluginValue {
     Null,
 }
 
+/// A type interface for Nbcl
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum NbclType {
+    String,
+    Int,
+    Float,
+    Bool,
+    Array,
+    Any,
+    Null
+}
+
 /// This enumrate provides improved error support for plugins
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PluginError {
@@ -88,7 +100,7 @@ impl std::fmt::Display for PluginError {
 
 // === register_function implementation === //
 
-/// Handler for handling Native Function registeration in rhai
+/// Handler for handling Native Function registeration in nbcl
 pub type NativeFn = Arc<dyn Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync>;
 
 pub trait NativeFnExt {

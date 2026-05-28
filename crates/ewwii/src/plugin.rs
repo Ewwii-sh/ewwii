@@ -1,10 +1,11 @@
 use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
-use ewwii_plugin_api::{PluginError, PluginValue, IpcRequest, WidgetControlType};
+use ewwii_plugin_api::{PluginError, PluginValue, IpcRequest, WidgetControlType, NbclType};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
 use crate::opts::WidgetControlAction;
 use nbcl::Value as NbclValue;
+use nbcl::Type as ActualNbclType;
 use once_cell::sync::Lazy;
 use std::path::PathBuf;
 use std::sync::RwLock;
@@ -72,6 +73,18 @@ fn plugin_value_to_nbcl(val: PluginValue) -> NbclValue {
     }
 }
 
+fn plugin_nbcltype_to_nbcltype(ty: NbclType) -> ActualNbclType {
+    match ty {
+        NbclType::String => ActualNbclType::Str,
+        NbclType::Int => ActualNbclType::Int,
+        NbclType::Float => ActualNbclType::Float,
+        NbclType::Bool => ActualNbclType::Bool,
+        NbclType::Array => ActualNbclType::List,
+        NbclType::Any => ActualNbclType::Any,
+        NbclType::Null => ActualNbclType::Null,
+    }
+}
+
 fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) -> Option<Vec<u8>> {
     let plugins = ACTIVE_PLUGINS.read().unwrap();
     let plugin = plugins.iter().find(|p| p.id == plugin_id)?;
@@ -101,12 +114,7 @@ fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) ->
     }
 }
 
-fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: NbclValue) -> PluginValue {
-    let args = match args {
-        NbclValue::List(v) => v,
-        _ => unreachable!(),
-    };
-
+fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: Vec<NbclValue>) -> PluginValue {
     let arg_bytes =
         bincode::serialize(&args.into_iter().map(nbclvalue_to_plugin_value).collect::<Vec<_>>())
             .unwrap_or_default();
@@ -178,7 +186,7 @@ impl<B: DisplayBackend> App<B> {
                 self.handle_plugin_ipc(req);
                 Ok(PluginValue::Null)
             }
-            PluginRequest::RegisterFn { id, name, callback_id } => {
+            PluginRequest::RegisterFn { id, name, types, return_type, callback_id } => {
                 if name.trim().is_empty() {
                     return Err(PluginError::RegistrationError(
                         "Function name cannot be empty".into(),
@@ -191,7 +199,7 @@ impl<B: DisplayBackend> App<B> {
                     ));
                 }
 
-                self.register_function_internal(id, name, callback_id)
+                self.register_function_internal(id, name, types, return_type, callback_id)
             }
             PluginRequest::RegisterConfigEngine { id, extension, main_file, callback_id } => {
                 if extension.trim().is_empty() || main_file.trim().is_empty() {
@@ -221,20 +229,26 @@ impl<B: DisplayBackend> App<B> {
         &self,
         plugin_id: String,
         name: String,
+        types: Vec<NbclType>,
+        return_type: NbclType,
         callback_id: u64,
     ) -> Result<PluginValue, PluginError> {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
+            let types = types.into_iter()
+                .map(plugin_nbcltype_to_nbcltype)
+                .collect();
+            let return_type = plugin_nbcltype_to_nbcltype(return_type);
 
             match parser.as_mut().unwrap() {
                 ConfigEngine::Default(nbcl) => {
                     nbcl.engine.register_native_fn(
                         &name,
-                        vec![nbcl::Type::List],
-                        nbcl::Type::Any,
-                        move |mut args| {
+                        types,
+                        return_type,
+                        move |args| {
                             let result =
-                                trigger_plugin_func_call(&plugin_id, callback_id, args.remove(0));
+                                trigger_plugin_func_call(&plugin_id, callback_id, args);
 
                             Ok(plugin_value_to_nbcl(result))
                         },
