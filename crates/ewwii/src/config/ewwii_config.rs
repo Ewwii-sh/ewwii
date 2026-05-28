@@ -10,8 +10,9 @@ use std::rc::Rc;
 
 use ewwii_nbcl_impl::parser::NbclConfigParser;
 use ewwii_shared_utils::ast::WidgetNode;
-use ewwii_shared_utils::prop::PropertyMap;
+use ewwii_shared_utils::prop::{PropertyMap, Callback};
 
+#[derive(Clone)]
 pub enum ConfigEngine {
     Default(NbclConfigParser),
     Custom(CustomConfigEngine),
@@ -29,6 +30,13 @@ impl ConfigEngine {
         match self {
             Self::Default(d) => d.main_file(),
             Self::Custom(c) => c.main_file(),
+        }
+    }
+
+    pub fn handle_callback(&self, callback: &Callback) {
+        match self {
+            Self::Default(d) => d.handle_callback(callback),
+            Self::Custom(c) => c.handle_callback(callback),
         }
     }
 
