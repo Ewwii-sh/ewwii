@@ -1,14 +1,10 @@
 use crate::{builtins, errors, libraries, translate};
 use anyhow::{anyhow, Result};
 use ewwii_shared_utils::ast::WidgetNode;
+use ewwii_shared_utils::prop::Callback;
 use nbcl::{context::Context, NbclEngine, Value};
-use std::cell::RefCell;
-use std::collections::HashMap;
 
-thread_local! {
-    pub static CALLBACKS: RefCell<HashMap<u64, fn(&NbclConfigParser, &str)>> = RefCell::new(HashMap::new());
-}
-
+#[derive(Clone)]
 pub struct NbclConfigParser {
     pub engine: NbclEngine,
     pub ctx: Option<Context>,
@@ -92,14 +88,16 @@ impl NbclConfigParser {
         Ok(())
     }
 
-    pub fn call_callback(&self, name: &str, id: u64) {
-        CALLBACKS.with(|map| {
-            if let Some(cb) = map.borrow().get(&id) {
-                cb(&self, name);
-            } else {
-                log::error!("Cannot find callback by the id: {}", &id);
+    pub fn handle_callback(&self, callback: &Callback) {
+        let name = &callback.name;
+
+        if let Some(ctx) = &self.ctx {
+            if let Err(e) = self.engine.call_function(&name, vec![], &ctx) {
+                log::error!("Failed to call function: {}", e);
             }
-        });
+        } else {
+            log::error!("Nbcl config must be evaluated at least once before callback.");
+        }
     }
 
     pub fn extension(&self) -> String {

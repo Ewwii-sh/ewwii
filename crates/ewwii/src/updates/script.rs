@@ -1,21 +1,25 @@
 use ewwii_shared_utils::prop::PropertyMap;
 use ewwii_shared_utils::prop_utils::*;
+use super::listen::stream_cmd_lines;
+use crate::config::ConfigEngine;
 use super::SHUTDOWN_REGISTRY;
 use tokio::sync::watch;
+use tokio::sync::mpsc;
 use tokio::time::sleep;
+use gtk4::glib;
 
-pub fn handle_script(props: PropertyMap) {
+pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) {
     let every_sec = match get_duration_prop(&props, "every", None) {
         Ok(d) => Some(d),
-        Err(e) => None,
+        Err(_) => None,
     };
-    let on_cmd = match get_string_prop(&props, "on", Some("")) {
+    let on_cmd = match get_string_prop(&props, "on", None) {
         Ok(c) => Some(unwrap_static("on", c)),
-        Err(e) => None,
+        Err(_) => None,
     };
     let run = match get_callback_prop(&props, "run") {
         Ok(r) => r,
-        Err(e) => {
+        Err(_) => {
             log::error!("Script requires 'run' property to function.");
             return;
         }
@@ -24,12 +28,13 @@ pub fn handle_script(props: PropertyMap) {
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
 
+    let parser: ConfigEngine = parser.clone();
+
     match (every_sec, on_cmd) {
-        (Some(interval), Some(cmd)) => {}
         (Some(interval), None) => {
-            tokio::spawn(async move {
+            glib::MainContext::default().spawn_local(async move {
                 loop {
-                    // call the callback
+                    parser.handle_callback(&run);
 
                     tokio::select! {
                         _ = sleep(interval) => {}
@@ -42,7 +47,20 @@ pub fn handle_script(props: PropertyMap) {
                 }
             });
         }
-        (None, Some(cmd)) => {}
+        (None, Some(cmd)) => {
+            glib::MainContext::default().spawn_local(async move {
+                let (tx, mut rx) = mpsc::channel::<String>(32);
+                tokio::spawn(stream_cmd_lines(shell, cmd, tx, shutdown_rx));
+
+                while let Some(_) = rx.recv().await {
+                    parser.handle_callback(&run);
+                }
+            });
+        }
+        (Some(_), Some(_)) => {
+            log::error!("Either 'every' or 'on' needs to be provided: got both.");
+            return;
+        }
         (None, None) => {
             log::error!("Either 'every' or 'on' needs to be provided for Script to work.");
             return;

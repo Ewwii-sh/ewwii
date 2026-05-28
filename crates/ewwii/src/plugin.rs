@@ -2,6 +2,7 @@ use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{PluginError, PluginValue};
 use ewwii_shared_utils::ast::WidgetNode;
+use ewwii_shared_utils::prop::Callback;
 use nbcl::Value as NbclValue;
 use once_cell::sync::Lazy;
 use std::path::PathBuf;
@@ -123,6 +124,7 @@ fn trigger_plugin_config_parse(
     }
 }
 
+#[derive(Clone)]
 pub struct CustomConfigEngine {
     id: String,
     extension: String,
@@ -138,6 +140,8 @@ impl CustomConfigEngine {
     pub fn main_file(&self) -> String {
         self.main_file.clone()
     }
+
+    pub fn handle_callback(&self, _callback: &Callback) { todo!("Handle callback is not yet implemented for plugins") }
 
     pub fn parse_source(&self, source: String, config_path: PathBuf) -> Result<WidgetNode, String> {
         let path_str = config_path.to_str().unwrap_or("<unknown>");

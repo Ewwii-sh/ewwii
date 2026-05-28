@@ -18,6 +18,7 @@ mod script;
 use api::VarWatcherAPI;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::PropertyMap;
+use crate::config::ConfigEngine;
 use listen::handle_listen;
 use poll::handle_poll;
 use script::handle_script;
@@ -81,6 +82,8 @@ pub fn retreive_signals(root_node: &WidgetNode) -> Vec<SignalProps> {
                         props: props.clone(),
                         signal_type: SignalType::Script,
                     };
+
+                    signals.push(signal);
                 }
                 _ => {}
             }
@@ -92,7 +95,7 @@ pub fn retreive_signals(root_node: &WidgetNode) -> Vec<SignalProps> {
     signals
 }
 
-pub fn handle_state_changes(signals: Vec<SignalProps>) {
+pub fn handle_state_changes(parser: &ConfigEngine, signals: Vec<SignalProps>) {
     let shell = get_prefered_shell();
 
     for signal in signals {
@@ -105,7 +108,9 @@ pub fn handle_state_changes(signals: Vec<SignalProps>) {
                 VarWatcherAPI::register(&signal.name, String::new());
                 handle_listen(signal.name, &signal.props, shell.clone());
             }
-            SignalType::Script => { todo!("Implement script") }
+            SignalType::Script => {
+                handle_script(parser, &signal.props, shell.clone());
+            }
         }
     }
 }

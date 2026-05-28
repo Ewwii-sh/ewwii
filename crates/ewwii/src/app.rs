@@ -449,7 +449,11 @@ impl<B: DisplayBackend> App<B> {
                 let signals_vec =
                     crate::updates::retreive_signals(self.ewwii_config.get_root_node()?.as_ref());
 
-                crate::updates::handle_state_changes(signals_vec);
+                EWWII_CONFIG_PARSER.with(|p| {
+                    let parser_raw = p.borrow();
+                    let parser = parser_raw.as_ref().unwrap();
+                    crate::updates::handle_state_changes(parser, signals_vec);
+                });
             }
 
             let root_widget = {
