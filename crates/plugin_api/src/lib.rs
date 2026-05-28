@@ -77,7 +77,32 @@ pub trait EwwiiAPI: Send + Sync {
 
     // === IPC, I guess === //
 
-
+    /// Send an IPC request to ewwii.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     EwwiiAPI, Plugin,
+    ///     PluginInfo, IpcRequest
+    /// }
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn metadata(&self) -> PluginInfo {
+    ///         PluginInfo::new("test.example.ipc", "1.0")
+    ///     }
+    ///
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         host.ipc_request(IpcRequest::WidgetControl(WidgetControlType::PropertyUpdate{
+    ///             widget = "my_widget".to_string(),
+    ///             prop = "label".to_string(),
+    ///             value = "Hello, World".to_string()
+    ///         }));
+    ///     }
+    /// }
+    /// ```
     fn ipc_request(&self, req: IpcRequest);
 
     // === Registration Stuff === //
