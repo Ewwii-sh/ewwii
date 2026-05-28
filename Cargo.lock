@@ -426,6 +426,7 @@ dependencies = [
  "ahash",
  "anyhow",
  "codespan-reporting",
+ "ewwii_plugin_api",
  "ewwii_shared_utils",
  "gtk4",
  "log",

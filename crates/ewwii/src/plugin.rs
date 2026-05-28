@@ -256,7 +256,7 @@ impl<B: DisplayBackend> App<B> {
             IpcRequest::WidgetControl(wc_type) => {
                 match wc_type {
                     WidgetControlType::Remove(w) => {
-                        let (sender, _) = daemon_response::create_pair();
+                        let (sender, _recv) = daemon_response::create_pair();
                         let command = DaemonCommand::WidgetControl {
                             action: WidgetControlAction::Remove {
                                 names: vec![w]
@@ -268,7 +268,7 @@ impl<B: DisplayBackend> App<B> {
                         });
                     }
                     WidgetControlType::Create { parent, codes } => {
-                        let (sender, _) = daemon_response::create_pair();
+                        let (sender, _recv) = daemon_response::create_pair();
                         let command = DaemonCommand::WidgetControl {
                             action: WidgetControlAction::Create {
                                 nbcl_codes: codes,
@@ -281,7 +281,7 @@ impl<B: DisplayBackend> App<B> {
                         });
                     }
                     WidgetControlType::PropertyGet { prop, widget } => {
-                        let (sender, _) = daemon_response::create_pair();
+                        let (sender, _recv) = daemon_response::create_pair();
                         let command = DaemonCommand::WidgetControl {
                             action: WidgetControlAction::PropertyGet {
                                 property: prop,
@@ -296,7 +296,7 @@ impl<B: DisplayBackend> App<B> {
                     WidgetControlType::PropertyUpdate { prop, widget, value } => {
                         let p2v = HashMap::from([(prop, value)]);
 
-                        let (sender, _) = daemon_response::create_pair();
+                        let (sender, _recv) = daemon_response::create_pair();
                         let command = DaemonCommand::WidgetControl {
                             action: WidgetControlAction::PropertyUpdate {
                                 property_and_value: p2v,
@@ -309,7 +309,7 @@ impl<B: DisplayBackend> App<B> {
                         });
                     }
                     WidgetControlType::AddClass { class, widget } => {
-                        let (sender, _) = daemon_response::create_pair();
+                        let (sender, _recv) = daemon_response::create_pair();
                         let command = DaemonCommand::WidgetControl {
                             action: WidgetControlAction::AddClass {
                                 class: class,
@@ -322,7 +322,7 @@ impl<B: DisplayBackend> App<B> {
                         });
                     }
                     WidgetControlType::RemoveClass { class, widget } => {
-                        let (sender, _) = daemon_response::create_pair();
+                        let (sender, _recv) = daemon_response::create_pair();
                         let command = DaemonCommand::WidgetControl {
                             action: WidgetControlAction::RemoveClass {
                                 class: class,
