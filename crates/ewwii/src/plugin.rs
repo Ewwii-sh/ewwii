@@ -336,6 +336,58 @@ impl<B: DisplayBackend> App<B> {
                     }
                 }
             }
+            IpcRequest::Update(var, val) => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command = DaemonCommand::Update {
+                    mappings: HashMap::from([(var, val)]),
+                    sender,
+                };
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
+            IpcRequest::Close(windows) => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command = DaemonCommand::CloseWindows {
+                    windows,
+                    auto_reopen: false,
+                    sender,
+                };
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
+            IpcRequest::Open(window, toggle) => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command = DaemonCommand::OpenWindow {
+                    window_name: window,
+                    instance_id: None,
+                    pos: None,
+                    size: None,
+                    anchor: None,
+                    screen: None,
+                    should_toggle: toggle,
+                    duration: None,
+                    sender,
+                };
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+
+            }
+            IpcRequest::CloseAll => {
+                let command = DaemonCommand::CloseAll;
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
+            IpcRequest::Reload => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command = DaemonCommand::ReloadConfigAndCss(sender);
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
         }
     }
 }
