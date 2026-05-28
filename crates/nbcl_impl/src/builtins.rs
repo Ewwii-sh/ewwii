@@ -1,5 +1,6 @@
 use nbcl::{NativeNodeSchema, NbclEngine, PropValidation, Type, Value};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 pub fn register_all_nodes(engine: &mut NbclEngine) {
     // == Primitive nodes (nodes that does not take in children) ==
@@ -105,7 +106,7 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     });
 }
 
-pub fn register_all_fns(engine: &mut NbclEngine) {
+pub fn register_all_fns(engine: &mut NbclEngine, config_dir: PathBuf) {
     engine.register_native_fn(
         "global",
         vec![Type::Str],
@@ -136,8 +137,77 @@ pub fn register_all_fns(engine: &mut NbclEngine) {
                     }
                     Ok(glob_var)
                 }
-                _ => Ok(glob_var),
+                _ => Err(crate::runtime_err!("unexpected value shape in template()"))
             }
         },
+    );
+
+
+    // Widget control stuff
+    engine.register_native_fn(
+        "find",
+        vec![Type::Object("WidgetCtrl".into()), Type::Str],
+        Type::Object("WidgetCtrl".into()),
+        |mut args: Vec<Value>| {
+            let mut global_var = args.remove(0);
+            let name = args.remove(0);
+
+            match global_var {
+                Value::Object(_, ref mut data) => {
+                    if let Value::Str(ref mut inner_data) = **data {
+                        if let Value::Str(new_val) = name {
+                            *inner_data = new_val;
+                        }
+                    }
+                    Ok(global_var)
+                }
+                _ => Ok(global_var)
+            }
+        }
+    );
+
+    engine.register_native_fn(
+        "set_property",
+        vec![Type::Object("WidgetCtrl".into()), Type::Str, Type::Str],
+        Type::Object("WidgetCtrl".into()),
+        move |mut args: Vec<Value>| {
+            let global_var = args.remove(0);
+            let prop = args.remove(0);
+            let value = args.remove(0);
+
+            match global_var {
+                Value::Object(_, ref data) => {
+                    let bin = std::env::current_exe().map_err(|_| crate::runtime_err!("Failed to get bin"))?;
+
+                    let prop_str = match prop {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+                    let value_str = match value {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+
+                    let data = match &**data {
+                        Value::Str(s) => s,
+                        _ => return Err(crate::runtime_err!("expected string")),
+                    };
+
+                    std::process::Command::new(&bin)
+                        .arg("widget-control")
+                        .arg("property-update")
+                        .arg(format!("{}={}", prop_str, value_str))
+                        .arg("--widget")
+                        .arg(data)
+                        .arg("-c")
+                        .arg(&config_dir)
+                        .spawn()
+                        .map_err(|e| crate::runtime_err!("{}", e.to_string()))?;
+
+                    Ok(global_var)
+                }
+                _ => Ok(global_var)
+            }
+        }
     );
 }
