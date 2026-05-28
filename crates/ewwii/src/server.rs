@@ -33,7 +33,8 @@ pub fn initialize_server<B: DisplayBackend>(
     log::info!("Loading paths: {}", &paths);
 
     EWWII_CONFIG_PARSER.with(|p| {
-        let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new();
+        let config_dir = paths.config_dir.clone();
+        let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new(config_dir);
         *p.borrow_mut() = Some(ConfigEngine::Default(config_parser));
     });
 

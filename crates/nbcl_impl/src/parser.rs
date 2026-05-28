@@ -3,6 +3,7 @@ use anyhow::{anyhow, Result};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
 use nbcl::{context::Context, NbclEngine, Value};
+use std::path::PathBuf;
 
 #[derive(Clone)]
 pub struct NbclConfigParser {
@@ -11,11 +12,11 @@ pub struct NbclConfigParser {
 }
 
 impl NbclConfigParser {
-    pub fn new() -> Self {
+    pub fn new(config_dir: PathBuf) -> Self {
         let mut engine = NbclEngine::new();
 
         builtins::register_all_nodes(&mut engine);
-        builtins::register_all_fns(&mut engine);
+        builtins::register_all_fns(&mut engine, config_dir);
 
         libraries::register_api_lib(&mut engine);
         libraries::register_core_lib(&mut engine);
@@ -92,7 +93,11 @@ impl NbclConfigParser {
         let name = &callback.name;
 
         if let Some(ctx) = &self.ctx {
-            if let Err(e) = self.engine.call_function(&name, vec![], &ctx) {
+            if let Err(e) = self.engine.call_function(
+                &name,
+                vec![Value::Object("WidgetCtrl".into(), Box::new(Value::Str(String::new())))],
+                &ctx
+            ) {
                 log::error!("Failed to call function: {}", e);
             }
         } else {
