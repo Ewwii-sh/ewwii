@@ -1,12 +1,21 @@
 use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
-use ewwii_plugin_api::{PluginError, PluginValue};
+use ewwii_plugin_api::{PluginError, PluginValue, IpcRequest, WidgetControlType};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
+use crate::opts::WidgetControlAction;
 use nbcl::Value as NbclValue;
 use once_cell::sync::Lazy;
 use std::path::PathBuf;
 use std::sync::RwLock;
+use crate::app::{App, DaemonCommand};
+use crate::display_backend::DisplayBackend;
+use crate::daemon_response;
+use std::sync::OnceLock;
+use tokio::sync::{mpsc, oneshot};
+use std::collections::HashMap;
+
+pub static PLUGIN_TX: OnceLock<mpsc::Sender<(PluginRequest, oneshot::Sender<Result<PluginValue, PluginError>>)>> = OnceLock::new();
 
 pub fn is_compatible(plugin_ver: &str, host_ver: &str) -> bool {
     let p_str = plugin_ver.trim_matches('\0');
@@ -150,10 +159,8 @@ impl CustomConfigEngine {
     }
 }
 
-pub(crate) struct HostImpl;
-
-impl HostImpl {
-    pub fn handle_request(&self, request: PluginRequest) -> Result<PluginValue, PluginError> {
+impl<B: DisplayBackend> App<B> {
+    pub fn handle_plugin_request(&mut self, request: PluginRequest) -> Result<PluginValue, PluginError> {
         match request {
             PluginRequest::Log((id, msg)) => {
                 log::info!("[{}] {}", id, msg);
@@ -165,6 +172,10 @@ impl HostImpl {
             }
             PluginRequest::Error((id, msg)) => {
                 log::error!("[{}] {}", id, msg);
+                Ok(PluginValue::Null)
+            }
+            PluginRequest::Ipc((_, req)) => {
+                self.handle_plugin_ipc(req);
                 Ok(PluginValue::Null)
             }
             PluginRequest::RegisterFn { id, name, callback_id } => {
@@ -238,6 +249,95 @@ impl HostImpl {
             }
         })
     }
+
+    pub fn handle_plugin_ipc(&mut self, req: IpcRequest) {
+        let handle = tokio::runtime::Handle::current();
+        match req {
+            IpcRequest::WidgetControl(wc_type) => {
+                match wc_type {
+                    WidgetControlType::Remove(w) => {
+                        let (sender, _) = daemon_response::create_pair();
+                        let command = DaemonCommand::WidgetControl {
+                            action: WidgetControlAction::Remove {
+                                names: vec![w]
+                            },
+                            sender,
+                        };
+                        handle.block_on(async {
+                            self.handle_command(command).await;
+                        });
+                    }
+                    WidgetControlType::Create { parent, codes } => {
+                        let (sender, _) = daemon_response::create_pair();
+                        let command = DaemonCommand::WidgetControl {
+                            action: WidgetControlAction::Create {
+                                nbcl_codes: codes,
+                                parent_name: parent,
+                            },
+                            sender,
+                        };
+                        handle.block_on(async {
+                            self.handle_command(command).await;
+                        });
+                    }
+                    WidgetControlType::PropertyGet { prop, widget } => {
+                        let (sender, _) = daemon_response::create_pair();
+                        let command = DaemonCommand::WidgetControl {
+                            action: WidgetControlAction::PropertyGet {
+                                property: prop,
+                                widget_name: widget,
+                            },
+                            sender,
+                        };
+                        handle.block_on(async {
+                            self.handle_command(command).await;
+                        });
+                    }
+                    WidgetControlType::PropertyUpdate { prop, widget, value } => {
+                        let p2v = HashMap::from([(prop, value)]);
+
+                        let (sender, _) = daemon_response::create_pair();
+                        let command = DaemonCommand::WidgetControl {
+                            action: WidgetControlAction::PropertyUpdate {
+                                property_and_value: p2v,
+                                widget_name: widget,
+                            },
+                            sender,
+                        };
+                        handle.block_on(async {
+                            self.handle_command(command).await;
+                        });
+                    }
+                    WidgetControlType::AddClass { class, widget } => {
+                        let (sender, _) = daemon_response::create_pair();
+                        let command = DaemonCommand::WidgetControl {
+                            action: WidgetControlAction::AddClass {
+                                class: class,
+                                widget_name: widget,
+                            },
+                            sender,
+                        };
+                        handle.block_on(async {
+                            self.handle_command(command).await;
+                        });
+                    }
+                    WidgetControlType::RemoveClass { class, widget } => {
+                        let (sender, _) = daemon_response::create_pair();
+                        let command = DaemonCommand::WidgetControl {
+                            action: WidgetControlAction::RemoveClass {
+                                class: class,
+                                widget_name: widget,
+                            },
+                            sender,
+                        };
+                        handle.block_on(async {
+                            self.handle_command(command).await;
+                        });
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -253,8 +353,11 @@ pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize, output_len: *mut usize
         }
     };
 
-    let host = HostImpl;
-    let response = host.handle_request(request);
+    let (resp_tx, resp_rx) = oneshot::channel();
+    PLUGIN_TX.get().unwrap()
+        .blocking_send((request, resp_tx))
+        .unwrap();
+    let response = resp_rx.blocking_recv().unwrap();
 
     let res_bytes = bincode::serialize(&response).unwrap_or_default();
     unsafe {

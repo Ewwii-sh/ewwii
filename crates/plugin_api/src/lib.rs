@@ -75,6 +75,13 @@ pub trait EwwiiAPI: Send + Sync {
     /// Log an error from the host
     fn error(&self, msg: &str);
 
+    // === IPC, I guess === //
+
+
+    fn ipc_request(&self, req: IpcRequest);
+
+    // === Registration Stuff === //
+
     /// Expose a function that nbcl configuration can call.
     ///
     /// # Example

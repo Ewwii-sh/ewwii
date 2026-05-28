@@ -1,7 +1,7 @@
 //! This module provides plugin requests and host proxy
 //! that are used to redirect API calls to host after serialization
 
-use crate::{ConfigInfo, EwwiiAPI, NativeFn, ParseFn, PluginError, PluginValue};
+use crate::{ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, ParseFn, PluginError, PluginValue};
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -35,6 +35,9 @@ pub enum PluginRequest {
     Log((String, String)),
     Warn((String, String)),
     Error((String, String)),
+
+    // Not so complex API
+    Ipc((String, IpcRequest)),
 
     // Complex API
     RegisterFn { id: String, name: String, callback_id: u64 },
@@ -149,6 +152,13 @@ impl EwwiiAPI for HostProxy {
     fn error(&self, msg: &str) {
         let plugid = &self.get_id();
         let req = PluginRequest::Error((plugid.to_string(), msg.to_string()));
+
+        let _ = self.call_host(req);
+    }
+
+    fn ipc_request(&self, req: IpcRequest) {
+        let plugid = &self.get_id();
+        let req = PluginRequest::Ipc((plugid.to_string(), req));
 
         let _ = self.call_host(req);
     }
