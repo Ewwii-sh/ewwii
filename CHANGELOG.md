@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Renamed `mutate` to `template`.
+- Renamed `mutate` to `concat`.
 
 ## [0.7.0] - 2026-05-23
 

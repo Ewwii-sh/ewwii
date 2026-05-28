@@ -124,7 +124,7 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
     );
 
     engine.register_native_fn(
-        "template",
+        "concat",
         vec![Type::Object("GlobalVar".to_string()), Type::Str],
         Type::Object("GlobalVar".to_string()),
         |mut args| {
@@ -138,7 +138,7 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
                     }
                     Ok(glob_var)
                 }
-                _ => Err(crate::runtime_err!("unexpected value shape in template()"))
+                _ => Err(crate::runtime_err!("unexpected value shape in concat()"))
             }
         },
     );
