@@ -128,3 +128,36 @@ impl ParseFnExt for ParseFn {
         Arc::new(f)
     }
 }
+
+
+// === ipc access implementation  === //
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum IpcRequest {
+    WidgetControl(WidgetControlType)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum WidgetControlType {
+    Remove(String),
+    Create {
+        parent: String,
+        codes: Vec<String>,
+    },
+    PropertyGet {
+        widget: String,
+        prop: String,
+    },
+    PropertyUpdate {
+        widget: String,
+        prop: String,
+        value: String,
+    },
+    AddClass {
+        widget: String,
+        class: String,
+    },
+    RemoveClass {
+        widget: String,
+        class: String,
+    }
+}

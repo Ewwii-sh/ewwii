@@ -18,6 +18,7 @@ use std::{
     sync::{atomic::Ordering, Arc},
 };
 use tokio::sync::mpsc::*;
+use crate::plugin;
 
 pub fn initialize_server<B: DisplayBackend>(
     paths: EwwiiPaths,
@@ -93,6 +94,9 @@ pub fn initialize_server<B: DisplayBackend>(
     };
 
     // start up plugins
+    let (plugin_tx, mut plugin_rx) = tokio::sync::mpsc::channel(32);
+    plugin::PLUGIN_TX.set(plugin_tx).expect("plugin tx already initialized");
+
     if let Err(e) = app.load_ewwii_plugins(ewwii_plugins) {
         error_handling_ctx::print_error(e);
     }
@@ -144,6 +148,10 @@ pub fn initialize_server<B: DisplayBackend>(
                 // },
                 Some(ui_event) = ui_recv.recv() => {
                     app.handle_command(ui_event).await;
+                }
+                Some((request, resp_tx)) = plugin_rx.recv() => {
+                    let response = app.handle_plugin_request(request);
+                    let _ = resp_tx.send(response);
                 }
                 else => break,
             }
