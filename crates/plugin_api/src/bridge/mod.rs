@@ -9,7 +9,6 @@ mod registration;
 
 pub use ipc::*;
 pub use shared::*;
-pub use library::*;
 pub use registration::*;
 
 // === handlers === //

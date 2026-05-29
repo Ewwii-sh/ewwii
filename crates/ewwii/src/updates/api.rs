@@ -38,21 +38,21 @@ impl VarWatcherAPI {
     }
 
     /// Lazily Subscribe to a variable
-    pub async fn lazy_subscribe(var_name: &str) -> watch::Receiver<String> {
-        if let Some(rx) = VAR_WATCHERS.read().unwrap().get(var_name).map(|tx| tx.subscribe()) {
-            return rx;
-        }
-
-        let (tx, rx) = oneshot::channel();
-        PENDING_SUBSCRIBERS.write().unwrap().entry(var_name.to_string()).or_default().push(tx);
-
-        rx.await.unwrap()
-    }
+    // pub async fn lazy_subscribe(var_name: &str) -> watch::Receiver<String> {
+    //     if let Some(rx) = VAR_WATCHERS.read().unwrap().get(var_name).map(|tx| tx.subscribe()) {
+    //         return rx;
+    //     }
+    //
+    //     let (tx, rx) = oneshot::channel();
+    //     PENDING_SUBSCRIBERS.write().unwrap().entry(var_name.to_string()).or_default().push(tx);
+    //
+    //     rx.await.unwrap()
+    // }
 
     /// Update a variable in the store
-    pub fn update_store(var_name: &str, val: String) {
-        GLOBAL_VAR_STORE.write().unwrap().insert(var_name.to_owned(), val);
-    }
+    // pub fn update_store(var_name: &str, val: String) {
+    //     GLOBAL_VAR_STORE.write().unwrap().insert(var_name.to_owned(), val);
+    // }
 
     /// Update the store and broadcast
     pub fn update_with_broadcast(var_name: &str, val: String) {
