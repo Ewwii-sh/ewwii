@@ -222,7 +222,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     ///
     ///     fn init(&self, host: &dyn EwwiiAPI) {
-    ///         host.inject_css("* { all: unset }");
+    ///         host.inject_css("* { all: unset }".to_string());
     ///     }
     /// }
     /// ```
