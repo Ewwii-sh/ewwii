@@ -87,6 +87,7 @@ pub fn initialize_server<B: DisplayBackend>(
         failed_windows: HashSet::new(),
         instance_id_to_args: HashMap::new(),
         css_provider: gtk4::CssProvider::new(),
+        custom_css_provider: gtk4::CssProvider::new(),
         reloading: false,
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
@@ -120,6 +121,7 @@ pub fn initialize_server<B: DisplayBackend>(
 
     if let Some(display) = gtk4::gdk::Display::default() {
         gtk4::style_context_add_provider_for_display(&display, &app.css_provider, 900);
+        gtk4::style_context_add_provider_for_display(&display, &app.custom_css_provider, 910);
     }
 
     if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
@@ -153,7 +155,7 @@ pub fn initialize_server<B: DisplayBackend>(
                     app.handle_command(ui_event).await;
                 }
                 Some(request) = plugin_rx.recv() => {
-                    let _ = app.handle_plugin_request(request);
+                    app.handle_plugin_request(request);
                 }
                 Some(ipc_req)  = ipc_rx.recv() => {
                     app.handle_plugin_ipc(ipc_req);

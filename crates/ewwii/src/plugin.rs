@@ -178,50 +178,42 @@ impl CustomConfigEngine {
 }
 
 impl<B: DisplayBackend> App<B> {
-    pub fn handle_plugin_request(&mut self, request: PluginRequest) -> Result<PluginValue, PluginError> {
+    pub fn handle_plugin_request(&mut self, request: PluginRequest) {
         match request {
             PluginRequest::Log((id, msg)) => {
                 log::info!("[{}] {}", id, msg);
-                Ok(PluginValue::Null)
             }
             PluginRequest::Warn((id, msg)) => {
                 log::warn!("[{}] {}", id, msg);
-                Ok(PluginValue::Null)
             }
             PluginRequest::Error((id, msg)) => {
                 log::error!("[{}] {}", id, msg);
-                Ok(PluginValue::Null)
             }
             PluginRequest::Ipc((_, req)) => {
                 self.handle_plugin_ipc(req);
-                Ok(PluginValue::Null)
             }
             PluginRequest::RegisterFn { id, name, types, return_type, callback_id } => {
                 if name.trim().is_empty() {
-                    return Err(PluginError::RegistrationError(
-                        "Function name cannot be empty".into(),
-                    ));
+                    log::error!("Function name cannot be empty");
+                    return;
                 }
 
                 if name.contains(' ') {
-                    return Err(PluginError::RegistrationError(
-                        "Function names cannot contain spaces".into(),
-                    ));
+                    log::error!("Function names cannot contain spaces");
+                    return;
                 }
 
-                self.register_function_internal(id, name, types, return_type, callback_id)
+                self.register_function_internal(id, name, types, return_type, callback_id);
             }
             PluginRequest::RegisterConfigEngine { id, extension, main_file, callback_id } => {
                 if extension.trim().is_empty() || main_file.trim().is_empty() {
-                    return Err(PluginError::RegistrationError(
-                        "File extension or main file cannot be empty".into(),
-                    ));
+                    log::error!("File extension or main file cannot be empty");
+                    return;
                 }
 
                 if extension.contains(' ') || main_file.contains(' ') {
-                    return Err(PluginError::RegistrationError(
-                        "File extension or main file cannot contain spaces".into(),
-                    ));
+                    log::error!("File extension or main file cannot contain spaces");
+                    return;
                 }
 
                 let custom_engine = CustomConfigEngine { id, extension, main_file, callback_id, cfg_callback_id: None };
@@ -229,8 +221,9 @@ impl<B: DisplayBackend> App<B> {
                 EWWII_CONFIG_PARSER.with(|p| {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
                 });
-
-                Ok(PluginValue::Null)
+            }
+            PluginRequest::InjectCss(css) => {
+                self.custom_css_provider.load_from_string(&css);
             }
             PluginRequest::ConfigCallbackHandle(id) => {
                 EWWII_CONFIG_PARSER.with(|p| {
@@ -239,8 +232,6 @@ impl<B: DisplayBackend> App<B> {
                         c.cfg_callback_id = Some(id);
                     }
                 });
-
-                Ok(PluginValue::Null)
             }
         }
     }
@@ -252,7 +243,7 @@ impl<B: DisplayBackend> App<B> {
         types: Vec<NbclType>,
         return_type: NbclType,
         callback_id: u64,
-    ) -> Result<PluginValue, PluginError> {
+    ) {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
             let types = types.into_iter()
@@ -273,13 +264,11 @@ impl<B: DisplayBackend> App<B> {
                             Ok(plugin_value_to_nbcl(result))
                         },
                     );
-
-                    Ok(PluginValue::Null)
                 }
-                ConfigEngine::Custom(_) => Err(PluginError::RegistrationError(
-                    "Registering rhai functions is only supported with the Nbcl config engine"
-                        .to_string(),
-                )),
+                ConfigEngine::Custom(_) => {
+                    log::error!("Registering rhai functions is only supported with the Nbcl config engine");
+                    return;
+                }
             }
         })
     }

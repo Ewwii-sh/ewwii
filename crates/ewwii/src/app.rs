@@ -152,7 +152,10 @@ pub struct App<B: DisplayBackend> {
     /// Window names that are supposed to be open, but failed.
     /// When reloading the config, these should be opened again.
     pub failed_windows: HashSet<String>,
+    /// The user's css provider.
     pub css_provider: gtk4::CssProvider,
+    /// This will be set by the plugins.
+    pub custom_css_provider: gtk4::CssProvider,
     pub reloading: bool,
 
     /// Sender to send [`DaemonCommand`]s
