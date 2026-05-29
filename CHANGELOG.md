@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `core` library that implements all the features that existed in rhai `std`.
+- `api` library that implements all the features that existed in rhai `api`.
 - `Script` node for running script periodically or on event.
 - `ipc_request` plugin API for calling ewwii IPC directly.
 - Improved `register_function` plugin API.
+- `print-version` command to print the plugin API version.
 
 ### Changed
 

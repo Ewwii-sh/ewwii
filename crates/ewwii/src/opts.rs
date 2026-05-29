@@ -81,6 +81,10 @@ pub enum ActionClientOnly {
     /// Print and watch the ewwii logs
     #[command(name = "logs")]
     Logs,
+
+    /// Print the plugin version
+    #[command(name = "plugin-version")]
+    GetPluginVersion,
 }
 
 #[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq)]
