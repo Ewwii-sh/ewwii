@@ -1,3 +1,4 @@
+use crate::plugin;
 use crate::{
     app::{self, App, DaemonCommand},
     config,
@@ -7,6 +8,7 @@ use crate::{
     error_handling_ctx, ipc_server, EwwiiPaths,
 };
 use anyhow::{Context, Result};
+use ewwii_plugin_api::IpcRequest;
 use gtk4::prelude::{DisplayExt, ListModelExt};
 use std::{
     collections::{HashMap, HashSet},
@@ -32,8 +34,11 @@ pub fn initialize_server<B: DisplayBackend>(
 
     log::info!("Loading paths: {}", &paths);
 
+    // ipc_(tx/rx) is used to allow config parser
+    // to send ipc requests during evaluation.
+    let (ipc_tx, mut ipc_rx) = tokio::sync::mpsc::unbounded_channel::<IpcRequest>();
     EWWII_CONFIG_PARSER.with(|p| {
-        let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new();
+        let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new(ipc_tx);
         *p.borrow_mut() = Some(ConfigEngine::Default(config_parser));
     });
 
@@ -82,6 +87,7 @@ pub fn initialize_server<B: DisplayBackend>(
         failed_windows: HashSet::new(),
         instance_id_to_args: HashMap::new(),
         css_provider: gtk4::CssProvider::new(),
+        custom_css_provider: gtk4::CssProvider::new(),
         reloading: false,
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
@@ -92,6 +98,9 @@ pub fn initialize_server<B: DisplayBackend>(
     };
 
     // start up plugins
+    let (plugin_tx, mut plugin_rx) = tokio::sync::mpsc::channel(32);
+    plugin::PLUGIN_TX.set(plugin_tx).expect("plugin tx already initialized");
+
     if let Err(e) = app.load_ewwii_plugins(ewwii_plugins) {
         error_handling_ctx::print_error(e);
     }
@@ -112,6 +121,7 @@ pub fn initialize_server<B: DisplayBackend>(
 
     if let Some(display) = gtk4::gdk::Display::default() {
         gtk4::style_context_add_provider_for_display(&display, &app.css_provider, 900);
+        gtk4::style_context_add_provider_for_display(&display, &app.custom_css_provider, 910);
     }
 
     if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
@@ -143,6 +153,12 @@ pub fn initialize_server<B: DisplayBackend>(
                 // },
                 Some(ui_event) = ui_recv.recv() => {
                     app.handle_command(ui_event).await;
+                }
+                Some(request) = plugin_rx.recv() => {
+                    app.handle_plugin_request(request);
+                }
+                Some(ipc_req)  = ipc_rx.recv() => {
+                    app.handle_plugin_ipc(ipc_req);
                 }
                 else => break,
             }

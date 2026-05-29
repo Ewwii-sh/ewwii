@@ -1,11 +1,22 @@
+use crate::app::{App, DaemonCommand};
 use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
+use crate::daemon_response;
+use crate::display_backend::DisplayBackend;
+use crate::opts::WidgetControlAction;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
-use ewwii_plugin_api::{PluginError, PluginValue};
+use ewwii_plugin_api::{IpcRequest, NbclType, PluginError, PluginValue, WidgetControlType};
 use ewwii_shared_utils::ast::WidgetNode;
-use once_cell::sync::Lazy;
-use std::path::PathBuf;
-use std::sync::RwLock;
+use ewwii_shared_utils::prop::Callback;
+use nbcl::Type as ActualNbclType;
 use nbcl::Value as NbclValue;
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::OnceLock;
+use std::sync::RwLock;
+use tokio::sync::mpsc;
+
+pub static PLUGIN_TX: OnceLock<mpsc::Sender<PluginRequest>> = OnceLock::new();
 
 pub fn is_compatible(plugin_ver: &str, host_ver: &str) -> bool {
     let p_str = plugin_ver.trim_matches('\0');
@@ -39,8 +50,10 @@ fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
         NbclValue::Int(v) => PluginValue::Int(v),
         NbclValue::Float(v) => PluginValue::Float(v),
         NbclValue::Bool(v) => PluginValue::Bool(v),
-        NbclValue::List(v) => PluginValue::Array(v.into_iter().map(nbclvalue_to_plugin_value).collect()),
-        _ => PluginValue::Null
+        NbclValue::List(v) => {
+            PluginValue::Array(v.into_iter().map(nbclvalue_to_plugin_value).collect())
+        }
+        _ => PluginValue::Null,
     };
 
     return res;
@@ -57,6 +70,18 @@ fn plugin_value_to_nbcl(val: PluginValue) -> NbclValue {
             NbclValue::List(vec)
         }
         PluginValue::Null => NbclValue::Null,
+    }
+}
+
+fn plugin_nbcltype_to_nbcltype(ty: NbclType) -> ActualNbclType {
+    match ty {
+        NbclType::String => ActualNbclType::Str,
+        NbclType::Int => ActualNbclType::Int,
+        NbclType::Float => ActualNbclType::Float,
+        NbclType::Bool => ActualNbclType::Bool,
+        NbclType::Array => ActualNbclType::List,
+        NbclType::Any => ActualNbclType::Any,
+        NbclType::Null => ActualNbclType::Null,
     }
 }
 
@@ -89,12 +114,11 @@ fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) ->
     }
 }
 
-fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: NbclValue) -> PluginValue {
-    let args = match args {
-        NbclValue::List(v) => v,
-        _ => unreachable!(),
-    };
-
+fn trigger_plugin_func_call(
+    plugin_id: &str,
+    callback_id: u64,
+    args: Vec<NbclValue>,
+) -> PluginValue {
     let arg_bytes =
         bincode::serialize(&args.into_iter().map(nbclvalue_to_plugin_value).collect::<Vec<_>>())
             .unwrap_or_default();
@@ -121,11 +145,13 @@ fn trigger_plugin_config_parse(
     }
 }
 
+#[derive(Clone)]
 pub struct CustomConfigEngine {
     id: String,
     extension: String,
     main_file: String,
     callback_id: u64,
+    cfg_callback_id: Option<u64>,
 }
 
 impl CustomConfigEngine {
@@ -137,6 +163,21 @@ impl CustomConfigEngine {
         self.main_file.clone()
     }
 
+    pub fn handle_callback(&self, callback: &Callback) {
+        if let Some(cfg_cb) = self.cfg_callback_id {
+            let arg_bytes =
+                bincode::serialize(&(callback.name.clone(), callback.handle.unwrap_or_default()))
+                    .unwrap_or_default();
+            if let None = call_plugin_handler(&self.id, cfg_cb, arg_bytes) {
+                log::error!("Failed calling callback handler.");
+            }
+        } else {
+            log::error!(
+                "Failed to handle callback: plugin did not register config callback handler."
+            )
+        }
+    }
+
     pub fn parse_source(&self, source: String, config_path: PathBuf) -> Result<WidgetNode, String> {
         let path_str = config_path.to_str().unwrap_or("<unknown>");
         trigger_plugin_config_parse(&self.id, self.callback_id, &source, path_str)
@@ -144,58 +185,67 @@ impl CustomConfigEngine {
     }
 }
 
-pub(crate) struct HostImpl;
-
-impl HostImpl {
-    pub fn handle_request(&self, request: PluginRequest) -> Result<PluginValue, PluginError> {
+impl<B: DisplayBackend> App<B> {
+    pub fn handle_plugin_request(&mut self, request: PluginRequest) {
         match request {
             PluginRequest::Log((id, msg)) => {
                 log::info!("[{}] {}", id, msg);
-                Ok(PluginValue::Null)
             }
             PluginRequest::Warn((id, msg)) => {
                 log::warn!("[{}] {}", id, msg);
-                Ok(PluginValue::Null)
             }
             PluginRequest::Error((id, msg)) => {
                 log::error!("[{}] {}", id, msg);
-                Ok(PluginValue::Null)
             }
-            PluginRequest::RegisterFn { id, name, callback_id } => {
+            PluginRequest::Ipc((_, req)) => {
+                self.handle_plugin_ipc(req);
+            }
+            PluginRequest::RegisterFn { id, name, types, return_type, callback_id } => {
                 if name.trim().is_empty() {
-                    return Err(PluginError::RegistrationError(
-                        "Function name cannot be empty".into(),
-                    ));
+                    log::error!("Function name cannot be empty");
+                    return;
                 }
 
                 if name.contains(' ') {
-                    return Err(PluginError::RegistrationError(
-                        "Function names cannot contain spaces".into(),
-                    ));
+                    log::error!("Function names cannot contain spaces");
+                    return;
                 }
 
-                self.register_function_internal(id, name, callback_id)
+                self.register_function_internal(id, name, types, return_type, callback_id);
             }
             PluginRequest::RegisterConfigEngine { id, extension, main_file, callback_id } => {
                 if extension.trim().is_empty() || main_file.trim().is_empty() {
-                    return Err(PluginError::RegistrationError(
-                        "File extension or main file cannot be empty".into(),
-                    ));
+                    log::error!("File extension or main file cannot be empty");
+                    return;
                 }
 
                 if extension.contains(' ') || main_file.contains(' ') {
-                    return Err(PluginError::RegistrationError(
-                        "File extension or main file cannot contain spaces".into(),
-                    ));
+                    log::error!("File extension or main file cannot contain spaces");
+                    return;
                 }
 
-                let custom_engine = CustomConfigEngine { id, extension, main_file, callback_id };
+                let custom_engine = CustomConfigEngine {
+                    id,
+                    extension,
+                    main_file,
+                    callback_id,
+                    cfg_callback_id: None,
+                };
 
                 EWWII_CONFIG_PARSER.with(|p| {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
                 });
-
-                Ok(PluginValue::Null)
+            }
+            PluginRequest::InjectCss(css) => {
+                self.custom_css_provider.load_from_string(&css);
+            }
+            PluginRequest::ConfigCallbackHandle(id) => {
+                EWWII_CONFIG_PARSER.with(|p| {
+                    let mut parser = p.borrow_mut();
+                    if let Some(ConfigEngine::Custom(ref mut c)) = *parser {
+                        c.cfg_callback_id = Some(id);
+                    }
+                });
             }
         }
     }
@@ -204,37 +254,160 @@ impl HostImpl {
         &self,
         plugin_id: String,
         name: String,
+        types: Vec<NbclType>,
+        return_type: NbclType,
         callback_id: u64,
-    ) -> Result<PluginValue, PluginError> {
+    ) {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
+            let types = types.into_iter().map(plugin_nbcltype_to_nbcltype).collect();
+            let return_type = plugin_nbcltype_to_nbcltype(return_type);
 
             match parser.as_mut().unwrap() {
                 ConfigEngine::Default(nbcl) => {
-                    nbcl.engine.register_native_fn(
-                        &name,
-                        vec![nbcl::Type::List],
-                        nbcl::Type::Any,
-                        move |mut args| {
-                            let result = trigger_plugin_func_call(&plugin_id, callback_id, args.remove(0));
+                    nbcl.engine.register_native_fn(&name, types, return_type, move |args| {
+                        let result = trigger_plugin_func_call(&plugin_id, callback_id, args);
 
-                            Ok(plugin_value_to_nbcl(result))
-                        }
+                        Ok(plugin_value_to_nbcl(result))
+                    });
+                }
+                ConfigEngine::Custom(_) => {
+                    log::error!(
+                        "Registering rhai functions is only supported with the Nbcl config engine"
                     );
-
-                    Ok(PluginValue::Null)
-                },
-                ConfigEngine::Custom(_) => Err(PluginError::RegistrationError(
-                    "Registering rhai functions is only supported with the Nbcl config engine"
-                        .to_string()
-                )),
+                    return;
+                }
             }
         })
+    }
+
+    pub fn handle_plugin_ipc(&mut self, req: IpcRequest) {
+        let handle = tokio::runtime::Handle::current();
+        match req {
+            IpcRequest::WidgetControl(wc_type) => match wc_type {
+                WidgetControlType::Remove(w) => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::Remove { names: vec![w] },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::Create { parent, codes } => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::Create {
+                            nbcl_codes: codes,
+                            parent_name: parent,
+                        },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::PropertyGet { prop, widget } => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::PropertyGet {
+                            property: prop,
+                            widget_name: widget,
+                        },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::PropertyUpdate { prop, widget, value } => {
+                    let p2v = HashMap::from([(prop, value)]);
+
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::PropertyUpdate {
+                            property_and_value: p2v,
+                            widget_name: widget,
+                        },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::AddClass { class, widget } => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::AddClass { class, widget_name: widget },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::RemoveClass { class, widget } => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::RemoveClass { class, widget_name: widget },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+            },
+            IpcRequest::Update(var, val) => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command =
+                    DaemonCommand::Update { mappings: HashMap::from([(var, val)]), sender };
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
+            IpcRequest::Close(windows) => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command = DaemonCommand::CloseWindows { windows, auto_reopen: false, sender };
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
+            IpcRequest::Open(window, toggle) => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command = DaemonCommand::OpenWindow {
+                    window_name: window,
+                    instance_id: None,
+                    pos: None,
+                    size: None,
+                    anchor: None,
+                    screen: None,
+                    should_toggle: toggle,
+                    duration: None,
+                    sender,
+                };
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
+            IpcRequest::CloseAll => {
+                let command = DaemonCommand::CloseAll;
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
+            IpcRequest::Reload => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command = DaemonCommand::ReloadConfigAndCss(sender);
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+            }
+        }
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize, output_len: *mut usize) -> *mut u8 {
+pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize) {
     // SAFETY: Convert the raw pointer/len into a Rust slice
     let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
 
@@ -242,27 +415,9 @@ pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize, output_len: *mut usize
         Ok(req) => req,
         Err(e) => {
             eprintln!("[Host] Failed to deserialize plugin request: {}", e);
-            return std::ptr::null_mut();
+            return;
         }
     };
 
-    let host = HostImpl;
-    let response = host.handle_request(request);
-
-    let res_bytes = bincode::serialize(&response).unwrap_or_default();
-    unsafe {
-        *output_len = res_bytes.len();
-        let boxed = res_bytes.into_boxed_slice();
-        Box::into_raw(boxed) as *mut u8
-    }
-}
-
-// Way to free
-#[unsafe(no_mangle)]
-pub extern "C" fn host_free_buffer(ptr: *mut u8, len: usize) {
-    if !ptr.is_null() {
-        unsafe {
-            let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));
-        }
-    }
+    PLUGIN_TX.get().unwrap().blocking_send(request).unwrap();
 }

@@ -1,31 +1,27 @@
-use nbcl::ast::resolved::ResolvedNode;
-use ewwii_shared_utils::prop::{Property, PropertyMap};
-use ewwii_shared_utils::ast::WidgetNode;
 use anyhow::{Context, Result};
+use ewwii_shared_utils::ast::WidgetNode;
+use ewwii_shared_utils::prop::{Property, PropertyMap};
+use nbcl::ast::resolved::ResolvedNode;
 
 macro_rules! handle_primitive {
-    ($variant:ident, $node:expr) => {
-        {
-            let mut props = PropertyMap::from_nbcl($node.props);
-            if let Some(id) = $node.id {
-                props.insert("widget_name", Property::String(id));
-            }
-            WidgetNode::$variant { props }
+    ($variant:ident, $node:expr) => {{
+        let mut props = PropertyMap::from_nbcl($node.props);
+        if let Some(id) = $node.id {
+            props.insert("widget_name", Property::String(id));
         }
-    };
+        WidgetNode::$variant { props }
+    }};
 }
 
 macro_rules! handle_with_children {
-    ($variant:ident, $node:expr) => {
-        {
-            let mut props = PropertyMap::from_nbcl($node.props);
-            let children = to_widgetnode($node.children)?;
-            if let Some(id) = $node.id {
-                props.insert("widget_name", Property::String(id));
-            }
-            WidgetNode::$variant { props, children }
+    ($variant:ident, $node:expr) => {{
+        let mut props = PropertyMap::from_nbcl($node.props);
+        let children = to_widgetnode($node.children)?;
+        if let Some(id) = $node.id {
+            props.insert("widget_name", Property::String(id));
         }
-    };
+        WidgetNode::$variant { props, children }
+    }};
 }
 
 pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
@@ -68,20 +64,19 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
                 let name = node.id.with_context(|| format!("Poll has no <id>"))?;
                 let props = PropertyMap::from_nbcl(node.props);
 
-                WidgetNode::Poll {
-                    var: name,
-                    props,
-                }
+                WidgetNode::Poll { var: name, props }
             }
 
             "Listen" => {
                 let name = node.id.with_context(|| format!("Listen has no <id>"))?;
                 let props = PropertyMap::from_nbcl(node.props);
 
-                WidgetNode::Listen {
-                    var: name,
-                    props,
-                }
+                WidgetNode::Listen { var: name, props }
+            }
+
+            "Script" => {
+                let props = PropertyMap::from_nbcl(node.props);
+                WidgetNode::Script { props }
             }
 
             "Window" => {
@@ -91,13 +86,9 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
                 // provided in builtins.rs file.
                 let child = to_widgetnode(node.children)?.remove(0);
 
-                WidgetNode::DefWindow {
-                    name,
-                    props,
-                    node: Box::new(child),
-                }
+                WidgetNode::DefWindow { name, props, node: Box::new(child) }
             }
-            _ => unimplemented!()
+            _ => unimplemented!(),
         };
         widgets.push(widget);
     }

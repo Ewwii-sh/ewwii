@@ -5,6 +5,28 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] - 2026-05-29
+
+### Added
+
+- `core` library that implements all the features that existed in rhai `std`.
+- `api` library that implements all the features that existed in rhai `api`.
+- `Script` node for running script periodically or on event.
+- `ipc_request` plugin API for calling ewwii IPC directly.
+- Improved `register_function` plugin API.
+- `print-version` command to print the plugin API version.
+- `handle_config_callbacks` plugin api to handle callbacks from `Script`.
+- `inject_css` plugin api to inject custom css.
+
+### Changed
+
+- Renamed `mutate` to `template`.
+- Add more functionality to `template`.
+
+### Removed
+
+- Direct synchronous return of `Result` from plugin API.
+
 ## [0.7.0] - 2026-05-23
 
 ### Added

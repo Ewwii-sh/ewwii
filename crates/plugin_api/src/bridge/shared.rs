@@ -1,9 +1,4 @@
-//! This module provides data structures and enumrates that are used
-//! as a bridge between the communication of both the plugin and the host.
-
-use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 // === Shared Implementation === //
 
@@ -56,6 +51,18 @@ pub enum PluginValue {
     Null,
 }
 
+/// A type interface for Nbcl
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum NbclType {
+    String,
+    Int,
+    Float,
+    Bool,
+    Array,
+    Any,
+    Null,
+}
+
 /// This enumrate provides improved error support for plugins
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PluginError {
@@ -83,48 +90,5 @@ impl std::fmt::Display for PluginError {
             PluginError::ParseError(msg) => write!(f, "Parse error: {}", msg),
             PluginError::Internal(msg) => write!(f, "Internal error: {}", msg),
         }
-    }
-}
-
-// === register_function implementation === //
-
-/// Handler for handling Native Function registeration in rhai
-pub type NativeFn = Arc<dyn Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync>;
-
-pub trait NativeFnExt {
-    fn new<F>(f: F) -> Self
-    where
-        F: Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync + 'static;
-}
-
-impl NativeFnExt for NativeFn {
-    fn new<F>(f: F) -> Self
-    where
-        F: Fn(Vec<PluginValue>) -> Result<PluginValue, String> + Send + Sync + 'static,
-    {
-        Arc::new(f)
-    }
-}
-
-// === register_config implementation === //
-pub struct ConfigInfo {
-    pub extension: &'static str,
-    pub main_file: &'static str,
-}
-
-pub type ParseFn = Arc<dyn Fn(&str, &str) -> Result<WidgetNode, String> + Send + Sync>;
-
-pub trait ParseFnExt {
-    fn new<F>(f: F) -> Self
-    where
-        F: Fn(&str, &str) -> Result<WidgetNode, String> + Send + Sync + 'static;
-}
-
-impl ParseFnExt for ParseFn {
-    fn new<F>(f: F) -> Self
-    where
-        F: Fn(&str, &str) -> Result<WidgetNode, String> + Send + Sync + 'static,
-    {
-        Arc::new(f)
     }
 }

@@ -1,7 +1,7 @@
 /*
 * Highly probable to cause hidden bugs/issues.
 * It would be better if I replaced it with a procedural macro,
-* but then, I would have to publish it to crates.io as shared_utils 
+* but then, I would have to publish it to crates.io as shared_utils
 * is a public library that is a dependency of plugin_api.
 */
 
@@ -38,6 +38,7 @@ impl WidgetNode {
             | WidgetNode::GtkUI { props }
             | WidgetNode::DefWindow { props, .. }
             | WidgetNode::Poll { props, .. }
+            | WidgetNode::Script { props, .. }
             | WidgetNode::Listen { props, .. } => Some(props),
 
             // Variants with no props field
@@ -120,7 +121,10 @@ impl WidgetNode {
                 WidgetNode::Tree(process_children(children, parent_path, "tree"))
             }
 
-            // == Poll/Listen nodes ==
+            // == Script/Poll/Listen nodes ==
+            WidgetNode::Script { props } => WidgetNode::Script {
+                props: with_dyn_id(props.clone(), &format!("{}_script", parent_path)),
+            },
             WidgetNode::Poll { var, props } => WidgetNode::Poll {
                 var: var.clone(),
                 props: with_dyn_id(props.clone(), &format!("{}_poll_{}", parent_path, var)),

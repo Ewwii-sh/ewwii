@@ -10,14 +10,12 @@ homepage = "https://ewwii-sh.github.io/"
 
 [dependencies]
 ewwii_shared_utils.workspace = true
+ewwii_plugin_api.workspace = true
 
 nbcl.workspace = true
-gtk4.workspace = true
 anyhow.workspace = true
 tokio = { workspace = true, features = ["full"] }
 log.workspace = true
-once_cell.workspace = true
-ahash.workspace = true
 nix.workspace = true
 # error handling
 rand.workspace = true

@@ -20,6 +20,9 @@ pub fn handle_client_only_action(paths: &EwwiiPaths, action: ActionClientOnly) -
                 .spawn()?
                 .wait()?;
         }
+        ActionClientOnly::GetPluginVersion => {
+            println!("Plugin Version: {}", ewwii_plugin_api::API_VERSION);
+        }
     }
     Ok(())
 }

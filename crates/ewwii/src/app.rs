@@ -152,7 +152,10 @@ pub struct App<B: DisplayBackend> {
     /// Window names that are supposed to be open, but failed.
     /// When reloading the config, these should be opened again.
     pub failed_windows: HashSet<String>,
+    /// The user's css provider.
     pub css_provider: gtk4::CssProvider,
+    /// This will be set by the plugins.
+    pub custom_css_provider: gtk4::CssProvider,
     pub reloading: bool,
 
     /// Sender to send [`DaemonCommand`]s
@@ -449,7 +452,11 @@ impl<B: DisplayBackend> App<B> {
                 let signals_vec =
                     crate::updates::retreive_signals(self.ewwii_config.get_root_node()?.as_ref());
 
-                crate::updates::handle_state_changes(signals_vec);
+                EWWII_CONFIG_PARSER.with(|p| {
+                    let parser_raw = p.borrow();
+                    let parser = parser_raw.as_ref().unwrap();
+                    crate::updates::handle_state_changes(parser, signals_vec);
+                });
             }
 
             let root_widget = {

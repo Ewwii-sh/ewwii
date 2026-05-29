@@ -139,8 +139,8 @@ impl TemplateExpr {
                 let base = expr.eval(vars)?;
                 let key_str = key.eval(vars)?;
 
-                let json: serde_json::Value = serde_json::from_str(&base)
-                    .map_err(|e| format!("Not valid JSON: {}", e))?;
+                let json: serde_json::Value =
+                    serde_json::from_str(&base).map_err(|e| format!("Not valid JSON: {}", e))?;
 
                 let result = if let Ok(idx) = key_str.parse::<usize>() {
                     json.get(idx)
@@ -167,6 +167,112 @@ impl TemplateExpr {
                 .map(|n| n != 0.0)
                 .map_err(|_| format!("Cannot interpret '{}' as bool", s)),
         }
+    }
+
+    pub fn parse(input: &str) -> Result<Self, String> {
+        let mut exprs = Vec::new();
+        let mut remaining = input;
+
+        while !remaining.is_empty() {
+            if let Some(start_idx) = remaining.find('{') {
+                if start_idx > 0 {
+                    exprs.push(TemplateExpr::Literal(remaining[..start_idx].to_string()));
+                }
+
+                remaining = &remaining[start_idx + 1..];
+
+                if let Some(end_idx) = remaining.find('}') {
+                    let inner_expr_str = &remaining[..end_idx];
+                    remaining = &remaining[end_idx + 1..];
+
+                    let inner_expr = Self::parse_inner_expression(inner_expr_str.trim())?;
+                    exprs.push(inner_expr);
+                } else {
+                    return Err("Mismatched curly braces: missing closing '}'".to_string());
+                }
+            } else {
+                exprs.push(TemplateExpr::Literal(remaining.to_string()));
+                break;
+            }
+        }
+
+        match exprs.len() {
+            0 => Ok(TemplateExpr::Literal(String::new())),
+            1 => Ok(exprs.pop().unwrap()),
+            _ => Ok(TemplateExpr::Concat(exprs)),
+        }
+    }
+
+    fn parse_inner_expression(input: &str) -> Result<Self, String> {
+        let input = input.trim();
+        if input.is_empty() {
+            return Err("Empty expression inside brackets".to_string());
+        }
+
+        if let Some(q_idx) = input.find('?') {
+            if let Some(c_idx) = input[q_idx..].find(':') {
+                let actual_c_idx = q_idx + c_idx;
+
+                let condition_str = &input[..q_idx];
+                let true_str = &input[q_idx + 1..actual_c_idx];
+                let false_str = &input[actual_c_idx + 1..];
+
+                return Ok(TemplateExpr::IfElse {
+                    condition: Box::new(Self::parse_inner_expression(condition_str)?),
+                    if_true: Box::new(Self::parse_inner_expression(true_str)?),
+                    if_false: Box::new(Self::parse_inner_expression(false_str)?),
+                });
+            } else {
+                return Err("Ternary operator missing ':' closing branch".to_string());
+            }
+        }
+
+        let op_groups = [
+            (vec![("||", TemplateOp::Or), ("&&", TemplateOp::And)], false),
+            (vec![("==", TemplateOp::Eq), ("!=", TemplateOp::NotEq)], false),
+            (
+                vec![
+                    (">=", TemplateOp::Gte),
+                    ("<=", TemplateOp::Lte),
+                    (">", TemplateOp::Gt),
+                    ("<", TemplateOp::Lt),
+                ],
+                false,
+            ),
+            (vec![("+", TemplateOp::Add), ("-", TemplateOp::Sub)], false),
+            (vec![("*", TemplateOp::Mul), ("/", TemplateOp::Div), ("%", TemplateOp::Mod)], false),
+            (vec![("?:", TemplateOp::Elvis), ("~=", TemplateOp::RegexMatch)], false),
+        ];
+
+        for (ops, _) in op_groups.iter() {
+            for (op_str, op_enum) in ops {
+                if let Some(idx) = input.rfind(op_str) {
+                    let left_str = &input[..idx];
+                    let right_str = &input[idx + op_str.len()..];
+
+                    return Ok(TemplateExpr::BinOp {
+                        op: op_enum.clone(),
+                        left: Box::new(Self::parse_inner_expression(left_str)?),
+                        right: Box::new(Self::parse_inner_expression(right_str)?),
+                    });
+                }
+            }
+        }
+
+        if input.chars().all(|c| c.is_digit(10) || c == '.') {
+            return Ok(TemplateExpr::Literal(input.to_string()));
+        }
+
+        if (input.starts_with('"') && input.ends_with('"'))
+            || (input.starts_with('\'') && input.ends_with('\''))
+            || (input.starts_with('`') && input.ends_with('`'))
+        {
+            if input.len() >= 2 {
+                return Ok(TemplateExpr::Literal(input[1..input.len() - 1].to_string()));
+            }
+        }
+
+        Ok(TemplateExpr::Var(input.to_string()))
     }
 }
 
