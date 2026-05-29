@@ -378,7 +378,7 @@ dependencies = [
 
 [[package]]
 name = "ewwii"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1258,9 +1258,9 @@ dependencies = [
 
 [[package]]
 name = "nbcl"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dc4dcdc5f818cd7f8e943c43b91128b8c178295b5ceabac562e303f3485289b"
+checksum = "33c4d07a00836284464a405e158e43913e88de14ad33d4f75a07102e0fa95eb5"
 dependencies = [
  "pest",
  "pest_derive",
