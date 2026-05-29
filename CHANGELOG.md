@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Renamed `mutate` to `template`.
 - Add more functionality to `template`.
 
+### Removed
+
+- Direct synchronous return of `Result` from plugin API.
+
 ## [0.7.0] - 2026-05-23
 
 ### Added

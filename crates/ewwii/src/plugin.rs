@@ -13,10 +13,10 @@ use crate::app::{App, DaemonCommand};
 use crate::display_backend::DisplayBackend;
 use crate::daemon_response;
 use std::sync::OnceLock;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::mpsc;
 use std::collections::HashMap;
 
-pub static PLUGIN_TX: OnceLock<mpsc::Sender<(PluginRequest, oneshot::Sender<Result<PluginValue, PluginError>>)>> = OnceLock::new();
+pub static PLUGIN_TX: OnceLock<mpsc::Sender<PluginRequest>> = OnceLock::new();
 
 pub fn is_compatible(plugin_ver: &str, host_ver: &str) -> bool {
     let p_str = plugin_ver.trim_matches('\0');
@@ -427,7 +427,7 @@ impl<B: DisplayBackend> App<B> {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize, output_len: *mut usize) -> *mut u8 {
+pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize) {
     // SAFETY: Convert the raw pointer/len into a Rust slice
     let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
 
@@ -435,30 +435,11 @@ pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize, output_len: *mut usize
         Ok(req) => req,
         Err(e) => {
             eprintln!("[Host] Failed to deserialize plugin request: {}", e);
-            return std::ptr::null_mut();
+            return;
         }
     };
 
-    let (resp_tx, resp_rx) = oneshot::channel();
     PLUGIN_TX.get().unwrap()
-        .blocking_send((request, resp_tx))
+        .blocking_send(request)
         .unwrap();
-    let response = resp_rx.blocking_recv().unwrap();
-
-    let res_bytes = bincode::serialize(&response).unwrap_or_default();
-    unsafe {
-        *output_len = res_bytes.len();
-        let boxed = res_bytes.into_boxed_slice();
-        Box::into_raw(boxed) as *mut u8
-    }
-}
-
-// Way to free
-#[unsafe(no_mangle)]
-pub extern "C" fn host_free_buffer(ptr: *mut u8, len: usize) {
-    if !ptr.is_null() {
-        unsafe {
-            let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));
-        }
-    }
 }
