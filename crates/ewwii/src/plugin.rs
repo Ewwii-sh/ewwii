@@ -1,20 +1,20 @@
+use crate::app::{App, DaemonCommand};
 use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
+use crate::daemon_response;
+use crate::display_backend::DisplayBackend;
+use crate::opts::WidgetControlAction;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
-use ewwii_plugin_api::{PluginError, PluginValue, IpcRequest, WidgetControlType, NbclType};
+use ewwii_plugin_api::{IpcRequest, NbclType, PluginError, PluginValue, WidgetControlType};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
-use crate::opts::WidgetControlAction;
-use nbcl::Value as NbclValue;
 use nbcl::Type as ActualNbclType;
+use nbcl::Value as NbclValue;
 use once_cell::sync::Lazy;
-use std::path::PathBuf;
-use std::sync::RwLock;
-use crate::app::{App, DaemonCommand};
-use crate::display_backend::DisplayBackend;
-use crate::daemon_response;
-use std::sync::OnceLock;
-use tokio::sync::mpsc;
 use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::OnceLock;
+use std::sync::RwLock;
+use tokio::sync::mpsc;
 
 pub static PLUGIN_TX: OnceLock<mpsc::Sender<PluginRequest>> = OnceLock::new();
 
@@ -114,7 +114,11 @@ fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) ->
     }
 }
 
-fn trigger_plugin_func_call(plugin_id: &str, callback_id: u64, args: Vec<NbclValue>) -> PluginValue {
+fn trigger_plugin_func_call(
+    plugin_id: &str,
+    callback_id: u64,
+    args: Vec<NbclValue>,
+) -> PluginValue {
     let arg_bytes =
         bincode::serialize(&args.into_iter().map(nbclvalue_to_plugin_value).collect::<Vec<_>>())
             .unwrap_or_default();
@@ -161,12 +165,16 @@ impl CustomConfigEngine {
 
     pub fn handle_callback(&self, callback: &Callback) {
         if let Some(cfg_cb) = self.cfg_callback_id {
-            let arg_bytes = bincode::serialize(&(callback.name.clone(), callback.handle.unwrap_or_default())).unwrap_or_default();
+            let arg_bytes =
+                bincode::serialize(&(callback.name.clone(), callback.handle.unwrap_or_default()))
+                    .unwrap_or_default();
             if let None = call_plugin_handler(&self.id, cfg_cb, arg_bytes) {
                 log::error!("Failed calling callback handler.");
             }
         } else {
-            log::error!("Failed to handle callback: plugin did not register config callback handler.")
+            log::error!(
+                "Failed to handle callback: plugin did not register config callback handler."
+            )
         }
     }
 
@@ -216,7 +224,13 @@ impl<B: DisplayBackend> App<B> {
                     return;
                 }
 
-                let custom_engine = CustomConfigEngine { id, extension, main_file, callback_id, cfg_callback_id: None };
+                let custom_engine = CustomConfigEngine {
+                    id,
+                    extension,
+                    main_file,
+                    callback_id,
+                    cfg_callback_id: None,
+                };
 
                 EWWII_CONFIG_PARSER.with(|p| {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
@@ -246,27 +260,21 @@ impl<B: DisplayBackend> App<B> {
     ) {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
-            let types = types.into_iter()
-                .map(plugin_nbcltype_to_nbcltype)
-                .collect();
+            let types = types.into_iter().map(plugin_nbcltype_to_nbcltype).collect();
             let return_type = plugin_nbcltype_to_nbcltype(return_type);
 
             match parser.as_mut().unwrap() {
                 ConfigEngine::Default(nbcl) => {
-                    nbcl.engine.register_native_fn(
-                        &name,
-                        types,
-                        return_type,
-                        move |args| {
-                            let result =
-                                trigger_plugin_func_call(&plugin_id, callback_id, args);
+                    nbcl.engine.register_native_fn(&name, types, return_type, move |args| {
+                        let result = trigger_plugin_func_call(&plugin_id, callback_id, args);
 
-                            Ok(plugin_value_to_nbcl(result))
-                        },
-                    );
+                        Ok(plugin_value_to_nbcl(result))
+                    });
                 }
                 ConfigEngine::Custom(_) => {
-                    log::error!("Registering rhai functions is only supported with the Nbcl config engine");
+                    log::error!(
+                        "Registering rhai functions is only supported with the Nbcl config engine"
+                    );
                     return;
                 }
             }
@@ -276,106 +284,90 @@ impl<B: DisplayBackend> App<B> {
     pub fn handle_plugin_ipc(&mut self, req: IpcRequest) {
         let handle = tokio::runtime::Handle::current();
         match req {
-            IpcRequest::WidgetControl(wc_type) => {
-                match wc_type {
-                    WidgetControlType::Remove(w) => {
-                        let (sender, _recv) = daemon_response::create_pair();
-                        let command = DaemonCommand::WidgetControl {
-                            action: WidgetControlAction::Remove {
-                                names: vec![w]
-                            },
-                            sender,
-                        };
-                        handle.block_on(async {
-                            self.handle_command(command).await;
-                        });
-                    }
-                    WidgetControlType::Create { parent, codes } => {
-                        let (sender, _recv) = daemon_response::create_pair();
-                        let command = DaemonCommand::WidgetControl {
-                            action: WidgetControlAction::Create {
-                                nbcl_codes: codes,
-                                parent_name: parent,
-                            },
-                            sender,
-                        };
-                        handle.block_on(async {
-                            self.handle_command(command).await;
-                        });
-                    }
-                    WidgetControlType::PropertyGet { prop, widget } => {
-                        let (sender, _recv) = daemon_response::create_pair();
-                        let command = DaemonCommand::WidgetControl {
-                            action: WidgetControlAction::PropertyGet {
-                                property: prop,
-                                widget_name: widget,
-                            },
-                            sender,
-                        };
-                        handle.block_on(async {
-                            self.handle_command(command).await;
-                        });
-                    }
-                    WidgetControlType::PropertyUpdate { prop, widget, value } => {
-                        let p2v = HashMap::from([(prop, value)]);
-
-                        let (sender, _recv) = daemon_response::create_pair();
-                        let command = DaemonCommand::WidgetControl {
-                            action: WidgetControlAction::PropertyUpdate {
-                                property_and_value: p2v,
-                                widget_name: widget,
-                            },
-                            sender,
-                        };
-                        handle.block_on(async {
-                            self.handle_command(command).await;
-                        });
-                    }
-                    WidgetControlType::AddClass { class, widget } => {
-                        let (sender, _recv) = daemon_response::create_pair();
-                        let command = DaemonCommand::WidgetControl {
-                            action: WidgetControlAction::AddClass {
-                                class: class,
-                                widget_name: widget,
-                            },
-                            sender,
-                        };
-                        handle.block_on(async {
-                            self.handle_command(command).await;
-                        });
-                    }
-                    WidgetControlType::RemoveClass { class, widget } => {
-                        let (sender, _recv) = daemon_response::create_pair();
-                        let command = DaemonCommand::WidgetControl {
-                            action: WidgetControlAction::RemoveClass {
-                                class: class,
-                                widget_name: widget,
-                            },
-                            sender,
-                        };
-                        handle.block_on(async {
-                            self.handle_command(command).await;
-                        });
-                    }
+            IpcRequest::WidgetControl(wc_type) => match wc_type {
+                WidgetControlType::Remove(w) => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::Remove { names: vec![w] },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
                 }
-            }
+                WidgetControlType::Create { parent, codes } => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::Create {
+                            nbcl_codes: codes,
+                            parent_name: parent,
+                        },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::PropertyGet { prop, widget } => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::PropertyGet {
+                            property: prop,
+                            widget_name: widget,
+                        },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::PropertyUpdate { prop, widget, value } => {
+                    let p2v = HashMap::from([(prop, value)]);
+
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::PropertyUpdate {
+                            property_and_value: p2v,
+                            widget_name: widget,
+                        },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::AddClass { class, widget } => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::AddClass { class, widget_name: widget },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+                WidgetControlType::RemoveClass { class, widget } => {
+                    let (sender, _recv) = daemon_response::create_pair();
+                    let command = DaemonCommand::WidgetControl {
+                        action: WidgetControlAction::RemoveClass { class, widget_name: widget },
+                        sender,
+                    };
+                    handle.block_on(async {
+                        self.handle_command(command).await;
+                    });
+                }
+            },
             IpcRequest::Update(var, val) => {
                 let (sender, _recv) = daemon_response::create_pair();
-                let command = DaemonCommand::Update {
-                    mappings: HashMap::from([(var, val)]),
-                    sender,
-                };
+                let command =
+                    DaemonCommand::Update { mappings: HashMap::from([(var, val)]), sender };
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
             }
             IpcRequest::Close(windows) => {
                 let (sender, _recv) = daemon_response::create_pair();
-                let command = DaemonCommand::CloseWindows {
-                    windows,
-                    auto_reopen: false,
-                    sender,
-                };
+                let command = DaemonCommand::CloseWindows { windows, auto_reopen: false, sender };
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
@@ -396,7 +388,6 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
-
             }
             IpcRequest::CloseAll => {
                 let command = DaemonCommand::CloseAll;
@@ -428,7 +419,5 @@ pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize) {
         }
     };
 
-    PLUGIN_TX.get().unwrap()
-        .blocking_send(request)
-        .unwrap();
+    PLUGIN_TX.get().unwrap().blocking_send(request).unwrap();
 }

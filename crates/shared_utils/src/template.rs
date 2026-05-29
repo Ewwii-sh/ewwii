@@ -230,7 +230,15 @@ impl TemplateExpr {
         let op_groups = [
             (vec![("||", TemplateOp::Or), ("&&", TemplateOp::And)], false),
             (vec![("==", TemplateOp::Eq), ("!=", TemplateOp::NotEq)], false),
-            (vec![(">=", TemplateOp::Gte), ("<=", TemplateOp::Lte), (">", TemplateOp::Gt), ("<", TemplateOp::Lt)], false),
+            (
+                vec![
+                    (">=", TemplateOp::Gte),
+                    ("<=", TemplateOp::Lte),
+                    (">", TemplateOp::Gt),
+                    ("<", TemplateOp::Lt),
+                ],
+                false,
+            ),
             (vec![("+", TemplateOp::Add), ("-", TemplateOp::Sub)], false),
             (vec![("*", TemplateOp::Mul), ("/", TemplateOp::Div), ("%", TemplateOp::Mod)], false),
             (vec![("?:", TemplateOp::Elvis), ("~=", TemplateOp::RegexMatch)], false),
@@ -260,7 +268,7 @@ impl TemplateExpr {
             || (input.starts_with('`') && input.ends_with('`'))
         {
             if input.len() >= 2 {
-                return Ok(TemplateExpr::Literal(input[1..input.len()-1].to_string()));
+                return Ok(TemplateExpr::Literal(input[1..input.len() - 1].to_string()));
             }
         }
 

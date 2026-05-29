@@ -23,31 +23,13 @@ pub enum WidgetControlType {
     /// Remove a widget
     Remove(String),
     /// Create a widget
-    Create {
-        parent: String,
-        codes: Vec<String>,
-    },
+    Create { parent: String, codes: Vec<String> },
     /// Get the property of a widget
-    PropertyGet {
-        widget: String,
-        prop: String,
-    },
+    PropertyGet { widget: String, prop: String },
     /// Set a property of a widget
-    PropertyUpdate {
-        widget: String,
-        prop: String,
-        value: String,
-    },
+    PropertyUpdate { widget: String, prop: String, value: String },
     /// Add a class to a widget
-    AddClass {
-        widget: String,
-        class: String,
-    },
+    AddClass { widget: String, class: String },
     /// Remove the class of a widget
-    RemoveClass {
-        widget: String,
-        class: String,
-    }
+    RemoveClass { widget: String, class: String },
 }
-
-

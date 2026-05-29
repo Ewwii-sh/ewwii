@@ -11,8 +11,8 @@ use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;
 use tokio::process::Command;
 use tokio::signal as tokio_signal;
-use tokio::sync::watch;
 use tokio::sync::mpsc;
+use tokio::sync::watch;
 
 pub async fn stream_cmd_lines(
     shell: String,
@@ -46,9 +46,12 @@ pub async fn stream_cmd_lines(
                     const PROC_PDEATHSIG_CTL: c_int = 11;
                     let sig: c_int = libc::SIGTERM;
                     if libc::procctl(
-                        libc::P_PID, 0, PROC_PDEATHSIG_CTL,
+                        libc::P_PID,
+                        0,
+                        PROC_PDEATHSIG_CTL,
                         &sig as *const _ as *mut c_void,
-                    ) != 0 {
+                    ) != 0
+                    {
                         log::error!(
                             "procctl PROC_PDEATHSIG_CTL failed: {}",
                             std::io::Error::last_os_error()

@@ -4,12 +4,12 @@
 use std::sync::Arc;
 
 mod ipc;
-mod shared;
 mod registration;
+mod shared;
 
 pub use ipc::*;
-pub use shared::*;
 pub use registration::*;
+pub use shared::*;
 
 // === handlers === //
 
@@ -29,5 +29,3 @@ impl ConfigCallbackFnExt for ConfigCallbackFn {
         Arc::new(f)
     }
 }
-
-

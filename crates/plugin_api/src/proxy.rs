@@ -2,10 +2,8 @@
 //! that are used to redirect API calls to host after serialization
 
 use crate::{
-    ConfigInfo, EwwiiAPI, IpcRequest,
-    NativeFn, ParseFn, PluginError,
-    PluginValue, NbclType,
-    ConfigCallbackFn
+    ConfigCallbackFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError,
+    PluginValue,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
@@ -51,9 +49,14 @@ pub enum PluginRequest {
         name: String,
         types: Vec<NbclType>,
         return_type: NbclType,
-        callback_id: u64
+        callback_id: u64,
     },
-    RegisterConfigEngine { id: String, extension: String, main_file: String, callback_id: u64 },
+    RegisterConfigEngine {
+        id: String,
+        extension: String,
+        main_file: String,
+        callback_id: u64,
+    },
 
     // Dynamic Runtime
     InjectCss(String),
@@ -186,7 +189,7 @@ impl EwwiiAPI for HostProxy {
         name: &str,
         types: Vec<NbclType>,
         return_type: NbclType,
-        handler: NativeFn
+        handler: NativeFn,
     ) {
         // Register id
         let id = rand::random::<u64>();
@@ -204,11 +207,7 @@ impl EwwiiAPI for HostProxy {
         self.call_host(req)
     }
 
-    fn register_config_engine(
-        &self,
-        info: ConfigInfo,
-        parser: ParseFn,
-    ) {
+    fn register_config_engine(&self, info: ConfigInfo, parser: ParseFn) {
         // Register id
         let id = rand::random::<u64>();
         get_callbacks().lock().unwrap().insert(id, CallbackHandler::ParseFn(parser));

@@ -1,6 +1,6 @@
 use crate::{builtins, errors, libraries, translate};
-use ewwii_plugin_api::IpcRequest;
 use anyhow::{anyhow, Result};
+use ewwii_plugin_api::IpcRequest;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
 use nbcl::{context::Context, NbclEngine, Value};
@@ -97,7 +97,7 @@ impl NbclConfigParser {
             if let Err(e) = self.engine.call_function(
                 &name,
                 vec![Value::Object("WidgetCtrl".into(), Box::new(Value::Str(String::new())))],
-                &ctx
+                &ctx,
             ) {
                 log::error!("Failed to call function: {}", e);
             }

@@ -1,7 +1,7 @@
-use nbcl::{NativeNodeSchema, NbclEngine, PropValidation, Type, Value};
-use tokio::sync::mpsc::UnboundedSender;
 use ewwii_plugin_api::{IpcRequest, WidgetControlType};
+use nbcl::{NativeNodeSchema, NbclEngine, PropValidation, Type, Value};
 use std::collections::HashMap;
+use tokio::sync::mpsc::UnboundedSender;
 
 pub fn register_all_nodes(engine: &mut NbclEngine) {
     // == Primitive nodes (nodes that does not take in children) ==
@@ -138,11 +138,10 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
                     }
                     Ok(glob_var)
                 }
-                _ => Err(crate::runtime_err!("unexpected value shape in concat()"))
+                _ => Err(crate::runtime_err!("unexpected value shape in concat()")),
             }
         },
     );
-
 
     // Widget control stuff
     engine.register_native_fn(
@@ -162,9 +161,9 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
                     }
                     Ok(global_var)
                 }
-                _ => Ok(global_var)
+                _ => Ok(global_var),
             }
-        }
+        },
     );
 
     let tx = ipc_tx.clone();
@@ -191,7 +190,8 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
                     let data = match &**data {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
-                    }.clone();
+                    }
+                    .clone();
 
                     let req = IpcRequest::WidgetControl(WidgetControlType::PropertyUpdate {
                         prop: prop_str,
@@ -203,9 +203,9 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
 
                     Ok(global_var)
                 }
-                _ => Ok(global_var)
+                _ => Ok(global_var),
             }
-        }
+        },
     );
 
     let tx = ipc_tx.clone();
@@ -227,7 +227,8 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
                     let data = match &**data {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
-                    }.clone();
+                    }
+                    .clone();
 
                     let req = IpcRequest::WidgetControl(WidgetControlType::AddClass {
                         class: class_str,
@@ -238,9 +239,9 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
 
                     Ok(global_var)
                 }
-                _ => Ok(global_var)
+                _ => Ok(global_var),
             }
-        }
+        },
     );
 
     engine.register_native_fn(
@@ -261,7 +262,8 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
                     let data = match &**data {
                         Value::Str(s) => s,
                         _ => return Err(crate::runtime_err!("expected string")),
-                    }.clone();
+                    }
+                    .clone();
 
                     let req = IpcRequest::WidgetControl(WidgetControlType::RemoveClass {
                         class: class_str,
@@ -272,8 +274,8 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
 
                     Ok(global_var)
                 }
-                _ => Ok(global_var)
+                _ => Ok(global_var),
             }
-        }
+        },
     );
 }

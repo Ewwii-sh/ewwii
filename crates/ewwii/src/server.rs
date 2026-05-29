@@ -1,3 +1,4 @@
+use crate::plugin;
 use crate::{
     app::{self, App, DaemonCommand},
     config,
@@ -6,8 +7,8 @@ use crate::{
     display_backend::DisplayBackend,
     error_handling_ctx, ipc_server, EwwiiPaths,
 };
-use ewwii_plugin_api::IpcRequest;
 use anyhow::{Context, Result};
+use ewwii_plugin_api::IpcRequest;
 use gtk4::prelude::{DisplayExt, ListModelExt};
 use std::{
     collections::{HashMap, HashSet},
@@ -19,7 +20,6 @@ use std::{
     sync::{atomic::Ordering, Arc},
 };
 use tokio::sync::mpsc::*;
-use crate::plugin;
 
 pub fn initialize_server<B: DisplayBackend>(
     paths: EwwiiPaths,
