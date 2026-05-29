@@ -75,6 +75,39 @@ pub trait EwwiiAPI: Send + Sync {
     /// Log an error from the host
     fn error(&self, msg: &str);
 
+    // === IPC, I guess === //
+
+    /// Send an IPC request to ewwii.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     EwwiiAPI, Plugin,
+    ///     PluginInfo, IpcRequest,
+    ///     WidgetControlType,
+    /// };
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn metadata(&self) -> PluginInfo {
+    ///         PluginInfo::new("test.example.ipc", "1.0")
+    ///     }
+    ///
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         host.ipc_request(IpcRequest::WidgetControl(WidgetControlType::PropertyUpdate {
+    ///             widget: "my_widget".to_string(),
+    ///             prop: "label".to_string(),
+    ///             value: "Hello, World".to_string()
+    ///         }));
+    ///     }
+    /// }
+    /// ```
+    fn ipc_request(&self, req: IpcRequest);
+
+    // === Registration Stuff === //
+
     /// Expose a function that nbcl configuration can call.
     ///
     /// # Example
@@ -83,7 +116,8 @@ pub trait EwwiiAPI: Send + Sync {
     /// use ewwii_plugin_api::{
     ///     EwwiiAPI, Plugin,
     ///     PluginValue, PluginInfo,
-    ///     NativeFn, NativeFnExt
+    ///     NativeFn, NativeFnExt,
+    ///     NbclType,
     /// };
     ///
     /// pub struct DummyStructure;
@@ -95,13 +129,15 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     ///     fn init(&self, host: &dyn EwwiiAPI) {
     ///         host.register_function(
-    ///             "my_func",
+    ///             "my_func",              // function name
+    ///             vec![NbclType::String], // args we receive
+    ///             NbclType::Null,         // type we return
     ///             NativeFn::new(|args| {
-    ///             // Do stuff
-    ///             // - Perform things on the args (if needed)
-    ///             // - And return a value
+    ///                 // Do stuff
+    ///                 // - Perform things on the args (if needed)
+    ///                 // - And return a value
     ///
-    ///             Ok(PluginValue::Null) // return empty
+    ///                 Ok(PluginValue::Null) // return empty (must match provided return type)
     ///         }));
     ///     }
     /// }
@@ -112,9 +148,15 @@ pub trait EwwiiAPI: Send + Sync {
     /// ## Example use in nbcl
     ///
     /// ```js
-    /// print(my_func(["param1", "param2"]));
+    /// print(my_func("param"));
     /// ```
-    fn register_function(&self, name: &str, handler: NativeFn) -> Result<PluginValue, PluginError>;
+    fn register_function(
+        &self,
+        name: &str,
+        types: Vec<NbclType>,
+        return_type: NbclType,
+        handler: NativeFn,
+    );
 
     /// Replace nbcl with a custom configuration engine.
     ///
@@ -154,11 +196,62 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     /// }
     /// ```
-    fn register_config_engine(
-        &self,
-        info: ConfigInfo,
-        parser: ParseFn,
-    ) -> Result<PluginValue, PluginError>;
+    fn register_config_engine(&self, info: ConfigInfo, parser: ParseFn);
+
+    // === Dynamic Runtime === //
+
+    /// Inject custom CSS into the engine.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     EwwiiAPI, Plugin,
+    ///     PluginInfo
+    /// };
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn metadata(&self) -> PluginInfo {
+    ///         PluginInfo::new("test.example.config", "1.0")
+    ///     }
+    ///
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         host.inject_css("* { all: unset }".to_string());
+    ///     }
+    /// }
+    /// ```
+    fn inject_css(&self, css: String);
+
+    // === Handlers === //
+
+    /// Handle callbacks registered by the config engine.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     EwwiiAPI, Plugin,
+    ///     PluginInfo, ConfigCallbackFn,
+    ///     ConfigCallbackFnExt,
+    /// };
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn metadata(&self) -> PluginInfo {
+    ///         PluginInfo::new("test.example.config", "1.0")
+    ///     }
+    ///
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         host.handle_config_callbacks(ConfigCallbackFn::new(|name, id| {
+    ///             // handle here
+    ///         }));
+    ///     }
+    /// }
+    /// ```
+    fn handle_config_callbacks(&self, handle: ConfigCallbackFn);
 }
 
 /// The API format that the plugin should follow.

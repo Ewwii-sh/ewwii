@@ -45,6 +45,7 @@ pub enum WidgetNode {
     DefWindow { name: String, props: PropertyMap, node: Box<WidgetNode> },
     // Poll { var: String, interval: String, cmd: String, initial: String },
     // Listen { var: String, signal: String },
+    Script { props: PropertyMap },
     Poll { var: String, props: PropertyMap },
     Listen { var: String, props: PropertyMap },
     Tree(Vec<WidgetNode>),

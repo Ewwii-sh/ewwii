@@ -378,7 +378,7 @@ dependencies = [
 
 [[package]]
 name = "ewwii"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "bincode",
@@ -423,15 +423,13 @@ dependencies = [
 name = "ewwii_nbcl_impl"
 version = "0.1.0"
 dependencies = [
- "ahash",
  "anyhow",
  "codespan-reporting",
+ "ewwii_plugin_api",
  "ewwii_shared_utils",
- "gtk4",
  "log",
  "nbcl",
  "nix",
- "once_cell",
  "rand 0.10.0",
  "regex",
  "tokio",
@@ -439,7 +437,7 @@ dependencies = [
 
 [[package]]
 name = "ewwii_plugin_api"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "bincode",
  "ewwii_shared_utils",
@@ -449,17 +447,15 @@ dependencies = [
 
 [[package]]
 name = "ewwii_shared_utils"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ahash",
  "anyhow",
  "log",
  "nbcl",
- "rand 0.10.0",
  "regex",
  "serde",
  "serde_json",
- "tokio",
 ]
 
 [[package]]
@@ -1262,9 +1258,9 @@ dependencies = [
 
 [[package]]
 name = "nbcl"
-version = "0.4.0"
+version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8331bebfd80425dc038fe871b628003d0918048b047709327cc56e37f158133"
+checksum = "7dc4dcdc5f818cd7f8e943c43b91128b8c178295b5ceabac562e303f3485289b"
 dependencies = [
  "pest",
  "pest_derive",

@@ -1,5 +1,5 @@
 use super::variables::GlobalVar;
-use crate::prop::PropertyMap;
+use crate::prop::{Callback, PropertyMap};
 use crate::template::TemplateExpr;
 use anyhow::{anyhow, Result};
 use std::time::Duration;
@@ -79,6 +79,17 @@ fn parse_i32(s: &str) -> Option<i32> {
 }
 
 // === prop getters ===
+pub fn get_callback_prop(props: &PropertyMap, key: &str) -> Result<Callback> {
+    if let Some(value) = props.get(key) {
+        value
+            .as_callback()
+            .cloned()
+            .ok_or_else(|| anyhow!("Expected property `{}` to be a callback", key))
+    } else {
+        anyhow::bail!("Missing required callback property `{}`", key);
+    }
+}
+
 pub fn get_string_prop(
     props: &PropertyMap,
     key: &str,
@@ -116,7 +127,7 @@ pub fn get_bool_prop(
         } else if let Some(s) = value.as_str() {
             s.parse::<bool>()
                 .map(PropValue::Static)
-                .map_err(|_| anyhow!("Expected property `{}` to be boolean or bollean string", key))
+                .map_err(|_| anyhow!("Expected property `{}` to be boolean or boolean string", key))
         } else {
             Err(anyhow!("Expected property `{}` to be boolean or bollean string", key))
         }
