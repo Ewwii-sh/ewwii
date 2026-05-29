@@ -99,26 +99,14 @@ impl Property {
 
                         let template = if raw_string.is_empty() {
                             None
-                        } else if raw_string.contains("{self}") {
-                            let parts: Vec<&str> = raw_string.split("{self}").collect();
-                            let mut exprs = Vec::new();
-
-                            for (i, part) in parts.iter().enumerate() {
-                                if !part.is_empty() {
-                                    exprs.push(TemplateExpr::Literal(part.to_string()));
-                                }
-                                if i < parts.len() - 1 {
-                                    exprs.push(TemplateExpr::Var(name.clone()));
-                                }
-                            }
-
-                            if exprs.len() == 1 {
-                                exprs.pop()
-                            } else {
-                                Some(TemplateExpr::Concat(exprs))
-                            }
                         } else {
-                            Some(TemplateExpr::Literal(raw_string))
+                            match TemplateExpr::parse(&raw_string) {
+                                Ok(expr) => Some(expr),
+                                Err(err) => {
+                                    eprintln!("Template parse error: {}", err);
+                                    None
+                                }
+                            }
                         };
 
                         Self::GlobalVar(Box::new(GlobalVar { name, initial, template }))

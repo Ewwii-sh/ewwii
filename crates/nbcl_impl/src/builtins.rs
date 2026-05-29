@@ -124,7 +124,7 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
     );
 
     engine.register_native_fn(
-        "concat",
+        "template",
         vec![Type::Object("GlobalVar".to_string()), Type::Str],
         Type::Object("GlobalVar".to_string()),
         |mut args| {
