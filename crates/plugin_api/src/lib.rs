@@ -203,6 +203,29 @@ pub trait EwwiiAPI: Send + Sync {
     );
 
     // === Dynamic Runtime === //
+
+    /// Inject custom CSS into the engine.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     EwwiiAPI, Plugin,
+    ///     PluginInfo
+    /// };
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn metadata(&self) -> PluginInfo {
+    ///         PluginInfo::new("test.example.config", "1.0")
+    ///     }
+    ///
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         host.inject_css("* { all: unset }");
+    ///     }
+    /// }
+    /// ```
     fn inject_css(&self, css: String);
 
     // === Handlers === //
@@ -226,7 +249,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     ///
     ///     fn init(&self, host: &dyn EwwiiAPI) {
-    ///         handle_config_callbacks(ConfigCallbackFn::new(|name, id| {
+    ///         host.handle_config_callbacks(ConfigCallbackFn::new(|name, id| {
     ///             // handle here
     ///         }));
     ///     }
