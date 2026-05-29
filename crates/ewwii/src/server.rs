@@ -152,9 +152,8 @@ pub fn initialize_server<B: DisplayBackend>(
                 Some(ui_event) = ui_recv.recv() => {
                     app.handle_command(ui_event).await;
                 }
-                Some((request, resp_tx)) = plugin_rx.recv() => {
-                    let response = app.handle_plugin_request(request);
-                    let _ = resp_tx.send(response);
+                Some(request) = plugin_rx.recv() => {
+                    let _ = app.handle_plugin_request(request);
                 }
                 Some(ipc_req)  = ipc_rx.recv() => {
                     app.handle_plugin_ipc(ipc_req);

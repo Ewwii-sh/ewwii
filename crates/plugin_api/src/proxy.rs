@@ -35,7 +35,7 @@ fn get_callbacks() -> &'static Mutex<HashMap<u64, CallbackHandler>> {
 }
 
 /// Plugin Requests that needs to be send to host
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum PluginRequest {
     // (id, msg)
     Log((String, String)),
@@ -61,8 +61,7 @@ pub enum PluginRequest {
 
 // This is provided on the host side
 extern "C" {
-    fn ffi_gateway(ptr: *const u8, len: usize, out_len: *mut usize) -> *mut u8;
-    fn host_free_buffer(ptr: *mut u8, len: usize);
+    fn ffi_gateway(ptr: *const u8, len: usize);
 }
 
 #[no_mangle]
@@ -133,23 +132,17 @@ impl HostProxy {
         &self.id
     }
 
-    fn call_host(&self, req: PluginRequest) -> Result<PluginValue, PluginError> {
-        let bytes =
-            bincode::serialize(&req).map_err(|e| PluginError::BridgeError(e.to_string()))?;
-        let mut out_len: usize = 0;
+    fn call_host(&self, req: PluginRequest) {
+        let bytes = match bincode::serialize(&req) {
+            Ok(o) => o,
+            Err(e) => {
+                println!("Failed to serialize request: {}", e);
+                return;
+            }
+        };
 
         unsafe {
-            let res_ptr = ffi_gateway(bytes.as_ptr(), bytes.len(), &mut out_len);
-            if res_ptr.is_null() {
-                return Err(PluginError::BridgeError("Host gateway returned null".to_string()));
-            }
-
-            let res_slice = std::slice::from_raw_parts(res_ptr, out_len);
-            let result: Result<PluginValue, PluginError> = bincode::deserialize(res_slice)
-                .map_err(|e| PluginError::BridgeError(format!("Deserialization error: {}", e)))?;
-
-            host_free_buffer(res_ptr, out_len);
-            result
+            ffi_gateway(bytes.as_ptr(), bytes.len());
         }
     }
 }
@@ -159,28 +152,28 @@ impl EwwiiAPI for HostProxy {
         let plugid = &self.get_id();
         let req = PluginRequest::Log((plugid.to_string(), msg.to_string()));
 
-        let _ = self.call_host(req);
+        self.call_host(req);
     }
 
     fn warn(&self, msg: &str) {
         let plugid = &self.get_id();
         let req = PluginRequest::Warn((plugid.to_string(), msg.to_string()));
 
-        let _ = self.call_host(req);
+        self.call_host(req);
     }
 
     fn error(&self, msg: &str) {
         let plugid = &self.get_id();
         let req = PluginRequest::Error((plugid.to_string(), msg.to_string()));
 
-        let _ = self.call_host(req);
+        self.call_host(req);
     }
 
     fn ipc_request(&self, req: IpcRequest) {
         let plugid = &self.get_id();
         let req = PluginRequest::Ipc((plugid.to_string(), req));
 
-        let _ = self.call_host(req);
+        self.call_host(req);
     }
 
     fn register_function(
@@ -189,7 +182,7 @@ impl EwwiiAPI for HostProxy {
         types: Vec<NbclType>,
         return_type: NbclType,
         handler: NativeFn
-    ) -> Result<PluginValue, PluginError> {
+    ) {
         // Register id
         let id = rand::random::<u64>();
         get_callbacks().lock().unwrap().insert(id, CallbackHandler::NativeFn(handler));
@@ -210,7 +203,7 @@ impl EwwiiAPI for HostProxy {
         &self,
         info: ConfigInfo,
         parser: ParseFn,
-    ) -> Result<PluginValue, PluginError> {
+    ) {
         // Register id
         let id = rand::random::<u64>();
         get_callbacks().lock().unwrap().insert(id, CallbackHandler::ParseFn(parser));
@@ -233,6 +226,6 @@ impl EwwiiAPI for HostProxy {
         get_callbacks().lock().unwrap().insert(id, CallbackHandler::ConfigCallbackFn(handle));
 
         let req = PluginRequest::ConfigCallbackHandle(id);
-        let _ = self.call_host(req);
+        self.call_host(req);
     }
 }

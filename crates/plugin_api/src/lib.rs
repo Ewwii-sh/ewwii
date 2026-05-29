@@ -84,8 +84,9 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```rust
     /// use ewwii_plugin_api::{
     ///     EwwiiAPI, Plugin,
-    ///     PluginInfo, IpcRequest
-    /// }
+    ///     PluginInfo, IpcRequest,
+    ///     WidgetControlType,
+    /// };
     ///
     /// pub struct DummyStructure;
     ///
@@ -95,10 +96,10 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     ///
     ///     fn init(&self, host: &dyn EwwiiAPI) {
-    ///         host.ipc_request(IpcRequest::WidgetControl(WidgetControlType::PropertyUpdate{
-    ///             widget = "my_widget".to_string(),
-    ///             prop = "label".to_string(),
-    ///             value = "Hello, World".to_string()
+    ///         host.ipc_request(IpcRequest::WidgetControl(WidgetControlType::PropertyUpdate {
+    ///             widget: "my_widget".to_string(),
+    ///             prop: "label".to_string(),
+    ///             value: "Hello, World".to_string()
     ///         }));
     ///     }
     /// }
@@ -128,15 +129,15 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     ///     fn init(&self, host: &dyn EwwiiAPI) {
     ///         host.register_function(
-    ///             "my_func",             // function name
-    ///             vec![NbclType::String] // args we receive
-    ///             NbclType::Null,        // type we return
+    ///             "my_func",              // function name
+    ///             vec![NbclType::String], // args we receive
+    ///             NbclType::Null,         // type we return
     ///             NativeFn::new(|args| {
-    ///             // Do stuff
-    ///             // - Perform things on the args (if needed)
-    ///             // - And return a value
+    ///                 // Do stuff
+    ///                 // - Perform things on the args (if needed)
+    ///                 // - And return a value
     ///
-    ///             Ok(PluginValue::Null) // return empty (must match provided return type)
+    ///                 Ok(PluginValue::Null) // return empty (must match provided return type)
     ///         }));
     ///     }
     /// }
@@ -155,7 +156,7 @@ pub trait EwwiiAPI: Send + Sync {
         types: Vec<NbclType>,
         return_type: NbclType,
         handler: NativeFn
-    ) -> Result<PluginValue, PluginError>;
+    );
 
     /// Replace nbcl with a custom configuration engine.
     ///
@@ -199,7 +200,7 @@ pub trait EwwiiAPI: Send + Sync {
         &self,
         info: ConfigInfo,
         parser: ParseFn,
-    ) -> Result<PluginValue, PluginError>;
+    );
 
 
     // === Handlers === //

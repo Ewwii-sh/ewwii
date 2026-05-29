@@ -423,16 +423,13 @@ dependencies = [
 name = "ewwii_nbcl_impl"
 version = "0.1.0"
 dependencies = [
- "ahash",
  "anyhow",
  "codespan-reporting",
  "ewwii_plugin_api",
  "ewwii_shared_utils",
- "gtk4",
  "log",
  "nbcl",
  "nix",
- "once_cell",
  "rand 0.10.0",
  "regex",
  "tokio",
@@ -456,11 +453,9 @@ dependencies = [
  "anyhow",
  "log",
  "nbcl",
- "rand 0.10.0",
  "regex",
  "serde",
  "serde_json",
- "tokio",
 ]
 
 [[package]]
