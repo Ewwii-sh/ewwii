@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `ipc_request` plugin API for calling ewwii IPC directly.
 - Improved `register_function` plugin API.
 - `print-version` command to print the plugin API version.
+- `handle_config_callbacks` plugin api to handle callbacks from `Script`.
 
 ### Changed
 

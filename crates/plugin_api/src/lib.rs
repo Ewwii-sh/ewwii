@@ -200,6 +200,36 @@ pub trait EwwiiAPI: Send + Sync {
         info: ConfigInfo,
         parser: ParseFn,
     ) -> Result<PluginValue, PluginError>;
+
+
+    // === Handlers === //
+
+    /// Handle callbacks registered by the config engine.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     EwwiiAPI, Plugin,
+    ///     PluginInfo, ConfigCallbackFn,
+    ///     ConfigCallbackFnExt,
+    /// };
+    ///
+    /// pub struct DummyStructure;
+    ///
+    /// impl Plugin for DummyStructure {
+    ///     fn metadata(&self) -> PluginInfo {
+    ///         PluginInfo::new("test.example.config", "1.0")
+    ///     }
+    ///
+    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    ///         handle_config_callbacks(ConfigCallbackFn::new(|name, id| {
+    ///             // handle here
+    ///         }));
+    ///     }
+    /// }
+    /// ```
+    fn handle_config_callbacks(&self, handle: ConfigCallbackFn);
 }
 
 /// The API format that the plugin should follow.

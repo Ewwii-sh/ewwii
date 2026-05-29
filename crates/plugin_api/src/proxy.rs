@@ -4,7 +4,8 @@
 use crate::{
     ConfigInfo, EwwiiAPI, IpcRequest,
     NativeFn, ParseFn, PluginError,
-    PluginValue, NbclType
+    PluginValue, NbclType,
+    ConfigCallbackFn
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
@@ -15,6 +16,7 @@ use std::sync::{Mutex, OnceLock};
 pub enum CallbackHandler {
     NativeFn(NativeFn),
     ParseFn(ParseFn),
+    ConfigCallbackFn(ConfigCallbackFn),
 }
 
 /// Represents the possible response types returned by a plugin callback.
@@ -52,6 +54,9 @@ pub enum PluginRequest {
         callback_id: u64
     },
     RegisterConfigEngine { id: String, extension: String, main_file: String, callback_id: u64 },
+
+    // Handlers
+    ConfigCallbackHandle(u64),
 }
 
 // This is provided on the host side
@@ -85,6 +90,11 @@ pub extern "C" fn plugin_callback_handler(
                 Err(e) => bincode::serialize(&CallbackResponse::Error(PluginError::ParseError(e)))
                     .unwrap_or_default(),
             }
+        }
+        Some(CallbackHandler::ConfigCallbackFn(f)) => {
+            let (name, id): (String, String) = bincode::deserialize(bytes).unwrap_or_default();
+            f(&name, &id);
+            return std::ptr::null_mut();
         }
         None => return std::ptr::null_mut(),
     };
@@ -214,5 +224,15 @@ impl EwwiiAPI for HostProxy {
         };
 
         self.call_host(req)
+    }
+
+    // handlers
+
+    fn handle_config_callbacks(&self, handle: ConfigCallbackFn) {
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::ConfigCallbackFn(handle));
+
+        let req = PluginRequest::ConfigCallbackHandle(id);
+        let _ = self.call_host(req);
     }
 }

@@ -147,6 +147,7 @@ pub struct CustomConfigEngine {
     extension: String,
     main_file: String,
     callback_id: u64,
+    cfg_callback_id: Option<u64>,
 }
 
 impl CustomConfigEngine {
@@ -158,7 +159,16 @@ impl CustomConfigEngine {
         self.main_file.clone()
     }
 
-    pub fn handle_callback(&self, _callback: &Callback) { todo!("Handle callback is not yet implemented for plugins") }
+    pub fn handle_callback(&self, callback: &Callback) {
+        if let Some(cfg_cb) = self.cfg_callback_id {
+            let arg_bytes = bincode::serialize(&(callback.name.clone(), callback.handle.unwrap_or_default())).unwrap_or_default();
+            if let None = call_plugin_handler(&self.id, cfg_cb, arg_bytes) {
+                log::error!("Failed calling callback handler.");
+            }
+        } else {
+            log::error!("Failed to handle callback: plugin did not register config callback handler.")
+        }
+    }
 
     pub fn parse_source(&self, source: String, config_path: PathBuf) -> Result<WidgetNode, String> {
         let path_str = config_path.to_str().unwrap_or("<unknown>");
@@ -214,10 +224,20 @@ impl<B: DisplayBackend> App<B> {
                     ));
                 }
 
-                let custom_engine = CustomConfigEngine { id, extension, main_file, callback_id };
+                let custom_engine = CustomConfigEngine { id, extension, main_file, callback_id, cfg_callback_id: None };
 
                 EWWII_CONFIG_PARSER.with(|p| {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
+                });
+
+                Ok(PluginValue::Null)
+            }
+            PluginRequest::ConfigCallbackHandle(id) => {
+                EWWII_CONFIG_PARSER.with(|p| {
+                    let mut parser = p.borrow_mut();
+                    if let Some(ConfigEngine::Custom(ref mut c)) = *parser {
+                        c.cfg_callback_id = Some(id);
+                    }
                 });
 
                 Ok(PluginValue::Null)
