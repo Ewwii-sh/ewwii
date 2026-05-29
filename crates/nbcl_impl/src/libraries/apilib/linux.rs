@@ -1,9 +1,9 @@
-use nix::libc::{c_char, statvfs};
+use crate::runtime_err;
 use nbcl::{error::Result, Value};
+use nix::libc::{c_char, statvfs};
 use std::ffi::CString;
 use std::fs;
 use std::path::Path;
-use crate::runtime_err;
 
 pub fn get_kernel_version(_args: Vec<Value>) -> Result<Value> {
     let output = fs::read_to_string("/proc/sys/kernel/osrelease")
@@ -80,13 +80,8 @@ pub fn get_ram_info(_args: Vec<Value>) -> Result<Value> {
 
     for line in content.lines() {
         if let Some((key, value)) = line.split_once(':') {
-            let value = value
-                .trim()
-                .split_whitespace()
-                .next()
-                .unwrap_or("0")
-                .parse::<u64>()
-                .unwrap_or(0);
+            let value =
+                value.trim().split_whitespace().next().unwrap_or("0").parse::<u64>().unwrap_or(0);
             match key.trim() {
                 "MemTotal" => total = value,
                 "MemFree" => free = value,

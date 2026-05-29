@@ -60,7 +60,7 @@ pub enum NbclType {
     Bool,
     Array,
     Any,
-    Null
+    Null,
 }
 
 /// This enumrate provides improved error support for plugins
@@ -92,4 +92,3 @@ impl std::fmt::Display for PluginError {
         }
     }
 }
-

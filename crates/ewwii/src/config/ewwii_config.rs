@@ -10,7 +10,7 @@ use std::rc::Rc;
 
 use ewwii_nbcl_impl::parser::NbclConfigParser;
 use ewwii_shared_utils::ast::WidgetNode;
-use ewwii_shared_utils::prop::{PropertyMap, Callback};
+use ewwii_shared_utils::prop::{Callback, PropertyMap};
 
 #[derive(Clone)]
 pub enum ConfigEngine {

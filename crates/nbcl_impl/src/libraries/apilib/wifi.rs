@@ -1,6 +1,6 @@
-use std::process::Command;
-use nbcl::{error::Result, Value};
 use crate::runtime_err;
+use nbcl::{error::Result, Value};
+use std::process::Command;
 
 pub fn scan(_args: Vec<Value>) -> Result<Value> {
     let output = Command::new("nmcli")
@@ -31,8 +31,8 @@ pub fn current_connection(_args: Vec<Value>) -> Result<Value> {
         .args(&["-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"])
         .output()
         .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
-    let stdout =
-        String::from_utf8(output.stdout).map_err(|e| runtime_err!("Invalid UTF-8 output: {}", e))?;
+    let stdout = String::from_utf8(output.stdout)
+        .map_err(|e| runtime_err!("Invalid UTF-8 output: {}", e))?;
     let mut map = Vec::new();
     if let Some(line) = stdout.lines().find(|l| l.starts_with("yes:")) {
         let parts: Vec<&str> = line.split(':').collect();

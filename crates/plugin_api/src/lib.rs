@@ -155,7 +155,7 @@ pub trait EwwiiAPI: Send + Sync {
         name: &str,
         types: Vec<NbclType>,
         return_type: NbclType,
-        handler: NativeFn
+        handler: NativeFn,
     );
 
     /// Replace nbcl with a custom configuration engine.
@@ -196,11 +196,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     /// }
     /// ```
-    fn register_config_engine(
-        &self,
-        info: ConfigInfo,
-        parser: ParseFn,
-    );
+    fn register_config_engine(&self, info: ConfigInfo, parser: ParseFn);
 
     // === Dynamic Runtime === //
 

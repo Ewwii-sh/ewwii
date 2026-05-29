@@ -19,7 +19,12 @@ pub fn register_api_lib(engine: &mut NbclEngine) {
         .with_fn("scan", vec![], Type::List, wifi::scan)
         .with_fn("current_connection", vec![], Type::Map, wifi::current_connection)
         .with_fn("connect", vec![Type::Str, Type::Str], Type::Null, wifi::connect)
-        .with_fn("connect_without_password", vec![Type::Str], Type::Null, wifi::connect_without_password)
+        .with_fn(
+            "connect_without_password",
+            vec![Type::Str],
+            Type::Null,
+            wifi::connect_without_password,
+        )
         .with_fn("disconnect", vec![], Type::Null, wifi::disconnect)
         .with_fn("disable_adapter", vec![], Type::Null, wifi::disable_adapter)
         .with_fn("enable_adapter", vec![], Type::Null, wifi::enable_adapter)

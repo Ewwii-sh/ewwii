@@ -1,5 +1,5 @@
 use super::variables::GlobalVar;
-use crate::prop::{PropertyMap, Callback};
+use crate::prop::{Callback, PropertyMap};
 use crate::template::TemplateExpr;
 use anyhow::{anyhow, Result};
 use std::time::Duration;
@@ -79,10 +79,7 @@ fn parse_i32(s: &str) -> Option<i32> {
 }
 
 // === prop getters ===
-pub fn get_callback_prop(
-    props: &PropertyMap,
-    key: &str
-) -> Result<Callback> {
+pub fn get_callback_prop(props: &PropertyMap, key: &str) -> Result<Callback> {
     if let Some(value) = props.get(key) {
         value
             .as_callback()

@@ -1,6 +1,6 @@
+use super::PluginValue;
 use ewwii_shared_utils::ast::WidgetNode;
 use std::sync::Arc;
-use super::PluginValue;
 
 // === register_function implementation === //
 
@@ -44,5 +44,3 @@ impl ParseFnExt for ParseFn {
         Arc::new(f)
     }
 }
-
-

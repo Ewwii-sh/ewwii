@@ -1,12 +1,12 @@
+use super::listen::stream_cmd_lines;
+use super::SHUTDOWN_REGISTRY;
+use crate::config::ConfigEngine;
 use ewwii_shared_utils::prop::PropertyMap;
 use ewwii_shared_utils::prop_utils::*;
-use super::listen::stream_cmd_lines;
-use crate::config::ConfigEngine;
-use super::SHUTDOWN_REGISTRY;
-use tokio::sync::watch;
-use tokio::sync::mpsc;
-use tokio::time::sleep;
 use gtk4::glib;
+use tokio::sync::mpsc;
+use tokio::sync::watch;
+use tokio::time::sleep;
 
 pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) {
     let every_sec = match get_duration_prop(&props, "every", None) {
