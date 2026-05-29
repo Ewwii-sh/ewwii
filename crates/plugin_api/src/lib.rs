@@ -202,6 +202,8 @@ pub trait EwwiiAPI: Send + Sync {
         parser: ParseFn,
     );
 
+    // === Dynamic Runtime === //
+    fn inject_css(&self, css: String);
 
     // === Handlers === //
 

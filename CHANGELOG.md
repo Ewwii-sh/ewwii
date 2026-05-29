@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Improved `register_function` plugin API.
 - `print-version` command to print the plugin API version.
 - `handle_config_callbacks` plugin api to handle callbacks from `Script`.
+- `inject_css` plugin api to inject custom css.
 
 ### Changed
 

@@ -42,10 +42,10 @@ pub enum PluginRequest {
     Warn((String, String)),
     Error((String, String)),
 
-    // Not so complex API
+    // IPC API (Data transfer)
     Ipc((String, IpcRequest)),
 
-    // Complex API
+    // Registration API (Complex)
     RegisterFn {
         id: String,
         name: String,
@@ -54,6 +54,9 @@ pub enum PluginRequest {
         callback_id: u64
     },
     RegisterConfigEngine { id: String, extension: String, main_file: String, callback_id: u64 },
+
+    // Dynamic Runtime
+    InjectCss(String),
 
     // Handlers
     ConfigCallbackHandle(u64),
@@ -176,6 +179,8 @@ impl EwwiiAPI for HostProxy {
         self.call_host(req);
     }
 
+    // === Registration === //
+
     fn register_function(
         &self,
         name: &str,
@@ -219,7 +224,14 @@ impl EwwiiAPI for HostProxy {
         self.call_host(req)
     }
 
-    // handlers
+    // === Dynamic Runtime === //
+
+    fn inject_css(&self, css: String) {
+        let req = PluginRequest::InjectCss(css);
+        self.call_host(req);
+    }
+
+    // === Handlers === //
 
     fn handle_config_callbacks(&self, handle: ConfigCallbackFn) {
         let id = rand::random::<u64>();
