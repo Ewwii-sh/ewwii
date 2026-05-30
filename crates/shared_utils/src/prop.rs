@@ -38,7 +38,13 @@ impl PropertyMap {
     }
 
     pub fn get(&self, key: &str) -> Option<&Property> {
-        self.0.get(key)
+        let val = self.0.get(key);
+
+        if let Some(Property::None) = val {
+            None
+        } else {
+            val
+        }
     }
 
     pub fn len(&self) -> usize {
