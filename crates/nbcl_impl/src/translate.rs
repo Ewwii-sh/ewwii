@@ -88,7 +88,9 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
 
                 WidgetNode::DefWindow { name, props, node: Box::new(child) }
             }
-            _ => unimplemented!(),
+            other => {
+                anyhow::bail!("Unknown widget found: {other}");
+            }
         };
         widgets.push(widget);
     }
