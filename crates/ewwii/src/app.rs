@@ -415,10 +415,10 @@ impl<B: DisplayBackend> App<B> {
         }
 
         // stop poll/listen handlers if no windows are open
-        if self.open_windows.is_empty() || self.reloading {
+        if !self.reloading && self.open_windows.is_empty() {
             log::trace!("Killing ewwii state change handler.");
             crate::updates::kill_state_change_handler();
-            VarWatcherAPI::clear_all()
+            VarWatcherAPI::clear_all();
         }
 
         Ok(())
@@ -447,7 +447,7 @@ impl<B: DisplayBackend> App<B> {
 
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
-            if self.open_windows.is_empty() || self.reloading {
+             if !self.reloading && self.open_windows.is_empty() {
                 // Start the global variables
                 let signals_vec =
                     crate::updates::retreive_signals(self.ewwii_config.get_root_node()?.as_ref());
