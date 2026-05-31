@@ -1,6 +1,6 @@
 [package]
 name = "ewwii"
-version = "0.8.3"
+version = "0.8.4"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 description = "Widgets for everyone made better!"
 license = "GPL-3.0-or-later"
@@ -13,6 +13,7 @@ edition = "2021"
 default = ["x11", "wayland"]
 x11 = ["gdk4-x11", "x11rb"]
 wayland = ["gtk4-layer-shell"]
+dhat-heap = ["dhat"]
 
 [dependencies]
 ewwii_shared_utils.workspace = true
@@ -22,6 +23,7 @@ ewwii_plugin_api.workspace = true
 gtk4-layer-shell = { version = "0.6.3", optional = true }
 gdk4-x11 = { version = "0.10.1", optional = true }
 x11rb = { version = "0.13.1", features = ["randr"], optional = true }
+dhat = { version = "0.3.3", optional = true }
 
 grass.workspace = true
 thiserror.workspace = true

@@ -58,6 +58,10 @@ mod window;
 mod window_arguments;
 mod window_initiator;
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
 fn main() {
     let ewwii_binary_name = std::env::args().next().unwrap();
     let opts: opts::Opt = opts::Opt::from_env();

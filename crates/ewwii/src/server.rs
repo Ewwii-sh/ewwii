@@ -169,6 +169,9 @@ pub fn initialize_server<B: DisplayBackend>(
         }
     });
 
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
+
     // allow the GTK main thread to do tokio things
     let _g = tokio_handle.enter();
 
