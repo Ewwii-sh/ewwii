@@ -83,26 +83,22 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// ```rust
     /// use ewwii_plugin_api::{
-    ///     EwwiiAPI, Plugin,
-    ///     PluginInfo, IpcRequest,
-    ///     WidgetControlType,
+    ///     auto_plugin, PluginInfo,
+    ///     IpcRequest, WidgetControlType
     /// };
     ///
-    /// pub struct DummyStructure;
-    ///
-    /// impl Plugin for DummyStructure {
-    ///     fn metadata(&self) -> PluginInfo {
-    ///         PluginInfo::new("test.example.ipc", "1.0")
-    ///     }
-    ///
-    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.ipc", "1.0.0"),
+    ///     host,
+    ///     {
     ///         host.ipc_request(IpcRequest::WidgetControl(WidgetControlType::PropertyUpdate {
     ///             widget: "my_widget".to_string(),
     ///             prop: "label".to_string(),
     ///             value: "Hello, World".to_string()
     ///         }));
     ///     }
-    /// }
+    /// );
     /// ```
     fn ipc_request(&self, req: IpcRequest);
 
@@ -114,20 +110,16 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// ```rust
     /// use ewwii_plugin_api::{
-    ///     EwwiiAPI, Plugin,
-    ///     PluginValue, PluginInfo,
+    ///     auto_plugin, PluginInfo,
     ///     NativeFn, NativeFnExt,
-    ///     NbclType,
+    ///     NbclType, PluginValue
     /// };
     ///
-    /// pub struct DummyStructure;
-    ///
-    /// impl Plugin for DummyStructure {
-    ///     fn metadata(&self) -> PluginInfo {
-    ///         PluginInfo::new("test.example.register", "1.0")
-    ///     }
-    ///
-    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.ipc", "1.0.0"),
+    ///     host,
+    ///     {
     ///         host.register_function(
     ///             "my_func",              // function name
     ///             vec![NbclType::String], // args we receive
@@ -140,7 +132,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///                 Ok(PluginValue::Null) // return empty (must match provided return type)
     ///         }));
     ///     }
-    /// }
+    /// );
     /// ```
     ///
     /// This example will register a function with signature "my_func(List)" in nbcl.
@@ -164,20 +156,16 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// ```rust
     /// use ewwii_plugin_api::{
-    ///     EwwiiAPI, Plugin,
-    ///     PluginInfo, ConfigInfo,
-    ///     ParseFn, ParseFnExt,
-    ///     shared_utils::ast::WidgetNode,
+    ///     auto_plugin, PluginInfo,
+    ///     ConfigInfo, ParseFn,
+    ///     ParseFnExt, shared_utils::ast::WidgetNode
     /// };
     ///
-    /// pub struct DummyStructure;
-    ///
-    /// impl Plugin for DummyStructure {
-    ///     fn metadata(&self) -> PluginInfo {
-    ///         PluginInfo::new("test.example.config", "1.0")
-    ///     }
-    ///
-    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.ipc", "1.0.0"),
+    ///     host,
+    ///     {
     ///         // example language: Lua
     ///         host.register_config_engine(
     ///             ConfigInfo {
@@ -194,7 +182,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///             Ok(WidgetNode::Tree(vec![])) // returning Dummy for now
     ///         }));
     ///     }
-    /// }
+    /// );
     /// ```
     fn register_config_engine(&self, info: ConfigInfo, parser: ParseFn);
 
@@ -206,21 +194,17 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// ```rust
     /// use ewwii_plugin_api::{
-    ///     EwwiiAPI, Plugin,
-    ///     PluginInfo
+    ///     auto_plugin, PluginInfo,
     /// };
     ///
-    /// pub struct DummyStructure;
-    ///
-    /// impl Plugin for DummyStructure {
-    ///     fn metadata(&self) -> PluginInfo {
-    ///         PluginInfo::new("test.example.config", "1.0")
-    ///     }
-    ///
-    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.ipc", "1.0.0"),
+    ///     host,
+    ///     {
     ///         host.inject_css("* { all: unset }".to_string());
     ///     }
-    /// }
+    /// );
     /// ```
     fn inject_css(&self, css: String);
 
@@ -232,24 +216,21 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// ```rust
     /// use ewwii_plugin_api::{
-    ///     EwwiiAPI, Plugin,
-    ///     PluginInfo, ConfigCallbackFn,
-    ///     ConfigCallbackFnExt,
+    ///     auto_plugin, PluginInfo,
+    ///     ConfigCallbackFn,
+    ///     ConfigCallbackFnExt
     /// };
     ///
-    /// pub struct DummyStructure;
-    ///
-    /// impl Plugin for DummyStructure {
-    ///     fn metadata(&self) -> PluginInfo {
-    ///         PluginInfo::new("test.example.config", "1.0")
-    ///     }
-    ///
-    ///     fn init(&self, host: &dyn EwwiiAPI) {
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.ipc", "1.0.0"),
+    ///     host,
+    ///     {
     ///         host.handle_config_callbacks(ConfigCallbackFn::new(|name, id| {
     ///             // handle here
     ///         }));
     ///     }
-    /// }
+    /// );
     /// ```
     fn handle_config_callbacks(&self, handle: ConfigCallbackFn);
 }
