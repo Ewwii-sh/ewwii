@@ -5,6 +5,12 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.8.3] - 2026-05-31
+
+### Fixed
+
+- Plugin requests being handled after config loading.
+
 ## [0.8.2] - 2026-05-30
 
 ### Fixed
