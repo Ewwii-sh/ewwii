@@ -105,6 +105,10 @@ pub fn initialize_server<B: DisplayBackend>(
         error_handling_ctx::print_error(e);
     }
 
+    while let Ok(request) = plugin_rx.try_recv() {
+        app.handle_plugin_request(request);
+    }
+
     let read_config = config::read_from_ewwii_paths(&app.paths);
 
     match read_config {
