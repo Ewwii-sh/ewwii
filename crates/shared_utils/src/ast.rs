@@ -53,14 +53,19 @@ pub enum WidgetNode {
 
 pub fn hash_props_and_type(props: &PropertyMap, widget_type_str: &str) -> u64 {
     let mut hasher = AHasher::default();
-
     widget_type_str.hash(&mut hasher);
-
     props.len().hash(&mut hasher);
 
-    let dyn_id = get_string_prop(&props, "dyn_id", Some(""))
-        .map(|p| unwrap_static("dyn_id", p))
-        .unwrap_or_default();
+    let dyn_id = {
+        let key = "dyn_id".to_string();
+        if let Some(value) = props.get(&key) {
+            get_string_prop(&value, &key)
+                .map(|p| unwrap_static(&key, p))
+                .unwrap_or_default()
+        } else {
+            String::new()
+        }
+    };
 
     dyn_id.hash(&mut hasher);
 
