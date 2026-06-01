@@ -1,5 +1,5 @@
 use super::variables::GlobalVar;
-use crate::prop::{Callback, PropertyMap};
+use crate::prop::{Callback, PropertyMap, Property};
 use crate::template::TemplateExpr;
 use anyhow::{anyhow, Result};
 use std::time::Duration;
@@ -24,11 +24,11 @@ impl<T: Clone + Default> PropValue<T> {
 }
 
 // === Helpers ===
-fn make_bound<T>(var: GlobalVar, default: T, parser: fn(&str) -> Option<T>) -> PropValue<T>
+fn make_bound<T>(var: GlobalVar, parser: fn(&str) -> Option<T>) -> PropValue<T>
 where
-    T: Clone + 'static,
+    T: Clone + 'static + Default,
 {
-    let initial_val = var.initial.as_str().and_then(|s| parser(s)).unwrap_or(default);
+    let initial_val = var.initial.as_str().and_then(|s| parser(s)).unwrap_or(T::default());
 
     PropValue::Bound { var_name: var.name, initial: initial_val, parser, template: var.template }
 }
@@ -91,188 +91,148 @@ pub fn get_callback_prop(props: &PropertyMap, key: &str) -> Result<Callback> {
 }
 
 pub fn get_string_prop(
-    props: &PropertyMap,
+    prop: &Property,
     key: &str,
-    default: Option<&str>,
 ) -> Result<PropValue<String>> {
-    if let Some(value) = props.get(key) {
-        if let Some(var) = value.as_global_var() {
-            return Ok(make_bound(var.clone(), default.unwrap_or("").to_string(), parse_string));
-        }
-
-        value
-            .as_str()
-            .map(String::from)
-            .map(PropValue::Static)
-            .ok_or_else(|| anyhow!("Expected property `{}` to be a string", key))
-    } else {
-        default
-            .map(|s| PropValue::Static(s.to_string()))
-            .ok_or_else(|| anyhow!("Missing required string property `{}`", key))
+    if let Some(var) = prop.as_global_var() {
+        return Ok(make_bound(var.clone(), parse_string));
     }
+
+    prop
+        .as_str()
+        .map(String::from)
+        .map(PropValue::Static)
+        .ok_or_else(|| anyhow!("Expected property `{}` to be a string", key))
 }
 
 pub fn get_bool_prop(
-    props: &PropertyMap,
+    prop: &Property,
     key: &str,
-    default: Option<bool>,
 ) -> Result<PropValue<bool>> {
-    if let Some(value) = props.get(key) {
-        if let Some(var) = value.as_global_var() {
-            return Ok(make_bound(var.clone(), default.unwrap_or(false), parse_bool));
-        }
+    if let Some(var) = prop.as_global_var() {
+        return Ok(make_bound(var.clone(), parse_bool));
+    }
 
-        if let Some(v) = value.as_bool() {
-            Ok(PropValue::Static(v))
-        } else if let Some(s) = value.as_str() {
-            s.parse::<bool>()
-                .map(PropValue::Static)
-                .map_err(|_| anyhow!("Expected property `{}` to be boolean or boolean string", key))
-        } else {
-            Err(anyhow!("Expected property `{}` to be boolean or bollean string", key))
-        }
-    } else {
-        default
+    if let Some(v) = prop.as_bool() {
+        Ok(PropValue::Static(v))
+    } else if let Some(s) = prop.as_str() {
+        s.parse::<bool>()
             .map(PropValue::Static)
-            .ok_or_else(|| anyhow!("Missing required bool property `{}`", key))
+            .map_err(|_| anyhow!("Expected property `{}` to be boolean or boolean string", key))
+    } else {
+        Err(anyhow!("Expected property `{}` to be boolean or bollean string", key))
     }
 }
 
 pub fn get_i64_prop(
-    props: &PropertyMap,
+    prop: &Property,
     key: &str,
-    default: Option<i64>,
 ) -> Result<PropValue<i64>> {
-    if let Some(value) = props.get(key) {
-        if let Some(var) = value.as_global_var() {
-            return Ok(make_bound(var.clone(), default.unwrap_or(0), parse_i64));
-        }
+    if let Some(var) = prop.as_global_var() {
+        return Ok(make_bound(var.clone(), parse_i64));
+    }
 
-        // as_int is i64
-        if let Some(v) = value.as_int() {
-            Ok(PropValue::Static(v))
-        } else if let Some(s) = value.as_str() {
-            s.parse::<i64>()
-                .map(PropValue::Static)
-                .map_err(|_| anyhow!("Expected property `{}` to be an i64 or numeric string", key))
-        } else {
-            Err(anyhow!("Expected property `{}` to be an i64 or numeric string", key))
-        }
-    } else {
-        default
+    // as_int is i64
+    if let Some(v) = prop.as_int() {
+        Ok(PropValue::Static(v))
+    } else if let Some(s) = prop.as_str() {
+        s.parse::<i64>()
             .map(PropValue::Static)
-            .ok_or_else(|| anyhow!("Missing required i64 property `{}`", key))
+            .map_err(|_| anyhow!("Expected property `{}` to be an i64 or numeric string", key))
+    } else {
+        Err(anyhow!("Expected property `{}` to be an i64 or numeric string", key))
     }
 }
 
 pub fn get_f64_prop(
-    props: &PropertyMap,
+    prop: &Property,
     key: &str,
-    default: Option<f64>,
 ) -> Result<PropValue<f64>> {
-    if let Some(value) = props.get(key) {
-        if let Some(var) = value.as_global_var() {
-            let initial = var
-                .initial
-                .clone()
-                .as_float()
-                .or_else(|| var.initial.clone().as_int().map(|v| v as f64))
-                .unwrap_or(default.unwrap_or(0.0));
-            return Ok(PropValue::Bound {
-                var_name: var.name.clone(),
-                initial,
-                parser: parse_f64,
-                template: var.template.clone(),
-            });
-        }
+    if let Some(var) = prop.as_global_var() {
+        let initial = var
+            .initial
+            .clone()
+            .as_float()
+            .or_else(|| var.initial.clone().as_int().map(|v| v as f64))
+            .unwrap_or(0.0);
+        return Ok(PropValue::Bound {
+            var_name: var.name.clone(),
+            initial,
+            parser: parse_f64,
+            template: var.template.clone(),
+        });
+    }
 
-        // as_float is f64
-        if let Some(v) = value.as_float() {
-            Ok(PropValue::Static(v))
-        } else if let Some(v) = value.as_int() {
-            Ok(PropValue::Static(v as f64))
-        } else if let Some(s) = value.as_str() {
-            s.parse::<f64>().map(PropValue::Static).map_err(|_| {
-                anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key)
-            })
-        } else {
-            Err(anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key))
-        }
+    // as_float is f64
+    if let Some(v) = prop.as_float() {
+        Ok(PropValue::Static(v))
+    } else if let Some(v) = prop.as_int() {
+        Ok(PropValue::Static(v as f64))
+    } else if let Some(s) = prop.as_str() {
+        s.parse::<f64>().map(PropValue::Static).map_err(|_| {
+            anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key)
+        })
     } else {
-        default
-            .map(PropValue::Static)
-            .ok_or_else(|| anyhow!("Missing required f64 property `{}`", key))
+        Err(anyhow!("Expected property `{}` to be an f64, i64, or numeric string", key))
     }
 }
 
 pub fn get_i32_prop(
-    props: &PropertyMap,
+    prop: &Property,
     key: &str,
-    default: Option<i32>,
 ) -> Result<PropValue<i32>> {
-    if let Some(value) = props.get(key) {
-        if let Some(var) = value.as_global_var() {
-            let initial =
-                var.initial.clone().as_int().map(|v| v as i32).unwrap_or(default.unwrap_or(0));
-            return Ok(PropValue::Bound {
-                var_name: var.name.clone(),
-                initial,
-                parser: parse_i32,
-                template: var.template.clone(),
-            });
-        }
+    if let Some(var) = prop.as_global_var() {
+        let initial =
+            var.initial.clone().as_int().map(|v| v as i32).unwrap_or(0);
+        return Ok(PropValue::Bound {
+            var_name: var.name.clone(),
+            initial,
+            parser: parse_i32,
+            template: var.template.clone(),
+        });
+    }
 
-        // as_int is i64
-        if let Some(v) = value.as_int() {
-            if v >= i32::MIN as i64 && v <= i32::MAX as i64 {
-                Ok(PropValue::Static(v as i32))
-            } else {
-                Err(anyhow!("Value for `{}` is out of range for i32", key))
-            }
-        } else if let Some(s) = value.as_str() {
-            s.parse::<i32>()
-                .map(PropValue::Static)
-                .map_err(|_| anyhow!("Expected property `{}` to be an i32 or numeric string", key))
+    // as_int is i64
+    if let Some(v) = prop.as_int() {
+        if v >= i32::MIN as i64 && v <= i32::MAX as i64 {
+            Ok(PropValue::Static(v as i32))
         } else {
-            Err(anyhow!("Expected property `{}` to be an i32 or numeric string", key))
+            Err(anyhow!("Value for `{}` is out of range for i32", key))
         }
-    } else {
-        default
+    } else if let Some(s) = prop.as_str() {
+        s.parse::<i32>()
             .map(PropValue::Static)
-            .ok_or_else(|| anyhow!("Missing required i32 property `{}`", key))
+            .map_err(|_| anyhow!("Expected property `{}` to be an i32 or numeric string", key))
+    } else {
+        Err(anyhow!("Expected property `{}` to be an i32 or numeric string", key))
     }
 }
 
 pub fn get_vec_string_prop(
-    props: &PropertyMap,
+    prop: &Property,
     key: &str,
-    default: Option<Vec<PropValue<String>>>,
 ) -> Result<Vec<PropValue<String>>> {
-    if let Some(value) = props.get(key) {
-        let array =
-            value.as_array().ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
+    let array =
+        prop.as_array().ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
 
-        array
-            .into_iter()
-            .map(|d| {
-                if let Some(var) = d.as_global_var() {
-                    let initial = var.initial.as_str().map(String::from).unwrap_or_default();
-                    Ok(PropValue::Bound {
-                        var_name: var.name.clone(),
-                        initial,
-                        parser: parse_string,
-                        template: var.template.clone(),
-                    })
-                } else {
-                    d.as_str().map(String::from).map(PropValue::Static).ok_or_else(|| {
-                        anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key)
-                    })
-                }
-            })
-            .collect()
-    } else {
-        default.ok_or_else(|| anyhow!("Missing required vec property `{}`", key))
-    }
+    array
+        .into_iter()
+        .map(|d| {
+            if let Some(var) = d.as_global_var() {
+                let initial = var.initial.as_str().map(String::from).unwrap_or_default();
+                Ok(PropValue::Bound {
+                    var_name: var.name.clone(),
+                    initial,
+                    parser: parse_string,
+                    template: var.template.clone(),
+                })
+            } else {
+                d.as_str().map(String::from).map(PropValue::Static).ok_or_else(|| {
+                    anyhow!("Expected all elements of `{}` to be strings or GlobalVars", key)
+                })
+            }
+        })
+        .collect()
 }
 
 fn parse_duration_str(key_str: &str) -> Option<Duration> {
@@ -298,22 +258,17 @@ fn parse_duration_str(key_str: &str) -> Option<Duration> {
 }
 
 pub fn get_duration_prop(
-    props: &PropertyMap,
+    prop: &Property,
     key: &str,
-    default: Option<Duration>,
 ) -> Result<Duration> {
-    if let Some(value) = props.get(key) {
-        // Duration doesn't support GlobalVar binding. It's a static config value
-        let raw = value
-            .as_str()
-            .ok_or_else(|| anyhow!("Expected property `{}` to be a duration string", key))?;
+    // Duration doesn't support GlobalVar binding. It's a static config value
+    let raw = prop
+        .as_str()
+        .ok_or_else(|| anyhow!("Expected property `{}` to be a duration string", key))?;
 
-        let key_str = raw.trim().to_ascii_lowercase();
-        parse_duration_str(&key_str)
-            .ok_or_else(|| anyhow!("Unsupported duration format: '{}'", key_str))
-    } else {
-        default.ok_or_else(|| anyhow!("Missing required duration property `{}`", key))
-    }
+    let key_str = raw.trim().to_ascii_lowercase();
+    parse_duration_str(&key_str)
+        .ok_or_else(|| anyhow!("Unsupported duration format: '{}'", key_str))
 }
 
 // help unwrap the propvalue in cases where a static is expected
