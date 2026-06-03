@@ -5,7 +5,7 @@ use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use crate::{apply_property, apply_property_watch, bind_property};
 use anyhow::{anyhow, bail, Result};
 use ewwii_shared_utils::ast::{hash_props_and_type, WidgetNode};
-use ewwii_shared_utils::prop::PropertyMap;
+use ewwii_shared_utils::prop::{PropertyMap, Property};
 use gtk4::gdk::DragAction;
 use gtk4::{self, prelude::*};
 use gtk4::{gdk, glib, pango};
@@ -29,8 +29,13 @@ use std::{
 use crate::widgets::circular_progressbar::CircProg;
 use crate::widgets::graph::{Graph, RenderType};
 
+trait EwwiiWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget;
+    fn update_prop(&mut self, key: &str, value: &Property);
+}
+
 pub struct WidgetRegistry {
-    pub widgets: HashMap<u64, gtk4::Widget>,
+    pub widgets: HashMap<u64, Box<dyn EwwiiWidget>>,
 }
 
 impl WidgetRegistry {
@@ -189,33 +194,507 @@ impl WidgetRegistry {
     }
 }
 
+// === Widget Definition === //
+
+#[derive(Default)]
+struct BoxWidget {
+    gtk_widget: gtk4::Box
+}
+
+impl EwwiiWidget for BoxWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+        let gtk_widget.set_homogeneous(true);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        for child in children {
+            let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
+            self.gtk_widget.append(&child_widget);
+        }
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "orientation" => {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    if let Ok(o) = parse_orientation(&v) {
+                        self.gtk_widget.set_orientation(o)
+                    }
+                });
+            }
+            "spacing" => {
+                bind_property!(&value, &key, get_i64_prop, [gtk_widget], |v: i64| {
+                    self.gtk_widget.set_spacing(v as i32)
+                });
+            }
+            "space_evenly" => {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                    gtk_widget.set_homogeneous(v)
+                });
+            }
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+#[derive(Default)]
+struct OverlayWidget {
+    gtk_widget: gtk4::Box
+}
+
+impl EwwiiWidget for OverlayWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Overlay::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let count = children.len();
+        if count < 1 {
+            bail!("overlay must contain at least one element");
+        }
+
+        let mut children = children
+            .into_iter()
+            .map(|child| build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry));
+
+        // we have more than one child, we can unwrap
+        let first = children.next().unwrap()?;
+        gtk_widget.set_child(Some(&first));
+        for child in children {
+            let child = child?;
+            gtk_widget.add_overlay(&child);
+        }
+
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+#[derive(Default)]
+struct TooltipWidget {
+    gtk_widget: gtk4::Box
+}
+
+impl EwwiiWidget for TooltipWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+        self.gtk_widget.set_has_tooltip(true);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let count = children.len();
+        if count < 2 {
+            bail!("tooltip must contain exactly 2 children");
+        } else {
+            bail!("tooltip must contain exactly 2 children, but got more");
+        }
+
+        let tooltip_node = children.get(0).cloned().ok_or_else(|| anyhow!("missing tooltip"))?;
+        let content_node = children.get(1).cloned().ok_or_else(|| anyhow!("missing content"))?;
+
+        // The visible child immediately
+        let content_widget = build_gtk_widget(&WidgetInput::Node(content_node), widget_registry)?;
+        gtk_widget.append(&content_widget);
+
+        let tooltip_node = Rc::new(tooltip_node);
+        let tooltip_widget = build_gtk_widget(
+            &WidgetInput::BorrowedNode(Rc::clone(&tooltip_node).as_ref()),
+            widget_registry,
+        )
+        .expect("Failed to build tooltip widget");
+
+        gtk_widget.connect_query_tooltip(move |_widget, _x, _y, _keyboard_mode, tooltip| {
+            tooltip.set_custom(Some(&tooltip_widget));
+            true
+        });
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+
+// EVENTBOX HERE
+
+#[derive(Default)]
+struct FlowBoxWidget {
+    gtk_widget: gtk4::FlowBox,
+    onaccept_cmd: String,
+    cmd_timeout: Duration,
+}
+
+impl EwwiiWidget for BoxWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::FlowBox::new();
+        self.cmd_timeout = Duration::from_millis(200);
+        self.gtk_widget.set_homogeneous(true);
+
+        self.gtk_widget.connect_child_activated(glib::clone!(
+            #[strong]
+            controller_data,
+            move |_, flow_child: &gtk4::FlowBoxChild| {
+                let controller = controller_data.borrow();
+
+                if let Some(child) = flow_child.child() {
+                    let widget_name = child.widget_name();
+                    run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[widget_name]);
+                } else {
+                    log::error!("Failed to get the child of FlowBoxChild.");
+                }
+            }
+        ));
+
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let mut index = 0;
+
+        for child in children {
+            let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
+            gtk_widget.insert(&child_widget, index);
+            index += 1;
+        }
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "default_select" => {
+                bind_property!(&value, &key, get_i32_prop, [gtk_widget], |dsv: i32| {
+                    if let Some(child) = gtk_widget.child_at_index(dsv) {
+                        gtk_widget.select_child(&child);
+                        child.grab_focus();
+                    } else {
+                        log::error!("Failed to get child at index {} from FlowBox", dsv);
+                    }
+                });
+            }
+            "orientation" => {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    if let Ok(o) = parse_orientation(&v) {
+            gtk_widget.set_orientation(o);
+                    }
+                });
+            }
+            "space_evenly" => {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                    gtk_widget.set_homogeneous(v);
+                });
+            }
+            "selection_model" => {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    if let Ok(selection_model) = parse_selection_model(&v) {
+                        gtk_widget.set_selection_mode(selection_model);
+                    }
+                });
+            }
+            "onaccept" => {
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
+                    controller_data.borrow_mut().onaccept_cmd = v;
+                });
+            }
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+
+#[derive(Default)]
+struct StackWidget {
+    gtk_widget: gtk4::Stack
+}
+
+impl EwwiiWidget for StackWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Stack::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        if children.is_empty() {
+            return Err(anyhow!("stack must contain at least one element");
+        }
+
+        let children = children
+            .into_iter()
+            .map(|child| build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry));
+
+        for (i, child) in children.enumerate() {
+            let child = child?;
+            gtk_widget.add_named(&child, Some(&i.to_string()));
+        }
+
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "selected" => {
+                bind_property!(&value, &key, get_i32_prop, [gtk_widget], |v: i32| {
+                    gtk_widget.set_visible_child_name(&v.to_string());
+                });
+            }
+            "transition" => {
+                bind_property!(
+                    &value,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |v: String| {
+                        if let Ok(t) = parse_stack_transition(&v) {
+                            gtk_widget.set_transition_type(t);
+                        }
+                    }
+                );
+            }
+            "transition_duration" => {
+                bind_property!(&value, &key, get_i32_prop, [gtk_widget], |v: i32| {
+                    gtk_widget.set_transition_duration(v as u32);
+                });
+            }
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+#[derive(Default)]
+struct CircularProgressWidget {
+    gtk_widget: CircProg
+}
+
+impl EwwiiWidget for CircularProgressWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = CircProg::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        self.gtk_widget.clone().upcast()
+   }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "value" => {
+                bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
+                    widget.set_property("value", v.clamp(0.0, 100.0));
+                });
+            }
+            "start_at" => {
+                bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
+                    widget.set_property("start-at", v.clamp(0.0, 100.0));
+                });
+            }
+            "thickness" => {
+                bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
+                    widget.set_property("thickness", v);
+                });
+            }
+            "clockwise" => {
+                bind_property!(&value, &key, get_bool_prop, [widget], |v: bool| {
+                    widget.set_property("clockwise", v);
+                });
+            }
+            "fg_color" => {
+                bind_property!(&value, &key, get_string_prop, [widget], |v: String| {
+                    if let Ok(rgba) = gdk::RGBA::parse(v) {
+                        widget.set_property("fg-color", rgba);
+                    }
+                });
+
+            }
+            "bg_color" => {
+                bind_property!(&value, &key, get_string_prop, [widget], |v: String| {
+                if let Ok(rgba) = gdk::RGBA::parse(v) {
+                    widget.set_property("bg-color", rgba);
+                }
+            });
+
+            }
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+
+#[derive(Default)]
+struct GraphWidget {
+    gtk_widget: Graph,
+    min_val: Rc<RefCell<f64>>,
+    max_val: Rc<RefCell<f64>>,
+}
+
+impl EwwiiWidget for GraphWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = Graph::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        self.gtk_widget.clone().upcast()
+   }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        let apply_min_max = {
+            let widget = widget.clone();
+            let min_val = min_val.clone();
+            let max_val = max_val.clone();
+            Rc::new(move || {
+                let min = *min_val.borrow();
+                let max = *max_val.borrow();
+                if min > max {
+                    log::error!("Graph's min ({min}) should never be higher than max ({max})");
+                    return;
+                }
+                widget.set_property("min", min);
+                widget.set_property("max", max);
+            })
+        };
+
+        match key {
+            "value" => {}
+            "time_range" => {}
+            "min" => {}
+            "max" => {}
+            "dynamic" => {}
+            "type" => {}
+            "thickness" => {}
+            "line_style" => {}
+            "flip_x" => {}
+            "flip_y" => {}
+            "vertical" => {}
+            "animate" => {}
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+#[derive(Default)]
+struct ProgressWidget {
+    gtk_widget: gtk4::ProgressBar
+}
+
+impl EwwiiWidget for ProgressWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::ProgressBar::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "orientation" => {
+    bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+        if let Ok(o) = parse_orientation(&v) {
+            gtk_widget.set_orientation(o)
+        }
+    });
+
+            }
+            "flipped" => {
+    bind_property!(&value, &key, get_bool_prop, [gtk_widget], |flipped: bool| {
+        gtk_widget.set_inverted(flipped)
+    });
+
+            }
+            "value" => {
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |bar_value: f64| {
+                    gtk_widget.set_fraction(bar_value / 100f64);
+                });
+
+            }
+            "text" => {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |bar_text: String| {
+                    gtk_widget.set_text(Some(&bar_text));
+                });
+            }
+            "show_text" => {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |show_text: bool| {
+                    gtk_widget.set_show_text(show_text);
+                });
+            }
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+// IMAGE here
+// BUTTON here
+
+// === Widget Registration === //
+
 pub(super) fn build_gtk_box(
     props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
-    let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
-
-    bind_property!(&props, "orientation", get_string_prop, Some("h"), [gtk_widget], |v: String| {
-        if let Ok(o) = parse_orientation(&v) {
-            gtk_widget.set_orientation(o)
-        }
-    });
-    bind_property!(&props, "spacing", get_i64_prop, Some(0), [gtk_widget], |v: i64| {
-        gtk_widget.set_spacing(v as i32)
-    });
-    bind_property!(&props, "space_evenly", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_homogeneous(v)
-    });
-
-    for child in children {
-        let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
-        gtk_widget.append(&child_widget);
-    }
+    let mut widget = BoxWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Box");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
@@ -225,29 +704,11 @@ pub(super) fn build_gtk_overlay(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Overlay> {
-    let gtk_widget = gtk4::Overlay::new();
-
-    let count = children.len();
-
-    if count < 1 {
-        bail!("overlay must contain at least one element");
-    }
-
-    let mut children = children
-        .into_iter()
-        .map(|child| build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry));
-
-    // we have more than one child, we can unwrap
-    let first = children.next().unwrap()?;
-    gtk_widget.set_child(Some(&first));
-    for child in children {
-        let child = child?;
-        gtk_widget.add_overlay(&child);
-    }
+    let mut widget = OverlayWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Overlay");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
@@ -257,39 +718,11 @@ pub(super) fn build_tooltip(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
-    let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
-    gtk_widget.set_has_tooltip(true);
-
-    let count = children.len();
-
-    if count < 2 {
-        bail!("tooltip must contain exactly 2 children");
-    } else if count > 2 {
-        bail!("tooltip must contain exactly 2 children, but got more");
-    }
-
-    let tooltip_node = children.get(0).cloned().ok_or_else(|| anyhow!("missing tooltip"))?;
-    let content_node = children.get(1).cloned().ok_or_else(|| anyhow!("missing content"))?;
-
-    // The visible child immediately
-    let content_widget = build_gtk_widget(&WidgetInput::Node(content_node), widget_registry)?;
-    gtk_widget.append(&content_widget);
-
-    let tooltip_node = Rc::new(tooltip_node);
-    let tooltip_widget = build_gtk_widget(
-        &WidgetInput::BorrowedNode(Rc::clone(&tooltip_node).as_ref()),
-        widget_registry,
-    )
-    .expect("Failed to build tooltip widget");
-
-    gtk_widget.connect_query_tooltip(move |_widget, _x, _y, _keyboard_mode, tooltip| {
-        tooltip.set_custom(Some(&tooltip_widget));
-        true
-    });
+    let mut widget = TooltipWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Tooltip");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
@@ -701,13 +1134,8 @@ pub(super) fn build_event_box(
 
     let id = hash_props_and_type(&props, "EventBox");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
     Ok(gtk_widget)
-}
-
-struct FlowBoxCtrlData {
-    onaccept_cmd: String,
-    cmd_timeout: Duration,
 }
 
 pub(crate) fn build_gtk_flowbox(
@@ -715,68 +1143,11 @@ pub(crate) fn build_gtk_flowbox(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::FlowBox> {
-    let gtk_widget = gtk4::FlowBox::new();
-
-    let controller_data = Rc::new(RefCell::new(FlowBoxCtrlData {
-        onaccept_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200),
-    }));
-
-    gtk_widget.connect_child_activated(glib::clone!(
-        #[strong]
-        controller_data,
-        move |_, flow_child: &gtk4::FlowBoxChild| {
-            let controller = controller_data.borrow();
-
-            if let Some(child) = flow_child.child() {
-                let widget_name = child.widget_name();
-                run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[widget_name]);
-            } else {
-                log::error!("Failed to get the child of FlowBoxChild.");
-            }
-        }
-    ));
-
-    let mut index = 0;
-
-    for child in children {
-        let child_widget = build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
-        gtk_widget.insert(&child_widget, index);
-        index += 1;
-    }
-
-    bind_property!(&props, "default_select", get_i32_prop, None, [gtk_widget], |dsv: i32| {
-        if let Some(child) = gtk_widget.child_at_index(dsv) {
-            gtk_widget.select_child(&child);
-            child.grab_focus();
-        } else {
-            log::error!("Failed to get child at index {} from FlowBox", dsv);
-        }
-    });
-
-    bind_property!(&props, "orientation", get_string_prop, Some("h"), [gtk_widget], |v: String| {
-        if let Ok(o) = parse_orientation(&v) {
-            gtk_widget.set_orientation(o);
-        }
-    });
-
-    bind_property!(&props, "space_evenly", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_homogeneous(v);
-    });
-
-    bind_property!(&props, "selection_model", get_string_prop, None, [gtk_widget], |v: String| {
-        if let Ok(selection_model) = parse_selection_model(&v) {
-            gtk_widget.set_selection_mode(selection_model);
-        }
-    });
-
-    bind_property!(&props, "onaccept", get_string_prop, None, [controller_data], |v: String| {
-        controller_data.borrow_mut().onaccept_cmd = v;
-    });
+    let mut widget = FlowBoxWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "FlowBox");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
@@ -786,49 +1157,12 @@ pub(super) fn build_gtk_stack(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Stack> {
-    let gtk_widget = gtk4::Stack::new();
-
-    if children.is_empty() {
-        return Err(anyhow!("stack must contain at least one element"));
-    }
-
-    let children = children
-        .into_iter()
-        .map(|child| build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry));
-
-    for (i, child) in children.enumerate() {
-        let child = child?;
-        gtk_widget.add_named(&child, Some(&i.to_string()));
-    }
-
-    // parsing the properties
-    bind_property!(&props, "selected", get_i32_prop, None, [gtk_widget], |v: i32| {
-        gtk_widget.set_visible_child_name(&v.to_string());
-    });
-
-    bind_property!(
-        &props,
-        "transition",
-        get_string_prop,
-        Some("crossfade"),
-        [gtk_widget],
-        |v: String| {
-            if let Ok(t) = parse_stack_transition(&v) {
-                gtk_widget.set_transition_type(t);
-            }
-        }
-    );
-
-    bind_property!(&props, "transition_duration", get_i32_prop, None, [gtk_widget], |v: i32| {
-        gtk_widget.set_transition_duration(v as u32);
-    });
-
-    // let same_size = get_bool_prop(&props, "same_size", Some(false))?;
-    // gtk_widget.set_homogeneous(same_size);
+    let mut widget = StackWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Stack");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
+
     Ok(gtk_widget)
 }
 
@@ -836,40 +1170,13 @@ pub(super) fn build_circular_progress_bar(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<CircProg> {
-    let widget = CircProg::new();
-
-    bind_property!(&props, "value", get_f64_prop, None, [widget], |v: f64| {
-        widget.set_property("value", v.clamp(0.0, 100.0));
-    });
-
-    bind_property!(&props, "start_at", get_f64_prop, None, [widget], |v: f64| {
-        widget.set_property("start-at", v.clamp(0.0, 100.0));
-    });
-
-    bind_property!(&props, "thickness", get_f64_prop, None, [widget], |v: f64| {
-        widget.set_property("thickness", v);
-    });
-
-    bind_property!(&props, "clockwise", get_bool_prop, None, [widget], |v: bool| {
-        widget.set_property("clockwise", v);
-    });
-
-    bind_property!(&props, "fg_color", get_string_prop, None, [widget], |v: String| {
-        if let Ok(rgba) = gdk::RGBA::parse(v) {
-            widget.set_property("fg-color", rgba);
-        }
-    });
-
-    bind_property!(&props, "bg_color", get_string_prop, None, [widget], |v: String| {
-        if let Ok(rgba) = gdk::RGBA::parse(v) {
-            widget.set_property("bg-color", rgba);
-        }
-    });
+    let mut widget = CircularProgressWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "CircularProgress");
-    widget_registry.widgets.insert(id, widget.clone().upcast());
-    resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
-    Ok(widget)
+    widget_registry.widgets.insert(id, Box::new(widget));
+
+    Ok(gtk_widget)
 }
 
 pub(super) fn build_graph(
@@ -987,7 +1294,7 @@ pub(super) fn build_graph(
 
     let id = hash_props_and_type(&props, "Graph");
     widget_registry.widgets.insert(id, widget.clone().upcast());
-    resolve_rhai_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(widget)
 }
@@ -996,33 +1303,12 @@ pub(super) fn build_gtk_progress(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ProgressBar> {
-    let gtk_widget = gtk4::ProgressBar::new();
-
-    bind_property!(&props, "orientation", get_string_prop, Some("h"), [gtk_widget], |v: String| {
-        if let Ok(o) = parse_orientation(&v) {
-            gtk_widget.set_orientation(o)
-        }
-    });
-
-    bind_property!(&props, "flipped", get_bool_prop, Some(false), [gtk_widget], |flipped: bool| {
-        gtk_widget.set_inverted(flipped)
-    });
-
-    bind_property!(&props, "value", get_f64_prop, None, [gtk_widget], |bar_value: f64| {
-        gtk_widget.set_fraction(bar_value / 100f64);
-    });
-
-    bind_property!(&props, "text", get_string_prop, None, [gtk_widget], |bar_text: String| {
-        gtk_widget.set_text(Some(&bar_text));
-    });
-
-    bind_property!(&props, "show_text", get_bool_prop, None, [gtk_widget], |show_text: bool| {
-        gtk_widget.set_show_text(show_text);
-    });
+    let mut widget = ProgressWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Progress");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    registry.widgets.insert(id, Box::new(widget));
+
     Ok(gtk_widget)
 }
 
@@ -1213,7 +1499,7 @@ pub(super) fn build_image(
 
     let id = hash_props_and_type(&props, "Image");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -1355,7 +1641,7 @@ pub(super) fn build_gtk_button(
 
     let id = hash_props_and_type(&props, "Button");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
     Ok(gtk_widget)
 }
 
@@ -1568,7 +1854,7 @@ pub(super) fn build_gtk_label(
 
     let id = hash_props_and_type(&props, "Label");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -1632,7 +1918,7 @@ pub(super) fn build_gtk_input(
 
     let id = hash_props_and_type(&props, "Input");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -1729,7 +2015,7 @@ pub(super) fn build_gtk_calendar(
 
     let id = hash_props_and_type(&props, "Calendar");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -1788,7 +2074,7 @@ pub(super) fn build_gtk_combo_box_text(
 
     let id = hash_props_and_type(&props, "ComboBoxText");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -1839,7 +2125,7 @@ pub(super) fn build_gtk_expander(
 
     let id = hash_props_and_type(&props, "Expander");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
     Ok(gtk_widget)
 }
 
@@ -1884,7 +2170,7 @@ pub(super) fn build_gtk_revealer(
 
     let id = hash_props_and_type(&props, "Revealer");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -1937,7 +2223,7 @@ pub(super) fn build_gtk_checkbox(
 
     let id = hash_props_and_type(&props, "Checkbox");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -1974,7 +2260,7 @@ pub(super) fn build_gtk_color_button(
 
     let id = hash_props_and_type(&props, "ColorButton");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -2011,7 +2297,7 @@ pub(super) fn build_gtk_color_chooser(
 
     let id = hash_props_and_type(&props, "ColorChooser");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -2119,7 +2405,7 @@ pub(super) fn build_gtk_scale(
 
     let id = hash_props_and_type(&props, "Scale");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -2171,7 +2457,7 @@ pub(super) fn build_gtk_scrolledwindow(
 
     let id = hash_props_and_type(&props, "ScrolledWindow");
     widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_rhai_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
@@ -2182,10 +2468,11 @@ pub(super) fn build_gtk_scrolledwindow(
 //     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
 
 /// Code that applies css/scss to widgets.
-pub(super) fn resolve_rhai_widget_attrs(
+pub(super) fn resolve_widget_attrs(
     gtk_widget: &gtk4::Widget,
-    props: &PropertyMap,
-) -> Result<()> {
+    key: &str,
+    value: &Property
+) {
     // // checking deprecated keys
     // // see eww issue #251 (https://github.com/elkowar/eww/issues/251)
     // for deprecated in DEPRECATED_ATTRS.iter() {
@@ -2194,93 +2481,108 @@ pub(super) fn resolve_rhai_widget_attrs(
     //     }
     // }
 
-    // Handle visibility
-    bind_property!(&props, "visible", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_visible(v);
-    });
-
-    // Handle classes
-    bind_property!(&props, "class", get_string_prop, None, [gtk_widget], |class_str: String| {
-        // remove all classes
-        for class in gtk_widget.css_classes() {
-            gtk_widget.remove_css_class(&class);
+    match key {
+        "visible" => {
+            bind_property!(&props, "visible", get_bool_prop, [gtk_widget], |v: bool| {
+                gtk_widget.set_visible(v);
+            });
         }
+        "class" => {
+            bind_property!(&props, "class", get_string_prop, [gtk_widget], |class_str: String| {
+                // remove all classes
+                for class in gtk_widget.css_classes() {
+                    gtk_widget.remove_css_class(&class);
+                }
 
-        // then apply the classes
-        for class in class_str.split_whitespace() {
-            gtk_widget.add_css_class(class);
+                // then apply the classes
+                for class in class_str.split_whitespace() {
+                    gtk_widget.add_css_class(class);
+                }
+            });
         }
-    });
+        "style" => {
+            bind_property!(&props, "style", get_string_prop, [gtk_widget], |style_str: String| {
+                let css_provider = gtk4::CssProvider::new();
+                let scss = format!("* {{ {} }}", style_str);
+                if let Ok(compiled) = grass::from_string(scss, &grass::Options::default()) {
+                    css_provider.load_from_string(&compiled);
+                    #[allow(deprecated)]
+                    gtk_widget.style_context().add_provider(&css_provider, 950);
+                }
+            });
 
-    // style and css need SCSS compilation
-    bind_property!(&props, "style", get_string_prop, None, [gtk_widget], |style_str: String| {
-        let css_provider = gtk4::CssProvider::new();
-        let scss = format!("* {{ {} }}", style_str);
-        if let Ok(compiled) = grass::from_string(scss, &grass::Options::default()) {
-            css_provider.load_from_string(&compiled);
-            #[allow(deprecated)]
-            gtk_widget.style_context().add_provider(&css_provider, 950);
         }
-    });
-
-    bind_property!(&props, "css", get_string_prop, None, [gtk_widget], |css_str: String| {
-        let css_provider = gtk4::CssProvider::new();
-        if let Ok(compiled) = grass::from_string(css_str, &grass::Options::default()) {
-            css_provider.load_from_string(&compiled);
-            #[allow(deprecated)]
-            gtk_widget.style_context().add_provider(&css_provider, 950);
+        "css" => {
+            bind_property!(&props, "css", get_string_prop, [gtk_widget], |css_str: String| {
+                let css_provider = gtk4::CssProvider::new();
+                if let Ok(compiled) = grass::from_string(css_str, &grass::Options::default()) {
+                    css_provider.load_from_string(&compiled);
+                    #[allow(deprecated)]
+                    gtk_widget.style_context().add_provider(&css_provider, 950);
+                }
+            });
         }
-    });
-
-    bind_property!(&props, "valign", get_string_prop, None, [gtk_widget], |valign: String| {
-        if let Ok(a) = parse_align(&valign) {
-            gtk_widget.set_valign(a);
+        "valign" => {
+            bind_property!(&props, "valign", get_string_prop, [gtk_widget], |valign: String| {
+                if let Ok(a) = parse_align(&valign) {
+                    gtk_widget.set_valign(a);
+                }
+            });
         }
-    });
-
-    bind_property!(&props, "halign", get_string_prop, None, [gtk_widget], |halign: String| {
-        if let Ok(a) = parse_align(&halign) {
-            gtk_widget.set_halign(a);
+        "halign" => {
+            bind_property!(&props, "halign", get_string_prop, [gtk_widget], |halign: String| {
+                if let Ok(a) = parse_align(&halign) {
+                    gtk_widget.set_halign(a);
+                }
+            });
         }
-    });
-
-    bind_property!(&props, "vexpand", get_bool_prop, Some(false), [gtk_widget], |v: bool| {
-        gtk_widget.set_vexpand(v);
-    });
-
-    bind_property!(&props, "hexpand", get_bool_prop, Some(false), [gtk_widget], |v: bool| {
-        gtk_widget.set_hexpand(v);
-    });
-
-    bind_property!(&props, "width", get_i32_prop, None, [gtk_widget], |w: i32| {
-        gtk_widget.set_width_request(w);
-    });
-
-    bind_property!(&props, "height", get_i32_prop, None, [gtk_widget], |h: i32| {
-        gtk_widget.set_height_request(h);
-    });
-
-    bind_property!(&props, "active", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_sensitive(v);
-    });
-
-    bind_property!(&props, "tooltip", get_string_prop, None, [gtk_widget], |tooltip: String| {
-        gtk_widget.set_tooltip_text(Some(&tooltip));
-    });
-
-    bind_property!(&props, "can_target", get_bool_prop, None, [gtk_widget], |v: bool| {
-        gtk_widget.set_can_target(v);
-    });
-
-    bind_property!(&props, "focusable", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_focusable(v);
-    });
-
-    bind_property!(&props, "widget_name", get_string_prop, None, [gtk_widget], |name: String| {
-        gtk_widget.set_widget_name(&name);
-    });
-
-    Ok(())
+        "vexpand" => {
+            bind_property!(&props, "vexpand", get_bool_prop, [gtk_widget], |v: bool| {
+                gtk_widget.set_vexpand(v);
+            });
+        }
+        "hexpand" => {
+            bind_property!(&props, "hexpand", get_bool_prop, [gtk_widget], |v: bool| {
+                gtk_widget.set_hexpand(v);
+            });
+        }
+        "width" => {
+            bind_property!(&props, "width", get_i32_prop, [gtk_widget], |w: i32| {
+                gtk_widget.set_width_request(w);
+            });
+        }
+        "height" => {
+            bind_property!(&props, "height", get_i32_prop, [gtk_widget], |h: i32| {
+                gtk_widget.set_height_request(h);
+            });
+        }
+        "active" => {
+            bind_property!(&props, "active", get_bool_prop, [gtk_widget], |v: bool| {
+                gtk_widget.set_sensitive(v);
+            });
+        }
+        "tooltip" => {
+            bind_property!(&props, "tooltip", get_string_prop, [gtk_widget], |tooltip: String| {
+                gtk_widget.set_tooltip_text(Some(&tooltip));
+            });
+        }
+        "can_target" => {
+            bind_property!(&props, "can_target", get_bool_prop, [gtk_widget], |v: bool| {
+                gtk_widget.set_can_target(v);
+            });
+        }
+        "focusable" => {
+            bind_property!(&props, "focusable", get_bool_prop, [gtk_widget], |v: bool| {
+                gtk_widget.set_focusable(v);
+            });
+        }
+        "widget_name" => {
+            bind_property!(&props, "widget_name", get_string_prop, [gtk_widget], |name: String| {
+                gtk_widget.set_widget_name(&name);
+            });
+        }
+        _ => {}
+    }
 }
 
 /// Shared rage atribute
@@ -2315,4 +2617,3 @@ pub(super) fn resolve_range_attrs(
     });
 
     Ok(())
-}
