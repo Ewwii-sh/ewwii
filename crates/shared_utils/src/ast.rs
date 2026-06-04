@@ -59,9 +59,7 @@ pub fn hash_props_and_type(props: &PropertyMap, widget_type_str: &str) -> u64 {
     let dyn_id = {
         let key = "dyn_id".to_string();
         if let Some(value) = props.get(&key) {
-            get_string_prop(&value, &key)
-                .map(|p| unwrap_static(&key, p))
-                .unwrap_or_default()
+            get_string_prop(&value, &key).map(|p| unwrap_static(&key, p)).unwrap_or_default()
         } else {
             String::new()
         }

@@ -1,5 +1,5 @@
 use super::variables::GlobalVar;
-use crate::prop::{Callback, PropertyMap, Property};
+use crate::prop::{Callback, Property, PropertyMap};
 use crate::template::TemplateExpr;
 use anyhow::{anyhow, Result};
 use std::time::Duration;
@@ -90,25 +90,18 @@ pub fn get_callback_prop(props: &PropertyMap, key: &str) -> Result<Callback> {
     }
 }
 
-pub fn get_string_prop(
-    prop: &Property,
-    key: &str,
-) -> Result<PropValue<String>> {
+pub fn get_string_prop(prop: &Property, key: &str) -> Result<PropValue<String>> {
     if let Some(var) = prop.as_global_var() {
         return Ok(make_bound(var.clone(), parse_string));
     }
 
-    prop
-        .as_str()
+    prop.as_str()
         .map(String::from)
         .map(PropValue::Static)
         .ok_or_else(|| anyhow!("Expected property `{}` to be a string", key))
 }
 
-pub fn get_bool_prop(
-    prop: &Property,
-    key: &str,
-) -> Result<PropValue<bool>> {
+pub fn get_bool_prop(prop: &Property, key: &str) -> Result<PropValue<bool>> {
     if let Some(var) = prop.as_global_var() {
         return Ok(make_bound(var.clone(), parse_bool));
     }
@@ -124,10 +117,7 @@ pub fn get_bool_prop(
     }
 }
 
-pub fn get_i64_prop(
-    prop: &Property,
-    key: &str,
-) -> Result<PropValue<i64>> {
+pub fn get_i64_prop(prop: &Property, key: &str) -> Result<PropValue<i64>> {
     if let Some(var) = prop.as_global_var() {
         return Ok(make_bound(var.clone(), parse_i64));
     }
@@ -144,10 +134,7 @@ pub fn get_i64_prop(
     }
 }
 
-pub fn get_f64_prop(
-    prop: &Property,
-    key: &str,
-) -> Result<PropValue<f64>> {
+pub fn get_f64_prop(prop: &Property, key: &str) -> Result<PropValue<f64>> {
     if let Some(var) = prop.as_global_var() {
         let initial = var
             .initial
@@ -177,13 +164,9 @@ pub fn get_f64_prop(
     }
 }
 
-pub fn get_i32_prop(
-    prop: &Property,
-    key: &str,
-) -> Result<PropValue<i32>> {
+pub fn get_i32_prop(prop: &Property, key: &str) -> Result<PropValue<i32>> {
     if let Some(var) = prop.as_global_var() {
-        let initial =
-            var.initial.clone().as_int().map(|v| v as i32).unwrap_or(0);
+        let initial = var.initial.clone().as_int().map(|v| v as i32).unwrap_or(0);
         return Ok(PropValue::Bound {
             var_name: var.name.clone(),
             initial,
@@ -208,10 +191,7 @@ pub fn get_i32_prop(
     }
 }
 
-pub fn get_vec_string_prop(
-    prop: &Property,
-    key: &str,
-) -> Result<Vec<PropValue<String>>> {
+pub fn get_vec_string_prop(prop: &Property, key: &str) -> Result<Vec<PropValue<String>>> {
     let array =
         prop.as_array().ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
 
@@ -257,10 +237,7 @@ fn parse_duration_str(key_str: &str) -> Option<Duration> {
     }
 }
 
-pub fn get_duration_prop(
-    prop: &Property,
-    key: &str,
-) -> Result<Duration> {
+pub fn get_duration_prop(prop: &Property, key: &str) -> Result<Duration> {
     // Duration doesn't support GlobalVar binding. It's a static config value
     let raw = prop
         .as_str()
