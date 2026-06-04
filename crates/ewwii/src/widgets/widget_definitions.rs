@@ -682,6 +682,224 @@ impl EwwiiWidget for ProgressWidget {
 
 // IMAGE here
 // BUTTON here
+// LABEL here
+
+#[derive(Default)]
+struct InputWidget {
+    gtk_widget: gtk4::Entry,
+    timeout: Rc<RefCell<Duration>>,
+    onchange_cmd: Rc<RefCell<String>>,
+    onaccept_cmd: Rc<RefCell<String>>
+}
+
+impl EwwiiWidget for InputWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Entry::new();
+        self.timeout = Duration::from_millis(200);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let timeout = self.timeout.clone();
+        let onchange_cmd = self.onchange_cmd.clone();
+        let entry = self.gtk_widget.clone();
+
+        gtk_widget.connect_changed(glib::clone!(
+            #[strong] timeout,
+            #[strong] onchange_cmd,
+            #[strong] entry,
+            move |widget| {
+                if let Some(cmd) = &*onchange_cmd.borrow() {
+                     run_command(timeout, cmd, &[entry.text().to_string()]);
+                }
+            }
+        ));
+
+        gtk_widget.connect_activate(glib::clone!(
+            #[strong] timeout,
+            #[strong] onaccept_cmd,
+            #[strong] entry,
+            move |widget| {
+                if let Some(cmd) = &*onaccept_cmd.borrow() {
+                    run_command(timeout, cmd, &[entry.text().to_string()]);
+                }
+            }
+        ));
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "value" => {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |value: String| {
+                    gtk_widget.set_text(&value);
+                });
+            }
+            "placeholder" => {
+                bind_property!(&value, &key, get_string_prop, None, [gtk_widget], |value: String| {
+                    gtk_widget.set_placeholder_text(Some(&value));
+                });
+            }
+            "password" => {
+                bind_property!(
+                    &value,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget],
+                    |password: bool| {
+                        gtk_widget.set_visibility(!password);
+                    }
+                );
+            }
+            "timeout" => {
+                let new_timeout = get_duration_prop(&value, &key);
+                *self.timeout.borrow_mut() = new_timeout;
+            }
+            "onchange" => {
+                let onchange_cmd = self.onchange_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onchange_cmd], |v: String| {
+                    *onchange_cmd.borrow_mut() = Some(v);
+                });
+            }
+            "onaccept" => {
+                let onaccept_cmd = self.onaccept_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onaccept_cmd], |v: String| {
+                    *onaccept_cmd.borrow_mut() = Some(v);
+                });
+            }
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
+
+#[derive(Default)]
+struct CalendarWidget {
+    gtk_widget: gtk4::Calendar,
+    timeout: Rc<RefCell<Duration>>,
+    onclick_cmd: Rc<RefCell<String>>,
+}
+
+impl EwwiiWidget for CalendarWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Calendar::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+
+        let timeout = self.timeout.clone();
+        let onclick_cmd = self.onclick_cmd.clone();
+        let calendar = self.gtk_widget.clone();
+
+        gtk_widget.connect_day_selected(glib::clone!(
+            #[strong]
+            onclick_cmd,
+            #[strong]
+            timeout,
+            #[strong]
+            calendar,
+            move |w| {
+                if let Some(cmd) = &*onclick_cmd.borrow() {
+                    run_command(timeout, cmd, &[calendar.day(), calendar.month(), calendar.year()]);
+                }
+            }
+        ));
+
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "day" => {
+                // day - the selected day
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |day: f64| {
+                    if !(1f64..=31f64).contains(&day) {
+                        log::warn!("Calendar day is not a number between 1 and 31");
+                    } else {
+                        gtk_widget.set_day(day as i32);
+                    }
+                });
+
+            }
+            "month" => {
+                // month - the selected month
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |month: f64| {
+                    if !(1f64..=12f64).contains(&month) {
+                        log::warn!("Calendar month is not a number between 1 and 12");
+                    } else {
+                        gtk_widget.set_month(month as i32 - 1);
+                    }
+                });
+            }
+            "year" => {
+                // year - the selected year
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |year: f64| {
+                    gtk_widget.set_year(year as i32);
+                });
+
+            }
+            "show_heading" => {
+                // show-heading - show heading line
+                bind_property!(
+                    &value,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget],
+                    |show_heading: bool| {
+                        gtk_widget.set_show_heading(show_heading);
+                    }
+                );
+            }
+            "show_day_names" => {
+                // show-day-names - show names of days
+                bind_property!(
+                    &value,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget],
+                    |show_day_names: bool| {
+                        gtk_widget.set_show_day_names(show_day_names);
+                    }
+                );
+            }
+            "show_week_numbers" => {
+                // show-week-numbers - show week numbers
+                bind_property!(
+                    &value,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget],
+                    |show_week_numbers: bool| {
+                        gtk_widget.set_show_week_numbers(show_week_numbers);
+                    }
+                );
+            }
+            "timeout" => {
+                let new_timeout = get_duration_prop(&value, &key);
+                *self.timeout.borrow_mut() = new_timeout;
+            }
+            "onclick" => {
+                let onclick_cmd = self.onclick_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onclick_cmd], |v: String| {
+                    *onclick_cmd.borrow_mut() = Some(v);
+                });
+            }
+            _ => resolve_widget_attrs(
+                &self.gtk_widget.clone().upcast::<gtk4::Widget>(),
+                key,
+                value
+            ),
+        }
+    }
+}
 
 // === Widget Registration === //
 
@@ -1863,159 +2081,24 @@ pub(super) fn build_gtk_input(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Entry> {
-    let gtk_widget = gtk4::Entry::new();
-
-    bind_property!(&props, "value", get_string_prop, None, [gtk_widget], |value: String| {
-        gtk_widget.set_text(&value);
-    });
-
-    bind_property!(&props, "placeholder", get_string_prop, None, [gtk_widget], |value: String| {
-        gtk_widget.set_placeholder_text(Some(&value));
-    });
-
-    bind_property!(
-        &props,
-        "password",
-        get_bool_prop,
-        Some(false),
-        [gtk_widget],
-        |password: bool| {
-            gtk_widget.set_visibility(!password);
-        }
-    );
-
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-
-    let onchange_cmd = Rc::new(RefCell::new(None::<String>));
-    bind_property!(&props, "onchange", get_string_prop, None, [onchange_cmd], |v: String| {
-        *onchange_cmd.borrow_mut() = Some(v);
-    });
-
-    gtk_widget.connect_changed(glib::clone!(
-        #[strong]
-        onchange_cmd,
-        move |widget| {
-            if let Some(cmd) = &*onchange_cmd.borrow() {
-                run_command(timeout, cmd, &[widget.text().to_string()]);
-            }
-        }
-    ));
-
-    let onaccept_cmd = Rc::new(RefCell::new(None::<String>));
-    bind_property!(&props, "onaccept", get_string_prop, None, [onaccept_cmd], |v: String| {
-        *onaccept_cmd.borrow_mut() = Some(v);
-    });
-
-    gtk_widget.connect_activate(glib::clone!(
-        #[strong]
-        onaccept_cmd,
-        move |widget| {
-            if let Some(cmd) = &*onaccept_cmd.borrow() {
-                run_command(timeout, cmd, &[widget.text().to_string()]);
-            }
-        }
-    ));
+    let mut widget = InputWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Input");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
 
 pub(super) fn build_gtk_calendar(
     props: &PropertyMap,
-    widget_registry: &mut WidgetRegistry,
+widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Calendar> {
-    let gtk_widget = gtk4::Calendar::new();
-
-    // day - the selected day
-    bind_property!(&props, "day", get_f64_prop, None, [gtk_widget], |day: f64| {
-        if !(1f64..=31f64).contains(&day) {
-            log::warn!("Calendar day is not a number between 1 and 31");
-        } else {
-            gtk_widget.set_day(day as i32);
-        }
-    });
-
-    // month - the selected month
-    bind_property!(&props, "month", get_f64_prop, None, [gtk_widget], |month: f64| {
-        if !(1f64..=12f64).contains(&month) {
-            log::warn!("Calendar month is not a number between 1 and 12");
-        } else {
-            gtk_widget.set_month(month as i32 - 1);
-        }
-    });
-
-    // year - the selected year
-    bind_property!(&props, "year", get_f64_prop, None, [gtk_widget], |year: f64| {
-        gtk_widget.set_year(year as i32);
-    });
-
-    // // show-details - show details
-    // bind_property!(&props, "show_details", get_bool_prop, None, |show_details| {
-    //     gtk_widget.set_show_details(show_details);
-    // });
-
-    // show-heading - show heading line
-    bind_property!(
-        &props,
-        "show_heading",
-        get_bool_prop,
-        None,
-        [gtk_widget],
-        |show_heading: bool| {
-            gtk_widget.set_show_heading(show_heading);
-        }
-    );
-
-    // show-day-names - show names of days
-    bind_property!(
-        &props,
-        "show_day_names",
-        get_bool_prop,
-        None,
-        [gtk_widget],
-        |show_day_names: bool| {
-            gtk_widget.set_show_day_names(show_day_names);
-        }
-    );
-
-    // show-week-numbers - show week numbers
-    bind_property!(
-        &props,
-        "show_week_numbers",
-        get_bool_prop,
-        None,
-        [gtk_widget],
-        |show_week_numbers: bool| {
-            gtk_widget.set_show_week_numbers(show_week_numbers);
-        }
-    );
-
-    // timeout - timeout of the command. Default: "200ms"
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-
-    // onclick - command to run when the user selects a date. The `{0}` placeholder will be replaced by the selected day, `{1}` will be replaced by the month, and `{2}` by the year.
-    let onclick_cmd = Rc::new(RefCell::new(None::<String>));
-
-    bind_property!(&props, "onclick", get_string_prop, None, [onclick_cmd], |v: String| {
-        *onclick_cmd.borrow_mut() = Some(v);
-    });
-
-    gtk_widget.connect_day_selected(glib::clone!(
-        #[strong]
-        onclick_cmd,
-        move |w| {
-            if let Some(cmd) = &*onclick_cmd.borrow() {
-                run_command(timeout, cmd, &[w.day(), w.month(), w.year()]);
-            }
-        }
-    ));
+    let mut widget = CalendarWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Calendar");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
