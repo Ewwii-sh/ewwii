@@ -863,6 +863,200 @@ impl EwwiiWidget for CalendarWidget {
     }
 }
 
+#[derive(Default)]
+struct ComboBoxTextWidget {
+    gtk_widget: gtk4::ComboBoxText,
+    timeout: Rc<RefCell<Duration>>,
+    onchange_cmd: Rc<RefCell<String>>,
+}
+
+impl EwwiiWidget for ComboBoxTextWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::ComboBoxText::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let onchange_cmd = self.onchange_cmd.clone();
+        let combo_box = self.gtk_widget.clone();
+        let timeout = self.timeout.clone();
+        gtk_widget.connect_changed(glib::clone!(
+            #[strong]
+            onchange_cmd,
+            #[strong]
+            timeout,
+            #[strong]
+            combo_box
+            move |widget| {
+                run_command(
+                    timeout,
+                    &onchange_cmd.borrow(),
+                    &[combo_box.active_text().unwrap_or_else(|| "".into())],
+                );
+            }
+        ));
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "items" => {
+                if let Ok(items) = get_vec_string_prop(&value, &key) {
+                    let current_items: Rc<RefCell<Vec<String>>> =
+                        Rc::new(RefCell::new(items.iter().map(|p| p.initial_value()).collect()));
+
+                    let apply_items = {
+                        let gtk_widget = gtk_widget.clone();
+                        let current_items = current_items.clone();
+                        Rc::new(move || {
+                            gtk_widget.remove_all();
+                            for item in current_items.borrow().iter() {
+                                gtk_widget.append_text(item);
+                            }
+                        })
+                    };
+
+            apply_items();
+
+                    for (i, item) in items.into_iter().enumerate() {
+                        apply_property_watch!(item, [current_items, apply_items], |v: String| {
+                            current_items.borrow_mut()[i] = v;
+                            apply_items();
+                        });
+                    }
+                }
+
+            }
+            "timeout" => {
+                let new_timeout = get_duration_prop(&value, &key);
+                *self.timeout.borrow_mut() = new_timeout;
+            }
+            "onchange" => {
+                let onchange_cmd = self.onclick_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onchange_cmd], |v: String| {
+                    *onchange_cmd.borrow_mut() = Some(v);
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+     }
+}
+
+#[derive(Default)]
+struct ExpanderWidget {
+    gtk_widget: gtk4::Expander,
+}
+
+impl EwwiiWidget for ExpanderWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Expander::new(None);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let count = children.len();
+        if count < 1 {
+            bail!("expander must contain exactly one element");
+        } else if count > 1 {
+            bail!("expander must contain exactly one element, but got more");
+        }
+
+        let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+        let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
+        gtk_widget.set_child(Some(&child_widget));
+
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "name" => {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |name: String| {
+                    gtk_widget.set_label(Some(&name));
+                });
+            }
+            "expanded" => {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |expanded: bool| {
+                    gtk_widget.set_expanded(expanded);
+            });
+
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
+
+
+#[derive(Default)]
+struct RevealerWidget {
+    gtk_widget: gtk4::Revealer,
+}
+
+impl EwwiiWidget for RevealerWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Revealer::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        match children.len() {
+            0 => { /* maybe warn? */ }
+            1 => {
+                let child_widget =
+                    build_gtk_widget(&WidgetInput::Node(children[0].clone()), widget_registry)?;
+                gtk_widget.set_child(Some(&child_widget));
+            }
+            n => {
+                return Err(anyhow!("A revealer must only have a maximum of 1 child but got: {}", n));
+            }
+        }
+
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "transition" => {
+                bind_property!(
+                    &value,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |transition: String| {
+                        if let Ok(t) = parse_revealer_transition(&transition) {
+                            gtk_widget.set_transition_type(t);
+                        }
+                    }
+                );
+            }
+            "reveal" => {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |reveal: bool| {
+                    gtk_widget.set_reveal_child(reveal);
+                });
+
+            }
+            "timeout" => {
+                let duration = get_duration_prop(&value, &key, Some(Duration::from_millis(500)))?;
+                self.gtk_widget.set_transition_duration(duration.as_millis() as u32);
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
+
+
 // === Widget Registration === //
 
 pub(super) fn build_gtk_box(
@@ -2070,60 +2264,17 @@ pub(super) fn build_gtk_combo_box_text(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ComboBoxText> {
-    let gtk_widget = gtk4::ComboBoxText::new();
-
-    if let Ok(items) = get_vec_string_prop(&props, "items", None) {
-        let current_items: Rc<RefCell<Vec<String>>> =
-            Rc::new(RefCell::new(items.iter().map(|p| p.initial_value()).collect()));
-
-        let apply_items = {
-            let gtk_widget = gtk_widget.clone();
-            let current_items = current_items.clone();
-            Rc::new(move || {
-                gtk_widget.remove_all();
-                for item in current_items.borrow().iter() {
-                    gtk_widget.append_text(item);
-                }
-            })
-        };
-
-        apply_items();
-
-        for (i, item) in items.into_iter().enumerate() {
-            apply_property_watch!(item, [current_items, apply_items], |v: String| {
-                current_items.borrow_mut()[i] = v;
-                apply_items();
-            });
-        }
-    }
-
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-
-    let onchange_cmd = Rc::new(RefCell::new(String::new()));
-
-    bind_property!(&props, "onchange", get_string_prop, Some(""), [onchange_cmd], |v: String| {
-        *onchange_cmd.borrow_mut() = v;
-    });
-
-    gtk_widget.connect_changed(glib::clone!(
-        #[strong]
-        onchange_cmd,
-        move |widget| {
-            run_command(
-                timeout,
-                &onchange_cmd.borrow(),
-                &[widget.active_text().unwrap_or_else(|| "".into())],
-            );
-        }
-    ));
+    let mut widget = ComboBoxTextWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "ComboBoxText");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
 
+// Doesn't require `EwwiiWidget` trait
+// because its a special non-widget thingy.
 pub(super) fn build_gtk_ui_file(props: &PropertyMap) -> Result<gtk4::Widget> {
     let path = unwrap_static("file", get_string_prop(&props, "file", None)?);
     let main_id = unwrap_static("id", get_string_prop(&props, "id", None)?);
@@ -2146,31 +2297,11 @@ pub(super) fn build_gtk_expander(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Expander> {
-    let gtk_widget = gtk4::Expander::new(None);
-
-    let count = children.len();
-
-    if count < 1 {
-        bail!("expander must contain exactly one element");
-    } else if count > 1 {
-        bail!("expander must contain exactly one element, but got more");
-    }
-
-    let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
-    let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
-    gtk_widget.set_child(Some(&child_widget));
-
-    bind_property!(&props, "name", get_string_prop, None, [gtk_widget], |name: String| {
-        gtk_widget.set_label(Some(&name));
-    });
-
-    bind_property!(&props, "expanded", get_bool_prop, None, [gtk_widget], |expanded: bool| {
-        gtk_widget.set_expanded(expanded);
-    });
+    let mut widget = ExpanderWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Expander");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
     Ok(gtk_widget)
 }
 
@@ -2179,43 +2310,11 @@ pub(super) fn build_gtk_revealer(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Revealer> {
-    let gtk_widget = gtk4::Revealer::new();
-
-    bind_property!(
-        &props,
-        "transition",
-        get_string_prop,
-        Some("crossfade"),
-        [gtk_widget],
-        |transition: String| {
-            if let Ok(t) = parse_revealer_transition(&transition) {
-                gtk_widget.set_transition_type(t);
-            }
-        }
-    );
-
-    bind_property!(&props, "reveal", get_bool_prop, None, [gtk_widget], |reveal: bool| {
-        gtk_widget.set_reveal_child(reveal);
-    });
-
-    let duration = get_duration_prop(&props, "timeout", Some(Duration::from_millis(500)))?;
-    gtk_widget.set_transition_duration(duration.as_millis() as u32);
-
-    match children.len() {
-        0 => { /* maybe warn? */ }
-        1 => {
-            let child_widget =
-                build_gtk_widget(&WidgetInput::Node(children[0].clone()), widget_registry)?;
-            gtk_widget.set_child(Some(&child_widget));
-        }
-        n => {
-            return Err(anyhow!("A revealer must only have a maximum of 1 child but got: {}", n));
-        }
-    }
+    let mut widget = RevealerWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Revealer");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
