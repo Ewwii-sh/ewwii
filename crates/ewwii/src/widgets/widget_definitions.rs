@@ -717,7 +717,6 @@ impl EwwiiWidget for InputWidget {
                     &value,
                     &key,
                     get_string_prop,
-                    None,
                     [gtk_widget],
                     |value: String| {
                         gtk_widget.set_placeholder_text(Some(&value));
@@ -886,9 +885,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
             onchange_cmd,
             #[strong]
             timeout,
-            #[strong]
-            combo_box
-            move |widget| {
+            move |combo_box| {
                 run_command(
                     timeout,
                     &onchange_cmd.borrow(),
@@ -1056,6 +1053,80 @@ impl EwwiiWidget for RevealerWidget {
     }
 }
 
+#[derive(Default)]
+struct CheckboxWidget {
+    gtk_widget: gtk4::CheckButton,
+    timeout: Rc<RefCell<Duration>>,
+    onchecked_cmd: Rc<RefCell<String>>,
+    onunchecked_cmd: Rc<RefCell<String>>,
+}
+
+impl EwwiiWidget for CheckboxWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::CheckButton::new();
+        *self.timeout.borrow_mut() = Duration::from_millis(200);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let timeout = self.timeout.clone();
+        let onchecked_cmd = self.onchecked_cmd.clone();
+        let onunchecked_cmd = self.onunchecked_cmd.clone()
+
+        self.gtk_widget.connect_toggled(glib::clone!(
+            #[strong]
+            onchecked_cmd,
+            #[strong]
+            onunchecked_cmd,
+            #[strong]
+            timeout,
+            move |widget| {
+                let oncheck = &onchecked_cmd.borrow();
+                let onuncheck = &onunchecked_cmd.borrow();
+
+                run_command(
+                    timeout,
+                    if widget.is_active() { &oncheck } else { &onuncheck },
+                    &[] as &[&str],
+                );
+            }
+        ));
+
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "checked" => {
+                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |checked: bool| {
+                    gtk_widget.set_active(checked);
+                });
+            }
+            "timeout" => {
+                let new_timeout = get_duration_prop(&value, &key);
+                *self.timeout.borrow_mut() = new_timeout;
+            }
+            "onchecked" => {
+                let onchecked_cmd = self.onchecked_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onchecked_cmd], |v: String| {
+                    *onchecked_cmd.borrow_mut() = v;
+                });
+            }
+            "onunchecked" => {
+                let onunchecked_cmd = self.onunchecked_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onchecked_cmd], |v: String| {
+                    *onchecked_cmd.borrow_mut() = v;
+                });
+            }
+
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
 
 // === Widget Registration === //
 
@@ -2323,51 +2394,11 @@ pub(super) fn build_gtk_checkbox(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::CheckButton> {
-    let gtk_widget = gtk4::CheckButton::new();
-
-    bind_property!(&props, "checked", get_bool_prop, Some(false), [gtk_widget], |checked: bool| {
-        gtk_widget.set_active(checked);
-    });
-
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-    let onchecked_cmd = Rc::new(RefCell::new(String::new()));
-    let onunchecked_cmd = Rc::new(RefCell::new(String::new()));
-
-    bind_property!(&props, "onchecked", get_string_prop, Some(""), [onchecked_cmd], |v: String| {
-        *onchecked_cmd.borrow_mut() = v;
-    });
-
-    bind_property!(
-        &props,
-        "onunchecked",
-        get_string_prop,
-        Some(""),
-        [onunchecked_cmd],
-        |v: String| {
-            *onunchecked_cmd.borrow_mut() = v;
-        }
-    );
-
-    gtk_widget.connect_toggled(glib::clone!(
-        #[strong]
-        onchecked_cmd,
-        #[strong]
-        onunchecked_cmd,
-        move |widget| {
-            let oncheck = &onchecked_cmd.borrow();
-            let onuncheck = &onunchecked_cmd.borrow();
-
-            run_command(
-                timeout,
-                if widget.is_active() { &oncheck } else { &onuncheck },
-                &[] as &[&str],
-            );
-        }
-    ));
+    let mut widget = CheckboxWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Checkbox");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
