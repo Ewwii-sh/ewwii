@@ -207,7 +207,7 @@ struct BoxWidget {
 impl EwwiiWidget for BoxWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
-        gtk_widget.set_homogeneous(true);
+        self.gtk_widget.set_homogeneous(true);
 
         for (key, value) in props {
             self.update_prop(key, value.clone());
@@ -225,6 +225,7 @@ impl EwwiiWidget for BoxWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "orientation" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     if let Ok(o) = parse_orientation(&v) {
                         self.gtk_widget.set_orientation(o)
@@ -232,11 +233,13 @@ impl EwwiiWidget for BoxWidget {
                 });
             }
             "spacing" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_i64_prop, [gtk_widget], |v: i64| {
                     self.gtk_widget.set_spacing(v as i32)
                 });
             }
             "space_evenly" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_homogeneous(v)
                 });
@@ -710,7 +713,7 @@ impl EwwiiWidget for EventBoxWidget {
             }
             "onmiddleclick" => {
                 let controller_data = self.controller_data.clone();
-     k          // onmiddleclick - command to run when the widget is middleclicked
+                // onmiddleclick - command to run when the widget is middleclicked
                 bind_property!(
                     &props,
                     &key,
@@ -776,7 +779,7 @@ struct FlowBoxWidget {
     cmd_timeout: Duration,
 }
 
-impl EwwiiWidget for BoxWidget {
+impl EwwiiWidget for FlowBoxWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = gtk4::FlowBox::new();
         self.cmd_timeout = Duration::from_millis(200);
@@ -816,6 +819,7 @@ impl EwwiiWidget for BoxWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "default_select" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_i32_prop, [gtk_widget], |dsv: i32| {
                     if let Some(child) = gtk_widget.child_at_index(dsv) {
                         gtk_widget.select_child(&child);
@@ -826,6 +830,7 @@ impl EwwiiWidget for BoxWidget {
                 });
             }
             "orientation" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     if let Ok(o) = parse_orientation(&v) {
                         gtk_widget.set_orientation(o);
@@ -838,6 +843,7 @@ impl EwwiiWidget for BoxWidget {
                 });
             }
             "selection_model" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     if let Ok(selection_model) = parse_selection_model(&v) {
                         gtk_widget.set_selection_mode(selection_model);
@@ -888,11 +894,13 @@ impl EwwiiWidget for StackWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "selected" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_i32_prop, [gtk_widget], |v: i32| {
                     gtk_widget.set_visible_child_name(&v.to_string());
                 });
             }
             "transition" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     if let Ok(t) = parse_stack_transition(&v) {
                         gtk_widget.set_transition_type(t);
@@ -900,6 +908,7 @@ impl EwwiiWidget for StackWidget {
                 });
             }
             "transition_duration" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_i32_prop, [gtk_widget], |v: i32| {
                     gtk_widget.set_transition_duration(v as u32);
                 });
@@ -930,26 +939,31 @@ impl EwwiiWidget for CircularProgressWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "value" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
                     widget.set_property("value", v.clamp(0.0, 100.0));
                 });
             }
             "start_at" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
                     widget.set_property("start-at", v.clamp(0.0, 100.0));
                 });
             }
             "thickness" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
                     widget.set_property("thickness", v);
                 });
             }
             "clockwise" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [widget], |v: bool| {
                     widget.set_property("clockwise", v);
                 });
             }
             "fg_color" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [widget], |v: String| {
                     if let Ok(rgba) = gdk::RGBA::parse(v) {
                         widget.set_property("fg-color", rgba);
@@ -957,6 +971,7 @@ impl EwwiiWidget for CircularProgressWidget {
                 });
             }
             "bg_color" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [widget], |v: String| {
                     if let Ok(rgba) = gdk::RGBA::parse(v) {
                         widget.set_property("bg-color", rgba);
@@ -1007,6 +1022,7 @@ impl EwwiiWidget for GraphWidget {
 
         match key {
             "value" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |value: f64| {
                     if value.is_nan() || value.is_infinite() {
                         log::error!("Graph's value should never be NaN or infinite");
@@ -1016,6 +1032,7 @@ impl EwwiiWidget for GraphWidget {
                 });
             }
             "time_range" => {
+                let widget = self.gtk_widget.clone();
                 if let Ok(time_range) = get_duration_prop(&value, &key) {
                     let millis = time_range.as_millis();
                     let millis_u32 = u32::try_from(millis).map_err(|_| {
@@ -1044,11 +1061,13 @@ impl EwwiiWidget for GraphWidget {
 
             }
             "dynamic" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_bool_prop, [widget], |dynamic: bool| {
                     widget.set_property("dynamic", dynamic);
                 });
             }
             "type" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_string_prop, [widget], |render_type: String| {
                     match parse_graph_render_type(render_type.as_str()) {
                         Ok(t) => widget.set_property("type", t),
@@ -1060,6 +1079,7 @@ impl EwwiiWidget for GraphWidget {
                 });
             }
             "thickness" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_f64_prop, [widget], |thickness: f64| {
                     if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
                         log::error!("Property thickness can only be used with line graphs");
@@ -1070,6 +1090,7 @@ impl EwwiiWidget for GraphWidget {
                 });
             }
             "line_style" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_string_prop, [widget], |line_style: String| {
                     if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
                         log::error!("Property line-style can only be used with line graphs");
@@ -1086,12 +1107,14 @@ impl EwwiiWidget for GraphWidget {
                 });
             }
             "flip_x" => {
+                let widget = self.gtk_widget.clone();
                 // flip-x - whether the x axis should go from high to low
                 bind_property!(&props, &key, get_bool_prop, [widget], |flip_x: bool| {
                     widget.set_property("flip-x", flip_x);
                 });
             }
             "flip_y" => {
+                let widget = self.gtk_widget.clone();
                 // flip-y - whether the y axis should go from high to low
                 bind_property!(&props, &key, get_bool_prop, [widget], |flip_y: bool| {
                     widget.set_property("flip-y", flip_y);
@@ -1099,12 +1122,14 @@ impl EwwiiWidget for GraphWidget {
 
             }
             "vertical" => {
+                let widget = self.gtk_widget.clone();
                 // vertical - if set to true, the x and y axes will be exchanged
                 bind_property!(&props, &key, get_bool_prop, [widget], |vertical: bool| {
                     widget.set_property("vertical", vertical);
                 });
             }
             "animate" => {
+                let widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_bool_prop, [widget], |animate: bool| {
                     widget.set_property("animate", animate);
                 });
@@ -1135,6 +1160,7 @@ impl EwwiiWidget for ProgressWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "orientation" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     if let Ok(o) = parse_orientation(&v) {
                         gtk_widget.set_orientation(o)
@@ -1142,21 +1168,25 @@ impl EwwiiWidget for ProgressWidget {
                 });
             }
             "flipped" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |flipped: bool| {
                     gtk_widget.set_inverted(flipped)
                 });
             }
             "value" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [gtk_widget], |bar_value: f64| {
                     gtk_widget.set_fraction(bar_value / 100f64);
                 });
             }
             "text" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |bar_text: String| {
                     gtk_widget.set_text(Some(&bar_text));
                 });
             }
             "show_text" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |show_text: bool| {
                     gtk_widget.set_show_text(show_text);
                 });
@@ -1284,7 +1314,7 @@ struct ButtonWidget {
 
 impl EwwiiWidget for ButtonWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
-        self.gtk_widget = gtk4::ButtonWidget::new();
+        self.gtk_widget = ButtonWidget::new();
         *self.cmd_timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
@@ -1453,7 +1483,7 @@ impl EwwiiWidget for LabelWidget {
                 );
             }
             "truncate" => {
-                let gtk_widget = self.gtk_widget.clone()
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
                     &value,
                     &key,
@@ -1520,7 +1550,6 @@ impl EwwiiWidget for LabelWidget {
                     &props,
                     &key,
                     get_bool_prop,
-                    Some(false),
                     [gtk_widget],
                     |wrap: bool| {
                         gtk_widget.set_wrap(wrap);
@@ -1589,7 +1618,7 @@ struct InputWidget {
 impl EwwiiWidget for InputWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = gtk4::Entry::new();
-        self.timeout = Duration::from_millis(200);
+        *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
             self.update_prop(key, value.clone());
@@ -1633,16 +1662,19 @@ impl EwwiiWidget for InputWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "value" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |value: String| {
                     gtk_widget.set_text(&value);
                 });
             }
             "placeholder" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |value: String| {
                     gtk_widget.set_placeholder_text(Some(&value));
                 });
             }
             "password" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |password: bool| {
                     gtk_widget.set_visibility(!password);
                 });
@@ -1680,6 +1712,7 @@ struct CalendarWidget {
 impl EwwiiWidget for CalendarWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = gtk4::Calendar::new();
+        *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
             self.update_prop(key, value.clone());
@@ -1709,6 +1742,7 @@ impl EwwiiWidget for CalendarWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "day" => {
+                let gtk_widget = self.gtk_widget.clone();
                 // day - the selected day
                 bind_property!(&value, &key, get_f64_prop, [gtk_widget], |day: f64| {
                     if !(1f64..=31f64).contains(&day) {
@@ -1719,6 +1753,7 @@ impl EwwiiWidget for CalendarWidget {
                 });
             }
             "month" => {
+                let gtk_widget = self.gtk_widget.clone();
                 // month - the selected month
                 bind_property!(&value, &key, get_f64_prop, [gtk_widget], |month: f64| {
                     if !(1f64..=12f64).contains(&month) {
@@ -1729,18 +1764,21 @@ impl EwwiiWidget for CalendarWidget {
                 });
             }
             "year" => {
+                let gtk_widget = self.gtk_widget.clone();
                 // year - the selected year
                 bind_property!(&value, &key, get_f64_prop, [gtk_widget], |year: f64| {
                     gtk_widget.set_year(year as i32);
                 });
             }
             "show_heading" => {
+                let gtk_widget = self.gtk_widget.clone();
                 // show-heading - show heading line
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |show_heading: bool| {
                     gtk_widget.set_show_heading(show_heading);
                 });
             }
             "show_day_names" => {
+                let gtk_widget = self.gtk_widget.clone();
                 // show-day-names - show names of days
                 bind_property!(
                     &value,
@@ -1753,6 +1791,7 @@ impl EwwiiWidget for CalendarWidget {
                 );
             }
             "show_week_numbers" => {
+                let gtk_widget = self.gtk_widget.clone();
                 // show-week-numbers - show week numbers
                 bind_property!(
                     &value,
@@ -1791,6 +1830,7 @@ struct ComboBoxTextWidget {
 impl EwwiiWidget for ComboBoxTextWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = gtk4::ComboBoxText::new();
+        *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
             self.update_prop(key, value.clone());
@@ -1819,6 +1859,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "items" => {
+                let gtk_widget = self.gtk_widget.clone();
                 if let Ok(items) = get_vec_string_prop(&value, &key) {
                     let current_items: Rc<RefCell<Vec<String>>> =
                         Rc::new(RefCell::new(items.iter().map(|p| p.initial_value()).collect()));
@@ -1891,11 +1932,13 @@ impl EwwiiWidget for ExpanderWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "name" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |name: String| {
                     gtk_widget.set_label(Some(&name));
                 });
             }
             "expanded" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |expanded: bool| {
                     gtk_widget.set_expanded(expanded);
                 });
@@ -1941,6 +1984,7 @@ impl EwwiiWidget for RevealerWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "transition" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
                     &value,
                     &key,
@@ -1954,11 +1998,12 @@ impl EwwiiWidget for RevealerWidget {
                 );
             }
             "reveal" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |reveal: bool| {
                     gtk_widget.set_reveal_child(reveal);
                 });
             }
-            "timeout" => {
+            "duration" => {
                 let duration = get_duration_prop(&value, &key, Some(Duration::from_millis(500)))?;
                 self.gtk_widget.set_transition_duration(duration.as_millis() as u32);
             }
@@ -2015,6 +2060,7 @@ impl EwwiiWidget for CheckboxWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "checked" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_bool_prop, [gtk_widget], |checked: bool| {
                     gtk_widget.set_active(checked);
                 });
@@ -2077,11 +2123,11 @@ impl EwwiiWidget for ColorButtonWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "use_alpha" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
                     &props,
                     &key,
                     get_bool_prop,
-                    None,
                     [gtk_widget],
                     |use_alpha: bool| {
                         gtk_widget.set_use_alpha(use_alpha);
@@ -2137,11 +2183,11 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "use_alpha" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
                     &props,
                     &key,
                     get_bool_prop,
-                    None,
                     [gtk_widget],
                     |use_alpha: bool| {
                         gtk_widget.set_use_alpha(use_alpha);
@@ -2231,6 +2277,7 @@ impl EwwiiWidget for ScaleWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "orientation" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_string_prop, [gtk_widget], |v: String| {
                     if let Ok(o) = parse_orientation(&v) {
                         gtk_widget.set_orientation(o)
@@ -2238,11 +2285,13 @@ impl EwwiiWidget for ScaleWidget {
                 });
             }
             "flipped" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_inverted(v);
                 });
             }
             "marks" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_string_prop, [gtk_widget], |marks: String| {
                     gtk_widget.clear_marks();
                     for mark in marks.split(',') {
@@ -2253,11 +2302,13 @@ impl EwwiiWidget for ScaleWidget {
                 });
             }
             "draw_value" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_draw_value(v);
                 });
             }
             "value_pos" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_string_prop, [gtk_widget], |value_pos: String| {
                     if let Ok(pos) = parse_position_type(&value_pos) {
                         gtk_widget.set_value_pos(pos);
@@ -2265,6 +2316,7 @@ impl EwwiiWidget for ScaleWidget {
                 });
             }
             "round_digits" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&props, &key, get_i32_prop, [gtk_widget], |v: i32| {
                     gtk_widget.set_round_digits(v);
                 });
@@ -2313,7 +2365,8 @@ impl EwwiiWidget for ScrolledWindowWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "hscroll" => {
-                bind_property!(&props, &key, get_bool_prop, Some(true), [gtk_widget], |v: bool| {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_hscrollbar_policy(if v {
                         gtk4::PolicyType::Automatic
                     } else {
@@ -2322,7 +2375,8 @@ impl EwwiiWidget for ScrolledWindowWidget {
                 });
             }
             "vscroll" => {
-                bind_property!(&props, &key, get_bool_prop, Some(true), [gtk_widget], |v: bool| {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_vscrollbar_policy(if v {
                         gtk4::PolicyType::Automatic
                     } else {
@@ -2331,11 +2385,11 @@ impl EwwiiWidget for ScrolledWindowWidget {
                 });
             }
             "propagate_natural_height" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
                     &props,
                     &key,
                     get_bool_prop,
-                    None,
                     [gtk_widget],
                     |natural_height: bool| {
                         gtk_widget.set_propagate_natural_height(natural_height);
@@ -2393,53 +2447,16 @@ pub(super) fn build_tooltip(
     Ok(gtk_widget)
 }
 
-struct EventBoxCtrlData {
-    // hover controller data
-    onhover_cmd: String,
-    onhoverlost_cmd: String,
-    hover_cursor: String,
-
-    // gesture controller data
-    onclick_cmd: String,
-    onmiddleclick_cmd: String,
-    onrightclick_cmd: String,
-
-    // scroll controoler data
-    onscroll_cmd: String,
-
-    // drop controller data
-    ondropped_cmd: String,
-    dragvalue: Option<String>,
-    dragtype: DragEntryType,
-
-    // key controller data
-    onkeypress_cmd: Option<String>,
-    onkeyrelease_cmd: Option<String>,
-
-    // other
-    cmd_timeout: Duration,
-}
-
 pub(super) fn build_event_box(
     props: &PropertyMap,
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
-    let gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
-
-
-
-
-
-
-
-
-
-
+    let mut widget = EventBoxWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "EventBox");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
     Ok(gtk_widget)
 }
 

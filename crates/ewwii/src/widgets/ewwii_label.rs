@@ -5,6 +5,7 @@ use glib::Object;
 use gtk4::subclass::prelude::*;
 use gtk4::prelude::*;
 use std::cell::{Cell, OnceCell, RefCell};
+use crate::util;
 
 mod imp {
     use super::*;
