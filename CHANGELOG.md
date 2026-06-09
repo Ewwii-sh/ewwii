@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Removed
 
 - `show_truncated` property from label widget.
+- `space_evenly` property from eventbox.
+- `spacing` property from eventbox.
 
 ## [0.8.4] - 2026-05-31
 
