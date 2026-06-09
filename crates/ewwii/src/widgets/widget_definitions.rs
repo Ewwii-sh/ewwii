@@ -28,6 +28,7 @@ use std::{
 // use crate::widgets::{circular_progressbar::CircProg, transform::Transform};
 use crate::widgets::circular_progressbar::CircProg;
 use crate::widgets::ewwii_label::EwwiiLabel;
+use crate::widgets::ewwii_image::EwwiiImage;
 use crate::widgets::graph::{Graph, RenderType};
 
 trait EwwiiWidget {
@@ -741,7 +742,110 @@ impl EwwiiWidget for ProgressWidget {
     }
 }
 
-// IMAGE here
+#[derive(Default)]
+struct ImageWidget {
+    gtk_widget: EwwiiImage,
+}
+
+impl EwwiiWidget for ImageWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = ImageWidget::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "path" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |v: String| {
+                        gtk_widget.set_path(v);
+                    }
+                );
+            }
+            "image_width" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_i32_prop,
+                    [gtk_widget],
+                    |v: i32| {
+                        gtk_widget.set_image_width(v);
+                    }
+                );
+            }
+            "image_height" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_i32_prop,
+                    [gtk_widget],
+                    |v: i32| {
+                        gtk_widget.set_image_height(v);
+                    }
+                );
+            }
+            "preserve_aspect_ratio" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget],
+                    |v: bool| {
+                        gtk_widget.set_preserve_aspect_ratio(v);
+                    }
+                );
+            }
+            "fill_svg" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |v: String| {
+                        gtk_widget.set_fill_svg(v);
+                    }
+                );
+            }
+            "content_fit" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |v: String| {
+                        if let Ok(content_fit) = parse_content_fit(&v) {
+                            gtk_widget.set_content_fit(content_fit);
+                        };
+                    }
+                );
+            }
+            "can_shrink" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                    gtk_widget.set_can_shrink(v);
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
 
 #[derive(Default)]
 struct ButtonWidget {
@@ -882,7 +986,7 @@ impl EwwiiWidget for ButtonWidget {
 
 #[derive(Default)]
 struct LabelWidget {
-    gtk_widget: gtk4::EwwiiLabel,
+    gtk_widget: EwwiiLabel,
 }
 
 impl EwwiiWidget for LabelWidget {
@@ -2345,190 +2449,11 @@ pub(super) fn build_image(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Picture> {
-    let gtk_widget = gtk4::Picture::new();
-
-    let path_prop = get_string_prop(&props, "path", None)?;
-    let image_width_prop = get_i32_prop(&props, "image_width", Some(-1))?;
-    let image_height_prop = get_i32_prop(&props, "image_height", Some(-1))?;
-    let preserve_aspect_ratio_prop = get_bool_prop(&props, "preserve_aspect_ratio", Some(true))?;
-    let fill_svg_prop = get_string_prop(&props, "fill_svg", Some(""))?;
-
-    let current_path = Rc::new(RefCell::new(path_prop.initial_value()));
-    let current_image_width = Rc::new(RefCell::new(image_width_prop.initial_value()));
-    let current_image_height = Rc::new(RefCell::new(image_height_prop.initial_value()));
-    let current_preserve_aspect_ratio =
-        Rc::new(RefCell::new(preserve_aspect_ratio_prop.initial_value()));
-    let current_fill_svg = Rc::new(RefCell::new(fill_svg_prop.initial_value()));
-
-    #[allow(deprecated)]
-    let re_render = {
-        let gtk_widget = gtk_widget.clone();
-        let current_path = current_path.clone();
-        let current_image_width = current_image_width.clone();
-        let current_image_height = current_image_height.clone();
-        let current_preserve_aspect_ratio = current_preserve_aspect_ratio.clone();
-        let current_fill_svg = current_fill_svg.clone();
-
-        Rc::new(move || {
-            let path = current_path.borrow().clone();
-            let image_width = *current_image_width.borrow();
-            let image_height = *current_image_height.borrow();
-            let preserve_aspect_ratio = *current_preserve_aspect_ratio.borrow();
-            let fill_svg = current_fill_svg.borrow().clone();
-
-            gtk_widget.set_height_request(image_height);
-            gtk_widget.set_width_request(image_width);
-
-            if !path.ends_with(".svg") && !fill_svg.is_empty() {
-                log::warn!("Fill attribute ignored, file is not an svg image");
-            }
-
-            if path.ends_with(".gif") {
-                let pixbuf_animation = match gtk4::gdk_pixbuf::PixbufAnimation::from_file(
-                    std::path::PathBuf::from(&path),
-                ) {
-                    Ok(a) => a,
-                    Err(e) => {
-                        log::error!("Failed to load GIF `{path}`: {e}");
-                        return;
-                    }
-                };
-                let iter = pixbuf_animation.iter(None);
-                let frame_pixbuf = iter.pixbuf();
-                gtk_widget.set_pixbuf(Some(&frame_pixbuf));
-                let widget_clone = gtk_widget.clone();
-                if let Some(delay) = iter.delay_time() {
-                    glib::timeout_add_local(delay, move || {
-                        let now = std::time::SystemTime::now();
-                        if iter.advance(now) {
-                            let frame_pixbuf = iter.pixbuf();
-                            widget_clone.set_pixbuf(Some(&frame_pixbuf));
-                        }
-                        glib::ControlFlow::Continue
-                    });
-                }
-            } else {
-                let scale = gtk_widget.scale_factor();
-                let width = if image_width > 0 { image_width * scale } else { -1 };
-                let height = if image_height > 0 { image_height * scale } else { -1 };
-
-                let pixbuf = if path.ends_with(".svg") && !fill_svg.is_empty() {
-                    let svg_data = match std::fs::read_to_string(std::path::PathBuf::from(&path)) {
-                        Ok(d) => d,
-                        Err(e) => {
-                            log::error!("Failed to read SVG `{path}`: {e}");
-                            return;
-                        }
-                    };
-                    let svg_data = if svg_data.contains("fill=") {
-                        let reg = match regex::Regex::new(r#"fill="[^"]*""#) {
-                            Ok(r) => r,
-                            Err(e) => {
-                                log::error!("Regex error: {e}");
-                                return;
-                            }
-                        };
-                        reg.replace(&svg_data, &format!("fill=\"{}\"", fill_svg))
-                    } else {
-                        let reg = match regex::Regex::new(r"<svg") {
-                            Ok(r) => r,
-                            Err(e) => {
-                                log::error!("Regex error: {e}");
-                                return;
-                            }
-                        };
-                        reg.replace(&svg_data, &format!("<svg fill=\"{}\"", fill_svg))
-                    };
-                    let stream = gtk4::gio::MemoryInputStream::from_bytes(
-                        &gtk4::glib::Bytes::from(svg_data.as_bytes()),
-                    );
-                    let result = gtk4::gdk_pixbuf::Pixbuf::from_stream_at_scale(
-                        &stream,
-                        width,
-                        height,
-                        preserve_aspect_ratio,
-                        None::<&gtk4::gio::Cancellable>,
-                    );
-                    if let Err(e) = stream.close(None::<&gtk4::gio::Cancellable>) {
-                        log::error!("Failed to close SVG stream: {e}");
-                    }
-                    match result {
-                        Ok(p) => p,
-                        Err(e) => {
-                            log::error!("Failed to render SVG `{path}`: {e}");
-                            return;
-                        }
-                    }
-                } else {
-                    match gtk4::gdk_pixbuf::Pixbuf::from_file_at_scale(
-                        std::path::PathBuf::from(&path),
-                        width,
-                        height,
-                        preserve_aspect_ratio,
-                    ) {
-                        Ok(p) => p,
-                        Err(e) => {
-                            log::error!("Failed to load image `{path}`: {e}");
-                            return;
-                        }
-                    }
-                };
-
-                let texture = gtk4::gdk::Texture::for_pixbuf(&pixbuf);
-                gtk_widget.set_paintable(Some(&texture));
-            }
-        })
-    };
-
-    // Single initial render
-    re_render();
-
-    // Watch for future changes on bound props only
-    apply_property_watch!(path_prop, [current_path, re_render], |v: String| {
-        *current_path.borrow_mut() = v;
-        re_render();
-    });
-    apply_property_watch!(image_width_prop, [current_image_width, re_render], |v: i32| {
-        *current_image_width.borrow_mut() = v;
-        re_render();
-    });
-    apply_property_watch!(image_height_prop, [current_image_height, re_render], |v: i32| {
-        *current_image_height.borrow_mut() = v;
-        re_render();
-    });
-    apply_property_watch!(
-        preserve_aspect_ratio_prop,
-        [current_preserve_aspect_ratio, re_render],
-        |v: bool| {
-            *current_preserve_aspect_ratio.borrow_mut() = v;
-            re_render();
-        }
-    );
-    apply_property_watch!(fill_svg_prop, [current_fill_svg, re_render], |v: String| {
-        *current_fill_svg.borrow_mut() = v;
-        re_render();
-    });
-
-    bind_property!(
-        &props,
-        "content_fit",
-        get_string_prop,
-        Some("contain"),
-        [gtk_widget],
-        |v: String| {
-            if let Ok(content_fit) = parse_content_fit(&v) {
-                gtk_widget.set_content_fit(content_fit);
-            };
-        }
-    );
-
-    bind_property!(&props, "can_shrink", get_bool_prop, Some(false), [gtk_widget], |v: bool| {
-        gtk_widget.set_can_shrink(v);
-    });
+    let mut widget = EwwiiWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Image");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }

@@ -202,59 +202,47 @@ impl EwwiiLabel {
     }
 
     pub fn set_wrap(&self, value: bool) {
-        if let Some(label) = imp::EwwiiLabel::from_obj(self).inner_label.get() {
-            if let Some(label) = self.inner_label.get() {
-                label.set_wrap(value);
-            }
+        if let Some(label) = self.inner_label.get() {
+            label.set_wrap(value);
         }
     }
 
     pub fn set_xalign(&self, value: f32) {
-        if let Some(label) = imp::EwwiiLabel::from_obj(self).inner_label.get() {
-            if let Some(label) = self.inner_label.get() {
-                label.set_xalign(value);
-            }
+        if let Some(label) = self.inner_label.get() {
+            label.set_xalign(value);
         }
     }
 
     pub fn set_yalign(&self, value: f32) {
-        if let Some(label) = imp::EwwiiLabel::from_obj(self).inner_label.get() {
-            if let Some(label) = self.inner_label.get() {
-                label.set_yalign(value);
-            }
+        if let Some(label) = self.inner_label.get() {
+            label.set_yalign(value);
         }
     }
 
     pub fn set_lines(&self, value: i32) {
-        if let Some(label) = imp::EwwiiLabel::from_obj(self).inner_label.get() {
-            if let Some(label) = self.inner_label.get() {
-                label.set_lines(value);
-            }
+        if let Some(label) = self.inner_label.get() {
+            label.set_lines(value);
         }
     }
 
     pub fn set_justify(&self, value: u32) {
-        if let Some(label) = imp::EwwiiLabel::from_obj(self).inner_label.get() {
-            if let Some(label) = self.inner_label.get() {
-                label.set_justify(match value {
-                    1 => gtk4::Justification::Right,
-                    2 => gtk4::Justification::Center,
-                    3 => gtk4::Justification::Fill,
-                    _ => gtk4::Justification::Left,
-                });
-            }
+        if let Some(label) = self.inner_label.get() {
+            label.set_justify(match value {
+                1 => gtk4::Justification::Right,
+                2 => gtk4::Justification::Center,
+                3 => gtk4::Justification::Fill,
+                _ => gtk4::Justification::Left,
+            });
         }
     }
 
     pub fn set_wrap_mode(&self, value: u32) {
-        if let Some(label) = imp::EwwiiLabel::from_obj(self).inner_label.get() {
-            if let Some(label) = self.inner_label.get() {
-                label.set_wrap_mode(match value {
-                    1 => pango::WrapMode::Char,
-                    2 => pango::WrapMode::WordChar,
-                    _ => pango::WrapMode::Word,
-                });
-            }
+        if let Some(label) = self.inner_label.get() {
+            label.set_wrap_mode(match value {
+                1 => pango::WrapMode::Char,
+                2 => pango::WrapMode::WordChar,
+                _ => pango::WrapMode::Word,
+            });
         }
     }
 }
