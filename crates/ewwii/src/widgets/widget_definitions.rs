@@ -579,18 +579,109 @@ impl EwwiiWidget for GraphWidget {
         };
 
         match key {
-            "value" => {}
-            "time_range" => {}
-            "min" => {}
-            "max" => {}
-            "dynamic" => {}
-            "type" => {}
-            "thickness" => {}
-            "line_style" => {}
-            "flip_x" => {}
-            "flip_y" => {}
-            "vertical" => {}
-            "animate" => {}
+            "value" => {
+                bind_property!(&value, &key, get_f64_prop, [widget], |value: f64| {
+                    if value.is_nan() || value.is_infinite() {
+                        log::error!("Graph's value should never be NaN or infinite");
+                        return;
+                    }
+                    widget.set_property("value", value);
+                });
+            }
+            "time_range" => {
+                if let Ok(time_range) = get_duration_prop(&value, &key) {
+                    let millis = time_range.as_millis();
+                    let millis_u32 = u32::try_from(millis).map_err(|_| {
+                        anyhow!(
+                            "Graph's time_range ({}ms) exceeds maximum representable ({}ms)",
+                            millis,
+                            u32::MAX
+                        )
+                    })?;
+
+                    widget.set_property("time-range", millis_u32);
+                }
+
+            }
+            "min" => {
+                bind_property!(&props, &key, get_f64_prop, [min_val, apply_min_max], |v: f64| {
+                    *min_val.borrow_mut() = v;
+                    apply_min_max();
+                });
+            }
+            "max" => {
+                bind_property!(&props, &key, get_f64_prop, [max_val, apply_min_max], |v: f64| {
+                    *max_val.borrow_mut() = v;
+                    apply_min_max();
+                });
+
+            }
+            "dynamic" => {
+                bind_property!(&props, &key, get_bool_prop, [widget], |dynamic: bool| {
+                    widget.set_property("dynamic", dynamic);
+                });
+            }
+            "type" => {
+                bind_property!(&props, &key, get_string_prop, [widget], |render_type: String| {
+                    match parse_graph_render_type(render_type.as_str()) {
+                        Ok(t) => widget.set_property("type", t),
+                        Err(e) => {
+                            log::error!("Failed to parse graph type property: {}", e);
+                            return;
+                        }
+                    };
+                });
+            }
+            "thickness" => {
+                bind_property!(&props, &key, get_f64_prop, [widget], |thickness: f64| {
+                    if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
+                        log::error!("Property thickness can only be used with line graphs");
+                        return;
+                    }
+
+                    widget.set_property("thickness", thickness);
+                });
+            }
+            "line_style" => {
+                bind_property!(&props, &key, get_string_prop, [widget], |line_style: String| {
+                    if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
+                        log::error!("Property line-style can only be used with line graphs");
+                        return;
+                    }
+
+                    match parse_graph_line_style(line_style.as_str()) {
+                        Ok(ls) => widget.set_property("line-style", ls),
+                        Err(e) => {
+                            log::error!("Failed to parse graph line-style property: {}", e);
+                            return;
+                        }
+                    };
+                });
+            }
+            "flip_x" => {
+                // flip-x - whether the x axis should go from high to low
+                bind_property!(&props, &key, get_bool_prop, [widget], |flip_x: bool| {
+                    widget.set_property("flip-x", flip_x);
+                });
+            }
+            "flip_y" => {
+                // flip-y - whether the y axis should go from high to low
+                bind_property!(&props, &key, get_bool_prop, [widget], |flip_y: bool| {
+                    widget.set_property("flip-y", flip_y);
+                });
+
+            }
+            "vertical" => {
+                // vertical - if set to true, the x and y axes will be exchanged
+                bind_property!(&props, &key, get_bool_prop, [widget], |vertical: bool| {
+                    widget.set_property("vertical", vertical);
+                });
+            }
+            "animate" => {
+                bind_property!(&props, &key, get_bool_prop, [widget], |animate: bool| {
+                    widget.set_property("animate", animate);
+                });
+            }
             _ => {
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
             }
@@ -2092,120 +2183,13 @@ pub(super) fn build_graph(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<Graph> {
-    let widget = Graph::new();
-
-    bind_property!(&props, "value", get_f64_prop, None, [widget], |value: f64| {
-        if value.is_nan() || value.is_infinite() {
-            log::error!("Graph's value should never be NaN or infinite");
-            return;
-        }
-        widget.set_property("value", value);
-    });
-
-    if let Ok(time_range) = get_duration_prop(&props, "time_range", None) {
-        let millis = time_range.as_millis();
-        let millis_u32 = u32::try_from(millis).map_err(|_| {
-            anyhow!(
-                "Graph's time_range ({}ms) exceeds maximum representable ({}ms)",
-                millis,
-                u32::MAX
-            )
-        })?;
-
-        widget.set_property("time-range", millis_u32);
-    }
-
-    let min_val: Rc<RefCell<f64>> = Rc::new(RefCell::new(0.0));
-    let max_val: Rc<RefCell<f64>> = Rc::new(RefCell::new(100.0));
-
-    let apply_min_max = {
-        let widget = widget.clone();
-        let min_val = min_val.clone();
-        let max_val = max_val.clone();
-        Rc::new(move || {
-            let min = *min_val.borrow();
-            let max = *max_val.borrow();
-            if min > max {
-                log::error!("Graph's min ({min}) should never be higher than max ({max})");
-                return;
-            }
-            widget.set_property("min", min);
-            widget.set_property("max", max);
-        })
-    };
-
-    bind_property!(&props, "min", get_f64_prop, Some(0.0), [min_val, apply_min_max], |v: f64| {
-        *min_val.borrow_mut() = v;
-        apply_min_max();
-    });
-
-    bind_property!(&props, "max", get_f64_prop, Some(100.0), [max_val, apply_min_max], |v: f64| {
-        *max_val.borrow_mut() = v;
-        apply_min_max();
-    });
-
-    bind_property!(&props, "dynamic", get_bool_prop, None, [widget], |dynamic: bool| {
-        widget.set_property("dynamic", dynamic);
-    });
-
-    bind_property!(&props, "type", get_string_prop, None, [widget], |render_type: String| {
-        match parse_graph_render_type(render_type.as_str()) {
-            Ok(t) => widget.set_property("type", t),
-            Err(e) => {
-                log::error!("Failed to parse graph type property: {}", e);
-                return;
-            }
-        };
-    });
-
-    bind_property!(&props, "thickness", get_f64_prop, None, [widget], |thickness: f64| {
-        if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
-            log::error!("Property thickness can only be used with line graphs");
-            return;
-        }
-
-        widget.set_property("thickness", thickness);
-    });
-
-    bind_property!(&props, "line_style", get_string_prop, None, [widget], |line_style: String| {
-        if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
-            log::error!("Property line-style can only be used with line graphs");
-            return;
-        }
-
-        match parse_graph_line_style(line_style.as_str()) {
-            Ok(ls) => widget.set_property("line-style", ls),
-            Err(e) => {
-                log::error!("Failed to parse graph line-style property: {}", e);
-                return;
-            }
-        };
-    });
-
-    // flip-x - whether the x axis should go from high to low
-    bind_property!(&props, "flip_x", get_bool_prop, None, [widget], |flip_x: bool| {
-        widget.set_property("flip-x", flip_x);
-    });
-
-    // flip-y - whether the y axis should go from high to low
-    bind_property!(&props, "flip_y", get_bool_prop, None, [widget], |flip_y: bool| {
-        widget.set_property("flip-y", flip_y);
-    });
-
-    // vertical - if set to true, the x and y axes will be exchanged
-    bind_property!(&props, "vertical", get_bool_prop, None, [widget], |vertical: bool| {
-        widget.set_property("vertical", vertical);
-    });
-
-    bind_property!(&props, "animate", get_bool_prop, None, [widget], |animate: bool| {
-        widget.set_property("animate", animate);
-    });
+    let mut widget = GraphWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Graph");
-    widget_registry.widgets.insert(id, widget.clone().upcast());
-    resolve_widget_attrs(&widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(widget)
+    Ok(gtk_widget)
 }
 
 pub(super) fn build_gtk_progress(
