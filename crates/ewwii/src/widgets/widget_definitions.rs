@@ -651,7 +651,205 @@ impl EwwiiWidget for ProgressWidget {
 
 // IMAGE here
 // BUTTON here
-// LABEL here
+
+#[derive(Default)]
+struct LabelWidget {
+    gtk_widget: gtk4::Label,
+    text: Rc<RefCell<Option<String>>>,
+    markup: Rc<RefCell<Option<String>>>,
+    truncate: Rc<RefCell<bool>>,
+    limit_width: Rc<RefCell<i32>>,
+    truncate_left: Rc<RefCell<bool>>,
+    show_truncated: Rc<RefCell<bool>>,
+    unindent: Rc<RefCell<bool>>,
+}
+
+impl LabelWidget {
+    fn render_widget(&self) {
+        if let Some(text) = self.current_text.borrow() {
+            let t = if self.show_truncated.borrow() {
+                if self.limit_width.borrow() == i32::MAX {
+                    gtk_widget.set_max_width_chars(-1);
+                } else {
+                    gtk_widget.set_max_width_chars(self.limit_width);
+                }
+                apply_ellipsize_settings(
+                    &gtk_widget,
+                    self.truncate.borrow(),
+                    self.limit_width.borrow(),
+                    self.truncate_left.borrow(),
+                    self.show_truncated.borrow(),
+                );
+                text.to_string()
+            } else {
+                gtk_widget.set_ellipsize(pango::EllipsizeMode::None);
+                let limit_width = *self.limit_width.borrow() as usize;
+                let char_count = text.chars().count();
+                if char_count > limit_width {
+                    if self.truncate_left {
+                        text.chars().skip(char_count - limit_width).collect()
+                    } else {
+                        text.chars().take(limit_width).collect()
+                    }
+                } else {
+                    text.to_string()
+                }
+            };
+            match unescape::unescape(&t) {
+                Some(unescaped) => {
+                    let final_text =
+                        if self.unindent.borrow() { util::unindent(&unescaped) } else { unescaped };
+                    gtk_widget.set_text(&final_text);
+                }
+                None => {
+                    log::error!("Failed to unescape...");
+                }
+            }
+        } else if let Some(markup) = self.current_markup.borrow() {
+            apply_ellipsize_settings(
+                &gtk_widget,
+                self.truncate.borrow(),
+                self.limit_width.borrow(),
+                self.truncate_left.borrow(),
+                self.show_truncated.borrow(),
+            );
+            gtk_widget.set_markup(markup);
+        }
+    }
+}
+
+impl EwwiiWidget for LabelWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Label::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "text" => {
+                let text = self.text.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget, text], |value: String| {
+                    *text.borrow_mut() = Some(value);
+                });
+            }
+            "markup" => {
+                let markup = self.markup.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget, markup], |value: String| {
+                    *markup.borrow_mut() = Some(value);
+                });
+            }
+            "truncate" => {
+                let truncate = self.truncate.clone();
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget, truncate], |value: bool| {
+                    *truncate.borrow_mut() = value;
+                });
+            }
+            "limit_width" => {
+                let limit_width = self.limit_width.clone();
+                bind_property!(&value, &key, get_i32_prop, [gtk_widget, limit_width], |value: i32| {
+                    *limit_width.borrow_mut() = value;
+                });
+            }
+            "truncate_left" => {
+                let truncate_left = self.truncate_left.clone();
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget, truncate_left], |value: bool| {
+                    *truncate_left.borrow_mut() = value;
+                });
+            }
+            "show_truncated" => {
+                let show_truncated = self.show_truncated.clone();
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget, show_truncated], |value: bool| {
+                    *show_truncated.borrow_mut() = value;
+                });
+            }
+            "unindent" => {
+                let unindent = self.unindent.clone();
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget, unindent], |value: bool| {
+                    *unindent.borrow_mut() = value;
+                });
+            }
+
+
+            // independant props
+            "wrap" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_bool_prop, Some(false), [gtk_widget], |wrap: bool| {
+                    gtk_widget.set_wrap(wrap);
+                });
+            }
+            "gravity" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |grav: String| {
+                        if let Ok(v) = parse_gravity(&grav) {
+                            gtk_widget.pango_context().set_base_gravity(v);
+                        }
+                    }
+                );
+            }
+            "xalign" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                    gtk_widget.set_xalign(v as f32);
+                });
+            }
+            "yalign" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                    gtk_widget.set_yalign(v as f32);
+                });
+            }
+            "justify" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |justify: String| {
+                        if let Ok(v) = parse_justification(&justify) {
+                            gtk_widget.set_justify(v);
+                        }
+                    }
+                );
+            }
+            "wrap_mode" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(
+                    &props,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |wrap: String| {
+                        if let Ok(v) = parse_wrap_mode(&wrap) {
+                            gtk_widget.set_wrap_mode(v);
+                        }
+                    }
+                );
+            }
+            "lines" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_i32_prop, [gtk_widget], |lines: i32| {
+                    gtk_widget.set_lines(lines);
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+
+        self.render_widget();
+    }
+}
 
 #[derive(Default)]
 struct InputWidget {
