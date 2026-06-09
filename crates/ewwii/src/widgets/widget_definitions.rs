@@ -1235,7 +1235,123 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
         }
 }
 
-// SCALE widget here
+#[derive(Default)]
+struct RangeCtrlData {
+    onchange_cmd: String,
+    cmd_timeout: Duration,
+    is_being_dragged: bool,
+    last_set_value: Option<f64>,
+}
+
+#[derive(Default)]
+struct ScaleWidget {
+    gtk_widget: gtk4::Scale,
+    range_dat: Rc<RefCell<RangeCtrlData>>,
+}
+
+impl EwwiiWidget for ScaleWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::Scale::new(
+            gtk4::Orientation::Horizontal,
+            Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0))
+        );
+        *self.range_dat.borrow_mut().range_dat.cmd_timeout = Duration::from_millis(200);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let legacy_controller = EventControllerLegacy::new();
+        // there might be better implementation but
+        // this seems to be the one that works well.
+        legacy_controller.connect_event(glib::clone!(
+            #[strong]
+            scale_dat,
+            move |ctrl, event| {
+                match event.event_type() {
+                    gtk4::gdk::EventType::ButtonPress | gtk4::gdk::EventType::TouchBegin => {
+                        scale_dat.borrow_mut().is_being_dragged = true;
+                    }
+                    gtk4::gdk::EventType::ButtonRelease | gtk4::gdk::EventType::TouchEnd => {
+                        let mut scale_dat_mut = scale_dat.borrow_mut();
+                        scale_dat_mut.is_being_dragged = false;
+
+                        if let Some(widget) = ctrl.widget() {
+                            let value = widget.downcast_ref::<gtk4::Scale>().unwrap().value();
+
+                            if scale_dat_mut.last_set_value.take() != Some(value) {
+                                let cmd_timeout = scale_dat_mut.cmd_timeout;
+                                let onchange_cmd = scale_dat_mut.onchange_cmd.clone();
+                                drop(scale_dat_mut);
+
+                                run_command(cmd_timeout, &onchange_cmd, &[value]);
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                glib::Propagation::Proceed
+            }
+        ));
+
+        self.gtk_widget.add_controller(legacy_controller);
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "orientation" => {
+                bind_property!(&props, &key, get_string_prop, [gtk_widget], |v: String| {
+                    if let Ok(o) = parse_orientation(&v) {
+                        gtk_widget.set_orientation(o)
+                    }
+                });
+            }
+            "flipped" => {
+                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                    gtk_widget.set_inverted(v);
+                });
+            }
+            "marks" => {
+                bind_property!(&props, &key, get_string_prop, [gtk_widget], |marks: String| {
+                    gtk_widget.clear_marks();
+                    for mark in marks.split(',') {
+                        if let Ok(val) = mark.trim().parse() {
+                            gtk_widget.add_mark(val, gtk4::PositionType::Bottom, None);
+                        }
+                    }
+                });
+            }
+            "draw_value" => {
+                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                    gtk_widget.set_draw_value(v);
+                });
+            }
+            "value_pos" => {
+                bind_property!(
+                    &props,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget],
+                    |value_pos: String| {
+                        if let Ok(pos) = parse_position_type(&value_pos) {
+                            gtk_widget.set_value_pos(pos);
+                        }
+                    }
+                );
+            }
+            "round_digits" => {
+                bind_property!(&props, &key, get_i32_prop, [gtk_widget], |v: i32| {
+                    gtk_widget.set_round_digits(v);
+                });
+            }
+            _ => {
+                resolve_range_attrs(&self.gtk_widget.upcast_ref::<gtk4::Range>(), key, value, scale_dat)?;
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
 
 #[derive(Default)]
 struct ScrolledWindowWidget {
@@ -2605,110 +2721,15 @@ pub(super) fn build_gtk_color_chooser(
     Ok(gtk_widget)
 }
 
-pub(super) struct RangeCtrlData {
-    onchange_cmd: String,
-    cmd_timeout: Duration,
-    is_being_dragged: bool,
-    last_set_value: Option<f64>,
-}
-
 pub(super) fn build_gtk_scale(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Scale> {
-    let gtk_widget = gtk4::Scale::new(
-        gtk4::Orientation::Horizontal,
-        Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0)),
-    );
-
-    // only allow changing the value via the value property if the user isn't currently dragging
-    let scale_dat = Rc::new(RefCell::new(RangeCtrlData {
-        onchange_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(16),
-        is_being_dragged: false,
-        last_set_value: None,
-    }));
-    let legacy_controller = EventControllerLegacy::new();
-
-    // there might be better implementation but
-    // this seems to be the one that works well.
-    legacy_controller.connect_event(glib::clone!(
-        #[strong]
-        scale_dat,
-        move |ctrl, event| {
-            match event.event_type() {
-                gtk4::gdk::EventType::ButtonPress | gtk4::gdk::EventType::TouchBegin => {
-                    scale_dat.borrow_mut().is_being_dragged = true;
-                }
-                gtk4::gdk::EventType::ButtonRelease | gtk4::gdk::EventType::TouchEnd => {
-                    let mut scale_dat_mut = scale_dat.borrow_mut();
-                    scale_dat_mut.is_being_dragged = false;
-
-                    if let Some(widget) = ctrl.widget() {
-                        let value = widget.downcast_ref::<gtk4::Scale>().unwrap().value();
-
-                        if scale_dat_mut.last_set_value.take() != Some(value) {
-                            let cmd_timeout = scale_dat_mut.cmd_timeout;
-                            let onchange_cmd = scale_dat_mut.onchange_cmd.clone();
-                            drop(scale_dat_mut);
-
-                            run_command(cmd_timeout, &onchange_cmd, &[value]);
-                        }
-                    }
-                }
-                _ => {}
-            }
-            glib::Propagation::Proceed
-        }
-    ));
-
-    gtk_widget.add_controller(legacy_controller);
-
-    bind_property!(&props, "orientation", get_string_prop, Some("h"), [gtk_widget], |v: String| {
-        if let Ok(o) = parse_orientation(&v) {
-            gtk_widget.set_orientation(o)
-        }
-    });
-
-    bind_property!(&props, "flipped", get_bool_prop, Some(false), [gtk_widget], |v: bool| {
-        gtk_widget.set_inverted(v);
-    });
-
-    bind_property!(&props, "marks", get_string_prop, None, [gtk_widget], |marks: String| {
-        gtk_widget.clear_marks();
-        for mark in marks.split(',') {
-            if let Ok(val) = mark.trim().parse() {
-                gtk_widget.add_mark(val, gtk4::PositionType::Bottom, None);
-            }
-        }
-    });
-
-    bind_property!(&props, "draw_value", get_bool_prop, Some(false), [gtk_widget], |v: bool| {
-        gtk_widget.set_draw_value(v);
-    });
-
-    bind_property!(
-        &props,
-        "value_pos",
-        get_string_prop,
-        None,
-        [gtk_widget],
-        |value_pos: String| {
-            if let Ok(pos) = parse_position_type(&value_pos) {
-                gtk_widget.set_value_pos(pos);
-            }
-        }
-    );
-
-    bind_property!(&props, "round_digits", get_i32_prop, Some(0), [gtk_widget], |v: i32| {
-        gtk_widget.set_round_digits(v);
-    });
-
-    resolve_range_attrs(&props, gtk_widget.upcast_ref::<gtk4::Range>(), scale_dat)?;
+    let mut widget = ScaleWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Scale");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
@@ -2847,34 +2868,44 @@ pub(super) fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: 
 
 /// Shared rage atribute
 pub(super) fn resolve_range_attrs(
-    props: &PropertyMap,
     gtk_widget: &gtk4::Range,
+    key: &str, value: &Property,
     range_dat: Rc<RefCell<RangeCtrlData>>,
 ) -> Result<()> {
-    bind_property!(&props, "min", get_f64_prop, None, [gtk_widget], |min: f64| {
-        gtk_widget.adjustment().set_lower(min);
-    });
-
-    bind_property!(&props, "max", get_f64_prop, None, [gtk_widget], |max: f64| {
-        gtk_widget.adjustment().set_upper(max);
-    });
-
-    // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
-    // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler
-    // and only run on_change when it's caused by manual user input
-    bind_property!(&props, "value", get_f64_prop, None, [gtk_widget, range_dat], |v: f64| {
-        if !range_dat.borrow().is_being_dragged {
-            range_dat.borrow_mut().last_set_value = Some(v);
-            gtk_widget.set_value(v);
+    match key {
+        "min" => {
+            bind_property!(&props, &key, get_f64_prop, [gtk_widget], |min: f64| {
+                gtk_widget.adjustment().set_lower(min);
+            });
         }
-    });
+        "max" => {
+            bind_property!(&props, &key, get_f64_prop, [gtk_widget], |max: f64| {
+                gtk_widget.adjustment().set_upper(max);
+            });
 
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
+        }
+        "value" => {
+            // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
+            // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler
+            // and only run on_change when it's caused by manual user input
+            bind_property!(&props, &key, get_f64_prop, [gtk_widget, range_dat], |v: f64| {
+                if !range_dat.borrow().is_being_dragged {
+                    range_dat.borrow_mut().last_set_value = Some(v);
+                    gtk_widget.set_value(v);
+                }
+            });
 
-    bind_property!(&props, "onchange", get_string_prop, None, [range_dat], |onchange: String| {
-        range_dat.borrow_mut().onchange_cmd = onchange;
-        range_dat.borrow_mut().cmd_timeout = timeout;
-    });
+        }
+        "timeout" => {
+            let new_timeout = get_duration_prop(&value, &key);
+            range_dat.borrow_mut().cmd_timeout = new_timeout;
+        }
+        "onchange" => {
+            bind_property!(&props, "onchange", get_string_prop, [range_dat], |onchange: String| {
+                range_dat.borrow_mut().onchange_cmd = onchange;
+            });
+        }
+    }
 
     Ok(())
 }
