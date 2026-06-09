@@ -226,24 +226,15 @@ impl EwwiiLabel {
         }
     }
 
-    pub fn set_justify(&self, value: u32) {
+    pub fn set_justify(&self, justify: gtk4::Justification) {
         if let Some(label) = self.imp().inner_label.get() {
-            label.set_justify(match value {
-                1 => gtk4::Justification::Right,
-                2 => gtk4::Justification::Center,
-                3 => gtk4::Justification::Fill,
-                _ => gtk4::Justification::Left,
-            });
+            label.set_justify(justify);
         }
     }
 
-    pub fn set_wrap_mode(&self, value: u32) {
+    pub fn set_wrap_mode(&self, mode: pango::WrapMode) {
         if let Some(label) = self.imp().inner_label.get() {
-            label.set_wrap_mode(match value {
-                1 => pango::WrapMode::Char,
-                2 => pango::WrapMode::WordChar,
-                _ => pango::WrapMode::Word,
-            });
+            label.set_wrap_mode(mode);
         }
     }
 }
