@@ -2554,15 +2554,216 @@ pub(super) fn build_gtk_button(
     Ok(gtk_widget)
 }
 
+struct LabelTextParams {
+    truncate: bool,
+    limit_width: i32,
+    truncate_left: bool,
+    show_truncated: bool,
+    unindent: bool,
+}
+
 pub(super) fn build_gtk_label(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Label> {
-    let mut widget = LabelWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = gtk4::Label::new(None);
+
+    let current_text: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
+    let current_markup: Rc<RefCell<Option<String>>> = Rc::new(RefCell::new(None));
+
+    let has_text = props.get("text").is_some();
+    let has_markup = props.get("markup").is_some();
+
+    if has_text && has_markup {
+        bail!("Cannot set both 'text' and 'markup' for a label");
+    }
+
+    // Quick Info:
+    // limit_width wouldn't work if show_truncated is true.
+    let truncate_prop = get_bool_prop(&props, "truncate", Some(false))?;
+    let limit_width_prop = get_i32_prop(&props, "limit_width", Some(i32::MAX))?;
+    let truncate_left_prop = get_bool_prop(&props, "truncate_left", Some(false))?;
+    let show_truncated_prop = get_bool_prop(&props, "show_truncated", Some(true))?;
+    let unindent_prop = get_bool_prop(&props, "unindent", Some(true))?;
+
+    let text_params = Rc::new(RefCell::new(LabelTextParams {
+        truncate: truncate_prop.initial_value(),
+        limit_width: limit_width_prop.initial_value(),
+        truncate_left: truncate_left_prop.initial_value(),
+        show_truncated: show_truncated_prop.initial_value(),
+        unindent: unindent_prop.initial_value(),
+    }));
+
+    if has_text {
+        let text_prop = get_string_prop(&props, "text", None)?;
+        *current_text.borrow_mut() = Some(text_prop.initial_value());
+    } else if has_markup {
+        let markup_prop = get_string_prop(&props, "markup", None)?;
+        *current_markup.borrow_mut() = Some(markup_prop.initial_value());
+    } else {
+        bail!("Either 'text' or 'markup' must be set");
+    }
+
+    let re_render = {
+        let gtk_widget = gtk_widget.clone();
+        let current_text = current_text.clone();
+        let current_markup = current_markup.clone();
+        let text_params = text_params.clone();
+        Rc::new(move || {
+            let p = text_params.borrow();
+            if let Some(text) = &*current_text.borrow() {
+                let t = if p.show_truncated {
+                    if p.limit_width == i32::MAX {
+                        gtk_widget.set_max_width_chars(-1);
+                    } else {
+                        gtk_widget.set_max_width_chars(p.limit_width);
+                    }
+                    apply_ellipsize_settings(
+                        &gtk_widget,
+                        p.truncate,
+                        p.limit_width,
+                        p.truncate_left,
+                        p.show_truncated,
+                    );
+                    text.to_string()
+                } else {
+                    gtk_widget.set_ellipsize(pango::EllipsizeMode::None);
+                    let limit_width = p.limit_width as usize;
+                    let char_count = text.chars().count();
+                    if char_count > limit_width {
+                        if p.truncate_left {
+                            text.chars().skip(char_count - limit_width).collect()
+                        } else {
+                            text.chars().take(limit_width).collect()
+                        }
+                    } else {
+                        text.to_string()
+                    }
+                };
+                match unescape::unescape(&t) {
+                    Some(unescaped) => {
+                        let final_text =
+                            if p.unindent { util::unindent(&unescaped) } else { unescaped };
+                        gtk_widget.set_text(&final_text);
+                    }
+                    None => {
+                        log::error!("Failed to unescape...");
+                    }
+                }
+            } else if let Some(markup) = &*current_markup.borrow() {
+                apply_ellipsize_settings(
+                    &gtk_widget,
+                    p.truncate,
+                    p.limit_width,
+                    p.truncate_left,
+                    p.show_truncated,
+                );
+                gtk_widget.set_markup(markup);
+            }
+        })
+    };
+
+    // Single initial render
+    re_render();
+
+    apply_property_watch!(truncate_prop, [text_params, re_render], |v: bool| {
+        text_params.borrow_mut().truncate = v;
+        re_render();
+    });
+    apply_property_watch!(limit_width_prop, [text_params, re_render], |v: i32| {
+        text_params.borrow_mut().limit_width = v;
+        re_render();
+    });
+    apply_property_watch!(truncate_left_prop, [text_params, re_render], |v: bool| {
+        text_params.borrow_mut().truncate_left = v;
+        re_render();
+    });
+    apply_property_watch!(show_truncated_prop, [text_params, re_render], |v: bool| {
+        text_params.borrow_mut().show_truncated = v;
+        re_render();
+    });
+    apply_property_watch!(unindent_prop, [text_params, re_render], |v: bool| {
+        text_params.borrow_mut().unindent = v;
+        re_render();
+    });
+
+    if has_text {
+        let text_prop = get_string_prop(&props, "text", None)?;
+        apply_property_watch!(text_prop, [current_text, re_render], |text: String| {
+            *current_text.borrow_mut() = Some(text);
+            re_render();
+        });
+    } else if has_markup {
+        let markup_prop = get_string_prop(&props, "markup", None)?;
+        apply_property_watch!(markup_prop, [current_markup, re_render], |markup: String| {
+            *current_markup.borrow_mut() = Some(markup);
+            re_render();
+        });
+    }
+
+    // independent properties
+    bind_property!(&props, "wrap", get_bool_prop, Some(false), [gtk_widget], |wrap: bool| {
+        gtk_widget.set_wrap(wrap);
+    });
+
+    // if let Ok(angle) = get_f64_prop(&props, "angle", Some(0.0)) {
+    //     widget.set_angle(angle);
+    // }
+
+    bind_property!(
+        &props,
+        "gravity",
+        get_string_prop,
+        Some("south"),
+        [gtk_widget],
+        |grav: String| {
+            if let Ok(v) = parse_gravity(&grav) {
+                gtk_widget.pango_context().set_base_gravity(v);
+            }
+        }
+    );
+
+    bind_property!(&props, "xalign", get_f64_prop, Some(0.5), [gtk_widget], |v: f64| {
+        gtk_widget.set_xalign(v as f32);
+    });
+
+    bind_property!(&props, "yalign", get_f64_prop, Some(0.5), [gtk_widget], |v: f64| {
+        gtk_widget.set_yalign(v as f32);
+    });
+
+    bind_property!(
+        &props,
+        "justify",
+        get_string_prop,
+        Some("left"),
+        [gtk_widget],
+        |justify: String| {
+            if let Ok(v) = parse_justification(&justify) {
+                gtk_widget.set_justify(v);
+            }
+        }
+    );
+
+    bind_property!(
+        &props,
+        "wrap_mode",
+        get_string_prop,
+        Some("word"),
+        [gtk_widget],
+        |wrap: String| {
+            if let Ok(v) = parse_wrap_mode(&wrap) {
+                gtk_widget.set_wrap_mode(v);
+            }
+        }
+    );
+
+    bind_property!(&props, "lines", get_i32_prop, Some(-1), [gtk_widget], |lines: i32| {
+        gtk_widget.set_lines(lines);
+    });
 
     let id = hash_props_and_type(&props, "Label");
-    widget_registry.widgets.insert(id, Box::new(widget));
+    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
+    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
 
     Ok(gtk_widget)
 }
