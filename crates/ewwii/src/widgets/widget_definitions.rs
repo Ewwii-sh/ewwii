@@ -275,10 +275,10 @@ impl EwwiiWidget for OverlayWidget {
 
         // we have more than one child, we can unwrap
         let first = children.next().unwrap()?;
-        gtk_widget.set_child(Some(&first));
+        self.gtk_widget.set_child(Some(&first));
         for child in children {
             let child = child?;
-            gtk_widget.add_overlay(&child);
+            self.gtk_widget.add_overlay(&child);
         }
 
         self.gtk_widget.clone().upcast()
@@ -319,7 +319,7 @@ impl EwwiiWidget for TooltipWidget {
 
         // The visible child immediately
         let content_widget = build_gtk_widget(&WidgetInput::Node(content_node), widget_registry)?;
-        gtk_widget.append(&content_widget);
+        self.gtk_widget.append(&content_widget);
 
         let tooltip_node = Rc::new(tooltip_node);
         let tooltip_widget = build_gtk_widget(
@@ -328,7 +328,7 @@ impl EwwiiWidget for TooltipWidget {
         )
         .expect("Failed to build tooltip widget");
 
-        gtk_widget.connect_query_tooltip(move |_widget, _x, _y, _keyboard_mode, tooltip| {
+        self.gtk_widget.connect_query_tooltip(move |_widget, _x, _y, _keyboard_mode, tooltip| {
             tooltip.set_custom(Some(&tooltip_widget));
             true
         });
@@ -391,6 +391,7 @@ impl EwwiiWidget for EventBoxWidget {
         }
 
         let controller_data = self.controller.clone();
+        let gtk_widget = self.gtk_widget.clone();
         let hover_controller = EventControllerMotion::new();
         let gesture_controller = GestureClick::new();
         gesture_controller.set_button(0);
@@ -642,21 +643,21 @@ impl EwwiiWidget for EventBoxWidget {
             "onscroll" => {
                 // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
                 let controller_data = self.controller_data.clone();
-                bind_property!(&props, &key, get_string_prop, [controller_data], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onscroll_cmd = v;
                 });
             }
             "onhover" => {
                 // onhover - event to execute when the user hovers over the widget
                 let controller_data = self.controller_data.clone();
-                bind_property!(&props, &key, get_string_prop, [controller_data], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onhover_cmd = v;
                 });
             }
             "onhoverlost" => {
                 // onhoverlost - event to execute when the user loses hover over the widget
                 let controller_data = self.controller_data.clone();
-                bind_property!(&props, &key, get_string_prop, [controller_data], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onhoverlost_cmd = v;
                 });
             }
@@ -664,7 +665,7 @@ impl EwwiiWidget for EventBoxWidget {
                 // cursor - Cursor to show while hovering
                 let controller_data = self.controller_data.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_string_prop,
                     [controller_data],
@@ -676,7 +677,7 @@ impl EwwiiWidget for EventBoxWidget {
             "ondropped" => {
                 let controller_data = self.controller_data.clone();
                 // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
-                bind_property!(&props, &key, get_string_prop, [controller_data], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().ondropped_cmd = v;
                 });
             }
@@ -684,7 +685,7 @@ impl EwwiiWidget for EventBoxWidget {
                 // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
                 let controller_data = self.controller_data.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_string_prop,
                     [controller_data],
@@ -698,7 +699,7 @@ impl EwwiiWidget for EventBoxWidget {
             "dragvalue" => {
                 let controller_data = self.controller_data();
                 // dragvalue - URI that will be provided when dragging from this widget
-                bind_property!(&props, &key, get_string_prop, [controller_data], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().dragvalue = Some(v);
                 });
 
@@ -706,7 +707,7 @@ impl EwwiiWidget for EventBoxWidget {
             "onclick" => {
                 let controller_data = self.controller_data.clone();
                 // onclick - command to run when the widget is clicked
-                bind_property!(&props, &key, get_string_prop, [controller_data], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onclick_cmd = v;
                 });
 
@@ -715,7 +716,7 @@ impl EwwiiWidget for EventBoxWidget {
                 let controller_data = self.controller_data.clone();
                 // onmiddleclick - command to run when the widget is middleclicked
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_string_prop,
                     [controller_data],
@@ -728,7 +729,7 @@ impl EwwiiWidget for EventBoxWidget {
                 let controller_data = self.controller_data.clone();
                 // onrightclick - command to run when the widget is rightclicked
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_string_prop,
                     [controller_data],
@@ -740,7 +741,7 @@ impl EwwiiWidget for EventBoxWidget {
             "onkeypress" => {
                 let controller_data = self.controller_data.clone();
                 // onkeypress - command to run when a key is pressed
-                bind_property!(&props, &key, get_string_prop, [controller_data], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onkeypress_cmd = Some(v);
                 });
             }
@@ -748,7 +749,7 @@ impl EwwiiWidget for EventBoxWidget {
                 // onkeyrelease - command to run when a key is released
                 let controller_data = self.controller_data.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_string_prop,
                     [controller_data],
@@ -759,7 +760,7 @@ impl EwwiiWidget for EventBoxWidget {
             }
             "orientation" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [gtk_widget], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     if let Ok(o) = parse_orientation(&v) {
                         gtk_widget.set_orientation(o);
                     }
@@ -1048,13 +1049,13 @@ impl EwwiiWidget for GraphWidget {
 
             }
             "min" => {
-                bind_property!(&props, &key, get_f64_prop, [min_val, apply_min_max], |v: f64| {
+                bind_property!(&value, &key, get_f64_prop, [min_val, apply_min_max], |v: f64| {
                     *min_val.borrow_mut() = v;
                     apply_min_max();
                 });
             }
             "max" => {
-                bind_property!(&props, &key, get_f64_prop, [max_val, apply_min_max], |v: f64| {
+                bind_property!(&value, &key, get_f64_prop, [max_val, apply_min_max], |v: f64| {
                     *max_val.borrow_mut() = v;
                     apply_min_max();
                 });
@@ -1062,13 +1063,13 @@ impl EwwiiWidget for GraphWidget {
             }
             "dynamic" => {
                 let widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, [widget], |dynamic: bool| {
+                bind_property!(&value, &key, get_bool_prop, [widget], |dynamic: bool| {
                     widget.set_property("dynamic", dynamic);
                 });
             }
             "type" => {
                 let widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [widget], |render_type: String| {
+                bind_property!(&value, &key, get_string_prop, [widget], |render_type: String| {
                     match parse_graph_render_type(render_type.as_str()) {
                         Ok(t) => widget.set_property("type", t),
                         Err(e) => {
@@ -1080,7 +1081,7 @@ impl EwwiiWidget for GraphWidget {
             }
             "thickness" => {
                 let widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_f64_prop, [widget], |thickness: f64| {
+                bind_property!(&value, &key, get_f64_prop, [widget], |thickness: f64| {
                     if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
                         log::error!("Property thickness can only be used with line graphs");
                         return;
@@ -1091,7 +1092,7 @@ impl EwwiiWidget for GraphWidget {
             }
             "line_style" => {
                 let widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [widget], |line_style: String| {
+                bind_property!(&value, &key, get_string_prop, [widget], |line_style: String| {
                     if !matches!(widget.property("type"), RenderType::Line | RenderType::StepLine) {
                         log::error!("Property line-style can only be used with line graphs");
                         return;
@@ -1109,14 +1110,14 @@ impl EwwiiWidget for GraphWidget {
             "flip_x" => {
                 let widget = self.gtk_widget.clone();
                 // flip-x - whether the x axis should go from high to low
-                bind_property!(&props, &key, get_bool_prop, [widget], |flip_x: bool| {
+                bind_property!(&value, &key, get_bool_prop, [widget], |flip_x: bool| {
                     widget.set_property("flip-x", flip_x);
                 });
             }
             "flip_y" => {
                 let widget = self.gtk_widget.clone();
                 // flip-y - whether the y axis should go from high to low
-                bind_property!(&props, &key, get_bool_prop, [widget], |flip_y: bool| {
+                bind_property!(&value, &key, get_bool_prop, [widget], |flip_y: bool| {
                     widget.set_property("flip-y", flip_y);
                 });
 
@@ -1124,13 +1125,13 @@ impl EwwiiWidget for GraphWidget {
             "vertical" => {
                 let widget = self.gtk_widget.clone();
                 // vertical - if set to true, the x and y axes will be exchanged
-                bind_property!(&props, &key, get_bool_prop, [widget], |vertical: bool| {
+                bind_property!(&value, &key, get_bool_prop, [widget], |vertical: bool| {
                     widget.set_property("vertical", vertical);
                 });
             }
             "animate" => {
                 let widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, [widget], |animate: bool| {
+                bind_property!(&value, &key, get_bool_prop, [widget], |animate: bool| {
                     widget.set_property("animate", animate);
                 });
             }
@@ -1219,7 +1220,7 @@ impl EwwiiWidget for ImageWidget {
             "path" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_string_prop,
                     [gtk_widget],
@@ -1231,7 +1232,7 @@ impl EwwiiWidget for ImageWidget {
             "image_width" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_i32_prop,
                     [gtk_widget],
@@ -1243,7 +1244,7 @@ impl EwwiiWidget for ImageWidget {
             "image_height" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_i32_prop,
                     [gtk_widget],
@@ -1255,7 +1256,7 @@ impl EwwiiWidget for ImageWidget {
             "preserve_aspect_ratio" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_bool_prop,
                     [gtk_widget],
@@ -1267,7 +1268,7 @@ impl EwwiiWidget for ImageWidget {
             "fill_svg" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_string_prop,
                     [gtk_widget],
@@ -1279,7 +1280,7 @@ impl EwwiiWidget for ImageWidget {
             "content_fit" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_string_prop,
                     [gtk_widget],
@@ -1292,7 +1293,7 @@ impl EwwiiWidget for ImageWidget {
             }
             "can_shrink" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_can_shrink(v);
                 });
             }
@@ -1429,7 +1430,7 @@ impl EwwiiWidget for ButtonWidget {
             }
             "label" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [gtk_widget], |lbl: String| {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |lbl: String| {
                     gtk_widget.set_label(&lbl);
                 });
             }
@@ -1566,19 +1567,19 @@ impl EwwiiWidget for LabelWidget {
             }
             "xalign" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |v: f64| {
                     gtk_widget.set_xalign(v as f32);
                 });
             }
             "yalign" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |v: f64| {
                     gtk_widget.set_yalign(v as f32);
                 });
             }
             "justify" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [gtk_widget], |justify: String| {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |justify: String| {
                     if let Ok(v) = parse_justification(&justify) {
                         gtk_widget.set_justify(v);
                     }
@@ -1586,7 +1587,7 @@ impl EwwiiWidget for LabelWidget {
             }
             "wrap_mode" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [gtk_widget], |wrap: String| {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |wrap: String| {
                     if let Ok(v) = parse_wrap_mode(&wrap) {
                         gtk_widget.set_wrap_mode(v);
                     }
@@ -1594,7 +1595,7 @@ impl EwwiiWidget for LabelWidget {
             }
             "lines" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_i32_prop, [gtk_widget], |lines: i32| {
+                bind_property!(&value, &key, get_i32_prop, [gtk_widget], |lines: i32| {
                     gtk_widget.set_lines(lines);
                 });
             }
@@ -2061,7 +2062,7 @@ impl EwwiiWidget for CheckboxWidget {
         match key {
             "checked" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |checked: bool| {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |checked: bool| {
                     gtk_widget.set_active(checked);
                 });
             }
@@ -2125,7 +2126,7 @@ impl EwwiiWidget for ColorButtonWidget {
             "use_alpha" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_bool_prop,
                     [gtk_widget],
@@ -2185,7 +2186,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
             "use_alpha" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_bool_prop,
                     [gtk_widget],
@@ -2278,7 +2279,7 @@ impl EwwiiWidget for ScaleWidget {
         match key {
             "orientation" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [gtk_widget], |v: String| {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     if let Ok(o) = parse_orientation(&v) {
                         gtk_widget.set_orientation(o)
                     }
@@ -2286,13 +2287,13 @@ impl EwwiiWidget for ScaleWidget {
             }
             "flipped" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_inverted(v);
                 });
             }
             "marks" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [gtk_widget], |marks: String| {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |marks: String| {
                     gtk_widget.clear_marks();
                     for mark in marks.split(',') {
                         if let Ok(val) = mark.trim().parse() {
@@ -2303,13 +2304,13 @@ impl EwwiiWidget for ScaleWidget {
             }
             "draw_value" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_draw_value(v);
                 });
             }
             "value_pos" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [gtk_widget], |value_pos: String| {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |value_pos: String| {
                     if let Ok(pos) = parse_position_type(&value_pos) {
                         gtk_widget.set_value_pos(pos);
                     }
@@ -2317,7 +2318,7 @@ impl EwwiiWidget for ScaleWidget {
             }
             "round_digits" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_i32_prop, [gtk_widget], |v: i32| {
+                bind_property!(&value, &key, get_i32_prop, [gtk_widget], |v: i32| {
                     gtk_widget.set_round_digits(v);
                 });
             }
@@ -2366,7 +2367,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
         match key {
             "hscroll" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_hscrollbar_policy(if v {
                         gtk4::PolicyType::Automatic
                     } else {
@@ -2376,7 +2377,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
             }
             "vscroll" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_vscrollbar_policy(if v {
                         gtk4::PolicyType::Automatic
                     } else {
@@ -2387,7 +2388,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
             "propagate_natural_height" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_bool_prop,
                     [gtk_widget],
