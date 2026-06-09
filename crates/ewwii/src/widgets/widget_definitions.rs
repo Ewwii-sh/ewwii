@@ -742,7 +742,143 @@ impl EwwiiWidget for ProgressWidget {
 }
 
 // IMAGE here
-// BUTTON here
+
+#[derive(Default)]
+struct ButtonWidget {
+    gtk_widget: gtk4::Button,
+    onclick_cmd: Rc<RefCell<String>>,
+    onmiddleclick_cmd: Rc<RefCell<String>>,
+    onrightclick_cmd: Rc<RefCell<String>>,
+    cmd_timeout: Rc<RefCell<Duration>>,
+}
+
+impl EwwiiWidget for ButtonWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::ButtonWidget::new();
+        *self.cmd_timeout.borrow_mut() = Duration::from_millis(200);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let key_controller = EventControllerKey::new();
+        let gesture_controller = GestureClick::new();
+
+        gesture_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
+        gesture_controller.set_button(0);
+
+        gtk_widget.connect_clicked(glib::clone!(
+            #[weak]
+            gtk_widget,
+            move |_| {
+                gtk_widget.emit_activate();
+            }
+        ));
+
+        let press_coords = Rc::new(Cell::new((0.0f64, 0.0f64)));
+
+        gesture_controller.connect_pressed(glib::clone!(
+            #[strong]
+            press_coords,
+            move |_, _, x, y| {
+                press_coords.set((x, y));
+            }
+        ));
+
+        gesture_controller.connect_released(glib::clone!(
+            #[weak]
+            gtk_widget,
+            #[strong]
+            controller_data,
+            #[strong]
+            press_coords,
+            move |gesture, _, x, y| {
+                gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
+
+                // return if press is long
+                let (px, py) = press_coords.get();
+                let dist = ((x - px).powi(2) + (y - py).powi(2)).sqrt();
+                if dist > 8.0 {
+                    return;
+                }
+
+                let controller = controller_data.borrow();
+                let button = gesture.current_button();
+
+                match button {
+                    1 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                    2 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onmiddleclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    3 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onrightclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    _ => {}
+                }
+            }
+        ));
+
+        key_controller.connect_key_released(glib::clone!(
+            #[strong]
+            controller_data,
+            move |_, _, code, _| {
+                let controller = controller_data.borrow();
+                match code {
+                    // return
+                    36 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                    // space
+                    65 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                    _ => {}
+                }
+            }
+        ));
+
+        self.gtk_widget.add_controller(key_controller);
+        self.gtk_widget.add_controller(gesture_controller);
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "timeout" => {
+                let new_timeout = get_duration_prop(&value, &key);
+                *self.timeout.borrow_mut() = new_timeout;
+            }
+            "onclick" => {
+                let onclick_cmd = self.onclick_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onclick_cmd], |v: String| {
+                    *onclick_cmd.borrow_mut() = Some(v);
+                });
+            }
+            "onmiddleclick" => {
+                let onmiddleclick_cmd = self.onmiddleclick_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onmiddleclick_cmd], |v: String| {
+                    *onmiddleclick_cmd.borrow_mut() = Some(v);
+                });
+            }
+            "onrightclick" => {
+                let onrightclick_cmd = self.onrightclick_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onrightclick_cmd], |v: String| {
+                    *onrightclick_cmd.borrow_mut() = Some(v);
+                });
+            }
+            "label" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_string_prop, [gtk_widget], |lbl: String| {
+                    gtk_widget.set_label(&lbl);
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
 
 #[derive(Default)]
 struct LabelWidget {
@@ -2412,129 +2548,12 @@ pub(super) fn build_gtk_button(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Button> {
-    let gtk_widget = gtk4::Button::new();
-
-    let controller_data = Rc::new(RefCell::new(GtkButtonCtrlData {
-        onclick_cmd: String::new(),
-        onmiddleclick_cmd: String::new(),
-        onrightclick_cmd: String::new(),
-        cmd_timeout: Duration::from_millis(200),
-    }));
-
-    let key_controller = EventControllerKey::new();
-    let gesture_controller = GestureClick::new();
-    gesture_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    gesture_controller.set_button(0);
-
-    gtk_widget.connect_clicked(glib::clone!(
-        #[weak]
-        gtk_widget,
-        move |_| {
-            gtk_widget.emit_activate();
-        }
-    ));
-
-    let press_coords = Rc::new(Cell::new((0.0f64, 0.0f64)));
-
-    gesture_controller.connect_pressed(glib::clone!(
-        #[strong]
-        press_coords,
-        move |_, _, x, y| {
-            press_coords.set((x, y));
-        }
-    ));
-
-    gesture_controller.connect_released(glib::clone!(
-        #[weak]
-        gtk_widget,
-        #[strong]
-        controller_data,
-        #[strong]
-        press_coords,
-        move |gesture, _, x, y| {
-            gtk_widget.unset_state_flags(gtk4::StateFlags::ACTIVE);
-
-            // return if press is long
-            let (px, py) = press_coords.get();
-            let dist = ((x - px).powi(2) + (y - py).powi(2)).sqrt();
-            if dist > 8.0 {
-                return;
-            }
-
-            let controller = controller_data.borrow();
-            let button = gesture.current_button();
-
-            match button {
-                1 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
-                2 => run_command(
-                    controller.cmd_timeout,
-                    &controller.onmiddleclick_cmd,
-                    &[] as &[&str],
-                ),
-                3 => run_command(
-                    controller.cmd_timeout,
-                    &controller.onrightclick_cmd,
-                    &[] as &[&str],
-                ),
-                _ => {}
-            }
-        }
-    ));
-
-    key_controller.connect_key_released(glib::clone!(
-        #[strong]
-        controller_data,
-        move |_, _, code, _| {
-            let controller = controller_data.borrow();
-            match code {
-                // return
-                36 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
-                // space
-                65 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
-                _ => {}
-            }
-        }
-    ));
-
-    gtk_widget.add_controller(key_controller);
-    gtk_widget.add_controller(gesture_controller);
-
-    controller_data.borrow_mut().cmd_timeout =
-        get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-
-    bind_property!(&props, "onclick", get_string_prop, None, [controller_data], |v: String| {
-        controller_data.borrow_mut().onclick_cmd = v;
-    });
-
-    bind_property!(
-        &props,
-        "onmiddleclick",
-        get_string_prop,
-        None,
-        [controller_data],
-        |v: String| {
-            controller_data.borrow_mut().onmiddleclick_cmd = v;
-        }
-    );
-
-    bind_property!(
-        &props,
-        "onrightclick",
-        get_string_prop,
-        None,
-        [controller_data],
-        |v: String| {
-            controller_data.borrow_mut().onrightclick_cmd = v;
-        }
-    );
-
-    bind_property!(&props, "label", get_string_prop, None, [gtk_widget], |lbl: String| {
-        gtk_widget.set_label(&lbl);
-    });
+    let mut widget = ButtonWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "Button");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
+
     Ok(gtk_widget)
 }
 
