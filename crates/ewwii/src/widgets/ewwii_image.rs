@@ -12,7 +12,7 @@ mod imp {
     #[derive(Properties)]
     #[properties(wrapper_type = super::EwwiiImage)]
     pub struct EwwiiImage {
-        inner_image: OnceCell<gtk4::Picture>,
+        pub inner_image: OnceCell<gtk4::Picture>,
 
         #[property(get, set = Self::set_path)]
         path: RefCell<String>,
@@ -41,6 +41,7 @@ mod imp {
                 image_height: Cell::new(-1),
                 preserve_aspect_ratio: Cell::new(true),
                 fill_svg: RefCell::new(String::new()),
+                gif_animation_source: RefCell::new(None),
             }
         }
     }
@@ -227,13 +228,13 @@ impl EwwiiImage {
     }
 
     pub fn set_content_fit(&self, fit: gtk4::ContentFit) {
-        if let Some(image) = self.inner_image.get() {
+        if let Some(image) = self.imp().inner_image.get() {
             image.set_content_fit(fit);
         }
     }
 
     pub fn set_can_shrink(&self, shrink: bool) {
-        if let Some(image) = self.inner_image.get() {
+        if let Some(image) = self.imp().inner_image.get() {
             image.set_can_shrink(shrink);
         }
     }

@@ -13,7 +13,7 @@ mod imp {
     #[derive(Properties)]
     #[properties(wrapper_type = super::EwwiiLabel)]
     pub struct EwwiiLabel {
-        inner_label: OnceCell<gtk4::Label>,
+        pub inner_label: OnceCell<gtk4::Label>,
 
         #[property(get, set = Self::set_text, nullable)]
         text: RefCell<Option<String>>,
@@ -203,31 +203,31 @@ impl EwwiiLabel {
     }
 
     pub fn set_wrap(&self, value: bool) {
-        if let Some(label) = self.inner_label.get() {
+        if let Some(label) = self.imp().inner_label.get() {
             label.set_wrap(value);
         }
     }
 
     pub fn set_xalign(&self, value: f32) {
-        if let Some(label) = self.inner_label.get() {
+        if let Some(label) = self.imp().inner_label.get() {
             label.set_xalign(value);
         }
     }
 
     pub fn set_yalign(&self, value: f32) {
-        if let Some(label) = self.inner_label.get() {
+        if let Some(label) = self.imp().inner_label.get() {
             label.set_yalign(value);
         }
     }
 
     pub fn set_lines(&self, value: i32) {
-        if let Some(label) = self.inner_label.get() {
+        if let Some(label) = self.imp().inner_label.get() {
             label.set_lines(value);
         }
     }
 
     pub fn set_justify(&self, value: u32) {
-        if let Some(label) = self.inner_label.get() {
+        if let Some(label) = self.imp().inner_label.get() {
             label.set_justify(match value {
                 1 => gtk4::Justification::Right,
                 2 => gtk4::Justification::Center,
@@ -238,7 +238,7 @@ impl EwwiiLabel {
     }
 
     pub fn set_wrap_mode(&self, value: u32) {
-        if let Some(label) = self.inner_label.get() {
+        if let Some(label) = self.imp().inner_label.get() {
             label.set_wrap_mode(match value {
                 1 => pango::WrapMode::Char,
                 2 => pango::WrapMode::WordChar,
