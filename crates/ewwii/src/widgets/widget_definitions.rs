@@ -1128,6 +1128,181 @@ impl EwwiiWidget for CheckboxWidget {
     }
 }
 
+#[derive(Default)]
+struct ColorButtonWidget {
+    gtk_widget: gtk4::ColorButton,
+    timeout: Rc<RefCell<Duration>>,
+    onchange_cmd: Rc<RefCell<String>>,
+}
+
+impl EwwiiWidget for ColorButtonWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::ColorButton::builder().build();
+        *self.timeout.borrow_mut() = Duration::from_millis(200);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let timeout  = self.timeout.clone();
+        let onchange_cmd = self.onchange_cmd.clone();
+        gtk_widget.connect_color_set(glib::clone!(
+            #[strong]
+            onchange_cmd,
+            #[strong]
+            timeout,
+            move |widget| {
+                run_command(timeout, &onchange_cmd.borrow(), &[widget.rgba()]);
+            }
+        ));
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "use_alpha" => {
+                bind_property!(&props, &key, get_bool_prop, None, [gtk_widget], |use_alpha: bool| {
+                    gtk_widget.set_use_alpha(use_alpha);
+                });
+            }
+            "timeout" => {
+                let new_timeout = get_duration_prop(&value, &key);
+                *self.timeout.borrow_mut() = new_timeout;
+            }
+            "onchange" => {
+                let onchange_cmd = self.onchange_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onchange_cmd], |v: String| {
+                    *onchange_cmd.borrow_mut() = v;
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+}
+
+
+#[derive(Default)]
+struct ColorChooserEwwiiWidget {
+    gtk_widget: gtk4::ColorChooserWidget,
+    timeout: Rc<RefCell<Duration>>,
+    onchange_cmd: Rc<RefCell<String>>,
+}
+
+impl EwwiiWidget for ColorChooserEwwiiWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::ColorChooserWidget::new();
+        *self.timeout.borrow_mut() = Duration::from_millis(200);
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let timeout  = self.timeout.clone();
+        let onchange_cmd = self.onchange_cmd.clone();
+        gtk_widget.connect_color_activated(glib::clone!(
+            #[strong]
+            onchange_cmd,
+            move |_a, color| {
+                run_command(timeout, &onchange_cmd.borrow(), &[*color]);
+            }
+        ));
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "use_alpha" => {
+                bind_property!(&props, &key, get_bool_prop, None, [gtk_widget], |use_alpha: bool| {
+                    gtk_widget.set_use_alpha(use_alpha);
+                });
+            }
+            "timeout" => {
+                let new_timeout = get_duration_prop(&value, &key);
+                *self.timeout.borrow_mut() = new_timeout;
+            }
+            "onchange" => {
+                let onchange_cmd = self.onchange_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onchange_cmd], |v: String| {
+                    *onchange_cmd.borrow_mut() = v;
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+}
+
+// SCALE widget here
+
+#[derive(Default)]
+struct ScrolledWindowWidget {
+    gtk_widget: gtk4::ScrolledWindow,
+}
+
+impl EwwiiWidget for ScrolledWindowWidget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+        self.gtk_widget = gtk4::ScrolledWindow::new();
+
+        for (key, value) in props {
+            self.update_prop(key, value.clone());
+        }
+
+        let count = children.len();
+
+        if count < 1 {
+            bail!("scrolled window must contain exactly one element");
+        } else if count > 1 {
+            bail!("scrolled window contain exactly one element, but got more");
+        }
+
+        let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+        let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
+        gtk_widget.set_child(Some(&child_widget));
+
+        self.gtk_widget.clone().upcast()
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "hscroll" => {
+                bind_property!(&props, &key, get_bool_prop, Some(true), [gtk_widget], |v: bool| {
+                    gtk_widget.set_hscrollbar_policy(if v {
+                        gtk4::PolicyType::Automatic
+                    } else {
+                        gtk4::PolicyType::Never
+                    });
+                });
+            }
+            "vscroll" => {
+                bind_property!(&props, &key, get_bool_prop, Some(true), [gtk_widget], |v: bool| {
+                    gtk_widget.set_vscrollbar_policy(if v {
+                        gtk4::PolicyType::Automatic
+                    } else {
+                        gtk4::PolicyType::Never
+                    });
+                });
+            }
+            "propagate_natural_height" => {
+                bind_property!(
+                    &props,
+                    &key,
+                    get_bool_prop,
+                    None,
+                    [gtk_widget],
+                    |natural_height: bool| {
+                        gtk_widget.set_propagate_natural_height(natural_height);
+                    }
+                );
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+}
+
 // === Widget Registration === //
 
 pub(super) fn build_gtk_box(
@@ -2403,39 +2578,15 @@ pub(super) fn build_gtk_checkbox(
     Ok(gtk_widget)
 }
 
-#[allow(deprecated)]
 pub(super) fn build_gtk_color_button(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorButton> {
-    let gtk_widget = gtk4::ColorButton::builder().build();
-
-    // use-alpha - bool to wether or not use alpha
-    bind_property!(&props, "use_alpha", get_bool_prop, None, [gtk_widget], |use_alpha: bool| {
-        gtk_widget.set_use_alpha(use_alpha);
-    });
-
-    // timeout - timeout of the command. Default: "200ms"
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-
-    // onchange - runs the code when the color was selected
-    let onchange_cmd = Rc::new(RefCell::new(String::new()));
-
-    bind_property!(&props, "onchange", get_string_prop, None, [onchange_cmd], |v: String| {
-        *onchange_cmd.borrow_mut() = v;
-    });
-
-    gtk_widget.connect_color_set(glib::clone!(
-        #[strong]
-        onchange_cmd,
-        move |widget| {
-            run_command(timeout, &onchange_cmd.borrow(), &[widget.rgba()]);
-        }
-    ));
+    let mut widget = ColorButtonWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "ColorButton");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
@@ -2445,34 +2596,11 @@ pub(super) fn build_gtk_color_chooser(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorChooserWidget> {
-    let gtk_widget = gtk4::ColorChooserWidget::new();
-
-    // use-alpha - bool to wether or not use alpha
-    bind_property!(&props, "use_alpha", get_bool_prop, None, [gtk_widget], |use_alpha: bool| {
-        gtk_widget.set_use_alpha(use_alpha);
-    });
-
-    // timeout - timeout of the command. Default: "200ms"
-    let timeout = get_duration_prop(&props, "timeout", Some(Duration::from_millis(200)))?;
-
-    // onchange - runs the code when the color was selected
-    let onchange_cmd = Rc::new(RefCell::new(String::new()));
-
-    bind_property!(&props, "onchange", get_string_prop, None, [onchange_cmd], |v: String| {
-        *onchange_cmd.borrow_mut() = v;
-    });
-
-    gtk_widget.connect_color_activated(glib::clone!(
-        #[strong]
-        onchange_cmd,
-        move |_a, color| {
-            run_command(timeout, &onchange_cmd.borrow(), &[*color]);
-        }
-    ));
+    let mut widget = ColorChooserEwwiiWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "ColorChooser");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
@@ -2590,49 +2718,11 @@ pub(super) fn build_gtk_scrolledwindow(
     children: &Vec<WidgetNode>,
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ScrolledWindow> {
-    let gtk_widget = gtk4::ScrolledWindow::new();
-
-    bind_property!(&props, "hscroll", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_hscrollbar_policy(if v {
-            gtk4::PolicyType::Automatic
-        } else {
-            gtk4::PolicyType::Never
-        });
-    });
-    bind_property!(&props, "vscroll", get_bool_prop, Some(true), [gtk_widget], |v: bool| {
-        gtk_widget.set_vscrollbar_policy(if v {
-            gtk4::PolicyType::Automatic
-        } else {
-            gtk4::PolicyType::Never
-        });
-    });
-
-    bind_property!(
-        &props,
-        "propagate_natural_height",
-        get_bool_prop,
-        None,
-        [gtk_widget],
-        |natural_height: bool| {
-            gtk_widget.set_propagate_natural_height(natural_height);
-        }
-    );
-
-    let count = children.len();
-
-    if count < 1 {
-        bail!("scrolled window must contain exactly one element");
-    } else if count > 1 {
-        bail!("scrolled window contain exactly one element, but got more");
-    }
-
-    let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
-    let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
-    gtk_widget.set_child(Some(&child_widget));
+    let mut widget = ScrolledWindowWidget::default();
+    let gtk_widget = widget.build(props, children);
 
     let id = hash_props_and_type(&props, "ScrolledWindow");
-    widget_registry.widgets.insert(id, gtk_widget.clone().upcast());
-    resolve_widget_attrs(&gtk_widget.clone().upcast::<gtk4::Widget>(), &props)?;
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget)
 }
