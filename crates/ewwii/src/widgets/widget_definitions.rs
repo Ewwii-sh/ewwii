@@ -733,68 +733,110 @@ impl EwwiiWidget for LabelWidget {
         match key {
             "text" => {
                 let text = self.text.clone();
-                bind_property!(&value, &key, get_string_prop, [gtk_widget, text], |value: String| {
-                    *text.borrow_mut() = Some(value);
-                });
+                bind_property!(
+                    &value,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget, text],
+                    |value: String| {
+                        *text.borrow_mut() = Some(value);
+                    }
+                );
             }
             "markup" => {
                 let markup = self.markup.clone();
-                bind_property!(&value, &key, get_string_prop, [gtk_widget, markup], |value: String| {
-                    *markup.borrow_mut() = Some(value);
-                });
+                bind_property!(
+                    &value,
+                    &key,
+                    get_string_prop,
+                    [gtk_widget, markup],
+                    |value: String| {
+                        *markup.borrow_mut() = Some(value);
+                    }
+                );
             }
             "truncate" => {
                 let truncate = self.truncate.clone();
-                bind_property!(&value, &key, get_bool_prop, [gtk_widget, truncate], |value: bool| {
-                    *truncate.borrow_mut() = value;
-                });
+                bind_property!(
+                    &value,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget, truncate],
+                    |value: bool| {
+                        *truncate.borrow_mut() = value;
+                    }
+                );
             }
             "limit_width" => {
                 let limit_width = self.limit_width.clone();
-                bind_property!(&value, &key, get_i32_prop, [gtk_widget, limit_width], |value: i32| {
-                    *limit_width.borrow_mut() = value;
-                });
+                bind_property!(
+                    &value,
+                    &key,
+                    get_i32_prop,
+                    [gtk_widget, limit_width],
+                    |value: i32| {
+                        *limit_width.borrow_mut() = value;
+                    }
+                );
             }
             "truncate_left" => {
                 let truncate_left = self.truncate_left.clone();
-                bind_property!(&value, &key, get_bool_prop, [gtk_widget, truncate_left], |value: bool| {
-                    *truncate_left.borrow_mut() = value;
-                });
+                bind_property!(
+                    &value,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget, truncate_left],
+                    |value: bool| {
+                        *truncate_left.borrow_mut() = value;
+                    }
+                );
             }
             "show_truncated" => {
                 let show_truncated = self.show_truncated.clone();
-                bind_property!(&value, &key, get_bool_prop, [gtk_widget, show_truncated], |value: bool| {
-                    *show_truncated.borrow_mut() = value;
-                });
+                bind_property!(
+                    &value,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget, show_truncated],
+                    |value: bool| {
+                        *show_truncated.borrow_mut() = value;
+                    }
+                );
             }
             "unindent" => {
                 let unindent = self.unindent.clone();
-                bind_property!(&value, &key, get_bool_prop, [gtk_widget, unindent], |value: bool| {
-                    *unindent.borrow_mut() = value;
-                });
+                bind_property!(
+                    &value,
+                    &key,
+                    get_bool_prop,
+                    [gtk_widget, unindent],
+                    |value: bool| {
+                        *unindent.borrow_mut() = value;
+                    }
+                );
             }
-
 
             // independant props
             "wrap" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_bool_prop, Some(false), [gtk_widget], |wrap: bool| {
-                    gtk_widget.set_wrap(wrap);
-                });
-            }
-            "gravity" => {
-                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
                     &props,
                     &key,
-                    get_string_prop,
+                    get_bool_prop,
+                    Some(false),
                     [gtk_widget],
-                    |grav: String| {
-                        if let Ok(v) = parse_gravity(&grav) {
-                            gtk_widget.pango_context().set_base_gravity(v);
-                        }
+                    |wrap: bool| {
+                        gtk_widget.set_wrap(wrap);
                     }
                 );
+            }
+            "gravity" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&props, &key, get_string_prop, [gtk_widget], |grav: String| {
+                    if let Ok(v) = parse_gravity(&grav) {
+                        gtk_widget.pango_context().set_base_gravity(v);
+                    }
+                });
             }
             "xalign" => {
                 let gtk_widget = self.gtk_widget.clone();
@@ -810,31 +852,19 @@ impl EwwiiWidget for LabelWidget {
             }
             "justify" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(
-                    &props,
-                    &key,
-                    get_string_prop,
-                    [gtk_widget],
-                    |justify: String| {
-                        if let Ok(v) = parse_justification(&justify) {
-                            gtk_widget.set_justify(v);
-                        }
+                bind_property!(&props, &key, get_string_prop, [gtk_widget], |justify: String| {
+                    if let Ok(v) = parse_justification(&justify) {
+                        gtk_widget.set_justify(v);
                     }
-                );
+                });
             }
             "wrap_mode" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(
-                    &props,
-                    &key,
-                    get_string_prop,
-                    [gtk_widget],
-                    |wrap: String| {
-                        if let Ok(v) = parse_wrap_mode(&wrap) {
-                            gtk_widget.set_wrap_mode(v);
-                        }
+                bind_property!(&props, &key, get_string_prop, [gtk_widget], |wrap: String| {
+                    if let Ok(v) = parse_wrap_mode(&wrap) {
+                        gtk_widget.set_wrap_mode(v);
                     }
-                );
+                });
             }
             "lines" => {
                 let gtk_widget = self.gtk_widget.clone();
@@ -911,15 +941,9 @@ impl EwwiiWidget for InputWidget {
                 });
             }
             "placeholder" => {
-                bind_property!(
-                    &value,
-                    &key,
-                    get_string_prop,
-                    [gtk_widget],
-                    |value: String| {
-                        gtk_widget.set_placeholder_text(Some(&value));
-                    }
-                );
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |value: String| {
+                    gtk_widget.set_placeholder_text(Some(&value));
+                });
             }
             "password" => {
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |password: bool| {
@@ -1113,7 +1137,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
                         })
                     };
 
-            apply_items();
+                    apply_items();
 
                     for (i, item) in items.into_iter().enumerate() {
                         apply_property_watch!(item, [current_items, apply_items], |v: String| {
@@ -1122,7 +1146,6 @@ impl EwwiiWidget for ComboBoxTextWidget {
                         });
                     }
                 }
-
             }
             "timeout" => {
                 let new_timeout = get_duration_prop(&value, &key);
@@ -1138,7 +1161,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
             }
         }
-     }
+    }
 }
 
 #[derive(Default)]
@@ -1165,7 +1188,6 @@ impl EwwiiWidget for ExpanderWidget {
         let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
         gtk_widget.set_child(Some(&child_widget));
 
-
         self.gtk_widget.clone().upcast()
     }
 
@@ -1179,8 +1201,7 @@ impl EwwiiWidget for ExpanderWidget {
             "expanded" => {
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |expanded: bool| {
                     gtk_widget.set_expanded(expanded);
-            });
-
+                });
             }
             _ => {
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
@@ -1188,7 +1209,6 @@ impl EwwiiWidget for ExpanderWidget {
         }
     }
 }
-
 
 #[derive(Default)]
 struct RevealerWidget {
@@ -1211,10 +1231,12 @@ impl EwwiiWidget for RevealerWidget {
                 gtk_widget.set_child(Some(&child_widget));
             }
             n => {
-                return Err(anyhow!("A revealer must only have a maximum of 1 child but got: {}", n));
+                return Err(anyhow!(
+                    "A revealer must only have a maximum of 1 child but got: {}",
+                    n
+                ));
             }
         }
-
 
         self.gtk_widget.clone().upcast()
     }
@@ -1238,7 +1260,6 @@ impl EwwiiWidget for RevealerWidget {
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |reveal: bool| {
                     gtk_widget.set_reveal_child(reveal);
                 });
-
             }
             "timeout" => {
                 let duration = get_duration_prop(&value, &key, Some(Duration::from_millis(500)))?;
@@ -1270,7 +1291,7 @@ impl EwwiiWidget for CheckboxWidget {
 
         let timeout = self.timeout.clone();
         let onchecked_cmd = self.onchecked_cmd.clone();
-        let onunchecked_cmd = self.onunchecked_cmd.clone()
+        let onunchecked_cmd = self.onunchecked_cmd.clone();
 
         self.gtk_widget.connect_toggled(glib::clone!(
             #[strong]
@@ -1290,7 +1311,6 @@ impl EwwiiWidget for CheckboxWidget {
                 );
             }
         ));
-
 
         self.gtk_widget.clone().upcast()
     }
@@ -1342,7 +1362,7 @@ impl EwwiiWidget for ColorButtonWidget {
             self.update_prop(key, value.clone());
         }
 
-        let timeout  = self.timeout.clone();
+        let timeout = self.timeout.clone();
         let onchange_cmd = self.onchange_cmd.clone();
         gtk_widget.connect_color_set(glib::clone!(
             #[strong]
@@ -1360,9 +1380,16 @@ impl EwwiiWidget for ColorButtonWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "use_alpha" => {
-                bind_property!(&props, &key, get_bool_prop, None, [gtk_widget], |use_alpha: bool| {
-                    gtk_widget.set_use_alpha(use_alpha);
-                });
+                bind_property!(
+                    &props,
+                    &key,
+                    get_bool_prop,
+                    None,
+                    [gtk_widget],
+                    |use_alpha: bool| {
+                        gtk_widget.set_use_alpha(use_alpha);
+                    }
+                );
             }
             "timeout" => {
                 let new_timeout = get_duration_prop(&value, &key);
@@ -1378,8 +1405,8 @@ impl EwwiiWidget for ColorButtonWidget {
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
             }
         }
+    }
 }
-
 
 #[derive(Default)]
 struct ColorChooserEwwiiWidget {
@@ -1397,7 +1424,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
             self.update_prop(key, value.clone());
         }
 
-        let timeout  = self.timeout.clone();
+        let timeout = self.timeout.clone();
         let onchange_cmd = self.onchange_cmd.clone();
         gtk_widget.connect_color_activated(glib::clone!(
             #[strong]
@@ -1413,9 +1440,16 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "use_alpha" => {
-                bind_property!(&props, &key, get_bool_prop, None, [gtk_widget], |use_alpha: bool| {
-                    gtk_widget.set_use_alpha(use_alpha);
-                });
+                bind_property!(
+                    &props,
+                    &key,
+                    get_bool_prop,
+                    None,
+                    [gtk_widget],
+                    |use_alpha: bool| {
+                        gtk_widget.set_use_alpha(use_alpha);
+                    }
+                );
             }
             "timeout" => {
                 let new_timeout = get_duration_prop(&value, &key);
@@ -1431,6 +1465,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
             }
         }
+    }
 }
 
 #[derive(Default)]
@@ -1451,7 +1486,7 @@ impl EwwiiWidget for ScaleWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = gtk4::Scale::new(
             gtk4::Orientation::Horizontal,
-            Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0))
+            Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0)),
         );
         *self.range_dat.borrow_mut().range_dat.cmd_timeout = Duration::from_millis(200);
 
@@ -1526,17 +1561,11 @@ impl EwwiiWidget for ScaleWidget {
                 });
             }
             "value_pos" => {
-                bind_property!(
-                    &props,
-                    &key,
-                    get_string_prop,
-                    [gtk_widget],
-                    |value_pos: String| {
-                        if let Ok(pos) = parse_position_type(&value_pos) {
-                            gtk_widget.set_value_pos(pos);
-                        }
+                bind_property!(&props, &key, get_string_prop, [gtk_widget], |value_pos: String| {
+                    if let Ok(pos) = parse_position_type(&value_pos) {
+                        gtk_widget.set_value_pos(pos);
                     }
-                );
+                });
             }
             "round_digits" => {
                 bind_property!(&props, &key, get_i32_prop, [gtk_widget], |v: i32| {
@@ -1544,7 +1573,12 @@ impl EwwiiWidget for ScaleWidget {
                 });
             }
             _ => {
-                resolve_range_attrs(&self.gtk_widget.upcast_ref::<gtk4::Range>(), key, value, scale_dat)?;
+                resolve_range_attrs(
+                    &self.gtk_widget.upcast_ref::<gtk4::Range>(),
+                    key,
+                    value,
+                    scale_dat,
+                )?;
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
             }
         }
@@ -1615,6 +1649,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
             }
         }
+    }
 }
 
 // === Widget Registration === //
@@ -3067,7 +3102,8 @@ pub(super) fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: 
 /// Shared rage atribute
 pub(super) fn resolve_range_attrs(
     gtk_widget: &gtk4::Range,
-    key: &str, value: &Property,
+    key: &str,
+    value: &Property,
     range_dat: Rc<RefCell<RangeCtrlData>>,
 ) -> Result<()> {
     match key {
@@ -3080,7 +3116,6 @@ pub(super) fn resolve_range_attrs(
             bind_property!(&props, &key, get_f64_prop, [gtk_widget], |max: f64| {
                 gtk_widget.adjustment().set_upper(max);
             });
-
         }
         "value" => {
             // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
@@ -3092,7 +3127,6 @@ pub(super) fn resolve_range_attrs(
                     gtk_widget.set_value(v);
                 }
             });
-
         }
         "timeout" => {
             let new_timeout = get_duration_prop(&value, &key);
