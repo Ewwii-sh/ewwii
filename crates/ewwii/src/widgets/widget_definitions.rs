@@ -210,7 +210,7 @@ impl EwwiiWidget for BoxWidget {
         self.gtk_widget.set_homogeneous(true);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         for child in children {
@@ -261,7 +261,7 @@ impl EwwiiWidget for OverlayWidget {
         self.gtk_widget = gtk4::Overlay::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let count = children.len();
@@ -304,7 +304,7 @@ impl EwwiiWidget for TooltipWidget {
         self.gtk_widget.set_has_tooltip(true);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let count = children.len();
@@ -387,7 +387,7 @@ impl EwwiiWidget for EventBoxWidget {
         *self.controller.borrow_mut().cmd_timeout = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let controller_data = self.controller.clone();
@@ -637,7 +637,7 @@ impl EwwiiWidget for EventBoxWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
                 *self.controller.borrow_mut().cmd_timeout = new_timeout;
             }
             "onscroll" => {
@@ -797,7 +797,7 @@ impl EwwiiWidget for FlowBoxWidget {
             move |_, flow_child: &gtk4::FlowBoxChild| {
                 if let Some(child) = flow_child.child() {
                     let widget_name = child.widget_name();
-                    run_command(cmd_timeout, &onaccept_cmd, &[widget_name]);
+                    run_command(*cmd_timeout.borrow(), &onaccept_cmd, &[widget_name]);
                 } else {
                     log::error!("Failed to get the child of FlowBoxChild.");
                 }
@@ -805,7 +805,7 @@ impl EwwiiWidget for FlowBoxWidget {
         ));
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let mut index = 0;
@@ -856,7 +856,7 @@ impl EwwiiWidget for FlowBoxWidget {
                 });
             }
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
                 *self.cmd_timeout.borrow_mut() = new_timeout;
             }
             "onaccept" => {
@@ -881,7 +881,7 @@ impl EwwiiWidget for StackWidget {
         self.gtk_widget = gtk4::Stack::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         if children.is_empty() {
@@ -935,11 +935,11 @@ struct CircularProgressWidget {
 }
 
 impl EwwiiWidget for CircularProgressWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = CircProg::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         self.gtk_widget.clone().upcast()
@@ -1002,11 +1002,11 @@ struct GraphWidget {
 }
 
 impl EwwiiWidget for GraphWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = Graph::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         self.gtk_widget.clone().upcast()
@@ -1158,11 +1158,11 @@ struct ProgressWidget {
 }
 
 impl EwwiiWidget for ProgressWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = gtk4::ProgressBar::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         self.gtk_widget.clone().upcast()
@@ -1219,7 +1219,7 @@ impl EwwiiWidget for ImageWidget {
         self.gtk_widget = ImageWidget::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         self.gtk_widget.clone().upcast()
@@ -1329,7 +1329,7 @@ impl EwwiiWidget for ButtonWidget {
         *self.cmd_timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let key_controller = EventControllerKey::new();
@@ -1414,7 +1414,7 @@ impl EwwiiWidget for ButtonWidget {
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onclick" => {
@@ -1454,11 +1454,11 @@ struct LabelWidget {
 }
 
 impl EwwiiWidget for LabelWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = EwwiiLabel::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         self.gtk_widget.clone().upcast()
@@ -1629,7 +1629,7 @@ impl EwwiiWidget for InputWidget {
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let timeout = self.timeout.clone();
@@ -1643,7 +1643,7 @@ impl EwwiiWidget for InputWidget {
             onchange_cmd,
             move |widget| {
                 if let Some(cmd) = &*onchange_cmd.borrow() {
-                    run_command(timeout, cmd, &[widget.text().to_string()]);
+                    run_command(*timeout.borrow(), cmd, &[widget.text().to_string()]);
                 }
             }
         ));
@@ -1655,7 +1655,7 @@ impl EwwiiWidget for InputWidget {
             onaccept_cmd,
             move |widget| {
                 if let Some(cmd) = &*onaccept_cmd.borrow() {
-                    run_command(timeout, cmd, &[widget.text().to_string()]);
+                    run_command(*timeout.borrow(), cmd, &[widget.text().to_string()]);
                 }
             }
         ));
@@ -1684,7 +1684,7 @@ impl EwwiiWidget for InputWidget {
                 });
             }
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -1719,7 +1719,7 @@ impl EwwiiWidget for CalendarWidget {
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let timeout = self.timeout.clone();
@@ -1735,7 +1735,7 @@ impl EwwiiWidget for CalendarWidget {
             calendar,
             move |w| {
                 if let Some(cmd) = &*onclick_cmd.borrow() {
-                    run_command(timeout, cmd, &[calendar.day(), calendar.month(), calendar.year()]);
+                    run_command(*timeout.borrow(), cmd, &[calendar.day(), calendar.month(), calendar.year()]);
                 }
             }
         ));
@@ -1808,7 +1808,7 @@ impl EwwiiWidget for CalendarWidget {
                 );
             }
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onclick" => {
@@ -1837,7 +1837,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let onchange_cmd = self.onchange_cmd.clone();
@@ -1850,7 +1850,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
             timeout,
             move |combo_box| {
                 run_command(
-                    timeout,
+                    *timeout.borrow(),
                     &onchange_cmd.borrow(),
                     &[combo_box.active_text().unwrap_or_else(|| "".into())],
                 );
@@ -1890,7 +1890,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
                 }
             }
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -1916,7 +1916,7 @@ impl EwwiiWidget for ExpanderWidget {
         self.gtk_widget = gtk4::Expander::new(None);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let count = children.len();
@@ -1964,7 +1964,7 @@ impl EwwiiWidget for RevealerWidget {
         self.gtk_widget = gtk4::Revealer::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         match children.len() {
@@ -2032,7 +2032,7 @@ impl EwwiiWidget for CheckboxWidget {
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let timeout = self.timeout.clone();
@@ -2051,7 +2051,7 @@ impl EwwiiWidget for CheckboxWidget {
                 let onuncheck = &onunchecked_cmd.borrow();
 
                 run_command(
-                    timeout,
+                    *timeout.borrow(),
                     if widget.is_active() { &oncheck } else { &onuncheck },
                     &[] as &[&str],
                 );
@@ -2070,7 +2070,7 @@ impl EwwiiWidget for CheckboxWidget {
                 });
             }
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchecked" => {
@@ -2106,7 +2106,7 @@ impl EwwiiWidget for ColorButtonWidget {
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let timeout = self.timeout.clone();
@@ -2117,7 +2117,7 @@ impl EwwiiWidget for ColorButtonWidget {
             #[strong]
             timeout,
             move |widget| {
-                run_command(timeout, &onchange_cmd.borrow(), &[widget.rgba()]);
+                run_command(*timeout.borrow(), &onchange_cmd.borrow(), &[widget.rgba()]);
             }
         ));
 
@@ -2139,7 +2139,7 @@ impl EwwiiWidget for ColorButtonWidget {
                 );
             }
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration.from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -2168,7 +2168,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let timeout = self.timeout.clone();
@@ -2177,7 +2177,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
             #[strong]
             onchange_cmd,
             move |_a, color| {
-                run_command(timeout, &onchange_cmd.borrow(), &[*color]);
+                run_command(*timeout.borrow(), &onchange_cmd.borrow(), &[*color]);
             }
         ));
 
@@ -2199,7 +2199,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
                 );
             }
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key);
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration.from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -2238,7 +2238,7 @@ impl EwwiiWidget for ScaleWidget {
         *self.range_dat.borrow_mut().range_dat.cmd_timeout = Duration::from_millis(200);
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let scale_dat = self.range_dat.clone();
@@ -2350,7 +2350,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
         self.gtk_widget = gtk4::ScrolledWindow::new();
 
         for (key, value) in props {
-            self.update_prop(key, value.clone());
+            self.update_prop(key, value);
         }
 
         let count = children.len();
@@ -2422,7 +2422,7 @@ pub(super) fn build_gtk_box(
     let id = hash_props_and_type(&props, "Box");
     registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Box>().expect("Box was expected to be a box."))
 }
 
 pub(super) fn build_gtk_overlay(
@@ -2436,7 +2436,7 @@ pub(super) fn build_gtk_overlay(
     let id = hash_props_and_type(&props, "Overlay");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Overlay>().expect("Overlay was expected to be an overlay."))
 }
 
 pub(super) fn build_tooltip(
@@ -2450,7 +2450,7 @@ pub(super) fn build_tooltip(
     let id = hash_props_and_type(&props, "Tooltip");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Box>().expect("Tooltip was expected to be a Box."))
 }
 
 pub(super) fn build_event_box(
@@ -2463,7 +2463,7 @@ pub(super) fn build_event_box(
 
     let id = hash_props_and_type(&props, "EventBox");
     widget_registry.widgets.insert(id, Box::new(widget));
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Box>().expect("Eventbox was expected to be a Box."))
 }
 
 pub(crate) fn build_gtk_flowbox(
@@ -2477,7 +2477,7 @@ pub(crate) fn build_gtk_flowbox(
     let id = hash_props_and_type(&props, "FlowBox");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::FlowBox>().expect("FlowBox was expected to be a FlowBox."))
 }
 
 pub(super) fn build_gtk_stack(
@@ -2491,7 +2491,7 @@ pub(super) fn build_gtk_stack(
     let id = hash_props_and_type(&props, "Stack");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Stack>().expect("Stack was expected to be a stack."))
 }
 
 pub(super) fn build_circular_progress_bar(
@@ -2504,7 +2504,7 @@ pub(super) fn build_circular_progress_bar(
     let id = hash_props_and_type(&props, "CircularProgress");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<CircProg>().expect("CircularProgress was expected to be a CircularProgress."))
 }
 
 pub(super) fn build_graph(
@@ -2517,7 +2517,7 @@ pub(super) fn build_graph(
     let id = hash_props_and_type(&props, "Graph");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<Graph>().expect("Graph was expected to be a Graph"))
 }
 
 pub(super) fn build_gtk_progress(
@@ -2530,20 +2530,20 @@ pub(super) fn build_gtk_progress(
     let id = hash_props_and_type(&props, "Progress");
     registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::ProgressBar>().expect("ProgressBar was expected to be a ProgressBar."))
 }
 
 pub(super) fn build_image(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
-) -> Result<gtk4::Picture> {
-    let mut widget = EwwiiWidget::default();
+) -> Result<EwwiiImage> {
+    let mut widget = ImageWidget::default();
     let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Image");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<EwwiiImage>().expect("EwwiiImage was expected to be EwwiiImage"))
 }
 
 pub(super) fn build_gtk_button(
@@ -2556,20 +2556,20 @@ pub(super) fn build_gtk_button(
     let id = hash_props_and_type(&props, "Button");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Button>().expect("Button was expected to be a Button"))
 }
 
 pub(super) fn build_gtk_label(
     props: &PropertyMap,
     widget_registry: &mut WidgetRegistry,
-) -> Result<gtk4::Label> {
+) -> Result<EwwiiLabel> {
     let mut widget = LabelWidget::default();
     let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Label");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<EwwiiLabel>().expect("EwwiiLabel was expected to be EwwiiLabel"))
 }
 
 pub(super) fn build_gtk_input(
@@ -2582,7 +2582,7 @@ pub(super) fn build_gtk_input(
     let id = hash_props_and_type(&props, "Input");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Entry>().expect("Entry was expected to be an Entry"))
 }
 
 pub(super) fn build_gtk_calendar(
@@ -2595,7 +2595,7 @@ pub(super) fn build_gtk_calendar(
     let id = hash_props_and_type(&props, "Calendar");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Calendar>().expect("Calendar was expected to be a Calendar"))
 }
 
 pub(super) fn build_gtk_combo_box_text(
@@ -2608,14 +2608,14 @@ pub(super) fn build_gtk_combo_box_text(
     let id = hash_props_and_type(&props, "ComboBoxText");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::ComboBoxText>().expect("ComboBoxText was expected to be a ComboBoxText"))
 }
 
 // Doesn't require `EwwiiWidget` trait
 // because its a special non-widget thingy.
 pub(super) fn build_gtk_ui_file(props: &PropertyMap) -> Result<gtk4::Widget> {
-    let path = unwrap_static("file", get_string_prop(&props, "file", None)?);
-    let main_id = unwrap_static("id", get_string_prop(&props, "id", None)?);
+    let path = unwrap_static("file", get_string_prop(&props, "file")?);
+    let main_id = unwrap_static("id", get_string_prop(&props, "id")?);
 
     if !std::path::Path::new(&path).exists() {
         return Err(anyhow::anyhow!("UI file not found: {}", path));
@@ -2640,7 +2640,7 @@ pub(super) fn build_gtk_expander(
 
     let id = hash_props_and_type(&props, "Expander");
     widget_registry.widgets.insert(id, Box::new(widget));
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Expander>().expect("Expander was expected to be an Expander"))
 }
 
 pub(super) fn build_gtk_revealer(
@@ -2654,7 +2654,7 @@ pub(super) fn build_gtk_revealer(
     let id = hash_props_and_type(&props, "Revealer");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Revealer>().expect("Revealer was expected to be a Revealer"))
 }
 
 pub(super) fn build_gtk_checkbox(
@@ -2667,7 +2667,7 @@ pub(super) fn build_gtk_checkbox(
     let id = hash_props_and_type(&props, "Checkbox");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::CheckButton>().expect("CheckButton was expected to be a CheckButton"))
 }
 
 pub(super) fn build_gtk_color_button(
@@ -2680,7 +2680,7 @@ pub(super) fn build_gtk_color_button(
     let id = hash_props_and_type(&props, "ColorButton");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::ColorButton>().expect("ColorButton was expected to be a ColorButton"))
 }
 
 pub(super) fn build_gtk_color_chooser(
@@ -2693,7 +2693,7 @@ pub(super) fn build_gtk_color_chooser(
     let id = hash_props_and_type(&props, "ColorChooser");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::ColorChooserWidget>().expect("ColorChooserWidget was expected to be a ColorChooserWidget"))
 }
 
 pub(super) fn build_gtk_scale(
@@ -2706,7 +2706,7 @@ pub(super) fn build_gtk_scale(
     let id = hash_props_and_type(&props, "Scale");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::Scale>().expect("Scale was expected to be a Scale"))
 }
 
 pub(super) fn build_gtk_scrolledwindow(
@@ -2720,7 +2720,7 @@ pub(super) fn build_gtk_scrolledwindow(
     let id = hash_props_and_type(&props, "ScrolledWindow");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget)
+    Ok(gtk_widget.downcast::<gtk4::ScrolledWindow>().expect("ScrolledWindow was expected to be a ScrolledWindow"))
 }
 
 // commented out because i dont think its needed...
@@ -2871,7 +2871,7 @@ pub(super) fn resolve_range_attrs(
             });
         }
         "timeout" => {
-            let new_timeout = get_duration_prop(&value, &key);
+            let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
             range_dat.borrow_mut().cmd_timeout = new_timeout;
         }
         "onchange" => {
@@ -2879,6 +2879,7 @@ pub(super) fn resolve_range_attrs(
                 range_dat.borrow_mut().onchange_cmd = onchange;
             });
         }
+        _ => {}
     }
 
     Ok(())
