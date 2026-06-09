@@ -776,25 +776,28 @@ impl EwwiiWidget for EventBoxWidget {
 #[derive(Default)]
 struct FlowBoxWidget {
     gtk_widget: gtk4::FlowBox,
-    onaccept_cmd: String,
-    cmd_timeout: Duration,
+    onaccept_cmd: Rc<RefCell<String>>,
+    cmd_timeout: Rc<RefCell<Duration>>,
 }
 
 impl EwwiiWidget for FlowBoxWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
         self.gtk_widget = gtk4::FlowBox::new();
-        self.cmd_timeout = Duration::from_millis(200);
+        *self.cmd_timeout.borrow_mut() = Duration::from_millis(200);
         self.gtk_widget.set_homogeneous(true);
+
+        let onaccept_cmd = self.onaccept_cmd.clone();
+        let cmd_timeout = self.cmd_timeout.clone();
 
         self.gtk_widget.connect_child_activated(glib::clone!(
             #[strong]
-            controller_data,
+            onaccept_cmd,
+            #[strong]
+            cmd_timeout,
             move |_, flow_child: &gtk4::FlowBoxChild| {
-                let controller = controller_data.borrow();
-
                 if let Some(child) = flow_child.child() {
                     let widget_name = child.widget_name();
-                    run_command(controller.cmd_timeout, &controller.onaccept_cmd, &[widget_name]);
+                    run_command(cmd_timeout, &onaccept_cmd, &[widget_name]);
                 } else {
                     log::error!("Failed to get the child of FlowBoxChild.");
                 }
@@ -810,7 +813,7 @@ impl EwwiiWidget for FlowBoxWidget {
         for child in children {
             let child_widget =
                 build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
-            gtk_widget.insert(&child_widget, index);
+            self.gtk_widget.insert(&child_widget, index);
             index += 1;
         }
 
@@ -839,6 +842,7 @@ impl EwwiiWidget for FlowBoxWidget {
                 });
             }
             "space_evenly" => {
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_homogeneous(v);
                 });
@@ -850,6 +854,10 @@ impl EwwiiWidget for FlowBoxWidget {
                         gtk_widget.set_selection_mode(selection_model);
                     }
                 });
+            }
+            "timeout" => {
+                let new_timeout = get_duration_prop(&value, &key);
+                *self.cmd_timeout.borrow_mut() = new_timeout;
             }
             "onaccept" => {
                 bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
@@ -886,7 +894,7 @@ impl EwwiiWidget for StackWidget {
 
         for (i, child) in children.enumerate() {
             let child = child?;
-            gtk_widget.add_named(&child, Some(&i.to_string()));
+            self.gtk_widget.add_named(&child, Some(&i.to_string()));
         }
 
         self.gtk_widget.clone().upcast()
@@ -1006,9 +1014,9 @@ impl EwwiiWidget for GraphWidget {
 
     fn update_prop(&mut self, key: &str, value: &Property) {
         let apply_min_max = {
-            let widget = widget.clone();
-            let min_val = min_val.clone();
-            let max_val = max_val.clone();
+            let widget = self.gtk_widget.clone();
+            let min_val = self.min_val.clone();
+            let max_val = self.max_val.clone();
             Rc::new(move || {
                 let min = *min_val.borrow();
                 let max = *max_val.borrow();
@@ -1049,12 +1057,14 @@ impl EwwiiWidget for GraphWidget {
 
             }
             "min" => {
+                let min_val = self.min_val.clone();
                 bind_property!(&value, &key, get_f64_prop, [min_val, apply_min_max], |v: f64| {
                     *min_val.borrow_mut() = v;
                     apply_min_max();
                 });
             }
             "max" => {
+                let max_val = self.max_val.clone();
                 bind_property!(&value, &key, get_f64_prop, [max_val, apply_min_max], |v: f64| {
                     *max_val.borrow_mut() = v;
                     apply_min_max();
@@ -1328,13 +1338,9 @@ impl EwwiiWidget for ButtonWidget {
         gesture_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
         gesture_controller.set_button(0);
 
-        gtk_widget.connect_clicked(glib::clone!(
-            #[weak]
-            gtk_widget,
-            move |_| {
-                gtk_widget.emit_activate();
-            }
-        ));
+        self.gtk_widget.connect_clicked(move |button| {
+            button.emit_activate();
+        });
 
         let press_coords = Rc::new(Cell::new((0.0f64, 0.0f64)));
 
@@ -1346,6 +1352,7 @@ impl EwwiiWidget for ButtonWidget {
             }
         ));
 
+        let gtk_widget = self.gtk_widget.clone();
         gesture_controller.connect_released(glib::clone!(
             #[weak]
             gtk_widget,
@@ -1448,7 +1455,7 @@ struct LabelWidget {
 
 impl EwwiiWidget for LabelWidget {
     fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
-        self.gtk_widget = gtk4::EwwiiLabel::new();
+        self.gtk_widget = EwwiiLabel::new();
 
         for (key, value) in props {
             self.update_prop(key, value.clone());
@@ -1465,19 +1472,19 @@ impl EwwiiWidget for LabelWidget {
                     &value,
                     &key,
                     get_string_prop,
-                    [gtk_widget, text],
+                    [gtk_widget],
                     |value: String| {
                         gtk_widget.set_label(Some(value))
                     }
                 );
             }
             "markup" => {
-                let markup = self.markup.clone();
+                let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
                     &value,
                     &key,
                     get_string_prop,
-                    [gtk_widget, markup],
+                    [gtk_widget],
                     |value: String| {
                         gtk_widget.set_markup(Some(value));
                     }
@@ -1489,7 +1496,7 @@ impl EwwiiWidget for LabelWidget {
                     &value,
                     &key,
                     get_bool_prop,
-                    [gtk_widget, truncate],
+                    [gtk_widget],
                     |value: bool| {
                         gtk_widget.set_ellipsize(value);
                     }
@@ -1501,7 +1508,7 @@ impl EwwiiWidget for LabelWidget {
                     &value,
                     &key,
                     get_i32_prop,
-                    [gtk_widget, limit_width],
+                    [gtk_widget],
                     |value: i32| {
                         gtk_widget.set_max_chars(value);
                     }
@@ -1513,7 +1520,7 @@ impl EwwiiWidget for LabelWidget {
                     &value,
                     &key,
                     get_bool_prop,
-                    [gtk_widget, truncate_left],
+                    [gtk_widget],
                     |value: bool| {
                         gtk_widget.set_ellipsize_start(value);
                     }
@@ -1525,7 +1532,7 @@ impl EwwiiWidget for LabelWidget {
                     &value,
                     &key,
                     get_bool_prop,
-                    [gtk_widget, unindent],
+                    [gtk_widget],
                     |value: bool| {
                         gtk_widget.set_unescape(value);
                     }
@@ -1537,7 +1544,7 @@ impl EwwiiWidget for LabelWidget {
                     &value,
                     &key,
                     get_bool_prop,
-                    [gtk_widget, unindent],
+                    [gtk_widget],
                     |value: bool| {
                         gtk_widget.set_unindent(value);
                     }
@@ -1548,7 +1555,7 @@ impl EwwiiWidget for LabelWidget {
             "wrap" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(
-                    &props,
+                    &value,
                     &key,
                     get_bool_prop,
                     [gtk_widget],
@@ -1559,7 +1566,7 @@ impl EwwiiWidget for LabelWidget {
             }
             "gravity" => {
                 let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&props, &key, get_string_prop, [gtk_widget], |grav: String| {
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |grav: String| {
                     if let Ok(v) = parse_gravity(&grav) {
                         gtk_widget.pango_context().set_base_gravity(v);
                     }
@@ -1627,32 +1634,28 @@ impl EwwiiWidget for InputWidget {
 
         let timeout = self.timeout.clone();
         let onchange_cmd = self.onchange_cmd.clone();
-        let entry = self.gtk_widget.clone();
+        let onaccept_cmd = self.onaccept_cmd.clone();
 
-        gtk_widget.connect_changed(glib::clone!(
+        self.gtk_widget.connect_changed(glib::clone!(
             #[strong]
             timeout,
             #[strong]
             onchange_cmd,
-            #[strong]
-            entry,
             move |widget| {
                 if let Some(cmd) = &*onchange_cmd.borrow() {
-                    run_command(timeout, cmd, &[entry.text().to_string()]);
+                    run_command(timeout, cmd, &[widget.text().to_string()]);
                 }
             }
         ));
 
-        gtk_widget.connect_activate(glib::clone!(
+        self.gtk_widget.connect_activate(glib::clone!(
             #[strong]
             timeout,
             #[strong]
             onaccept_cmd,
-            #[strong]
-            entry,
             move |widget| {
                 if let Some(cmd) = &*onaccept_cmd.borrow() {
-                    run_command(timeout, cmd, &[entry.text().to_string()]);
+                    run_command(timeout, cmd, &[widget.text().to_string()]);
                 }
             }
         ));
@@ -1723,7 +1726,7 @@ impl EwwiiWidget for CalendarWidget {
         let onclick_cmd = self.onclick_cmd.clone();
         let calendar = self.gtk_widget.clone();
 
-        gtk_widget.connect_day_selected(glib::clone!(
+        self.gtk_widget.connect_day_selected(glib::clone!(
             #[strong]
             onclick_cmd,
             #[strong]
@@ -1840,7 +1843,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
         let onchange_cmd = self.onchange_cmd.clone();
         let combo_box = self.gtk_widget.clone();
         let timeout = self.timeout.clone();
-        gtk_widget.connect_changed(glib::clone!(
+        self.gtk_widget.connect_changed(glib::clone!(
             #[strong]
             onchange_cmd,
             #[strong]
@@ -1925,7 +1928,7 @@ impl EwwiiWidget for ExpanderWidget {
 
         let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
         let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
-        gtk_widget.set_child(Some(&child_widget));
+        self.gtk_widget.set_child(Some(&child_widget));
 
         self.gtk_widget.clone().upcast()
     }
@@ -1969,7 +1972,7 @@ impl EwwiiWidget for RevealerWidget {
             1 => {
                 let child_widget =
                     build_gtk_widget(&WidgetInput::Node(children[0].clone()), widget_registry)?;
-                gtk_widget.set_child(Some(&child_widget));
+                self.gtk_widget.set_child(Some(&child_widget));
             }
             n => {
                 return Err(anyhow!(
@@ -2078,8 +2081,8 @@ impl EwwiiWidget for CheckboxWidget {
             }
             "onunchecked" => {
                 let onunchecked_cmd = self.onunchecked_cmd.clone();
-                bind_property!(&value, &key, get_string_prop, [onchecked_cmd], |v: String| {
-                    *onchecked_cmd.borrow_mut() = v;
+                bind_property!(&value, &key, get_string_prop, [onunchecked_cmd], |v: String| {
+                    *onunchecked_cmd.borrow_mut() = v;
                 });
             }
 
@@ -2108,7 +2111,7 @@ impl EwwiiWidget for ColorButtonWidget {
 
         let timeout = self.timeout.clone();
         let onchange_cmd = self.onchange_cmd.clone();
-        gtk_widget.connect_color_set(glib::clone!(
+        self.gtk_widget.connect_color_set(glib::clone!(
             #[strong]
             onchange_cmd,
             #[strong]
@@ -2170,7 +2173,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
 
         let timeout = self.timeout.clone();
         let onchange_cmd = self.onchange_cmd.clone();
-        gtk_widget.connect_color_activated(glib::clone!(
+        self.gtk_widget.connect_color_activated(glib::clone!(
             #[strong]
             onchange_cmd,
             move |_a, color| {
@@ -2237,6 +2240,8 @@ impl EwwiiWidget for ScaleWidget {
         for (key, value) in props {
             self.update_prop(key, value.clone());
         }
+
+        let scale_dat = self.range_dat.clone();
 
         let legacy_controller = EventControllerLegacy::new();
         // there might be better implementation but
@@ -2327,7 +2332,7 @@ impl EwwiiWidget for ScaleWidget {
                     &self.gtk_widget.upcast_ref::<gtk4::Range>(),
                     key,
                     value,
-                    scale_dat,
+                    self.range_dat.clone(),
                 )?;
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
             }
@@ -2358,7 +2363,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
 
         let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
         let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
-        gtk_widget.set_child(Some(&child_widget));
+        self.gtk_widget.set_child(Some(&child_widget));
 
         self.gtk_widget.clone().upcast()
     }
@@ -2494,7 +2499,7 @@ pub(super) fn build_circular_progress_bar(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<CircProg> {
     let mut widget = CircularProgressWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "CircularProgress");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2507,7 +2512,7 @@ pub(super) fn build_graph(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<Graph> {
     let mut widget = GraphWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Graph");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2520,7 +2525,7 @@ pub(super) fn build_gtk_progress(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ProgressBar> {
     let mut widget = ProgressWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Progress");
     registry.widgets.insert(id, Box::new(widget));
@@ -2533,7 +2538,7 @@ pub(super) fn build_image(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Picture> {
     let mut widget = EwwiiWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Image");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2546,7 +2551,7 @@ pub(super) fn build_gtk_button(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Button> {
     let mut widget = ButtonWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Button");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2559,7 +2564,7 @@ pub(super) fn build_gtk_label(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Label> {
     let mut widget = LabelWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Label");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2572,7 +2577,7 @@ pub(super) fn build_gtk_input(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Entry> {
     let mut widget = InputWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Input");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2585,7 +2590,7 @@ pub(super) fn build_gtk_calendar(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Calendar> {
     let mut widget = CalendarWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Calendar");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2598,7 +2603,7 @@ pub(super) fn build_gtk_combo_box_text(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ComboBoxText> {
     let mut widget = ComboBoxTextWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "ComboBoxText");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2657,7 +2662,7 @@ pub(super) fn build_gtk_checkbox(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::CheckButton> {
     let mut widget = CheckboxWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Checkbox");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2670,7 +2675,7 @@ pub(super) fn build_gtk_color_button(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorButton> {
     let mut widget = ColorButtonWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "ColorButton");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2683,7 +2688,7 @@ pub(super) fn build_gtk_color_chooser(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorChooserWidget> {
     let mut widget = ColorChooserEwwiiWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "ColorChooser");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2696,7 +2701,7 @@ pub(super) fn build_gtk_scale(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Scale> {
     let mut widget = ScaleWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, &[]);
 
     let id = hash_props_and_type(&props, "Scale");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2735,12 +2740,12 @@ pub(super) fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: 
 
     match key {
         "visible" => {
-            bind_property!(&props, "visible", get_bool_prop, [gtk_widget], |v: bool| {
+            bind_property!(&value, "visible", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_visible(v);
             });
         }
         "class" => {
-            bind_property!(&props, "class", get_string_prop, [gtk_widget], |class_str: String| {
+            bind_property!(&value, "class", get_string_prop, [gtk_widget], |class_str: String| {
                 // remove all classes
                 for class in gtk_widget.css_classes() {
                     gtk_widget.remove_css_class(&class);
@@ -2753,7 +2758,7 @@ pub(super) fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: 
             });
         }
         "style" => {
-            bind_property!(&props, "style", get_string_prop, [gtk_widget], |style_str: String| {
+            bind_property!(&value, "style", get_string_prop, [gtk_widget], |style_str: String| {
                 let css_provider = gtk4::CssProvider::new();
                 let scss = format!("* {{ {} }}", style_str);
                 if let Ok(compiled) = grass::from_string(scss, &grass::Options::default()) {
@@ -2764,7 +2769,7 @@ pub(super) fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: 
             });
         }
         "css" => {
-            bind_property!(&props, "css", get_string_prop, [gtk_widget], |css_str: String| {
+            bind_property!(&value, "css", get_string_prop, [gtk_widget], |css_str: String| {
                 let css_provider = gtk4::CssProvider::new();
                 if let Ok(compiled) = grass::from_string(css_str, &grass::Options::default()) {
                     css_provider.load_from_string(&compiled);
@@ -2774,61 +2779,61 @@ pub(super) fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: 
             });
         }
         "valign" => {
-            bind_property!(&props, "valign", get_string_prop, [gtk_widget], |valign: String| {
+            bind_property!(&value, "valign", get_string_prop, [gtk_widget], |valign: String| {
                 if let Ok(a) = parse_align(&valign) {
                     gtk_widget.set_valign(a);
                 }
             });
         }
         "halign" => {
-            bind_property!(&props, "halign", get_string_prop, [gtk_widget], |halign: String| {
+            bind_property!(&value, "halign", get_string_prop, [gtk_widget], |halign: String| {
                 if let Ok(a) = parse_align(&halign) {
                     gtk_widget.set_halign(a);
                 }
             });
         }
         "vexpand" => {
-            bind_property!(&props, "vexpand", get_bool_prop, [gtk_widget], |v: bool| {
+            bind_property!(&value, "vexpand", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_vexpand(v);
             });
         }
         "hexpand" => {
-            bind_property!(&props, "hexpand", get_bool_prop, [gtk_widget], |v: bool| {
+            bind_property!(&value, "hexpand", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_hexpand(v);
             });
         }
         "width" => {
-            bind_property!(&props, "width", get_i32_prop, [gtk_widget], |w: i32| {
+            bind_property!(&value, "width", get_i32_prop, [gtk_widget], |w: i32| {
                 gtk_widget.set_width_request(w);
             });
         }
         "height" => {
-            bind_property!(&props, "height", get_i32_prop, [gtk_widget], |h: i32| {
+            bind_property!(&value, "height", get_i32_prop, [gtk_widget], |h: i32| {
                 gtk_widget.set_height_request(h);
             });
         }
         "active" => {
-            bind_property!(&props, "active", get_bool_prop, [gtk_widget], |v: bool| {
+            bind_property!(&value, "active", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_sensitive(v);
             });
         }
         "tooltip" => {
-            bind_property!(&props, "tooltip", get_string_prop, [gtk_widget], |tooltip: String| {
+            bind_property!(&value, "tooltip", get_string_prop, [gtk_widget], |tooltip: String| {
                 gtk_widget.set_tooltip_text(Some(&tooltip));
             });
         }
         "can_target" => {
-            bind_property!(&props, "can_target", get_bool_prop, [gtk_widget], |v: bool| {
+            bind_property!(&value, "can_target", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_can_target(v);
             });
         }
         "focusable" => {
-            bind_property!(&props, "focusable", get_bool_prop, [gtk_widget], |v: bool| {
+            bind_property!(&value, "focusable", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_focusable(v);
             });
         }
         "widget_name" => {
-            bind_property!(&props, "widget_name", get_string_prop, [gtk_widget], |name: String| {
+            bind_property!(&value, "widget_name", get_string_prop, [gtk_widget], |name: String| {
                 gtk_widget.set_widget_name(&name);
             });
         }
@@ -2845,12 +2850,12 @@ pub(super) fn resolve_range_attrs(
 ) -> Result<()> {
     match key {
         "min" => {
-            bind_property!(&props, &key, get_f64_prop, [gtk_widget], |min: f64| {
+            bind_property!(&value, &key, get_f64_prop, [gtk_widget], |min: f64| {
                 gtk_widget.adjustment().set_lower(min);
             });
         }
         "max" => {
-            bind_property!(&props, &key, get_f64_prop, [gtk_widget], |max: f64| {
+            bind_property!(&value, &key, get_f64_prop, [gtk_widget], |max: f64| {
                 gtk_widget.adjustment().set_upper(max);
             });
         }
@@ -2858,7 +2863,7 @@ pub(super) fn resolve_range_attrs(
             // We keep track of the last value that has been set via gtk_widget.set_value (by a change in the value property).
             // We do this so we can detect if the new value came from a scripted change or from a user input from within the value_changed handler
             // and only run on_change when it's caused by manual user input
-            bind_property!(&props, &key, get_f64_prop, [gtk_widget, range_dat], |v: f64| {
+            bind_property!(&value, &key, get_f64_prop, [gtk_widget, range_dat], |v: f64| {
                 if !range_dat.borrow().is_being_dragged {
                     range_dat.borrow_mut().last_set_value = Some(v);
                     gtk_widget.set_value(v);
@@ -2870,7 +2875,7 @@ pub(super) fn resolve_range_attrs(
             range_dat.borrow_mut().cmd_timeout = new_timeout;
         }
         "onchange" => {
-            bind_property!(&props, "onchange", get_string_prop, [range_dat], |onchange: String| {
+            bind_property!(&value, "onchange", get_string_prop, [range_dat], |onchange: String| {
                 range_dat.borrow_mut().onchange_cmd = onchange;
             });
         }
