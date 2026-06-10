@@ -2,7 +2,6 @@ use super::listen::stream_cmd_lines;
 use super::SHUTDOWN_REGISTRY;
 use crate::config::ConfigEngine;
 use ewwii_shared_utils::prop::PropertyMap;
-use ewwii_shared_utils::prop::Property;
 use ewwii_shared_utils::prop_utils::*;
 use gtk4::glib;
 use tokio::sync::mpsc;
@@ -10,22 +9,22 @@ use tokio::sync::watch;
 use tokio::time::sleep;
 
 pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) {
-    const every_key: &str = "every";
-    const on_key: &str = "on";
-    const run_key: &str = "run";
+    const EVERY_KEY: &str = "every";
+    const ON_KEY: &str = "on";
+    const RUN_KEY: &str = "run";
 
-    let every_prop = soft_retreive_prop(props, every_key, "");
-    let on_prop = soft_retreive_prop(props, on_key, "");
+    let every_prop = soft_retreive_prop(props, EVERY_KEY, "");
+    let on_prop = soft_retreive_prop(props, ON_KEY, "");
 
-    let every_sec = match get_duration_prop(&every_prop, every_key) {
+    let every_sec = match get_duration_prop(&every_prop, EVERY_KEY) {
         Ok(d) => Some(d),
         Err(_) => None,
     };
-    let on_cmd = match get_string_prop(&on_prop, on_key) {
-        Ok(c) => Some(unwrap_static(on_key, c)),
+    let on_cmd = match get_string_prop(&on_prop, ON_KEY) {
+        Ok(c) => Some(unwrap_static(ON_KEY, c)),
         Err(_) => None,
     };
-    let run = match get_callback_prop(&props, run_key) {
+    let run = match get_callback_prop(&props, RUN_KEY) {
         Ok(r) => r,
         Err(_) => {
             log::error!("Script requires 'run' property to function.");

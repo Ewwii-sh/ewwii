@@ -1,5 +1,4 @@
 use gtk4::glib;
-use gtk4::pango;
 use gtk4::glib::Properties;
 use glib::Object;
 use gtk4::subclass::prelude::*;
@@ -129,6 +128,7 @@ mod imp {
                 };
                 let iter = pixbuf_animation.iter(None);
                 let frame_pixbuf = iter.pixbuf();
+                #[allow(deprecated)]
                 image.set_pixbuf(Some(&frame_pixbuf));
                 let widget_clone = image.clone();
                 if let Some(delay) = iter.delay_time() {
@@ -136,6 +136,7 @@ mod imp {
                         let now = std::time::SystemTime::now();
                         if iter.advance(now) {
                             let frame_pixbuf = iter.pixbuf();
+                            #[allow(deprecated)]
                             widget_clone.set_pixbuf(Some(&frame_pixbuf));
                         }
                         glib::ControlFlow::Continue
