@@ -171,12 +171,8 @@ impl WidgetRegistry {
             .iter()
             .find(|(_, widget)| widget.widget().widget_name().as_str() == widget_name)
         {
-            if let Some(widget) = self.widgets.get(&id) {
-                set_property_from_string_anywhere(
-                    widget.widget(),
-                    &property_and_value.0,
-                    &property_and_value.1,
-                );
+            if let Some(widget) = self.widgets.get_mut(&id) {
+                widget.update_prop(&property_and_value.0, &Property::String(property_and_value.1))
             }
         }
 
