@@ -70,27 +70,6 @@ pub(super) fn parse_orientation(ori: &str) -> Result<gtk4::Orientation> {
     }
 }
 
-/// Gtk Label
-pub(super) fn apply_ellipsize_settings(
-    label: &gtk4::Label,
-    truncate: bool,
-    limit_width: i32,
-    truncate_left: bool,
-    show: bool,
-) {
-    if (truncate || limit_width != i32::MAX) && show {
-        label.set_max_width_chars(if limit_width == i32::MAX { -1 } else { limit_width });
-        label.set_width_chars(if limit_width == i32::MAX { -1 } else { limit_width });
-        label.set_ellipsize(if truncate_left {
-            pango::EllipsizeMode::Start
-        } else {
-            pango::EllipsizeMode::End
-        });
-    } else {
-        label.set_ellipsize(pango::EllipsizeMode::None);
-    }
-}
-
 pub(super) fn parse_gravity(s: &str) -> Result<pango::Gravity> {
     match s.to_ascii_lowercase().as_str() {
         "south" => Ok(pango::Gravity::South),

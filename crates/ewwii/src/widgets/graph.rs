@@ -652,3 +652,10 @@ impl Graph {
         glib::Object::builder().build()
     }
 }
+
+impl Default for Graph {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+

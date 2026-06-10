@@ -1,6 +1,5 @@
 use super::{api::VarWatcherAPI, SHUTDOWN_REGISTRY};
 use ewwii_shared_utils::prop::PropertyMap;
-use ewwii_shared_utils::prop::Property;
 use ewwii_shared_utils::prop_utils::*;
 use nix::libc;
 use nix::{
@@ -109,11 +108,11 @@ pub async fn stream_cmd_lines(
 }
 
 pub fn handle_listen(var_name: String, props: &PropertyMap, shell: String) {
-    const cmd_key: &str = "cmd";
+    const CMD_KEY: &str = "cmd";
 
-    let cmd_prop = soft_retreive_prop(props, cmd_key, "");
-    let cmd = match get_string_prop(&cmd_prop, cmd_key) {
-        Ok(c) => unwrap_static(cmd_key, c),
+    let cmd_prop = soft_retreive_prop(props, CMD_KEY, "");
+    let cmd = match get_string_prop(&cmd_prop, CMD_KEY) {
+        Ok(c) => unwrap_static(CMD_KEY, c),
         Err(e) => {
             log::warn!("Listen {} cmd property either missing or invalid: {}", var_name, e);
             return;
