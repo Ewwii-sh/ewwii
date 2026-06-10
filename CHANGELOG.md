@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `unescape` property to label widget.
+- Better Nbcl error reporting.
+
+### Changed
+
+- Rendering backend architecture to a more flexible one.
+- Made `widget-control property-update` update the ewwii property instea of the gtk property.
 
 ### Removed
 
