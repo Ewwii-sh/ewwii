@@ -29,11 +29,11 @@ impl NbclConfigParser {
         let source_ast = self
             .engine
             .parse_str(&code)
-            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id)))?;
+            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id, None)))?;
         let (tree, ctx) = self
             .engine
             .evaluate_ast_for_ctx(source_ast)
-            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id)))?;
+            .map_err(|e| anyhow!(errors::handle_nbcl_err(e.err, code, file_id, Some(e.ctx))))?;
 
         // set the context
         self.ctx = Some(ctx);
@@ -47,7 +47,7 @@ impl NbclConfigParser {
         let tree = self
             .engine
             .evaluate(code)
-            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, Some("<dyn_eval>"))))?;
+            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, Some("<dyn_eval>"), None)))?;
 
         // translate the tree
         let mut all_nodes = translate::to_widgetnode(tree.root_nodes)?;
