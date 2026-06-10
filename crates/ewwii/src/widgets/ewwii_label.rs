@@ -1,11 +1,11 @@
-use gtk4::glib;
-use gtk4::pango;
-use gtk4::glib::Properties;
-use glib::Object;
-use gtk4::subclass::prelude::*;
-use gtk4::prelude::*;
-use std::cell::{Cell, OnceCell, RefCell};
 use crate::util;
+use glib::Object;
+use gtk4::glib;
+use gtk4::glib::Properties;
+use gtk4::pango;
+use gtk4::prelude::*;
+use gtk4::subclass::prelude::*;
+use std::cell::{Cell, OnceCell, RefCell};
 
 mod imp {
     use super::*;
@@ -153,7 +153,6 @@ mod imp {
                     text.to_string()
                 };
 
-
                 let content = if self.unescape.get() {
                     match unescape::unescape(&content) {
                         Some(u) => u,
@@ -166,14 +165,9 @@ mod imp {
                     content
                 };
 
-                let content = if self.unindent.get() {
-                    util::unindent(&content)
-                } else {
-                    content
-                };
+                let content = if self.unindent.get() { util::unindent(&content) } else { content };
 
                 label.set_text(&content);
-
             } else if let Some(markup) = self.markup.borrow().as_deref() {
                 label.set_ellipsize(if ellipsize {
                     if ellipsize_start {
