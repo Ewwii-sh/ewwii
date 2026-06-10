@@ -79,14 +79,40 @@ fn parse_i32(s: &str) -> Option<i32> {
 }
 
 // === prop getters ===
+pub fn retreive_prop<'a>(props: &'a PropertyMap, key: &str) -> Result<&'a Property> {
+    if let Some(value) = props.get(key) {
+        Ok(value)
+    } else {
+        anyhow::bail!("Missing required property: '{}'", key);
+    }
+}
+
+pub fn soft_retreive_prop(props: &PropertyMap, key: &str, default: &str) -> Property {
+    if let Some(value) = props.get(key) {
+        value.clone()
+    } else {
+        let value = Property::String(default.to_string());
+        value
+    }
+}
+
+pub fn soft_retreive_prop_bool(props: &PropertyMap, key: &str, default: bool) -> Property {
+    if let Some(value) = props.get(key) {
+        value.clone()
+    } else {
+        let value = Property::Bool(default);
+        value
+    }
+}
+
 pub fn get_callback_prop(props: &PropertyMap, key: &str) -> Result<Callback> {
     if let Some(value) = props.get(key) {
         value
             .as_callback()
             .cloned()
-            .ok_or_else(|| anyhow!("Expected property `{}` to be a callback", key))
+            .ok_or_else(|| anyhow!("Expected property '{}' to be a callback", key))
     } else {
-        anyhow::bail!("Missing required callback property `{}`", key);
+        anyhow::bail!("Missing required callback property '{}'", key);
     }
 }
 
