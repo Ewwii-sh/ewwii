@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `unescape` property to label widget.
 - Better Nbcl error reporting.
+- `register_library` API to plugin API.
 
 ### Changed
 

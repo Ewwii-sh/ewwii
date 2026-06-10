@@ -2,8 +2,7 @@
 //! that are used to redirect API calls to host after serialization
 
 use crate::{
-    ConfigCallbackFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError,
-    PluginValue,
+    ConfigCallbackFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError, PluginValue, LibraryItemFFI, LibraryFnFFI, LibraryItem,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
@@ -50,6 +49,11 @@ pub enum PluginRequest {
         types: Vec<NbclType>,
         return_type: NbclType,
         callback_id: u64,
+    },
+    RegisterLib {
+        id: String,
+        name: String,
+        items: Vec<LibraryItemFFI>,
     },
     RegisterConfigEngine {
         id: String,
@@ -202,6 +206,43 @@ impl EwwiiAPI for HostProxy {
             types,
             return_type,
             callback_id: id,
+        };
+
+        self.call_host(req)
+    }
+
+    fn register_library(
+        &self,
+        name: &str,
+        items: Vec<LibraryItem>,
+    ) {
+        let mut ffi_items = Vec::new();
+        for item in items {
+            let mut functions = HashMap::new();
+
+            for (name, func) in item.functions {
+                let id = rand::random::<u64>();
+                get_callbacks().lock().unwrap().insert(id, CallbackHandler::NativeFn(func.handler));
+
+                let fn_ffi = LibraryFnFFI {
+                    params: func.params,
+                    ret: func.ret,
+                    callback_id: id,
+                };
+                functions.insert(name, fn_ffi);
+            }
+
+            let ffi_item = LibraryItemFFI {
+                name: item.name,
+                functions
+            };
+            ffi_items.push(ffi_item);
+        }
+
+        let req = PluginRequest::RegisterLib {
+            id: self.get_id().to_string(),
+            name: name.to_string(),
+            items: ffi_items,
         };
 
         self.call_host(req)

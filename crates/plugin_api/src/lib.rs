@@ -150,6 +150,12 @@ pub trait EwwiiAPI: Send + Sync {
         handler: NativeFn,
     );
 
+    fn register_library(
+        &self,
+        name: &str,
+        items: Vec<LibraryItem>,
+    );
+
     /// Replace nbcl with a custom configuration engine.
     ///
     /// # Example

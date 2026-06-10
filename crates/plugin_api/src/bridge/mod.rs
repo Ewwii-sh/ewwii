@@ -6,10 +6,12 @@ use std::sync::Arc;
 mod ipc;
 mod registration;
 mod shared;
+mod library;
 
 pub use ipc::*;
 pub use registration::*;
 pub use shared::*;
+pub use library::*;
 
 // === handlers === //
 

@@ -4,11 +4,13 @@ use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
 use crate::opts::WidgetControlAction;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
-use ewwii_plugin_api::{IpcRequest, NbclType, PluginError, PluginValue, WidgetControlType};
+use ewwii_plugin_api::{IpcRequest, NbclType, PluginError, PluginValue, WidgetControlType, LibraryItemFFI};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
 use nbcl::Type as ActualNbclType;
 use nbcl::Value as NbclValue;
+use nbcl::library::Library as NbclLibrary;
+use nbcl::library::LibraryItem as NbclLibraryItem;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -213,6 +215,19 @@ impl<B: DisplayBackend> App<B> {
 
                 self.register_function_internal(id, name, types, return_type, callback_id);
             }
+            PluginRequest::RegisterLib { id, name, items } => {
+                if name.trim().is_empty() {
+                    log::error!("Function name cannot be empty");
+                    return;
+                }
+
+                if name.contains(' ') {
+                    log::error!("Function names cannot contain spaces");
+                    return;
+                }
+
+                self.register_lib_internal(id, name, items);
+            }
             PluginRequest::RegisterConfigEngine { id, extension, main_file, callback_id } => {
                 if extension.trim().is_empty() || main_file.trim().is_empty() {
                     log::error!("File extension or main file cannot be empty");
@@ -270,6 +285,49 @@ impl<B: DisplayBackend> App<B> {
 
                         Ok(plugin_value_to_nbcl(result))
                     });
+                }
+                ConfigEngine::Custom(_) => {
+                    log::error!(
+                        "Registering nbcl functions is only supported with the Nbcl config engine"
+                    );
+                    return;
+                }
+            }
+        })
+    }
+
+    pub fn register_lib_internal(
+        &self,
+        plugin_id: String,
+        name: String,
+        items: Vec<LibraryItemFFI>,
+    ) {
+        EWWII_CONFIG_PARSER.with(|p| {
+            let mut parser = p.borrow_mut();
+
+            match parser.as_mut().unwrap() {
+                ConfigEngine::Default(nbcl) => {
+                    let mut lib_items = Vec::new();
+                    for item in items {
+                        let mut lib_item   = NbclLibraryItem::define(item.name);
+
+                        for (name, func) in item.functions {
+                            let ret    = plugin_nbcltype_to_nbcltype(func.ret);
+                            let params = func.params.into_iter().map(plugin_nbcltype_to_nbcltype).collect();
+
+                            let callback_id = func.callback_id.clone();
+                            let plugin_id = plugin_id.clone();
+                            lib_item = lib_item.with_fn(&name, params, ret, move |args| {
+                                let result = trigger_plugin_func_call(&plugin_id, callback_id, args);
+
+                                Ok(plugin_value_to_nbcl(result))
+                            });
+                        }
+
+                        lib_items.push(lib_item);
+                    }
+
+                    nbcl.engine.register_library(NbclLibrary::new(name, lib_items));
                 }
                 ConfigEngine::Custom(_) => {
                     log::error!(
