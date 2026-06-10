@@ -33,7 +33,7 @@ use crate::widgets::ewwii_image::EwwiiImage;
 use crate::widgets::graph::{Graph, RenderType};
 
 trait EwwiiWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget;
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget>;
     fn update_prop(&mut self, key: &str, value: &Property);
 }
 
@@ -205,7 +205,7 @@ struct BoxWidget {
 }
 
 impl EwwiiWidget for BoxWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
         self.gtk_widget.set_homogeneous(true);
 
@@ -219,7 +219,7 @@ impl EwwiiWidget for BoxWidget {
             self.gtk_widget.append(&child_widget);
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -253,11 +253,11 @@ impl EwwiiWidget for BoxWidget {
 
 #[derive(Default)]
 struct OverlayWidget {
-    gtk_widget: gtk4::Box,
+    gtk_widget: gtk4::Overlay,
 }
 
 impl EwwiiWidget for OverlayWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Overlay::new();
 
         for (key, value) in props {
@@ -281,7 +281,7 @@ impl EwwiiWidget for OverlayWidget {
             self.gtk_widget.add_overlay(&child);
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -299,7 +299,7 @@ struct TooltipWidget {
 }
 
 impl EwwiiWidget for TooltipWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
         self.gtk_widget.set_has_tooltip(true);
 
@@ -310,7 +310,7 @@ impl EwwiiWidget for TooltipWidget {
         let count = children.len();
         if count < 2 {
             bail!("tooltip must contain exactly 2 children");
-        } else {
+        } else if count > 2 {
             bail!("tooltip must contain exactly 2 children, but got more");
         }
 
@@ -333,7 +333,7 @@ impl EwwiiWidget for TooltipWidget {
             true
         });
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -381,10 +381,10 @@ struct EventBoxWidget {
 }
 
 impl EwwiiWidget for EventBoxWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
         self.gtk_widget.set_homogeneous(true);
-        *(self.controller.borrow_mut()).cmd_timeout = Duration::from_millis(200);
+        self.controller.borrow_mut().cmd_timeout = Duration::from_millis(200);
 
         for (key, value) in props {
             self.update_prop(key, value);
@@ -631,14 +631,14 @@ impl EwwiiWidget for EventBoxWidget {
         gtk_widget.append(&child_widget);
 
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
             "timeout" => {
                 let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
-                *(self.controller.borrow_mut()).cmd_timeout = new_timeout;
+                self.controller.borrow_mut().cmd_timeout = new_timeout;
             }
             "onscroll" => {
                 // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
@@ -781,7 +781,7 @@ struct FlowBoxWidget {
 }
 
 impl EwwiiWidget for FlowBoxWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::FlowBox::new();
         *self.cmd_timeout.borrow_mut() = Duration::from_millis(200);
         self.gtk_widget.set_homogeneous(true);
@@ -817,7 +817,7 @@ impl EwwiiWidget for FlowBoxWidget {
             index += 1;
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -860,8 +860,9 @@ impl EwwiiWidget for FlowBoxWidget {
                 *self.cmd_timeout.borrow_mut() = new_timeout;
             }
             "onaccept" => {
-                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
-                    controller_data.borrow_mut().onaccept_cmd = v;
+                let onaccept_cmd = self.onaccept_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onaccept_cmd], |v: String| {
+                    *onaccept_cmd.borrow_mut() = v;
                 });
             }
             _ => {
@@ -877,7 +878,7 @@ struct StackWidget {
 }
 
 impl EwwiiWidget for StackWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Stack::new();
 
         for (key, value) in props {
@@ -897,7 +898,7 @@ impl EwwiiWidget for StackWidget {
             self.gtk_widget.add_named(&child, Some(&i.to_string()));
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -935,14 +936,14 @@ struct CircularProgressWidget {
 }
 
 impl EwwiiWidget for CircularProgressWidget {
-    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = CircProg::new();
 
         for (key, value) in props {
             self.update_prop(key, value);
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1002,14 +1003,14 @@ struct GraphWidget {
 }
 
 impl EwwiiWidget for GraphWidget {
-    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = Graph::new();
 
         for (key, value) in props {
             self.update_prop(key, value);
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1044,14 +1045,6 @@ impl EwwiiWidget for GraphWidget {
                 let widget = self.gtk_widget.clone();
                 if let Ok(time_range) = get_duration_prop(&value, &key) {
                     let millis = time_range.as_millis();
-                    let millis_u32 = u32::try_from(millis).map_err(|_| {
-                        anyhow!(
-                            "Graph's time_range ({}ms) exceeds maximum representable ({}ms)",
-                            millis,
-                            u32::MAX
-                        )
-                    })?;
-
                     let millis_u32 = match u32::try_from(millis) {
                         Ok(m) => m,
                         Err(e) => {
@@ -1166,14 +1159,14 @@ struct ProgressWidget {
 }
 
 impl EwwiiWidget for ProgressWidget {
-    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::ProgressBar::new();
 
         for (key, value) in props {
             self.update_prop(key, value);
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1223,14 +1216,14 @@ struct ImageWidget {
 }
 
 impl EwwiiWidget for ImageWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = EwwiiImage::default();
 
         for (key, value) in props {
             self.update_prop(key, value);
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1332,8 +1325,8 @@ struct ButtonWidget {
 }
 
 impl EwwiiWidget for ButtonWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
-        self.gtk_widget = ButtonWidget::default();
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
+        self.gtk_widget = gtk4::Button::new();
         *self.cmd_timeout.borrow_mut() = Duration::from_millis(200);
 
         for (key, value) in props {
@@ -1360,12 +1353,23 @@ impl EwwiiWidget for ButtonWidget {
             }
         ));
 
+        let cmd_timeout = self.cmd_timeout.clone();
+        let onclick_cmd = self.onclick_cmd.clone();
+        let onmiddleclick_cmd = self.onmiddleclick_cmd.clone();
+        let onrightclick_cmd = self.onrightclick_cmd.clone();
+
         let gtk_widget = self.gtk_widget.clone();
         gesture_controller.connect_released(glib::clone!(
             #[weak]
             gtk_widget,
             #[strong]
-            controller_data,
+            cmd_timeout,
+            #[strong]
+            onclick_cmd,
+            #[strong]
+            onmiddleclick_cmd,
+            #[strong]
+            onrightclick_cmd,
             #[strong]
             press_coords,
             move |gesture, _, x, y| {
@@ -1378,19 +1382,18 @@ impl EwwiiWidget for ButtonWidget {
                     return;
                 }
 
-                let controller = controller_data.borrow();
                 let button = gesture.current_button();
 
                 match button {
-                    1 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                    1 => run_command(*cmd_timeout.borrow(), &*onclick_cmd.borrow(), &[] as &[&str]),
                     2 => run_command(
-                        controller.cmd_timeout,
-                        &controller.onmiddleclick_cmd,
+                        *cmd_timeout.borrow(),
+                        &*onmiddleclick_cmd.borrow(),
                         &[] as &[&str],
                     ),
                     3 => run_command(
-                        controller.cmd_timeout,
-                        &controller.onrightclick_cmd,
+                        *cmd_timeout.borrow(),
+                        &*onrightclick_cmd.borrow(),
                         &[] as &[&str],
                     ),
                     _ => {}
@@ -1400,14 +1403,15 @@ impl EwwiiWidget for ButtonWidget {
 
         key_controller.connect_key_released(glib::clone!(
             #[strong]
-            controller_data,
+            cmd_timeout,
+            #[strong]
+            onclick_cmd,
             move |_, _, code, _| {
-                let controller = controller_data.borrow();
                 match code {
                     // return
-                    36 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                    36 => run_command(*cmd_timeout.borrow(), &*onclick_cmd.borrow(), &[] as &[&str]),
                     // space
-                    65 => run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str]),
+                    65 => run_command(*cmd_timeout.borrow(), &*onclick_cmd.borrow(), &[] as &[&str]),
                     _ => {}
                 }
             }
@@ -1416,7 +1420,7 @@ impl EwwiiWidget for ButtonWidget {
         self.gtk_widget.add_controller(key_controller);
         self.gtk_widget.add_controller(gesture_controller);
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1462,14 +1466,14 @@ struct LabelWidget {
 }
 
 impl EwwiiWidget for LabelWidget {
-    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = EwwiiLabel::new();
 
         for (key, value) in props {
             self.update_prop(key, value);
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1630,7 +1634,7 @@ struct InputWidget {
 }
 
 impl EwwiiWidget for InputWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Entry::new();
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
@@ -1662,7 +1666,7 @@ impl EwwiiWidget for InputWidget {
             }
         ));
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1716,7 +1720,7 @@ struct CalendarWidget {
 }
 
 impl EwwiiWidget for CalendarWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Calendar::new();
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
@@ -1740,7 +1744,7 @@ impl EwwiiWidget for CalendarWidget {
             }
         ));
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1832,7 +1836,7 @@ struct ComboBoxTextWidget {
 }
 
 impl EwwiiWidget for ComboBoxTextWidget {
-    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::ComboBoxText::new();
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
@@ -1856,7 +1860,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
             }
         ));
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1911,7 +1915,7 @@ struct ExpanderWidget {
 }
 
 impl EwwiiWidget for ExpanderWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Expander::new(None);
 
         for (key, value) in props {
@@ -1929,7 +1933,7 @@ impl EwwiiWidget for ExpanderWidget {
         let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
         self.gtk_widget.set_child(Some(&child_widget));
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -1959,7 +1963,7 @@ struct RevealerWidget {
 }
 
 impl EwwiiWidget for RevealerWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Revealer::new();
 
         for (key, value) in props {
@@ -1981,7 +1985,7 @@ impl EwwiiWidget for RevealerWidget {
             }
         }
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -2007,7 +2011,7 @@ impl EwwiiWidget for RevealerWidget {
                 });
             }
             "duration" => {
-                let duration = get_duration_prop(&value, &key, Some(Duration::from_millis(500)))?;
+                let duration = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(500));
                 self.gtk_widget.set_transition_duration(duration.as_millis() as u32);
             }
             _ => {
@@ -2026,7 +2030,7 @@ struct CheckboxWidget {
 }
 
 impl EwwiiWidget for CheckboxWidget {
-    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::CheckButton::new();
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
@@ -2057,7 +2061,7 @@ impl EwwiiWidget for CheckboxWidget {
             }
         ));
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -2100,7 +2104,7 @@ struct ColorButtonWidget {
 }
 
 impl EwwiiWidget for ColorButtonWidget {
-    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::ColorButton::builder().build();
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
@@ -2120,7 +2124,7 @@ impl EwwiiWidget for ColorButtonWidget {
             }
         ));
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -2162,7 +2166,7 @@ struct ColorChooserEwwiiWidget {
 }
 
 impl EwwiiWidget for ColorChooserEwwiiWidget {
-    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, _children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::ColorChooserWidget::new();
         *self.timeout.borrow_mut() = Duration::from_millis(200);
 
@@ -2180,7 +2184,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
             }
         ));
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -2198,7 +2202,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
                 );
             }
             "timeout" => {
-                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration.from_millis(200));
+                let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -2229,12 +2233,12 @@ struct ScaleWidget {
 }
 
 impl EwwiiWidget for ScaleWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::Scale::new(
             gtk4::Orientation::Horizontal,
             Some(&gtk4::Adjustment::new(0.0, 0.0, 100.0, 1.0, 10.0, 0.0)),
         );
-        *(self.range_dat.borrow_mut()).cmd_timeout = Duration::from_millis(200);
+        self.range_dat.borrow_mut().cmd_timeout = Duration::from_millis(200);
 
         for (key, value) in props {
             self.update_prop(key, value);
@@ -2276,7 +2280,7 @@ impl EwwiiWidget for ScaleWidget {
         ));
 
         self.gtk_widget.add_controller(legacy_controller);
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -2345,7 +2349,7 @@ struct ScrolledWindowWidget {
 }
 
 impl EwwiiWidget for ScrolledWindowWidget {
-    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode]) -> gtk4::Widget {
+    fn build(&mut self, props: &PropertyMap, children: &[WidgetNode], widget_registry: &mut WidgetRegistry) -> Result<gtk4::Widget> {
         self.gtk_widget = gtk4::ScrolledWindow::new();
 
         for (key, value) in props {
@@ -2364,7 +2368,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
         let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
         self.gtk_widget.set_child(Some(&child_widget));
 
-        self.gtk_widget.clone().upcast()
+        Ok(self.gtk_widget.clone().upcast())
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
@@ -2416,10 +2420,10 @@ pub(super) fn build_gtk_box(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = BoxWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "Box");
-    registry.widgets.insert(id, Box::new(widget));
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Box>().expect("Box was expected to be a box."))
 }
@@ -2430,7 +2434,7 @@ pub(super) fn build_gtk_overlay(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Overlay> {
     let mut widget = OverlayWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "Overlay");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2444,7 +2448,7 @@ pub(super) fn build_tooltip(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = TooltipWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "Tooltip");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2458,7 +2462,7 @@ pub(super) fn build_event_box(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = EventBoxWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "EventBox");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2471,7 +2475,7 @@ pub(crate) fn build_gtk_flowbox(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::FlowBox> {
     let mut widget = FlowBoxWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "FlowBox");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2485,7 +2489,7 @@ pub(super) fn build_gtk_stack(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Stack> {
     let mut widget = StackWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "Stack");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2498,7 +2502,7 @@ pub(super) fn build_circular_progress_bar(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<CircProg> {
     let mut widget = CircularProgressWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "CircularProgress");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2511,7 +2515,7 @@ pub(super) fn build_graph(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<Graph> {
     let mut widget = GraphWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Graph");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2524,10 +2528,10 @@ pub(super) fn build_gtk_progress(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ProgressBar> {
     let mut widget = ProgressWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Progress");
-    registry.widgets.insert(id, Box::new(widget));
+    widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::ProgressBar>().expect("ProgressBar was expected to be a ProgressBar."))
 }
@@ -2537,7 +2541,7 @@ pub(super) fn build_image(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<EwwiiImage> {
     let mut widget = ImageWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Image");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2550,7 +2554,7 @@ pub(super) fn build_gtk_button(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Button> {
     let mut widget = ButtonWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Button");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2563,7 +2567,7 @@ pub(super) fn build_gtk_label(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<EwwiiLabel> {
     let mut widget = LabelWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Label");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2576,7 +2580,7 @@ pub(super) fn build_gtk_input(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Entry> {
     let mut widget = InputWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Input");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2589,7 +2593,7 @@ pub(super) fn build_gtk_calendar(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Calendar> {
     let mut widget = CalendarWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Calendar");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2602,7 +2606,7 @@ pub(super) fn build_gtk_combo_box_text(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ComboBoxText> {
     let mut widget = ComboBoxTextWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "ComboBoxText");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2613,8 +2617,14 @@ pub(super) fn build_gtk_combo_box_text(
 // Doesn't require `EwwiiWidget` trait
 // because its a special non-widget thingy.
 pub(super) fn build_gtk_ui_file(props: &PropertyMap) -> Result<gtk4::Widget> {
-    let path = unwrap_static("file", get_string_prop(&props, "file")?);
-    let main_id = unwrap_static("id", get_string_prop(&props, "id")?);
+    const path_key: &str = "file";
+    const id_key: &str = "id";
+
+    let path_prop    = retreive_prop(props, path_key)?;
+    let main_id_prop = retreive_prop(props, id_key)?;
+
+    let path = unwrap_static(path_key, get_string_prop(&path_prop, path_key)?);
+    let main_id = unwrap_static(id_key, get_string_prop(&main_id_prop, id_key)?);
 
     if !std::path::Path::new(&path).exists() {
         return Err(anyhow::anyhow!("UI file not found: {}", path));
@@ -2635,7 +2645,7 @@ pub(super) fn build_gtk_expander(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Expander> {
     let mut widget = ExpanderWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "Expander");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2648,7 +2658,7 @@ pub(super) fn build_gtk_revealer(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Revealer> {
     let mut widget = RevealerWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "Revealer");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2661,7 +2671,7 @@ pub(super) fn build_gtk_checkbox(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::CheckButton> {
     let mut widget = CheckboxWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Checkbox");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2674,7 +2684,7 @@ pub(super) fn build_gtk_color_button(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorButton> {
     let mut widget = ColorButtonWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "ColorButton");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2687,7 +2697,7 @@ pub(super) fn build_gtk_color_chooser(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ColorChooserWidget> {
     let mut widget = ColorChooserEwwiiWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "ColorChooser");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2700,7 +2710,7 @@ pub(super) fn build_gtk_scale(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Scale> {
     let mut widget = ScaleWidget::default();
-    let gtk_widget = widget.build(props, &[]);
+    let gtk_widget = widget.build(props, &[], widget_registry)?;
 
     let id = hash_props_and_type(&props, "Scale");
     widget_registry.widgets.insert(id, Box::new(widget));
@@ -2714,7 +2724,7 @@ pub(super) fn build_gtk_scrolledwindow(
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ScrolledWindow> {
     let mut widget = ScrolledWindowWidget::default();
-    let gtk_widget = widget.build(props, children);
+    let gtk_widget = widget.build(props, children, widget_registry)?;
 
     let id = hash_props_and_type(&props, "ScrolledWindow");
     widget_registry.widgets.insert(id, Box::new(widget));
