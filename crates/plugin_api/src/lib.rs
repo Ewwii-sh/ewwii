@@ -150,6 +150,54 @@ pub trait EwwiiAPI: Send + Sync {
         handler: NativeFn,
     );
 
+    /// Register a library that can be imported in Nbcl.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginValue,
+    ///     PluginInfo, NativeFn,
+    ///     NativeFnExt, NbclType,
+    ///     LibraryItem
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.library", "1.0"),
+    ///     host,
+    ///     {
+    ///         host.register_library(
+    ///             "example",
+    ///             vec![
+    ///                 LibraryItem::define("foo")
+    ///                     .with_fn(
+    ///                         "greet",
+    ///                         vec![NbclType::String],
+    ///                         NbclType::Null,
+    ///                         NativeFn::new(|args| {
+    ///                             let PluginValue::String(ref name) = args[0] else {
+    ///                                 // guranteed to be string
+    ///                                 unreachable!();
+    ///                             };
+    ///                             println!("Hello, {}!", name);
+    ///                             Ok(PluginValue::Null) // return empty (must match provided return type)
+    ///                         })
+    ///                     )
+    ///             ]
+    ///         );
+    ///     }
+    /// );
+    ///
+    /// ```
+    ///
+    /// This example will register a library called 'example' with item 'foo'
+    /// which can be imported like so in nbcl:
+    ///
+    /// ```js
+    /// import example.foo
+    /// foo.greet("Bob")
+    /// ```
     fn register_library(
         &self,
         name: &str,
