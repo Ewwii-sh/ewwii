@@ -1,31 +1,16 @@
 //! This module provides data structures and enumrates that are used
 //! as a bridge between the communication of both the plugin and the host.
 
-use std::sync::Arc;
-
+mod future;
+mod handlers;
 mod ipc;
+mod library;
 mod registration;
 mod shared;
 
+pub use future::*;
+pub use handlers::*;
 pub use ipc::*;
+pub use library::*;
 pub use registration::*;
 pub use shared::*;
-
-// === handlers === //
-
-pub type ConfigCallbackFn = Arc<dyn Fn(&str, &str) + Send + Sync>;
-
-pub trait ConfigCallbackFnExt {
-    fn new<F>(f: F) -> Self
-    where
-        F: Fn(&str, &str) + Send + Sync + 'static;
-}
-
-impl ConfigCallbackFnExt for ConfigCallbackFn {
-    fn new<F>(f: F) -> Self
-    where
-        F: Fn(&str, &str) + Send + Sync + 'static,
-    {
-        Arc::new(f)
-    }
-}

@@ -32,7 +32,7 @@ macro_rules! auto_plugin {
                 $metadata
             }
 
-            fn init(&self, $host_name: &dyn $crate::EwwiiAPI) {
+            fn init(&self, $host_name: std::sync::Arc<dyn $crate::EwwiiAPI>) {
                 $init_block
             }
         }
@@ -66,7 +66,7 @@ macro_rules! export_plugin {
             let proxy = $crate::proxy::HostProxy::new(id_str);
 
             let p = <$plugin_struct as ::std::default::Default>::default();
-            $crate::Plugin::init(&p, &proxy);
+            $crate::Plugin::init(&p, std::sync::Arc::new(proxy));
         }
     };
 }

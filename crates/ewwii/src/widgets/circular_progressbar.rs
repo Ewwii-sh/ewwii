@@ -194,6 +194,12 @@ impl CircProg {
     }
 }
 
+impl Default for CircProg {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn perc_to_rad(n: f64) -> f64 {
     (n / 100f64) * 2f64 * std::f64::consts::PI
 }

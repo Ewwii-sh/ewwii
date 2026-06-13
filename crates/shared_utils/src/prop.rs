@@ -6,9 +6,17 @@ use std::collections::{BTreeMap, HashMap};
 use std::hash::{Hash, Hasher};
 
 /// A deterministic, serializable collection of widget properties.
-/// Replaces rhai::Map in your WidgetNode.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Hash)]
 pub struct PropertyMap(pub BTreeMap<String, Property>);
+
+impl<'a> IntoIterator for &'a PropertyMap {
+    type Item = (&'a String, &'a Property);
+    type IntoIter = std::collections::btree_map::Iter<'a, String, Property>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
 
 impl PropertyMap {
     pub fn new() -> Self {

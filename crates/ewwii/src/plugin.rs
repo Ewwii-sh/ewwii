@@ -4,9 +4,13 @@ use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
 use crate::opts::WidgetControlAction;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
-use ewwii_plugin_api::{IpcRequest, NbclType, PluginError, PluginValue, WidgetControlType};
+use ewwii_plugin_api::{
+    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, WidgetControlType,
+};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
+use nbcl::library::Library as NbclLibrary;
+use nbcl::library::LibraryItem as NbclLibraryItem;
 use nbcl::Type as ActualNbclType;
 use nbcl::Value as NbclValue;
 use once_cell::sync::Lazy;
@@ -188,17 +192,20 @@ impl CustomConfigEngine {
 impl<B: DisplayBackend> App<B> {
     pub fn handle_plugin_request(&mut self, request: PluginRequest) {
         match request {
-            PluginRequest::Log((id, msg)) => {
+            PluginRequest::Log(id, msg) => {
                 log::info!("[{}] {}", id, msg);
             }
-            PluginRequest::Warn((id, msg)) => {
+            PluginRequest::Warn(id, msg) => {
                 log::warn!("[{}] {}", id, msg);
             }
-            PluginRequest::Error((id, msg)) => {
+            PluginRequest::Error(id, msg) => {
                 log::error!("[{}] {}", id, msg);
             }
-            PluginRequest::Ipc((_, req)) => {
-                self.handle_plugin_ipc(req);
+            PluginRequest::Ipc(plugin_id, req, callback_id) => {
+                if let Some(res) = self.handle_plugin_ipc(req) {
+                    let arg_bytes = bincode::serialize(&res).unwrap_or_default();
+                    call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+                }
             }
             PluginRequest::RegisterFn { id, name, types, return_type, callback_id } => {
                 if name.trim().is_empty() {
@@ -212,6 +219,19 @@ impl<B: DisplayBackend> App<B> {
                 }
 
                 self.register_function_internal(id, name, types, return_type, callback_id);
+            }
+            PluginRequest::RegisterLib { id, name, items } => {
+                if name.trim().is_empty() {
+                    log::error!("Function name cannot be empty");
+                    return;
+                }
+
+                if name.contains(' ') {
+                    log::error!("Function names cannot contain spaces");
+                    return;
+                }
+
+                self.register_lib_internal(id, name, items);
             }
             PluginRequest::RegisterConfigEngine { id, extension, main_file, callback_id } => {
                 if extension.trim().is_empty() || main_file.trim().is_empty() {
@@ -237,7 +257,64 @@ impl<B: DisplayBackend> App<B> {
                 });
             }
             PluginRequest::InjectCss(css) => {
-                self.custom_css_provider.load_from_string(&css);
+                let provider = gtk4::CssProvider::new();
+                provider.load_from_string(&css);
+                self.custom_css_providers.push(provider);
+            }
+            PluginRequest::Emit(signal) => {
+                if let Err(e) = self.plugin_buffer.send(signal) {
+                    log::error!("Failed to emit signal: {e}");
+                }
+            }
+            PluginRequest::Listen(plugin_id, signal, callback_id) => {
+                let mut rx = self.plugin_buffer.subscribe();
+
+                tokio::spawn(async move {
+                    loop {
+                        match rx.recv().await {
+                            Ok(msg) => {
+                                if msg == signal {
+                                    let arg_bytes = Vec::new();
+                                    call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+                                }
+                            }
+                            Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                                log::warn!("Listener {} lagged by {} messages", callback_id, n);
+                            }
+                            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
+            PluginRequest::RegisterSignal(name, initial) => {
+                crate::updates::api::VarWatcherAPI::register(&name, initial);
+            }
+            PluginRequest::UpdateSignal(name, value) => {
+                crate::updates::api::VarWatcherAPI::update_with_broadcast(&name, value);
+            }
+            PluginRequest::OnSignalUpdate(plugin_id, name, callback_id) => {
+                let maybe_rx = crate::updates::api::VarWatcherAPI::subscribe(&name);
+                if let Some(mut rx) = maybe_rx {
+                    tokio::spawn(async move {
+                        while rx.changed().await.is_ok() {
+                            let arg_bytes = {
+                                let value = rx.borrow();
+                                bincode::serialize(&*value).unwrap_or_default()
+                            };
+
+                            call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+                        }
+                    });
+                } else {
+                    log::error!("Failed to get receiver for {name}");
+                }
+            }
+            PluginRequest::SignalValue(plugin_id, name, callback_id) => {
+                let value = crate::updates::api::VarWatcherAPI::state_of(&name);
+                let arg_bytes = bincode::serialize(&value).unwrap_or_default();
+                call_plugin_handler(&plugin_id, callback_id, arg_bytes);
             }
             PluginRequest::ConfigCallbackHandle(id) => {
                 EWWII_CONFIG_PARSER.with(|p| {
@@ -273,7 +350,7 @@ impl<B: DisplayBackend> App<B> {
                 }
                 ConfigEngine::Custom(_) => {
                     log::error!(
-                        "Registering rhai functions is only supported with the Nbcl config engine"
+                        "Registering nbcl functions is only supported with the Nbcl config engine"
                     );
                     return;
                 }
@@ -281,7 +358,52 @@ impl<B: DisplayBackend> App<B> {
         })
     }
 
-    pub fn handle_plugin_ipc(&mut self, req: IpcRequest) {
+    pub fn register_lib_internal(
+        &self,
+        plugin_id: String,
+        name: String,
+        items: Vec<LibraryItemFFI>,
+    ) {
+        EWWII_CONFIG_PARSER.with(|p| {
+            let mut parser = p.borrow_mut();
+
+            match parser.as_mut().unwrap() {
+                ConfigEngine::Default(nbcl) => {
+                    let mut lib_items = Vec::new();
+                    for item in items {
+                        let mut lib_item = NbclLibraryItem::define(item.name);
+
+                        for (name, func) in item.functions {
+                            let ret = plugin_nbcltype_to_nbcltype(func.ret);
+                            let params =
+                                func.params.into_iter().map(plugin_nbcltype_to_nbcltype).collect();
+
+                            let callback_id = func.callback_id.clone();
+                            let plugin_id = plugin_id.clone();
+                            lib_item = lib_item.with_fn(&name, params, ret, move |args| {
+                                let result =
+                                    trigger_plugin_func_call(&plugin_id, callback_id, args);
+
+                                Ok(plugin_value_to_nbcl(result))
+                            });
+                        }
+
+                        lib_items.push(lib_item);
+                    }
+
+                    nbcl.engine.register_library(NbclLibrary::new(name, lib_items));
+                }
+                ConfigEngine::Custom(_) => {
+                    log::error!(
+                        "Registering nbcl functions is only supported with the Nbcl config engine"
+                    );
+                    return;
+                }
+            }
+        })
+    }
+
+    pub fn handle_plugin_ipc(&mut self, req: IpcRequest) -> Option<String> {
         let handle = tokio::runtime::Handle::current();
         match req {
             IpcRequest::WidgetControl(wc_type) => match wc_type {
@@ -294,6 +416,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::Create { parent, codes } => {
                     let (sender, _recv) = daemon_response::create_pair();
@@ -307,6 +431,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::PropertyGet { prop, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
@@ -320,6 +446,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::PropertyUpdate { prop, widget, value } => {
                     let p2v = HashMap::from([(prop, value)]);
@@ -335,6 +463,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::AddClass { class, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
@@ -345,6 +475,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::RemoveClass { class, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
@@ -355,6 +487,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
             },
             IpcRequest::Update(var, val) => {
@@ -364,6 +498,8 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
             IpcRequest::Close(windows) => {
                 let (sender, _recv) = daemon_response::create_pair();
@@ -371,6 +507,8 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
             IpcRequest::Open(window, toggle) => {
                 let (sender, _recv) = daemon_response::create_pair();
@@ -388,12 +526,16 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
             IpcRequest::CloseAll => {
                 let command = DaemonCommand::CloseAll;
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
             IpcRequest::Reload => {
                 let (sender, _recv) = daemon_response::create_pair();
@@ -401,6 +543,8 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
         }
     }

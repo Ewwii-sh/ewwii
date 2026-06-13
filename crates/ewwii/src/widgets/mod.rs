@@ -1,5 +1,7 @@
 pub mod build_widget;
 pub mod circular_progressbar;
+pub mod ewwii_image;
+pub mod ewwii_label;
 pub mod graph;
 pub mod transform;
 pub mod widget_definitions;

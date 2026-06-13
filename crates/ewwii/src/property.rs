@@ -172,14 +172,14 @@ macro_rules! apply_property_watch {
 
 #[macro_export]
 macro_rules! bind_property {
-    ($props:expr, $key:expr, $getter:ident, $default:expr, [$($clone:ident),*], |$v:ident: $t:ty| $body:expr) => {
-        if let Ok(prop) = $getter($props, $key, $default) {
+    ($prop:expr, $key:expr, $getter:ident, [$($clone:ident),*], |$v:ident: $t:ty| $body:expr) => {
+        if let Ok(prop) = $getter($prop, $key) {
             $(let $clone = $clone.clone();)*
             apply_property!(prop, |$v: $t| $body);
         }
     };
-    ($props:expr, $key:expr, $getter:ident, $default:expr, |$v:ident: $t:ty| $body:expr) => {
-        if let Ok(prop) = $getter($props, $key, $default) {
+    ($prop:expr, $key:expr, $getter:ident, |$v:ident: $t:ty| $body:expr) => {
+        if let Ok(prop) = $getter($prop, $key) {
             apply_property!(prop, |$v: $t| $body);
         }
     };
