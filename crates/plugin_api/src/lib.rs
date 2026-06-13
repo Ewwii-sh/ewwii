@@ -396,7 +396,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// );
     /// ```
     ///
-    /// Always make sure that your plugin **never** blocks the main thread. Both ewwii and the plugin
+    /// NOTE: Always make sure that your plugin **never** blocks the main thread. Both ewwii and the plugin
     /// with deadlock each other.
     fn signal_value(&self, name: &str) -> FutureResult<String>;
 

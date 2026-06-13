@@ -118,6 +118,9 @@ pub fn initialize_server<B: DisplayBackend>(
     match read_config {
         Ok(new_config) => {
             app.ewwii_config = new_config;
+            if let Err(e) = app.plugin_buffer.send("ewwii-config-loaded".to_string()) {
+                log::error!("Ewwii failed to emit signal: {e}");
+            }
         }
         Err(err) => {
             error_handling_ctx::print_error(err);
@@ -130,6 +133,9 @@ pub fn initialize_server<B: DisplayBackend>(
     if let Some(display) = gtk4::gdk::Display::default() {
         gtk4::style_context_add_provider_for_display(&display, &app.css_provider, 900);
         gtk4::style_context_add_provider_for_display(&display, &app.custom_css_provider, 910);
+        if let Err(e) = app.plugin_buffer.send("ewwii-applied-styles".to_string()) {
+            log::error!("Ewwii failed to emit signal: {e}");
+        }
     }
 
     if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
