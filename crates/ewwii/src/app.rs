@@ -155,7 +155,7 @@ pub struct App<B: DisplayBackend> {
     /// The user's css provider.
     pub css_provider: gtk4::CssProvider,
     /// This will be set by the plugins.
-    pub custom_css_provider: gtk4::CssProvider,
+    pub custom_css_providers: Vec<gtk4::CssProvider>,
     pub plugin_buffer: tokio::sync::broadcast::Sender<String>,
     pub reloading: bool,
 

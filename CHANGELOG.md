@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Plugin API to allow calls from multiple threads.
 - Made `widget-control property-update` update the ewwii property instea of the gtk property.
 - `ipc_request` plugin API to return `FutureResult`.
+- `inject_css` plugin API to allow multiple plugins to inject css.
 
 ### Removed
 
