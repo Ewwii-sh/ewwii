@@ -331,7 +331,7 @@ impl<B: DisplayBackend> App<B> {
                 }
                 ConfigEngine::Custom(_) => {
                     log::error!(
-                        "Registering rhai functions is only supported with the Nbcl config engine"
+                        "Registering nbcl functions is only supported with the Nbcl config engine"
                     );
                     return;
                 }
