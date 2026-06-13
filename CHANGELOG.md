@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `register_signal` plugin API to register custom signals.
 - `update_signal` plugin API to update signals.
 - `on_signal_update` plugin API to run a function when signal updates.
+- `signal_value` plugin API to get the value of a signal.
 
 ### Changed
 
