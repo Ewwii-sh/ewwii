@@ -201,6 +201,10 @@ impl HostProxy {
 }
 
 impl EwwiiAPI for HostProxy {
+    fn metadata_id(&self) -> String {
+        self.get_id().to_string()
+    }
+
     fn log(&self, msg: &str) {
         let plugid = &self.get_id();
         let req = PluginRequest::Log((plugid.to_string(), msg.to_string()));

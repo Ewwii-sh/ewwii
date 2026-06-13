@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `update_signal` plugin API to update signals.
 - `on_signal_update` plugin API to run a function when signal updates.
 - `signal_value` plugin API to get the value of a signal.
+- `metadata_id` plugin API to get the id of this plugin.
 
 ### Changed
 
