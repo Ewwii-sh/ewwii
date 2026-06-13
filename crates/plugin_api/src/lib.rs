@@ -312,15 +312,96 @@ pub trait EwwiiAPI: Send + Sync {
     fn listen(&self, signal: &str, handle: ListenHandleFn);
 
     /// Register a signal into ewwii.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.signal", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         host.register_signal("example", "initial value");
+    ///     }
+    /// );
+    /// ```
     fn register_signal(&self, name: &str, initial: String);
 
     /// Update the value of a signal.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.signal", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         host.update_signal("example", "new val");
+    ///     }
+    /// );
+    /// ```
     fn update_signal(&self, name: &str, value: String);
 
     /// Run a function when a signal updates.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    ///     SignalUpdateFn, SignalUpdateFnExt
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.signal", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         self.on_signal_update("example", SignalUpdateFn::new(|val| {
+    ///             // 'val' is the value of the signal now
+    ///             // stuff can be done here...
+    ///         });
+    ///     }
+    /// );
+    /// ```
     fn on_signal_update(&self, name: &str, handle: SignalUpdateFn);
 
     /// Get the value of a signal
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.signal", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         let frx = host.signal_value("example");
+    ///
+    ///         // WARNING: Never block main thread
+    ///         std::thread::spawn(move || {
+    ///             let result = frx.blocking_recv();
+    ///             println!("Result is '{}'", result);
+    ///         });
+    ///     }
+    /// );
+    /// ```
+    ///
+    /// Always make sure that your plugin **never** blocks the main thread. Both ewwii and the plugin
+    /// with deadlock each other.
     fn signal_value(&self, name: &str) -> FutureResult<String>;
 
     // === Handlers === //
