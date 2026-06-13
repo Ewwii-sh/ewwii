@@ -2,12 +2,30 @@
 //! that are used to redirect API calls to host after serialization
 
 use crate::{
-    ConfigCallbackFn, ListenHandleFn, SignalUpdateFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError, PluginValue, LibraryItemFFI, LibraryFnFFI, LibraryItem,
+    ConfigCallbackFn, ListenHandleFn, SignalUpdateFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError, PluginValue, LibraryItemFFI, LibraryFnFFI, LibraryItem, FutureResult,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
+use std::sync::Arc;
+
+pub type ManualHandle<T> = Arc<dyn Fn(T) + Send + Sync>;
+
+pub trait ManualHandleExt<T> {
+    fn new<F>(f: F) -> Self
+    where
+        F: Fn(T) + Send + Sync + 'static;
+}
+
+impl<T> ManualHandleExt<T> for ManualHandle<T> {
+    fn new<F>(f: F) -> Self
+    where
+        F: Fn(T) + Send + Sync + 'static,
+    {
+        Arc::new(f)
+    }
+}
 
 /// Represents the different types of callbacks that can be registered by a plugin.
 pub enum CallbackHandler {
@@ -16,6 +34,7 @@ pub enum CallbackHandler {
     ListenHandleFn(ListenHandleFn),
     SignalUpdateFn(SignalUpdateFn),
     ConfigCallbackFn(ConfigCallbackFn),
+    ManualHandleStr(ManualHandle<String>),
 }
 
 /// Represents the possible response types returned by a plugin callback.
@@ -71,6 +90,7 @@ pub enum PluginRequest {
     RegisterSignal(String, String),
     UpdateSignal(String, String),
     OnSignalUpdate(String, String, u64),
+    SignalValue(String, String, u64),
 
     // Handlers
     ConfigCallbackHandle(u64),
@@ -119,6 +139,11 @@ pub extern "C" fn plugin_callback_handler(
         Some(CallbackHandler::ConfigCallbackFn(f)) => {
             let (name, id): (String, String) = bincode::deserialize(bytes).unwrap_or_default();
             f(&name, &id);
+            return std::ptr::null_mut();
+        }
+        Some(CallbackHandler::ManualHandleStr(f)) => {
+            let value: String = bincode::deserialize(bytes).unwrap_or_default();
+            f(value);
             return std::ptr::null_mut();
         }
         None => return std::ptr::null_mut(),
@@ -316,6 +341,21 @@ impl EwwiiAPI for HostProxy {
 
         let req = PluginRequest::OnSignalUpdate(self.get_id().to_string(), name.to_string(), id);
         self.call_host(req);
+    }
+
+    fn signal_value(&self, name: &str) -> FutureResult<String> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let handle = ManualHandle::new(move |value: String| {
+            let _ = tx.send(value);
+        });
+
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::ManualHandleStr(handle));
+
+        let req = PluginRequest::SignalValue(self.get_id().to_string(), name.to_string(), id);
+        self.call_host(req);
+
+        FutureResult { channel: rx }
     }
 
     // === Handlers === //

@@ -259,6 +259,28 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to emit signal: {e}");
                 }
             }
+            PluginRequest::Listen(plugin_id, signal, callback_id) => {
+                let mut rx = self.plugin_buffer.subscribe();
+
+                tokio::spawn(async move {
+                    loop {
+                        match rx.recv().await {
+                            Ok(msg) => {
+                                if msg == signal {
+                                    let arg_bytes = Vec::new();
+                                    call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+                                }
+                            }
+                            Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                                log::warn!("Listener {} lagged by {} messages", callback_id, n);
+                            }
+                            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
             PluginRequest::RegisterSignal(name, initial) => {
                 crate::updates::api::VarWatcherAPI::register(&name, initial);
             }
@@ -275,38 +297,17 @@ impl<B: DisplayBackend> App<B> {
                                 bincode::serialize(&*value).unwrap_or_default()
                             };
 
-                            if let None = call_plugin_handler(&plugin_id, callback_id, arg_bytes) {
-                                log::error!("Failed calling on signal update handler.");
-                            }
+                            call_plugin_handler(&plugin_id, callback_id, arg_bytes);
                         }
                     });
                 } else {
                     log::error!("Failed to get receiver for {name}");
                 }
             }
-            PluginRequest::Listen(plugin_id, signal, callback_id) => {
-                let mut rx = self.plugin_buffer.subscribe();
-
-                tokio::spawn(async move {
-                    loop {
-                        match rx.recv().await {
-                            Ok(msg) => {
-                                if msg == signal {
-                                    let arg_bytes = Vec::new();
-                                    if let None = call_plugin_handler(&plugin_id, callback_id, arg_bytes) {
-                                        log::error!("Failed calling listen handler.");
-                                    }
-                                }
-                            }
-                            Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
-                                log::warn!("Listener {} lagged by {} messages", callback_id, n);
-                            }
-                            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
-                                break;
-                            }
-                        }
-                    }
-                });
+            PluginRequest::SignalValue(plugin_id, name, callback_id) => {
+                let value = crate::updates::api::VarWatcherAPI::state_of(&name);
+                let arg_bytes = bincode::serialize(&value).unwrap_or_default();
+                call_plugin_handler(&plugin_id, callback_id, arg_bytes);
             }
             PluginRequest::ConfigCallbackHandle(id) => {
                 EWWII_CONFIG_PARSER.with(|p| {

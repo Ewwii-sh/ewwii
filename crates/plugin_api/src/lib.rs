@@ -320,6 +320,9 @@ pub trait EwwiiAPI: Send + Sync {
     /// Run a function when a signal updates.
     fn on_signal_update(&self, name: &str, handle: SignalUpdateFn);
 
+    /// Get the value of a signal
+    fn signal_value(&self, name: &str) -> FutureResult<String>;
+
     // === Handlers === //
 
     /// Handle callbacks registered by the config engine.
