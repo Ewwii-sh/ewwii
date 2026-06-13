@@ -1,15 +1,3 @@
-/*
-    This is where we update the variables in ewwii
-
-    Since we can poll and listen in ewwii, it is what we will
-    use to get variable updates in ewwii.
-
-    Updates are important because it helps keeping rhai dynamic.
-    Even though rhai is static by nature (only evaluates once),
-    we can trigger a re-evaluation every time a variable updates
-    as a workaround to this limitation.
-*/
-
 pub mod api;
 mod listen;
 mod poll;

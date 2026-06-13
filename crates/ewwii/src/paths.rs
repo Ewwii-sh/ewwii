@@ -87,7 +87,6 @@ impl EwwiiPaths {
         self.config_dir.as_path()
     }
 
-    // Modified this code with rhai (the new yuck replacer in ewwii)
     pub fn get_configlang_path(&self, main_file: &str) -> PathBuf {
         self.config_dir.join(main_file)
     }
