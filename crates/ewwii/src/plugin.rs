@@ -4,13 +4,15 @@ use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
 use crate::opts::WidgetControlAction;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
-use ewwii_plugin_api::{IpcRequest, NbclType, PluginError, PluginValue, WidgetControlType, LibraryItemFFI};
+use ewwii_plugin_api::{
+    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, WidgetControlType,
+};
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
-use nbcl::Type as ActualNbclType;
-use nbcl::Value as NbclValue;
 use nbcl::library::Library as NbclLibrary;
 use nbcl::library::LibraryItem as NbclLibraryItem;
+use nbcl::Type as ActualNbclType;
+use nbcl::Value as NbclValue;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -364,16 +366,18 @@ impl<B: DisplayBackend> App<B> {
                 ConfigEngine::Default(nbcl) => {
                     let mut lib_items = Vec::new();
                     for item in items {
-                        let mut lib_item   = NbclLibraryItem::define(item.name);
+                        let mut lib_item = NbclLibraryItem::define(item.name);
 
                         for (name, func) in item.functions {
-                            let ret    = plugin_nbcltype_to_nbcltype(func.ret);
-                            let params = func.params.into_iter().map(plugin_nbcltype_to_nbcltype).collect();
+                            let ret = plugin_nbcltype_to_nbcltype(func.ret);
+                            let params =
+                                func.params.into_iter().map(plugin_nbcltype_to_nbcltype).collect();
 
                             let callback_id = func.callback_id.clone();
                             let plugin_id = plugin_id.clone();
                             lib_item = lib_item.with_fn(&name, params, ret, move |args| {
-                                let result = trigger_plugin_func_call(&plugin_id, callback_id, args);
+                                let result =
+                                    trigger_plugin_func_call(&plugin_id, callback_id, args);
 
                                 Ok(plugin_value_to_nbcl(result))
                             });

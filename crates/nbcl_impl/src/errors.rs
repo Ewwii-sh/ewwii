@@ -1,10 +1,15 @@
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFiles;
 use codespan_reporting::term::{self, termcolor::Buffer};
-use nbcl::error::{NbclError, Span};
 use nbcl::context::Context;
+use nbcl::error::{NbclError, Span};
 
-pub fn handle_nbcl_err(err: NbclError, code: &str, file_id: Option<&str>, maybe_ctx: Option<Context>) -> String {
+pub fn handle_nbcl_err(
+    err: NbclError,
+    code: &str,
+    file_id: Option<&str>,
+    maybe_ctx: Option<Context>,
+) -> String {
     let mut file_id: Option<String> = file_id.map(str::to_string);
     if let Some(ctx) = maybe_ctx {
         if let Some(new) = ctx.get_current_file().and_then(|f| f.to_str().map(str::to_string)) {

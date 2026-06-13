@@ -200,11 +200,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// import example.foo
     /// foo.greet("Bob")
     /// ```
-    fn register_library(
-        &self,
-        name: &str,
-        items: Vec<LibraryItem>,
-    );
+    fn register_library(&self, name: &str, items: Vec<LibraryItem>);
 
     /// Replace nbcl with a custom configuration engine.
     ///
