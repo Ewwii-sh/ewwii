@@ -259,6 +259,31 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to emit signal: {e}");
                 }
             }
+            PluginRequest::RegisterSignal(name, initial) => {
+                crate::updates::api::VarWatcherAPI::register(&name, initial);
+            }
+            PluginRequest::UpdateSignal(name, value) => {
+                crate::updates::api::VarWatcherAPI::update_with_broadcast(&name, value);
+            }
+            PluginRequest::OnSignalUpdate(plugin_id, name, callback_id) => {
+                let maybe_rx = crate::updates::api::VarWatcherAPI::subscribe(&name);
+                if let Some(mut rx) = maybe_rx {
+                    tokio::spawn(async move {
+                        while rx.changed().await.is_ok() {
+                            let arg_bytes = {
+                                let value = rx.borrow();
+                                bincode::serialize(&*value).unwrap_or_default()
+                            };
+
+                            if let None = call_plugin_handler(&plugin_id, callback_id, arg_bytes) {
+                                log::error!("Failed calling on signal update handler.");
+                            }
+                        }
+                    });
+                } else {
+                    log::error!("Failed to get receiver for {name}");
+                }
+            }
             PluginRequest::Listen(plugin_id, signal, callback_id) => {
                 let mut rx = self.plugin_buffer.subscribe();
 

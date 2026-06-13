@@ -36,3 +36,20 @@ impl ListenHandleFnExt for ListenHandleFn {
     }
 }
 
+// signal update
+pub type SignalUpdateFn = Arc<dyn Fn(&str) + Send + Sync>;
+
+pub trait SignalUpdateFnExt {
+    fn new<F>(f: F) -> Self
+    where
+        F: Fn(&str) + Send + Sync + 'static;
+}
+
+impl SignalUpdateFnExt for SignalUpdateFn {
+    fn new<F>(f: F) -> Self
+    where
+        F: Fn(&str) + Send + Sync + 'static,
+    {
+        Arc::new(f)
+    }
+}
