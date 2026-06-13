@@ -363,7 +363,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     PluginInfo::new("test.example.signal", "1.0.0"),
     ///     host,
     ///     {
-    ///         host.register_signal("example", "initial value");
+    ///         host.register_signal("example", "initial value".to_string());
     ///     }
     /// );
     /// ```
@@ -383,7 +383,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     PluginInfo::new("test.example.signal", "1.0.0"),
     ///     host,
     ///     {
-    ///         host.update_signal("example", "new val");
+    ///         host.update_signal("example", "new val".to_string());
     ///     }
     /// );
     /// ```
@@ -404,10 +404,10 @@ pub trait EwwiiAPI: Send + Sync {
     ///     PluginInfo::new("test.example.signal", "1.0.0"),
     ///     host,
     ///     {
-    ///         self.on_signal_update("example", SignalUpdateFn::new(|val| {
+    ///         host.on_signal_update("example", SignalUpdateFn::new(|val| {
     ///             // 'val' is the value of the signal now
     ///             // stuff can be done here...
-    ///         });
+    ///         }));
     ///     }
     /// );
     /// ```
