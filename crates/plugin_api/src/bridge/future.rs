@@ -1,4 +1,4 @@
-use std::sync::mpsc::{channel, Receiver, TryRecvError};
+use std::sync::mpsc::Receiver;
 
 pub struct FutureResult<T> {
     pub(crate) channel: Receiver<T>,
