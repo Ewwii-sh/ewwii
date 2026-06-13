@@ -257,7 +257,9 @@ impl<B: DisplayBackend> App<B> {
                 });
             }
             PluginRequest::InjectCss(css) => {
-                self.custom_css_provider.load_from_string(&css);
+                let provider = gtk4::CssProvider::new();
+                provider.load_from_string(&css);
+                self.custom_css_providers.push(provider);
             }
             PluginRequest::Emit(signal) => {
                 if let Err(e) = self.plugin_buffer.send(signal) {
