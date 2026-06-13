@@ -2,7 +2,7 @@
 //! that are used to redirect API calls to host after serialization
 
 use crate::{
-    ConfigCallbackFn, ListenHandleFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError, PluginValue, LibraryItemFFI, LibraryFnFFI, LibraryItem,
+    ConfigCallbackFn, ListenHandleFn, SignalUpdateFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError, PluginValue, LibraryItemFFI, LibraryFnFFI, LibraryItem,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
@@ -14,6 +14,7 @@ pub enum CallbackHandler {
     NativeFn(NativeFn),
     ParseFn(ParseFn),
     ListenHandleFn(ListenHandleFn),
+    SignalUpdateFn(SignalUpdateFn),
     ConfigCallbackFn(ConfigCallbackFn),
 }
 
@@ -67,6 +68,9 @@ pub enum PluginRequest {
     InjectCss(String),
     Emit(String),
     Listen(String, String, u64),
+    RegisterSignal(String, String),
+    UpdateSignal(String, String),
+    OnSignalUpdate(String, String, u64),
 
     // Handlers
     ConfigCallbackHandle(u64),
@@ -105,6 +109,11 @@ pub extern "C" fn plugin_callback_handler(
         }
         Some(CallbackHandler::ListenHandleFn(f)) => {
             f();
+            return std::ptr::null_mut();
+        }
+        Some(CallbackHandler::SignalUpdateFn(f)) => {
+            let value: String = bincode::deserialize(bytes).unwrap_or_default();
+            f(&value);
             return std::ptr::null_mut();
         }
         Some(CallbackHandler::ConfigCallbackFn(f)) => {
@@ -288,6 +297,24 @@ impl EwwiiAPI for HostProxy {
         get_callbacks().lock().unwrap().insert(id, CallbackHandler::ListenHandleFn(handle));
 
         let req = PluginRequest::Listen(self.get_id().to_string(), signal.to_string(), id);
+        self.call_host(req);
+    }
+
+    fn register_signal(&self, name: &str, initial: String) {
+        let req = PluginRequest::RegisterSignal(name.to_string(), initial);
+        self.call_host(req);
+    }
+
+    fn update_signal(&self, name: &str, value: String) {
+        let req = PluginRequest::UpdateSignal(name.to_string(), value);
+        self.call_host(req);
+    }
+
+    fn on_signal_update(&self, name: &str, handle: SignalUpdateFn) {
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::SignalUpdateFn(handle));
+
+        let req = PluginRequest::OnSignalUpdate(self.get_id().to_string(), name.to_string(), id);
         self.call_host(req);
     }
 

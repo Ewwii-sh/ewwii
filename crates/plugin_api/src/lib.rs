@@ -311,6 +311,15 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```
     fn listen(&self, signal: &str, handle: ListenHandleFn);
 
+    /// Register a signal into ewwii.
+    fn register_signal(&self, name: &str, initial: String);
+
+    /// Update the value of a signal.
+    fn update_signal(&self, name: &str, value: String);
+
+    /// Run a function when a signal updates.
+    fn on_signal_update(&self, name: &str, handle: SignalUpdateFn);
+
     // === Handlers === //
 
     /// Handle callbacks registered by the config engine.

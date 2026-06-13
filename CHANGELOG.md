@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `register_library` API to plugin API.
 - `emit` plugin API to emit signal to a shared buffer.
 - `listen` plugin API to listen to signals emitted by plugins.
+- `register_signal` plugin API to register custom signals.
+- `update_signal` plugin API to update signals.
+- `on_signal_update` plugin API to run a function when signal updates.
 
 ### Changed
 
