@@ -12,6 +12,7 @@
 //! standard plugins, and the **Manual Implementation** for full control.
 //!
 //! ### 1. Recommended: Using `auto_plugin!`
+//!
 //! For most use cases, the macro handles the boilerplate of exporting
 //! symbols and implementing traits.
 //!
@@ -29,11 +30,13 @@
 //! ```
 //!
 //! ### 2. Advanced: Manual Implementation
-//! Use this approach if your plugin needs to maintain internal state,
-//! implement additional traits, or manage complex lifetimes.
+//!
+//! You generally would never need to use the manual approach unless you **have** to store someting
+//! inside the plugin structure.
 //!
 //! ```rust
 //! use ewwii_plugin_api::{EwwiiAPI, Plugin, PluginInfo, export_plugin};
+//! use std::sync::Arc;
 //!
 //! #[derive(Default)]
 //! pub struct MyPlugin {
@@ -45,7 +48,7 @@
 //!         PluginInfo::new("com.app.example", "1.0.0")
 //!     }
 //!
-//!     fn init(&self, host: &dyn EwwiiAPI) {
+//!     fn init(&self, host: Arc<dyn EwwiiAPI>) {
 //!         host.log("Manual plugin initialized.");
 //!     }
 //! }
@@ -343,6 +346,7 @@ pub trait EwwiiAPI: Send + Sync {
 ///
 /// ```rust
 /// use ewwii_plugin_api::{Plugin, PluginInfo, EwwiiAPI, export_plugin};
+/// use std::sync::Arc;
 ///
 /// #[derive(Default)]
 /// struct MyStruct;
@@ -353,7 +357,7 @@ pub trait EwwiiAPI: Send + Sync {
 ///         PluginInfo::new("", "")
 ///     }
 ///
-///     fn init(&self, host: &dyn EwwiiAPI) {
+///     fn init(&self, host: Arc<dyn EwwiiAPI>) {
 ///         /* Implementation Skipped */
 ///      }
 /// }
