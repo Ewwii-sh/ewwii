@@ -280,7 +280,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```
     fn emit(&self, signal: &str);
 
-    /// Listen to a message emitted by a plugin in the buffer.
+    /// Listen to a message emitted by a plugin or ewwii in the buffer.
     ///
     /// # Example
     ///
@@ -305,6 +305,17 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     /// );
     /// ```
+    ///
+    /// # Ewwii Emissions
+    ///
+    /// Ewwii too emits messages to the plugin buffer to let the plugins know when a event has
+    /// occourred. These are all the messages ewwii can emit:
+    ///
+    /// - ewwii-config-loaded
+    /// - ewwii-applied-styles
+    /// - ewwii-started-signals
+    /// - ewwii-init-window
+    ///
     fn listen(&self, signal: &str, handle: ListenHandleFn);
 
     /// Register a signal into ewwii.
