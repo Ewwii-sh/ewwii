@@ -2,7 +2,7 @@
 //! that are used to redirect API calls to host after serialization
 
 use crate::{
-    ConfigCallbackFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError, PluginValue, LibraryItemFFI, LibraryFnFFI, LibraryItem,
+    ConfigCallbackFn, ListenHandleFn, ConfigInfo, EwwiiAPI, IpcRequest, NativeFn, NbclType, ParseFn, PluginError, PluginValue, LibraryItemFFI, LibraryFnFFI, LibraryItem,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,7 @@ use std::sync::{Mutex, OnceLock};
 pub enum CallbackHandler {
     NativeFn(NativeFn),
     ParseFn(ParseFn),
+    ListenHandleFn(ListenHandleFn),
     ConfigCallbackFn(ConfigCallbackFn),
 }
 
@@ -64,6 +65,8 @@ pub enum PluginRequest {
 
     // Dynamic Runtime
     InjectCss(String),
+    Emit(String),
+    Listen(String, String, u64),
 
     // Handlers
     ConfigCallbackHandle(u64),
@@ -99,6 +102,10 @@ pub extern "C" fn plugin_callback_handler(
                 Err(e) => bincode::serialize(&CallbackResponse::Error(PluginError::ParseError(e)))
                     .unwrap_or_default(),
             }
+        }
+        Some(CallbackHandler::ListenHandleFn(f)) => {
+            f();
+            return std::ptr::null_mut();
         }
         Some(CallbackHandler::ConfigCallbackFn(f)) => {
             let (name, id): (String, String) = bincode::deserialize(bytes).unwrap_or_default();
@@ -266,8 +273,21 @@ impl EwwiiAPI for HostProxy {
 
     // === Dynamic Runtime === //
 
-    fn inject_css(&self, css: String) {
-        let req = PluginRequest::InjectCss(css);
+    fn inject_css(&self, css: &str) {
+        let req = PluginRequest::InjectCss(css.to_string());
+        self.call_host(req);
+    }
+
+    fn emit(&self, signal: &str) {
+        let req = PluginRequest::Emit(signal.to_string());
+        self.call_host(req);
+    }
+
+    fn listen(&self, signal: &str, handle: ListenHandleFn) {
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::ListenHandleFn(handle));
+
+        let req = PluginRequest::Listen(self.get_id().to_string(), signal.to_string(), id);
         self.call_host(req);
     }
 

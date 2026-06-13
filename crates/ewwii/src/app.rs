@@ -156,6 +156,7 @@ pub struct App<B: DisplayBackend> {
     pub css_provider: gtk4::CssProvider,
     /// This will be set by the plugins.
     pub custom_css_provider: gtk4::CssProvider,
+    pub plugin_buffer: tokio::sync::broadcast::Sender<String>,
     pub reloading: bool,
 
     /// Sender to send [`DaemonCommand`]s

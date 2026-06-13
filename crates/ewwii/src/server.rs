@@ -88,6 +88,10 @@ pub fn initialize_server<B: DisplayBackend>(
         instance_id_to_args: HashMap::new(),
         css_provider: gtk4::CssProvider::new(),
         custom_css_provider: gtk4::CssProvider::new(),
+        plugin_buffer: {
+            let (tx, _rx) = tokio::sync::broadcast::channel(64);
+            tx
+        },
         reloading: false,
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
