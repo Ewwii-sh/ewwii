@@ -1,5 +1,5 @@
 name: Module request
-description: Suggest an new Rhai Module
+description: Suggest an new Nbcl Module
 title: "[Module] "
 labels: [module-request]
 body:

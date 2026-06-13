@@ -30,8 +30,7 @@ Examples of projects powered by ewwii.
 |---------|---------|
 | **Basic Bar**<br>[- View Example](./examples/ewwii-bar) | [![Basic Bar](./examples/ewwii-bar/ewwii-bar.png)](./examples/ewwii-bar) |
 | **Data Structures**<br>[- View Example](./examples/data-structures) | [![Data Structures](./examples/data-structures/data-structures-preview.png)](./examples/data-structures) |
-| **Obsidian Bar Template**<br>[- View on GitHub](https://github.com/Ewwii-sh/obsidian-bar) | [![Obsidian Bar](https://raw.githubusercontent.com/Ewwii-sh/obsidian-bar/main/.github/screenshot.png)](https://github.com/Ewwii-sh/obsidian-bar) |
-| **Binary Dots by [@BinaryHarbinger](https://github.com/BinaryHarbinger)**<br>[- View on GitHub](https://github.com/BinaryHarbinger/binarydots/) | [![Binary Dots](https://raw.githubusercontent.com/BinaryHarbinger/binarydots/main/preview/Desktop.png)](https://github.com/BinaryHarbinger/binarydots)
+| **Binary Dots by [@BinaryHarbinger](https://codeberg.org/BinaryHarbinger)**<br>[- View on CodeBerg](https://codeberg.org/BinaryHarbinger/binarydots) | [![Binary Dots](https://raw.githubusercontent.com/BinaryHarbinger/binarydots/main/preview/Desktop.png)](https://github.com/BinaryHarbinger/binarydots)
 | **Astatine Dots (Linux Rice with Ewwii)**<br>[- View on GitHub](https://github.com/Ewwii-sh/astatine-dots) | [![Astatine Dots](https://github.com/user-attachments/assets/f028ca1f-e403-476d-a7d9-cadce47691b7)](https://github.com/Ewwii-sh/astatine-dots) |
 
 ## Contribewwtiing

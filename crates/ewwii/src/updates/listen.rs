@@ -108,8 +108,11 @@ pub async fn stream_cmd_lines(
 }
 
 pub fn handle_listen(var_name: String, props: &PropertyMap, shell: String) {
-    let cmd = match get_string_prop(props, "cmd", Some("")) {
-        Ok(c) => unwrap_static("cmd", c),
+    const CMD_KEY: &str = "cmd";
+
+    let cmd_prop = soft_retreive_prop(props, CMD_KEY, "");
+    let cmd = match get_string_prop(&cmd_prop, CMD_KEY) {
+        Ok(c) => unwrap_static(CMD_KEY, c),
         Err(e) => {
             log::warn!("Listen {} cmd property either missing or invalid: {}", var_name, e);
             return;

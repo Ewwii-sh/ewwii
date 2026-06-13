@@ -47,7 +47,7 @@ mod imp {
     const DEFAULT_VALUE: f64 = 0.0;
     const DEFAULT_THICKNESS: f64 = 1.0;
     const DEFAULT_MIN: f64 = 0.0;
-    const DEFAULT_MAX: f64 = 1.0;
+    const DEFAULT_MAX: f64 = 100.0;
     const DEFAULT_DYNAMIC: bool = true;
     const DEFAULT_TIME_RANGE: u32 = 10_000; // ms
     const DEFAULT_FLIP_X: bool = false;
@@ -650,5 +650,11 @@ glib::wrapper! {
 impl Graph {
     pub fn new() -> Self {
         glib::Object::builder().build()
+    }
+}
+
+impl Default for Graph {
+    fn default() -> Self {
+        Self::new()
     }
 }

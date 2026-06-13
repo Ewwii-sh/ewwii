@@ -5,6 +5,35 @@ All notable changes to `ewwii` are documented here.
 This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format,
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] - 2026-06-13
+
+### Added
+
+- `unescape` property to label widget.
+- Better Nbcl error reporting.
+- `register_library` API to plugin API.
+- `emit` plugin API to emit signal to a shared buffer.
+- `listen` plugin API to listen to signals emitted by plugins.
+- `register_signal` plugin API to register custom signals.
+- `update_signal` plugin API to update signals.
+- `on_signal_update` plugin API to run a function when signal updates.
+- `signal_value` plugin API to get the value of a signal.
+- `metadata_id` plugin API to get the id of this plugin.
+
+### Changed
+
+- Rendering backend architecture to a more flexible one.
+- Plugin API to allow calls from multiple threads.
+- Made `widget-control property-update` update the ewwii property instea of the gtk property.
+- `ipc_request` plugin API to return `FutureResult`.
+- `inject_css` plugin API to allow multiple plugins to inject css.
+
+### Removed
+
+- `show_truncated` property from label widget.
+- `space_evenly` property from eventbox.
+- `spacing` property from eventbox.
+
 ## [0.8.4] - 2026-05-31
 
 ### Fixed

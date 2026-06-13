@@ -1,20 +1,3 @@
-/*
-    Entry file of ewwii.
-
-    This file mostly contains wayland/x11 setup and args stuff
-    If you are interesting in something like window rendering,
-    then you can read `app.rs`. It is where daemon commands are handled.
-
-    The full options (arguments) are parsed in `opts.rs` as well as `app.rs`.
-
-    If you want to know about configuration loading (using iirhai),
-    then you can check `config/ewwii_config.rs` as it is the file that loads
-    and passes the widget tree to other compontents.
-
-    The ipc stuff are done in `ipc_server.rs`. This file holds the ipc
-    for both ewwii daemon and iirhai.
-*/
-
 #![allow(rustdoc::private_intra_doc_links)]
 
 // getting gtk stuff

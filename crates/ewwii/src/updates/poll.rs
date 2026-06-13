@@ -1,18 +1,24 @@
 use super::{api::VarWatcherAPI, SHUTDOWN_REGISTRY};
 use ewwii_shared_utils::prop::PropertyMap;
 use ewwii_shared_utils::prop_utils::*;
-use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::Command;
 use tokio::sync::watch;
 use tokio::time::sleep;
 
 pub fn handle_poll(var_name: String, props: &PropertyMap, shell: String) {
-    let interval = get_duration_prop(props, "interval", Some(Duration::from_secs(1)));
+    const INTERVAL_KEY: &str = "interval";
+    const CMD_KEY: &str = "cmd";
+    const SKIP_KEY: &str = "skip_unchanged";
+
+    let interval_prop = soft_retreive_prop(props, INTERVAL_KEY, "1s");
+    let cmd_prop = soft_retreive_prop(props, CMD_KEY, "");
+
+    let interval = get_duration_prop(&interval_prop, INTERVAL_KEY);
     let interval = interval.expect("Error parsing interval property of poll");
 
-    let cmd = match get_string_prop(props, "cmd", Some("")) {
-        Ok(c) => unwrap_static("cmd", c),
+    let cmd = match get_string_prop(&cmd_prop, CMD_KEY) {
+        Ok(c) => unwrap_static(CMD_KEY, c),
         Err(e) => {
             log::warn!("Poll {} cmd property either missing or invalid: {}", var_name, e);
             return;
@@ -20,8 +26,9 @@ pub fn handle_poll(var_name: String, props: &PropertyMap, shell: String) {
     };
 
     const DEFAULT_SKIP: bool = true;
-    let skip_unchanged = match get_bool_prop(props, "skip_unchanged", Some(DEFAULT_SKIP)) {
-        Ok(p) => unwrap_static("skip_unchanged", p),
+    let skip_prop = soft_retreive_prop_bool(props, SKIP_KEY, DEFAULT_SKIP);
+    let skip_unchanged = match get_bool_prop(&skip_prop, SKIP_KEY) {
+        Ok(p) => unwrap_static(SKIP_KEY, p),
         Err(e) => {
             log::warn!("Failed to parse skip_unchanged property of poll {}: {}", var_name, e);
             DEFAULT_SKIP

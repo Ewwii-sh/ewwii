@@ -9,15 +9,22 @@ use tokio::sync::watch;
 use tokio::time::sleep;
 
 pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) {
-    let every_sec = match get_duration_prop(&props, "every", None) {
+    const EVERY_KEY: &str = "every";
+    const ON_KEY: &str = "on";
+    const RUN_KEY: &str = "run";
+
+    let every_prop = soft_retreive_prop(props, EVERY_KEY, "");
+    let on_prop = soft_retreive_prop(props, ON_KEY, "");
+
+    let every_sec = match get_duration_prop(&every_prop, EVERY_KEY) {
         Ok(d) => Some(d),
         Err(_) => None,
     };
-    let on_cmd = match get_string_prop(&props, "on", None) {
-        Ok(c) => Some(unwrap_static("on", c)),
+    let on_cmd = match get_string_prop(&on_prop, ON_KEY) {
+        Ok(c) => Some(unwrap_static(ON_KEY, c)),
         Err(_) => None,
     };
-    let run = match get_callback_prop(&props, "run") {
+    let run = match get_callback_prop(&props, RUN_KEY) {
         Ok(r) => r,
         Err(_) => {
             log::error!("Script requires 'run' property to function.");

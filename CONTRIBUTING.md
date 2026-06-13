@@ -8,7 +8,7 @@
 
 ## Codebase
 
-- `crates/ewwii`: Core of ewwii (ipc, daemon, options, globalvar handlers, gtk, etc.)
+- `crates/ewwii`: Core of ewwii (ipc, daemon, options, signal handlers, gtk4, etc.)
 - `crates/plugin_api`: Plugin API (used by both ewwii and plugin for communication)
-- `crates/rhai_impl`: Rhai implementation (parsing, modules)
-- `crates/shared_utils`: Utility functions shared between rhai and ewwii (spans, helpers)
+- `crates/nbcl_impl`: Nbcl implementation (parsing, modules)
+- `crates/shared_utils`: Utility functions shared between nbcl, plugins, and ewwii (spans, helpers)
