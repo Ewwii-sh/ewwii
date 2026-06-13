@@ -1,11 +1,11 @@
 use super::NativeFn;
 use super::NbclType;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
 pub struct LibraryItem {
     pub(crate) name: String,
-    pub(crate) functions: HashMap<String, LibraryFn>
+    pub(crate) functions: HashMap<String, LibraryFn>,
 }
 
 pub struct LibraryFn {
@@ -26,12 +26,14 @@ impl LibraryItem {
     }
 
     /// Chainable function registration
-    pub fn with_fn(mut self, name: &str, params: Vec<NbclType>, ret: NbclType, f: NativeFn) -> Self {
-        let lib_fn = LibraryFn {
-            params,
-            ret,
-            handler: f,
-        };
+    pub fn with_fn(
+        mut self,
+        name: &str,
+        params: Vec<NbclType>,
+        ret: NbclType,
+        f: NativeFn,
+    ) -> Self {
+        let lib_fn = LibraryFn { params, ret, handler: f };
         self.functions.insert(name.to_string(), lib_fn);
 
         self
@@ -41,7 +43,7 @@ impl LibraryItem {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LibraryItemFFI {
     pub name: String,
-    pub functions: HashMap<String, LibraryFnFFI>
+    pub functions: HashMap<String, LibraryFnFFI>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
