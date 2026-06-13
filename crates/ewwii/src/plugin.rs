@@ -254,6 +254,35 @@ impl<B: DisplayBackend> App<B> {
             PluginRequest::InjectCss(css) => {
                 self.custom_css_provider.load_from_string(&css);
             }
+            PluginRequest::Emit(signal) => {
+                if let Err(e) = self.plugin_buffer.send(signal) {
+                    log::error!("Failed to emit signal: {e}");
+                }
+            }
+            PluginRequest::Listen(plugin_id, signal, callback_id) => {
+                let mut rx = self.plugin_buffer.subscribe();
+
+                tokio::spawn(async move {
+                    loop {
+                        match rx.recv().await {
+                            Ok(msg) => {
+                                if msg == signal {
+                                    let arg_bytes = Vec::new();
+                                    if let None = call_plugin_handler(&plugin_id, callback_id, arg_bytes) {
+                                        log::error!("Failed calling listen handler.");
+                                    }
+                                }
+                            }
+                            Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                                log::warn!("Listener {} lagged by {} messages", callback_id, n);
+                            }
+                            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
             PluginRequest::ConfigCallbackHandle(id) => {
                 EWWII_CONFIG_PARSER.with(|p| {
                     let mut parser = p.borrow_mut();

@@ -252,14 +252,61 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// auto_plugin!(
     ///     DummyStructure,
-    ///     PluginInfo::new("test.example.ipc", "1.0.0"),
+    ///     PluginInfo::new("test.example.inject", "1.0.0"),
     ///     host,
     ///     {
-    ///         host.inject_css("* { all: unset }".to_string());
+    ///         host.inject_css("* { all: unset }");
     ///     }
     /// );
     /// ```
-    fn inject_css(&self, css: String);
+    fn inject_css(&self, css: &str);
+
+    /// Emit a message to a buffer which other plugins can see.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.emit", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         host.emit("emit-loaded");
+    ///     }
+    /// );
+    /// ```
+    fn emit(&self, signal: &str);
+
+    /// Listen to a message emitted by a plugin in the buffer.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    ///     ListenHandleFn, ListenHandleFnExt
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.emitlisten", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         let host_clone = host.clone();
+    ///         host.listen("emit-loaded", ListenHandleFn::new(move || {
+    ///             // Assuming you would listen to
+    ///             // signals emitted by plugins
+    ///             // to do calls to host (i.e ewwii).
+    ///             host_clone.emit("emit-loaded-received");
+    ///         }));
+    ///     }
+    /// );
+    /// ```
+    fn listen(&self, signal: &str, handle: ListenHandleFn);
 
     // === Handlers === //
 
