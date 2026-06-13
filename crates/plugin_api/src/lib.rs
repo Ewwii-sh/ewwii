@@ -85,6 +85,8 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     /// # Example
     ///
+    /// **Example 1:**
+    ///
     /// ```rust
     /// use ewwii_plugin_api::{
     ///     auto_plugin, PluginInfo,
@@ -104,7 +106,34 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     /// );
     /// ```
-    fn ipc_request(&self, req: IpcRequest);
+    ///
+    /// **Example 2:**
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    ///     IpcRequest, WidgetControlType
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.ipc", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         let future_result = host.ipc_request(IpcRequest::WidgetControl(WidgetControlType::PropertyGet {
+    ///             widget: "my_widget".to_string(),
+    ///             prop: "label".to_string(),
+    ///         }));
+    ///
+    ///         let result = future_result.resolve(); // Result<T, E>
+    ///         // do stuff with result...
+    ///     }
+    /// );
+    /// ```
+    ///
+    /// WARNING: Trying to resolve a future_result if the ipc request is not the type that returns
+    /// something may result in a deadlock.
+    fn ipc_request(&self, req: IpcRequest) -> FutureResult<String>;
 
     // === Registration Stuff === //
 
@@ -398,19 +427,11 @@ pub trait EwwiiAPI: Send + Sync {
     ///     PluginInfo::new("test.example.signal", "1.0.0"),
     ///     host,
     ///     {
-    ///         let frx = host.signal_value("example");
-    ///
-    ///         // WARNING: Never block main thread
-    ///         std::thread::spawn(move || {
-    ///             let result = frx.blocking_recv();
-    ///             println!("Result is '{}'", result);
-    ///         });
+    ///         let future_result = host.signal_value("example");
+    ///         let value = future_result.resolve(); // Result<T, E>
     ///     }
     /// );
     /// ```
-    ///
-    /// NOTE: Always make sure that your plugin **never** blocks the main thread. Both ewwii and the plugin
-    /// with deadlock each other.
     fn signal_value(&self, name: &str) -> FutureResult<String>;
 
     // === Handlers === //

@@ -58,12 +58,12 @@ fn get_callbacks() -> &'static Mutex<HashMap<u64, CallbackHandler>> {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PluginRequest {
     // (id, msg)
-    Log((String, String)),
-    Warn((String, String)),
-    Error((String, String)),
+    Log(String, String),
+    Warn(String, String),
+    Error(String, String),
 
     // IPC API (Data transfer)
-    Ipc((String, IpcRequest)),
+    Ipc(String, IpcRequest, u64),
 
     // Registration API (Complex)
     RegisterFn {
@@ -207,30 +207,38 @@ impl EwwiiAPI for HostProxy {
 
     fn log(&self, msg: &str) {
         let plugid = &self.get_id();
-        let req = PluginRequest::Log((plugid.to_string(), msg.to_string()));
+        let req = PluginRequest::Log(plugid.to_string(), msg.to_string());
 
         self.call_host(req);
     }
 
     fn warn(&self, msg: &str) {
         let plugid = &self.get_id();
-        let req = PluginRequest::Warn((plugid.to_string(), msg.to_string()));
+        let req = PluginRequest::Warn(plugid.to_string(), msg.to_string());
 
         self.call_host(req);
     }
 
     fn error(&self, msg: &str) {
         let plugid = &self.get_id();
-        let req = PluginRequest::Error((plugid.to_string(), msg.to_string()));
+        let req = PluginRequest::Error(plugid.to_string(), msg.to_string());
 
         self.call_host(req);
     }
 
-    fn ipc_request(&self, req: IpcRequest) {
-        let plugid = &self.get_id();
-        let req = PluginRequest::Ipc((plugid.to_string(), req));
+    fn ipc_request(&self, req: IpcRequest) -> FutureResult<String> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let handle = ManualHandle::new(move |value: String| {
+            let _ = tx.send(value);
+        });
 
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::ManualHandleStr(handle));
+
+        let req = PluginRequest::Ipc(self.get_id().to_string(), req, id);
         self.call_host(req);
+
+        FutureResult { channel: rx }
     }
 
     // === Registration === //

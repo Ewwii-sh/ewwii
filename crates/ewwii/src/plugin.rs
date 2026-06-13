@@ -192,17 +192,20 @@ impl CustomConfigEngine {
 impl<B: DisplayBackend> App<B> {
     pub fn handle_plugin_request(&mut self, request: PluginRequest) {
         match request {
-            PluginRequest::Log((id, msg)) => {
+            PluginRequest::Log(id, msg) => {
                 log::info!("[{}] {}", id, msg);
             }
-            PluginRequest::Warn((id, msg)) => {
+            PluginRequest::Warn(id, msg) => {
                 log::warn!("[{}] {}", id, msg);
             }
-            PluginRequest::Error((id, msg)) => {
+            PluginRequest::Error(id, msg) => {
                 log::error!("[{}] {}", id, msg);
             }
-            PluginRequest::Ipc((_, req)) => {
-                self.handle_plugin_ipc(req);
+            PluginRequest::Ipc(plugin_id, req, callback_id) => {
+                if let Some(res) = self.handle_plugin_ipc(req) {
+                    let arg_bytes = bincode::serialize(&res).unwrap_or_default();
+                    call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+                }
             }
             PluginRequest::RegisterFn { id, name, types, return_type, callback_id } => {
                 if name.trim().is_empty() {
@@ -398,7 +401,7 @@ impl<B: DisplayBackend> App<B> {
         })
     }
 
-    pub fn handle_plugin_ipc(&mut self, req: IpcRequest) {
+    pub fn handle_plugin_ipc(&mut self, req: IpcRequest) -> Option<String> {
         let handle = tokio::runtime::Handle::current();
         match req {
             IpcRequest::WidgetControl(wc_type) => match wc_type {
@@ -411,6 +414,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::Create { parent, codes } => {
                     let (sender, _recv) = daemon_response::create_pair();
@@ -424,6 +429,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::PropertyGet { prop, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
@@ -437,6 +444,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::PropertyUpdate { prop, widget, value } => {
                     let p2v = HashMap::from([(prop, value)]);
@@ -452,6 +461,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::AddClass { class, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
@@ -462,6 +473,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
                 WidgetControlType::RemoveClass { class, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
@@ -472,6 +485,8 @@ impl<B: DisplayBackend> App<B> {
                     handle.block_on(async {
                         self.handle_command(command).await;
                     });
+
+                    None
                 }
             },
             IpcRequest::Update(var, val) => {
@@ -481,6 +496,8 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
             IpcRequest::Close(windows) => {
                 let (sender, _recv) = daemon_response::create_pair();
@@ -488,6 +505,8 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
             IpcRequest::Open(window, toggle) => {
                 let (sender, _recv) = daemon_response::create_pair();
@@ -505,12 +524,16 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
             IpcRequest::CloseAll => {
                 let command = DaemonCommand::CloseAll;
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
             IpcRequest::Reload => {
                 let (sender, _recv) = daemon_response::create_pair();
@@ -518,6 +541,8 @@ impl<B: DisplayBackend> App<B> {
                 handle.block_on(async {
                     self.handle_command(command).await;
                 });
+
+                None
             }
         }
     }
