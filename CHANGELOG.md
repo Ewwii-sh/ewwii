@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Rendering backend architecture to a more flexible one.
+- Plugin API to allow calls from multiple threads.
 - Made `widget-control property-update` update the ewwii property instea of the gtk property.
 
 ### Removed

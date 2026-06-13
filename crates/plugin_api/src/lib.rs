@@ -57,7 +57,6 @@
 mod bridge;
 mod export_macros;
 
-pub mod example;
 pub mod proxy;
 
 pub use bridge::*;
@@ -320,5 +319,5 @@ pub trait Plugin: Send + Sync {
     fn metadata(&self) -> PluginInfo;
 
     /// Function ran by host to startup plugin.
-    fn init(&self, host: &dyn EwwiiAPI);
+    fn init(&self, host: std::sync::Arc<dyn EwwiiAPI>);
 }
