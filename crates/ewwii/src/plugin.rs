@@ -47,6 +47,11 @@ pub struct ActivePlugin {
 
 pub static ACTIVE_PLUGINS: Lazy<RwLock<Vec<ActivePlugin>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
+pub struct PluginBuffer {
+    pub tx: tokio::sync::broadcast::Sender<String>,
+    pub _rx: tokio::sync::broadcast::Receiver<String>
+}
+
 fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
     let res = match any {
         NbclValue::Null => PluginValue::Null,
@@ -262,12 +267,12 @@ impl<B: DisplayBackend> App<B> {
                 self.custom_css_providers.push(provider);
             }
             PluginRequest::Emit(signal) => {
-                if let Err(e) = self.plugin_buffer.send(signal) {
+                if let Err(e) = self.plugin_buffer.tx.send(signal) {
                     log::error!("Failed to emit signal: {e}");
                 }
             }
             PluginRequest::Listen(plugin_id, signal, callback_id) => {
-                let mut rx = self.plugin_buffer.subscribe();
+                let mut rx = self.plugin_buffer.tx.subscribe();
 
                 tokio::spawn(async move {
                     loop {
