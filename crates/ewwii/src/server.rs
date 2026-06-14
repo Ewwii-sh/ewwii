@@ -1,7 +1,6 @@
-use crate::plugin;
 use crate::{
     app::{self, App, DaemonCommand},
-    config,
+    config, plugin,
     config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER},
     daemon_response,
     display_backend::DisplayBackend,
@@ -90,7 +89,7 @@ pub fn initialize_server<B: DisplayBackend>(
         custom_css_providers: Vec::new(),
         plugin_buffer: {
             let (tx, _rx) = tokio::sync::broadcast::channel(64);
-            tx
+            plugin::PluginBuffer { tx, _rx }
         },
         reloading: false,
         app_evt_send: ui_send.clone(),
@@ -118,7 +117,7 @@ pub fn initialize_server<B: DisplayBackend>(
     match read_config {
         Ok(new_config) => {
             app.ewwii_config = new_config;
-            if let Err(e) = app.plugin_buffer.send("ewwii-config-loaded".to_string()) {
+            if let Err(e) = app.plugin_buffer.tx.send("ewwii-config-loaded".to_string()) {
                 log::error!("Ewwii failed to emit signal: {e}");
             }
         }
@@ -135,7 +134,7 @@ pub fn initialize_server<B: DisplayBackend>(
         for css_provider in &app.custom_css_providers {
             gtk4::style_context_add_provider_for_display(&display, css_provider, 910);
         }
-        if let Err(e) = app.plugin_buffer.send("ewwii-applied-styles".to_string()) {
+        if let Err(e) = app.plugin_buffer.tx.send("ewwii-applied-styles".to_string()) {
             log::error!("Ewwii failed to emit signal: {e}");
         }
     }

@@ -156,7 +156,7 @@ pub struct App<B: DisplayBackend> {
     pub css_provider: gtk4::CssProvider,
     /// This will be set by the plugins.
     pub custom_css_providers: Vec<gtk4::CssProvider>,
-    pub plugin_buffer: tokio::sync::broadcast::Sender<String>,
+    pub plugin_buffer: plugin::PluginBuffer,
     pub reloading: bool,
 
     /// Sender to send [`DaemonCommand`]s
@@ -459,7 +459,7 @@ impl<B: DisplayBackend> App<B> {
                     crate::updates::handle_state_changes(parser, signals_vec);
                 });
 
-                if let Err(e) = self.plugin_buffer.send("ewwii-started-signals".to_string()) {
+                if let Err(e) = self.plugin_buffer.tx.send("ewwii-started-signals".to_string()) {
                     log::error!("Ewwii failed to emit signal: {e}");
                 }
             }
@@ -476,7 +476,7 @@ impl<B: DisplayBackend> App<B> {
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
 
-            if let Err(e) = self.plugin_buffer.send("ewwii-init-window".to_string()) {
+            if let Err(e) = self.plugin_buffer.tx.send("ewwii-init-window".to_string()) {
                 log::error!("Ewwii failed to emit signal: {e}");
             }
 
