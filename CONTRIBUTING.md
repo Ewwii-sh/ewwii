@@ -1,6 +1,6 @@
 # Contributing to ewwii
 
-Contribution does not always have to be code contribution. Any form of contribution is highly appreciated.
+Contribution does not always have to be code contribution. Any form of contribution is highly appreciated. Even if you can't contribute, making your ewwii configuration and sharing it with the community is also a great way to help the project out!
 
 ## Code Contribution
 
