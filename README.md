@@ -22,6 +22,13 @@ Ewwii is a Gtk4 based widget system for Linux that lets you build fully custom d
 - **Plugin System:** Extend or Replace core components via custom plugins
 - **X11 + Wayland support:** Native support for both major display protocols
 
+## Resources
+
+- **Website**: https://ewwii-sh.github.io/
+- **Docs**: https://ewwii-sh.github.io/docs/
+- **Articles**: https://ewwii-sh.github.io/articles/
+- **Plugins**: https://ewwii-sh.github.io/plugins/
+
 ## Examples
 
 Examples of projects powered by ewwii.
