@@ -48,8 +48,40 @@ pub struct ActivePlugin {
 pub static ACTIVE_PLUGINS: Lazy<RwLock<Vec<ActivePlugin>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
 pub struct PluginBuffer {
-    pub tx: tokio::sync::broadcast::Sender<String>,
-    pub _rx: tokio::sync::broadcast::Receiver<String>
+    pub subscribers: Vec<PluginSubscriber>
+}
+
+pub struct PluginSubscriber {
+    signal: String,
+    plugin_id: String,
+    callback_id: u64,
+}
+
+impl PluginBuffer {
+    pub fn new() -> Self {
+        Self {
+            subscribers: Vec::new()
+        }
+    }
+
+    pub fn subscribe(&mut self, signal: String, plugin_id: String, callback_id: u64) {
+        self.subscribers.push(PluginSubscriber {
+            signal,
+            plugin_id,
+            callback_id
+        })
+    }
+
+    pub fn emit<S: AsRef<str>>(&self, signal: S) {
+        for subscriber in &self.subscribers {
+            if signal.as_ref() != &subscriber.signal {
+                continue;
+            }
+
+            let arg_bytes = Vec::new();
+            call_plugin_handler(&subscriber.plugin_id, subscriber.callback_id, arg_bytes);
+        }
+    }
 }
 
 fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
@@ -267,31 +299,10 @@ impl<B: DisplayBackend> App<B> {
                 self.custom_css_providers.push(provider);
             }
             PluginRequest::Emit(signal) => {
-                if let Err(e) = self.plugin_buffer.tx.send(signal) {
-                    log::error!("Failed to emit signal: {e}");
-                }
+                self.plugin_buffer.emit(signal);
             }
             PluginRequest::Listen(plugin_id, signal, callback_id) => {
-                let mut rx = self.plugin_buffer.tx.subscribe();
-
-                tokio::spawn(async move {
-                    loop {
-                        match rx.recv().await {
-                            Ok(msg) => {
-                                if msg == signal {
-                                    let arg_bytes = Vec::new();
-                                    call_plugin_handler(&plugin_id, callback_id, arg_bytes);
-                                }
-                            }
-                            Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
-                                log::warn!("Listener {} lagged by {} messages", callback_id, n);
-                            }
-                            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
-                                break;
-                            }
-                        }
-                    }
-                });
+                self.plugin_buffer.subscribe(signal, plugin_id, callback_id);
             }
             PluginRequest::RegisterSignal(name, initial) => {
                 crate::updates::api::VarWatcherAPI::register(&name, initial);
