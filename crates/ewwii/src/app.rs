@@ -594,6 +594,8 @@ impl<B: DisplayBackend> App<B> {
         })();
         self.reloading = false;
 
+        self.plugin_buffer.emit("ewwii-reloaded-windows");
+
         result
     }
 

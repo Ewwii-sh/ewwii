@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+### Added
+
+- `ewwii-reloaded-windows` signal emission.
+
 ### Fixed
 
 - Plugin buffer crashing ewwii.

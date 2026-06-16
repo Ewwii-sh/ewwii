@@ -346,6 +346,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// - ewwii-applied-styles
     /// - ewwii-started-signals
     /// - ewwii-init-window
+    /// - ewwii-reloaded-windows
     ///
     fn listen(&self, signal: &str, handle: ListenHandleFn);
 
