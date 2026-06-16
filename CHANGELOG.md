@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Dummy receiver not being stored for plugin buffer.
+- Plugin buffer crashing ewwii.
 
 ## [0.9.0] - 2026-06-13
 

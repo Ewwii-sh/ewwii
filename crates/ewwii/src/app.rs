@@ -459,9 +459,7 @@ impl<B: DisplayBackend> App<B> {
                     crate::updates::handle_state_changes(parser, signals_vec);
                 });
 
-                if let Err(e) = self.plugin_buffer.tx.send("ewwii-started-signals".to_string()) {
-                    log::error!("Ewwii failed to emit signal: {e}");
-                }
+                self.plugin_buffer.emit("ewwii-started-signals");
             }
 
             let root_widget = {
@@ -476,9 +474,7 @@ impl<B: DisplayBackend> App<B> {
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
 
-            if let Err(e) = self.plugin_buffer.tx.send("ewwii-init-window".to_string()) {
-                log::error!("Ewwii failed to emit signal: {e}");
-            }
+            self.plugin_buffer.emit("ewwii-init-window");
 
             let gtk_close_handler = {
                 let app_evt_sender = self.app_evt_send.clone();
