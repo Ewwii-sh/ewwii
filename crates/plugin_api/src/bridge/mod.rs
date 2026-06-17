@@ -7,6 +7,7 @@ mod ipc;
 mod library;
 mod registration;
 mod shared;
+mod paths;
 
 pub use future::*;
 pub use handlers::*;
@@ -14,3 +15,4 @@ pub use ipc::*;
 pub use library::*;
 pub use registration::*;
 pub use shared::*;
+pub use paths::*;
