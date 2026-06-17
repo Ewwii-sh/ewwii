@@ -306,7 +306,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     host,
     ///     {
     ///         let future_idx = host.inject_css("* { all: unset }");
-    ///         let idx = future_idx.resolve();
+    ///         let idx = future_idx.resolve().expect("css provider idx");
     ///
     ///         host.remove_css(idx);
     ///     }
@@ -457,6 +457,27 @@ pub trait EwwiiAPI: Send + Sync {
     /// );
     /// ```
     fn signal_value(&self, name: &str) -> FutureResult<String>;
+
+    /// Get the runtime paths like configuration directories and ipc socket file.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.paths", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         let frt_paths = host.get_runtime_paths();
+    ///         let rt_paths = frt_paths.resolve(); // Result<T, E>
+    ///     }
+    /// );
+    /// ```
+    fn get_runtime_paths(&self) -> FutureResult<RuntimePaths>;
 
     // === Handlers === //
 

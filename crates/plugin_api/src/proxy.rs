@@ -4,7 +4,7 @@
 use crate::{
     ConfigCallbackFn, ConfigInfo, EwwiiAPI, FutureResult, IpcRequest, LibraryFnFFI, LibraryItem,
     LibraryItemFFI, ListenHandleFn, NativeFn, NbclType, ParseFn, PluginError, PluginValue,
-    SignalUpdateFn,
+    SignalUpdateFn, RuntimePaths,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
@@ -36,8 +36,10 @@ pub enum CallbackHandler {
     ListenHandleFn(ListenHandleFn),
     SignalUpdateFn(SignalUpdateFn),
     ConfigCallbackFn(ConfigCallbackFn),
+
     ManualHandleStr(ManualHandle<String>),
     ManualHandleU64(ManualHandle<u64>),
+    ManualHandleRtPaths(ManualHandle<RuntimePaths>),
 }
 
 /// Represents the possible response types returned by a plugin callback.
@@ -95,6 +97,7 @@ pub enum PluginRequest {
     UpdateSignal(String, String),
     OnSignalUpdate(String, String, u64),
     SignalValue(String, String, u64),
+    GetRuntimePaths(String, u64),
 
     // Handlers
     ConfigCallbackHandle(u64),
@@ -152,6 +155,11 @@ pub extern "C" fn plugin_callback_handler(
         }
         Some(CallbackHandler::ManualHandleU64(f)) => {
             let value: u64 = bincode::deserialize(bytes).unwrap_or_default();
+            f(value);
+            return std::ptr::null_mut();
+        }
+        Some(CallbackHandler::ManualHandleRtPaths(f)) => {
+            let value: RuntimePaths = bincode::deserialize(bytes).unwrap_or_default();
             f(value);
             return std::ptr::null_mut();
         }
@@ -378,6 +386,21 @@ impl EwwiiAPI for HostProxy {
         get_callbacks().lock().unwrap().insert(id, CallbackHandler::ManualHandleStr(handle));
 
         let req = PluginRequest::SignalValue(self.get_id().to_string(), name.to_string(), id);
+        self.call_host(req);
+
+        FutureResult { channel: rx }
+    }
+
+    fn get_runtime_paths(&self) -> FutureResult<RuntimePaths> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let handle = ManualHandle::new(move |value: RuntimePaths| {
+            let _ = tx.send(value);
+        });
+
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::ManualHandleRtPaths(handle));
+
+        let req = PluginRequest::GetRuntimePaths(self.get_id().to_string(), id);
         self.call_host(req);
 
         FutureResult { channel: rx }

@@ -5,7 +5,7 @@ use crate::display_backend::DisplayBackend;
 use crate::opts::WidgetControlAction;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{
-    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, WidgetControlType,
+    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, WidgetControlType, RuntimePaths
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
@@ -360,6 +360,16 @@ impl<B: DisplayBackend> App<B> {
             }
             PluginRequest::SignalValue(plugin_id, name, callback_id) => {
                 let value = crate::updates::api::VarWatcherAPI::state_of(&name);
+                let arg_bytes = bincode::serialize(&value).unwrap_or_default();
+                call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+            }
+            PluginRequest::GetRuntimePaths(plugin_id, callback_id) => {
+                let value = RuntimePaths {
+                    log_file: self.paths.log_file.to_string_lossy().to_string(),
+                    log_dir: self.paths.log_dir.to_string_lossy().to_string(),
+                    ipc_socket_file: self.paths.ipc_socket_file.to_string_lossy().to_string(),
+                    config_dir: self.paths.config_dir.to_string_lossy().to_string()
+                };
                 let arg_bytes = bincode::serialize(&value).unwrap_or_default();
                 call_plugin_handler(&plugin_id, callback_id, arg_bytes);
             }
