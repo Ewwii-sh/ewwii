@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `ewwii-reloaded-windows` signal emission.
+- `remove_css` plugin API to remove css injected with `inject_css`.
+
+### Changed
+
+- `inject_css` plugin API to return a handle.
 
 ### Fixed
 

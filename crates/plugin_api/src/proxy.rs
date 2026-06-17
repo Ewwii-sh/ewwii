@@ -37,6 +37,7 @@ pub enum CallbackHandler {
     SignalUpdateFn(SignalUpdateFn),
     ConfigCallbackFn(ConfigCallbackFn),
     ManualHandleStr(ManualHandle<String>),
+    ManualHandleU64(ManualHandle<u64>),
 }
 
 /// Represents the possible response types returned by a plugin callback.
@@ -86,7 +87,8 @@ pub enum PluginRequest {
     },
 
     // Dynamic Runtime
-    InjectCss(String),
+    InjectCss(String, String, u64),
+    RemoveCss(u64),
     Emit(String),
     Listen(String, String, u64),
     RegisterSignal(String, String),
@@ -145,6 +147,11 @@ pub extern "C" fn plugin_callback_handler(
         }
         Some(CallbackHandler::ManualHandleStr(f)) => {
             let value: String = bincode::deserialize(bytes).unwrap_or_default();
+            f(value);
+            return std::ptr::null_mut();
+        }
+        Some(CallbackHandler::ManualHandleU64(f)) => {
+            let value: u64 = bincode::deserialize(bytes).unwrap_or_default();
             f(value);
             return std::ptr::null_mut();
         }
@@ -310,8 +317,23 @@ impl EwwiiAPI for HostProxy {
 
     // === Dynamic Runtime === //
 
-    fn inject_css(&self, css: &str) {
-        let req = PluginRequest::InjectCss(css.to_string());
+    fn inject_css(&self, css: &str) -> FutureResult<u64> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let handle = ManualHandle::new(move |value: u64| {
+            let _ = tx.send(value);
+        });
+
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::ManualHandleU64(handle));
+
+        let req = PluginRequest::InjectCss(css.to_string(), self.get_id().to_string(), id);
+        self.call_host(req);
+
+        FutureResult { channel: rx }
+    }
+
+    fn remove_css(&self, idx: u64) {
+        let req = PluginRequest::RemoveCss(idx);
         self.call_host(req);
     }
 

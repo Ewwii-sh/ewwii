@@ -289,7 +289,30 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     /// );
     /// ```
-    fn inject_css(&self, css: &str);
+    fn inject_css(&self, css: &str) -> FutureResult<u64>;
+
+    /// Remove a CSS injected into the engine.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.remove-inject", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         let future_idx = host.inject_css("* { all: unset }");
+    ///         let idx = future_idx.resolve();
+    ///
+    ///         host.remove_css(idx);
+    ///     }
+    /// );
+    /// ```
+    fn remove_css(&self, idx: u64);
 
     /// Emit a message to a buffer which other plugins can see.
     ///
