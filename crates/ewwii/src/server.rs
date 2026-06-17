@@ -87,6 +87,7 @@ pub fn initialize_server<B: DisplayBackend>(
         instance_id_to_args: HashMap::new(),
         css_provider: gtk4::CssProvider::new(),
         custom_css_providers: Vec::new(),
+        gdk_display: gtk4::gdk::Display::default(),
         plugin_buffer: plugin::PluginBuffer::new(),
         reloading: false,
         app_evt_send: ui_send.clone(),
@@ -124,11 +125,8 @@ pub fn initialize_server<B: DisplayBackend>(
         }
     };
 
-    if let Some(display) = gtk4::gdk::Display::default() {
-        gtk4::style_context_add_provider_for_display(&display, &app.css_provider, 900);
-        for css_provider in &app.custom_css_providers {
-            gtk4::style_context_add_provider_for_display(&display, css_provider, 910);
-        }
+    if let Some(display) = &app.gdk_display {
+        gtk4::style_context_add_provider_for_display(display, &app.css_provider, 900);
         app.plugin_buffer.emit("ewwii-applied-styles");
     }
 

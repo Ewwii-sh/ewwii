@@ -293,10 +293,41 @@ impl<B: DisplayBackend> App<B> {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
                 });
             }
-            PluginRequest::InjectCss(css) => {
-                let provider = gtk4::CssProvider::new();
-                provider.load_from_string(&css);
-                self.custom_css_providers.push(provider);
+            PluginRequest::InjectCss(css, plugin_id, callback_id) => {
+                if let Some(display) = &self.gdk_display {
+                    let provider = gtk4::CssProvider::new();
+                    provider.load_from_string(&css);
+
+                    let mut free_space = None;
+
+                    for (idx, maybe_provider) in self.custom_css_providers.iter().enumerate() {
+                        if maybe_provider.is_none() {
+                            free_space = Some(idx);
+                        }
+                    }
+
+                    gtk4::style_context_add_provider_for_display(display, &provider, 910);
+                    let idx;
+
+                    if let Some(free_space) = free_space {
+                        self.custom_css_providers[free_space] = Some(provider);
+                        idx = free_space;
+                    } else {
+                        self.custom_css_providers.push(Some(provider));
+                        idx = self.custom_css_providers.len() - 1;
+                    }
+
+                    let arg_bytes = bincode::serialize(&idx).unwrap_or_default();
+                    call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+                }
+            }
+            PluginRequest::RemoveCss(idx) => {
+                let idx = idx as usize;
+                if let Some(provider) = self.custom_css_providers[idx].take() {
+                    if let Some(display) = &self.gdk_display {
+                        gtk4::style_context_remove_provider_for_display(display, &provider);
+                    }
+                }
             }
             PluginRequest::Emit(signal) => {
                 self.plugin_buffer.emit(signal);
