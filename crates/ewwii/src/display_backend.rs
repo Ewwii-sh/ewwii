@@ -109,14 +109,14 @@ mod platform_wayland {
                     let mut bottom = false;
 
                     match geometry.anchor_point.x {
-                        AnchorAlignment::START => left = true,
-                        AnchorAlignment::CENTER => {}
-                        AnchorAlignment::END => right = true,
+                        AnchorAlignment::Start => left = true,
+                        AnchorAlignment::Center => {}
+                        AnchorAlignment::End => right = true,
                     }
                     match geometry.anchor_point.y {
-                        AnchorAlignment::START => top = true,
-                        AnchorAlignment::CENTER => {}
-                        AnchorAlignment::END => bottom = true,
+                        AnchorAlignment::Start => top = true,
+                        AnchorAlignment::Center => {}
+                        AnchorAlignment::End => bottom = true,
                     }
 
                     window.set_anchor(gtk4_layer_shell::Edge::Left, left);
@@ -139,8 +139,8 @@ mod platform_wayland {
                     }
                     // https://github.com/elkowar/eww/issues/296
                     if window_init.backend_options.wayland.exclusive
-                        && geometry.anchor_point.x != AnchorAlignment::CENTER
-                        && geometry.anchor_point.y != AnchorAlignment::CENTER
+                        && geometry.anchor_point.x != AnchorAlignment::Center
+                        && geometry.anchor_point.y != AnchorAlignment::Center
                     {
                         log::warn!("When ':exclusive true' the anchor has to include 'center', otherwise exlcusive won't work")
                     }

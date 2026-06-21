@@ -302,32 +302,6 @@ impl From<RawOpt> for Opt {
     }
 }
 
-/// Parse a window-name:window-id pair of the form `name:id` or `name` into a tuple of `(name, id)`.
-// fn parse_window_config_and_id(s: &str) -> Result<(String, String)> {
-//     let (name, id) = s.split_once(':').unwrap_or((s, s));
-
-//     Ok((name.to_string(), id.to_string()))
-// }
-
-/// Parse a window-id specific variable value declaration with the syntax `window-id:variable_name="new_value"`
-/// into a tuple of `(id, variable_name, new_value)`.
-// fn parse_window_id_args(s: &str) -> Result<(String, VarName, DynVal)> {
-//     // Parse the = first so we know if an id has not been given
-//     let (name, value) = parse_var_update_arg(s)?;
-
-//     let (id, var_name) = name.0.split_once(':').unwrap_or(("", &name.0));
-
-//     Ok((id.to_string(), var_name.into(), value))
-// }
-
-/// Split the input string at `=`, parsing the value into a [`DynVal`].
-// fn parse_var_update_arg(s: &str) -> Result<(VarName, DynVal)> {
-//     let (name, value) = s
-//         .split_once('=')
-//         .with_context(|| format!("arguments must be in the shape `variable_name=\"new_value\"`, but got: {}", s))?;
-//     Ok((name.into(), DynVal::from_string(value.to_owned())))
-// }
-
 impl ActionWithServer {
     pub fn can_start_daemon(&self) -> bool {
         // matches!(self, ActionWithServer::OpenWindow { .. } | ActionWithServer::OpenMany { .. })

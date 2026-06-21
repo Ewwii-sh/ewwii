@@ -914,15 +914,13 @@ fn initialize_window<B: DisplayBackend>(
 
                 glib::MainContext::default().spawn_local(async move {
                     loop {
-                        if let Ok(event) = conn_clone.poll_for_event() {
-                            if let Some(x11rb::protocol::Event::ConfigureNotify(_ev)) = event {
-                                let _ = apply_window_position(
-                                    conn_clone.clone(),
-                                    geometry,
-                                    monitor_geometry,
-                                    &window_clone,
-                                );
-                            }
+                        if let Ok(Some(x11rb::protocol::Event::ConfigureNotify(_ev))) = conn_clone.poll_for_event() {
+                            let _ = apply_window_position(
+                                conn_clone.clone(),
+                                geometry,
+                                monitor_geometry,
+                                &window_clone,
+                            );
                         }
                         glib::timeout_future(std::time::Duration::from_millis(10)).await;
                     }

@@ -58,9 +58,10 @@ pub fn get_cpu_info(_args: Vec<Value>) -> Result<Value> {
         }
 
         if let Some(model) = model_name {
-            let mut cpu_map = Vec::new();
-            cpu_map.push(("core_id".into(), Value::Int(core_id)));
-            cpu_map.push(("model".into(), Value::Str(model)));
+            let cpu_map = vec![
+                ("core_id".into(), Value::Int(core_id)),
+                ("model".into(), Value::Str(model))
+            ];
             cpus.push(Value::Map(cpu_map));
             core_id += 1;
         }
@@ -172,11 +173,12 @@ pub fn get_disk_info(_args: Vec<Value>) -> Result<Value> {
     let free_kb = (stat.f_bfree * stat.f_frsize as u64) / 1024;
     let used_kb = total_kb - free_kb;
 
-    let mut info = Vec::new();
-    info.push(("device".into(), Value::Str(device.into())));
-    info.push(("total_kb".into(), Value::Int(total_kb as i64)));
-    info.push(("used_kb".into(), Value::Int(used_kb as i64)));
-    info.push(("free_kb".into(), Value::Int(free_kb as i64)));
+    let info = vec![
+        ("device".into(), Value::Str(device.into())),
+        ("total_kb".into(), Value::Int(total_kb as i64)),
+        ("used_kb".into(), Value::Int(used_kb as i64)),
+        ("free_kb".into(), Value::Int(free_kb as i64))
+    ];
 
     Ok(Value::Map(info))
 }

@@ -14,7 +14,7 @@ use ewwii_shared_utils::prop::{Callback, PropertyMap};
 
 #[derive(Clone)]
 pub enum ConfigEngine {
-    Default(NbclConfigParser),
+    Default(Box<NbclConfigParser>),
     Custom(CustomConfigEngine),
 }
 
