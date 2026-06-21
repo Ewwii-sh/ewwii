@@ -113,11 +113,7 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
         vec![Type::Str],
         Type::Object("GlobalVar".to_string()),
         |mut args| {
-            let mut data = Vec::new();
-
-            data.push(args.remove(0));
-            data.push(Value::Str(String::new()));
-            data.push(Value::Str(String::new()));
+            let data = vec![args.remove(0), Value::Str(String::new()), Value::Str(String::new())];
 
             Ok(Value::Object("GlobalVar".to_string(), Box::new(Value::List(data))))
         },

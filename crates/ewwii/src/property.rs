@@ -86,7 +86,7 @@ macro_rules! apply_property {
                 setter(val);
             }
             PropValue::Bound { var_name, initial, parser, template } => {
-                let var_value = crate::updates::api::VarWatcherAPI::state_of(&var_name);
+                let var_value = $crate::updates::api::VarWatcherAPI::state_of(&var_name);
 
                 if let Some(tmpl) = template {
                     // quick template handling
@@ -133,7 +133,7 @@ macro_rules! apply_property_watch {
 
         match $prop {
             PropValue::Bound { var_name, initial, parser, template } => {
-                let var_value = crate::updates::api::VarWatcherAPI::state_of(&var_name);
+                let var_value = $crate::updates::api::VarWatcherAPI::state_of(&var_name);
 
                 if let Some(tmpl) = template {
                     let mut recv = crate::property::handle_template(tmpl);

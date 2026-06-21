@@ -80,8 +80,7 @@ pub fn get_ram_info(_args: Vec<Value>) -> Result<Value> {
 
     for line in content.lines() {
         if let Some((key, value)) = line.split_once(':') {
-            let value =
-                value.trim().split_whitespace().next().unwrap_or("0").parse::<u64>().unwrap_or(0);
+            let value = value.split_whitespace().next().unwrap_or("0").parse::<u64>().unwrap_or(0);
             match key.trim() {
                 "MemTotal" => total = value,
                 "MemFree" => free = value,
@@ -166,7 +165,7 @@ pub fn get_disk_info(_args: Vec<Value>) -> Result<Value> {
     let mut stat: statvfs = unsafe { std::mem::zeroed() };
     let res = unsafe { statvfs(c_path.as_ptr() as *const c_char, &mut stat) };
     if res != 0 {
-        return Err(runtime_err!("Failed to statvfs for {}", mountpoint).into());
+        return Err(runtime_err!("Failed to statvfs for {}", mountpoint));
     }
 
     let total_kb = (stat.f_blocks * stat.f_frsize as u64) / 1024;

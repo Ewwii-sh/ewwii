@@ -70,7 +70,7 @@ fn parse_source(
 // NOTE: These global variables are used for the proper functioning
 // of bind function and for access to AST across the whole program.
 thread_local! {
-    pub static EWWII_CONFIG_PARSER: RefCell<Option<ConfigEngine>> = RefCell::new(None);
+    pub static EWWII_CONFIG_PARSER: RefCell<Option<ConfigEngine>> = const { RefCell::new(None) };
 }
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],

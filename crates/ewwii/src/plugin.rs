@@ -5,7 +5,7 @@ use crate::display_backend::DisplayBackend;
 use crate::opts::WidgetControlAction;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{
-    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, WidgetControlType, RuntimePaths
+    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths, WidgetControlType,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
@@ -48,7 +48,7 @@ pub struct ActivePlugin {
 pub static ACTIVE_PLUGINS: Lazy<RwLock<Vec<ActivePlugin>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
 pub struct PluginBuffer {
-    pub subscribers: Vec<PluginSubscriber>
+    pub subscribers: Vec<PluginSubscriber>,
 }
 
 pub struct PluginSubscriber {
@@ -59,22 +59,16 @@ pub struct PluginSubscriber {
 
 impl PluginBuffer {
     pub fn new() -> Self {
-        Self {
-            subscribers: Vec::new()
-        }
+        Self { subscribers: Vec::new() }
     }
 
     pub fn subscribe(&mut self, signal: String, plugin_id: String, callback_id: u64) {
-        self.subscribers.push(PluginSubscriber {
-            signal,
-            plugin_id,
-            callback_id
-        })
+        self.subscribers.push(PluginSubscriber { signal, plugin_id, callback_id })
     }
 
     pub fn emit<S: AsRef<str>>(&self, signal: S) {
         for subscriber in &self.subscribers {
-            if signal.as_ref() != &subscriber.signal {
+            if signal.as_ref() != subscriber.signal {
                 continue;
             }
 
@@ -97,7 +91,7 @@ fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
         _ => PluginValue::Null,
     };
 
-    return res;
+    res
 }
 
 fn plugin_value_to_nbcl(val: PluginValue) -> NbclValue {
@@ -209,7 +203,7 @@ impl CustomConfigEngine {
             let arg_bytes =
                 bincode::serialize(&(callback.name.clone(), callback.handle.unwrap_or_default()))
                     .unwrap_or_default();
-            if let None = call_plugin_handler(&self.id, cfg_cb, arg_bytes) {
+            if call_plugin_handler(&self.id, cfg_cb, arg_bytes).is_none() {
                 log::error!("Failed calling callback handler.");
             }
         } else {
@@ -368,7 +362,7 @@ impl<B: DisplayBackend> App<B> {
                     log_file: self.paths.log_file.to_string_lossy().to_string(),
                     log_dir: self.paths.log_dir.to_string_lossy().to_string(),
                     ipc_socket_file: self.paths.ipc_socket_file.to_string_lossy().to_string(),
-                    config_dir: self.paths.config_dir.to_string_lossy().to_string()
+                    config_dir: self.paths.config_dir.to_string_lossy().to_string(),
                 };
                 let arg_bytes = bincode::serialize(&value).unwrap_or_default();
                 call_plugin_handler(&plugin_id, callback_id, arg_bytes);
@@ -409,7 +403,6 @@ impl<B: DisplayBackend> App<B> {
                     log::error!(
                         "Registering nbcl functions is only supported with the Nbcl config engine"
                     );
-                    return;
                 }
             }
         })
@@ -435,7 +428,7 @@ impl<B: DisplayBackend> App<B> {
                             let params =
                                 func.params.into_iter().map(plugin_nbcltype_to_nbcltype).collect();
 
-                            let callback_id = func.callback_id.clone();
+                            let callback_id = func.callback_id;
                             let plugin_id = plugin_id.clone();
                             lib_item = lib_item.with_fn(&name, params, ret, move |args| {
                                 let result =
@@ -454,7 +447,6 @@ impl<B: DisplayBackend> App<B> {
                     log::error!(
                         "Registering nbcl functions is only supported with the Nbcl config engine"
                     );
-                    return;
                 }
             }
         })

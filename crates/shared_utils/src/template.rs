@@ -259,17 +259,16 @@ impl TemplateExpr {
             }
         }
 
-        if input.chars().all(|c| c.is_digit(10) || c == '.') {
+        if input.chars().all(|c| c.is_ascii_digit() || c == '.') {
             return Ok(TemplateExpr::Literal(input.to_string()));
         }
 
-        if (input.starts_with('"') && input.ends_with('"'))
+        if ((input.starts_with('"') && input.ends_with('"'))
             || (input.starts_with('\'') && input.ends_with('\''))
-            || (input.starts_with('`') && input.ends_with('`'))
+            || (input.starts_with('`') && input.ends_with('`')))
+            && input.len() >= 2
         {
-            if input.len() >= 2 {
-                return Ok(TemplateExpr::Literal(input[1..input.len() - 1].to_string()));
-            }
+            return Ok(TemplateExpr::Literal(input[1..input.len() - 1].to_string()));
         }
 
         Ok(TemplateExpr::Var(input.to_string()))

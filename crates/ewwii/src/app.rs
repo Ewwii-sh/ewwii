@@ -131,10 +131,10 @@ impl EwwiiWindow {
     pub fn close(self) {
         log::info!("Closing gtk window {}", self.name);
 
-        for handler_id_opt in [self.destroy_event_handler_id, self.delete_event_handler_id] {
-            if let Some(handler_id) = handler_id_opt {
-                self.gtk_window.disconnect(handler_id);
-            }
+        for handler_id in
+            [self.destroy_event_handler_id, self.delete_event_handler_id].into_iter().flatten()
+        {
+            self.gtk_window.disconnect(handler_id);
         }
 
         self.gtk_window.close();
@@ -602,7 +602,7 @@ impl<B: DisplayBackend> App<B> {
 
     /// Load a given CSS string into the gtk css provider
     pub fn load_css(&mut self, _file_id: usize, css: &str) -> Result<()> {
-        self.css_provider.load_from_string(&css);
+        self.css_provider.load_from_string(css);
 
         Ok(())
     }

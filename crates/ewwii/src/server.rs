@@ -1,10 +1,10 @@
 use crate::{
     app::{self, App, DaemonCommand},
-    config, plugin,
+    config,
     config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER},
     daemon_response,
     display_backend::DisplayBackend,
-    error_handling_ctx, ipc_server, EwwiiPaths,
+    error_handling_ctx, ipc_server, plugin, EwwiiPaths,
 };
 use anyhow::{Context, Result};
 use ewwii_plugin_api::IpcRequest;

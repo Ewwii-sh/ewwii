@@ -326,8 +326,8 @@ mod platform_x11 {
             .check()?;
 
             // apply the stickiness and fg/bg thingy
-            let sticky_clone = window_init.backend_options.x11.sticky.clone();
-            let stacking_clone = window_init.stacking.clone();
+            let sticky_clone = window_init.backend_options.x11.sticky;
+            let stacking_clone = window_init.stacking;
             let root_window = self.root_window;
             let conn = Rc::clone(&self.conn);
             let atoms = Rc::clone(&self.atoms);
@@ -336,7 +336,7 @@ mod platform_x11 {
                 if let Err(err) = Self::set_window_states(
                     &*conn,
                     win_id,
-                    &*atoms,
+                    &atoms,
                     sticky_clone,
                     stacking_clone,
                     root_window,

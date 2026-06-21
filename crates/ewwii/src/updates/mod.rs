@@ -23,9 +23,11 @@ pub fn get_prefered_shell() -> String {
     let dash_installed: bool =
         Command::new("which").arg("dash").output().map(|o| o.status.success()).unwrap_or(false);
 
-    let shell = if dash_installed { String::from("/bin/dash") } else { String::from("/bin/sh") };
-
-    shell
+    if dash_installed {
+        String::from("/bin/dash")
+    } else {
+        String::from("/bin/sh")
+    }
 }
 
 pub enum SignalType {
