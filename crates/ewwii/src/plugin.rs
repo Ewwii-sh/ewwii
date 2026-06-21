@@ -79,7 +79,7 @@ impl PluginBuffer {
 }
 
 fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
-    let res = match any {
+    match any {
         NbclValue::Null => PluginValue::Null,
         NbclValue::Str(v) => PluginValue::String(v),
         NbclValue::Int(v) => PluginValue::Int(v),
@@ -89,9 +89,7 @@ fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
             PluginValue::Array(v.into_iter().map(nbclvalue_to_plugin_value).collect())
         }
         _ => PluginValue::Null,
-    };
-
-    res
+    }
 }
 
 fn plugin_value_to_nbcl(val: PluginValue) -> NbclValue {

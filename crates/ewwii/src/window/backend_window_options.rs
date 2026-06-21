@@ -5,15 +5,10 @@ use anyhow::Result;
 use super::window_definition::EnumParseError;
 use crate::{
     enum_parse,
-    // diag_error::{DiagResult, DiagError, DiagResultExt},
-    // parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
     window::{coords, coords::NumWithUnit},
 };
-// use ewwii_shared_utils::{Span, VarName};
-
-// use crate::dynval::{DynVal, FromDynVal, ConversionError};
 use ewwii_shared_utils::prop::{Property, PropertyMap};
-// use crate::error::{DiagError, DiagResultExt};
+use coords::Error as CoordError;
 
 pub trait TryFromProperty: Sized {
     fn try_from_prop(p: &Property) -> Option<Self>;
@@ -66,10 +61,12 @@ impl TryFromProperty for X11StrutDefinitionExpr {
 pub enum Error {
     #[error("Missing required field: {0}")]
     MissingField(&'static str),
+
     #[error(transparent)]
-    EnumParseError(#[from] EnumParseError),
+    EnumParse(#[from] EnumParseError),
+
     #[error(transparent)]
-    CoordsError(#[from] coords::Error),
+    Coords(#[from] CoordError),
 }
 
 /// Backend-specific options of a window

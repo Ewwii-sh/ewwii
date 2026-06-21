@@ -822,13 +822,10 @@ impl EwwiiWidget for FlowBoxWidget {
             self.update_prop(key, value);
         }
 
-        let mut index = 0;
-
-        for child in children {
+        for (index, child) in children.iter().enumerate() {
             let child_widget =
                 build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
-            self.gtk_widget.insert(&child_widget, index);
-            index += 1;
+            self.gtk_widget.insert(&child_widget, index as i32);
         }
 
         Ok(self.gtk_widget.clone().upcast())
@@ -2517,7 +2514,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
 
 pub(super) fn build_gtk_box(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = BoxWidget::default();
@@ -2531,7 +2528,7 @@ pub(super) fn build_gtk_box(
 
 pub(super) fn build_gtk_overlay(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Overlay> {
     let mut widget = OverlayWidget::default();
@@ -2545,7 +2542,7 @@ pub(super) fn build_gtk_overlay(
 
 pub(super) fn build_tooltip(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = TooltipWidget::default();
@@ -2559,7 +2556,7 @@ pub(super) fn build_tooltip(
 
 pub(super) fn build_event_box(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = EventBoxWidget::default();
@@ -2572,7 +2569,7 @@ pub(super) fn build_event_box(
 
 pub(crate) fn build_gtk_flowbox(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::FlowBox> {
     let mut widget = FlowBoxWidget::default();
@@ -2586,7 +2583,7 @@ pub(crate) fn build_gtk_flowbox(
 
 pub(super) fn build_gtk_stack(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Stack> {
     let mut widget = StackWidget::default();
@@ -2749,7 +2746,7 @@ pub(super) fn build_gtk_ui_file(props: &PropertyMap) -> Result<gtk4::Widget> {
 
 pub(super) fn build_gtk_expander(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Expander> {
     let mut widget = ExpanderWidget::default();
@@ -2762,7 +2759,7 @@ pub(super) fn build_gtk_expander(
 
 pub(super) fn build_gtk_revealer(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Revealer> {
     let mut widget = RevealerWidget::default();
@@ -2836,7 +2833,7 @@ pub(super) fn build_gtk_scale(
 
 pub(super) fn build_gtk_scrolledwindow(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ScrolledWindow> {
     let mut widget = ScrolledWindowWidget::default();

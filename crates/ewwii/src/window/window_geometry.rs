@@ -45,8 +45,8 @@ impl Coords {
 }
 
 impl NumWithUnit {
-    pub fn to_pixels(&self, max: i32) -> i32 {
-        match *self {
+    pub fn to_pixels(self, max: i32) -> i32 {
+        match self {
             NumWithUnit::Percent(n) => ((max as f64 / 100.0) * n as f64).round() as i32,
             NumWithUnit::Pixels(n) => n,
         }
@@ -58,33 +58,33 @@ impl NumWithUnit {
 pub enum AnchorAlignment {
     #[display("start")]
     #[default]
-    START,
+    Start,
     #[display("center")]
-    CENTER,
+    Center,
     #[display("end")]
-    END,
+    End,
 }
 
 impl AnchorAlignment {
     pub fn from_x_alignment(s: &str) -> Result<Self, EnumParseError> {
         enum_parse! { "x-alignment", s,
-            "l" | "left" => AnchorAlignment::START,
-            "c" | "center" => AnchorAlignment::CENTER,
-            "r" | "right" => AnchorAlignment::END,
+            "l" | "left" => AnchorAlignment::Start,
+            "c" | "center" => AnchorAlignment::Center,
+            "r" | "right" => AnchorAlignment::End,
         }
     }
     pub fn from_y_alignment(s: &str) -> Result<Self, EnumParseError> {
         enum_parse! { "y-alignment", s,
-            "t" | "top" => AnchorAlignment::START,
-            "c" | "center" => AnchorAlignment::CENTER,
-            "b" | "bottom" => AnchorAlignment::END,
+            "t" | "top" => AnchorAlignment::Start,
+            "c" | "center" => AnchorAlignment::Center,
+            "b" | "bottom" => AnchorAlignment::End,
         }
     }
     pub fn alignment_to_coordinate(&self, inner: i32, outer: i32) -> i32 {
         match self {
-            AnchorAlignment::START => 0,
-            AnchorAlignment::CENTER => (outer - inner) / 2,
-            AnchorAlignment::END => outer - inner,
+            AnchorAlignment::Start => 0,
+            AnchorAlignment::Center => (outer - inner) / 2,
+            AnchorAlignment::End => outer - inner,
         }
     }
 }
@@ -115,7 +115,7 @@ impl std::str::FromStr for AnchorPoint {
 impl fmt::Display for AnchorPoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match (self.x, self.y) {
-            (AnchorAlignment::CENTER, AnchorAlignment::CENTER) => write!(f, "center"),
+            (AnchorAlignment::Center, AnchorAlignment::Center) => write!(f, "center"),
             (x, y) => write!(f, "{} {}", x, y),
         }
     }
@@ -169,13 +169,13 @@ mod tests {
     #[test]
     fn alignment_center_inner_larger_than_outer() {
         // if widget bigger than screen then it goes negative
-        assert_eq!(AnchorAlignment::CENTER.alignment_to_coordinate(600, 500), -50);
+        assert_eq!(AnchorAlignment::Center.alignment_to_coordinate(600, 500), -50);
     }
 
     #[test]
     fn alignment_center_odd_difference_truncates() {
         // outer - inner = 101, integer division truncates to 50
-        assert_eq!(AnchorAlignment::CENTER.alignment_to_coordinate(100, 201), 50);
+        assert_eq!(AnchorAlignment::Center.alignment_to_coordinate(100, 201), 50);
     }
 
     // Coords::relative_to
@@ -202,13 +202,13 @@ mod tests {
     // AnchorPoint::Dispay
     #[test]
     fn anchor_point_display_center_center() {
-        let ap = AnchorPoint { x: AnchorAlignment::CENTER, y: AnchorAlignment::CENTER };
+        let ap = AnchorPoint { x: AnchorAlignment::Center, y: AnchorAlignment::Center };
         assert_eq!(ap.to_string(), "center");
     }
 
     #[test]
     fn anchor_point_display_non_center() {
-        let ap = AnchorPoint { x: AnchorAlignment::START, y: AnchorAlignment::END };
+        let ap = AnchorPoint { x: AnchorAlignment::Start, y: AnchorAlignment::End };
         assert_eq!(ap.to_string(), "start end");
     }
 
@@ -216,7 +216,7 @@ mod tests {
     #[test]
     fn override_with_partial_only_replaces_some() {
         let geom = WindowGeometry {
-            anchor_point: AnchorPoint { x: AnchorAlignment::START, y: AnchorAlignment::START },
+            anchor_point: AnchorPoint { x: AnchorAlignment::Start, y: AnchorAlignment::Start },
             offset: Coords::from_pixels((0, 0)),
             size: Coords::from_pixels((800, 600)),
         };

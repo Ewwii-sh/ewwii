@@ -17,10 +17,11 @@ pub fn scan(_args: Vec<Value>) -> Result<Value> {
         if parts.len() != 3 {
             continue;
         }
-        let mut map = Vec::new();
-        map.push(("ssid".into(), Value::Str(parts[0].into())));
-        map.push(("signal".into(), Value::Str(parts[1].into())));
-        map.push(("security".into(), Value::Str(parts[2].into())));
+        let map = vec![
+            ("ssid".into(), Value::Str(parts[0].into())),
+            ("signal".into(), Value::Str(parts[1].into())),
+            ("security".into(), Value::Str(parts[2].into())),
+        ];
         result.push(Value::Map(map));
     }
     Ok(Value::List(result))

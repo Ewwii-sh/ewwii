@@ -76,14 +76,14 @@ fn parse_geometry(
     let anchor = map
         .get("anchor")
         .and_then(|v| v.as_str())
-        .map(|dyn_value| anchor_point_from_str(dyn_value))
+        .map(anchor_point_from_str)
         .transpose()?;
 
     let mut geom = WindowGeometry {
         offset: get_coords_from_map(map, "x", "y")?,
         size: get_coords_from_map(map, "width", "height")?,
         anchor_point: anchor
-            .unwrap_or(AnchorPoint { x: AnchorAlignment::CENTER, y: AnchorAlignment::START }),
+            .unwrap_or(AnchorPoint { x: AnchorAlignment::Center, y: AnchorAlignment::Start }),
     };
 
     if override_geom {
@@ -102,14 +102,14 @@ fn get_coords_from_map(map: &PropertyMap, x_key: &str, y_key: &str) -> Result<Co
     let key1 = map
         .get(x_key)
         .and_then(|v| v.as_str())
-        .map(|s| NumWithUnit::from_str(s))
+        .map(NumWithUnit::from_str)
         .transpose()?
         .unwrap_or_else(NumWithUnit::default);
 
     let key2 = map
         .get(y_key)
         .and_then(|v| v.as_str())
-        .map(|s| NumWithUnit::from_str(s))
+        .map(NumWithUnit::from_str)
         .transpose()?
         .unwrap_or_else(NumWithUnit::default);
 

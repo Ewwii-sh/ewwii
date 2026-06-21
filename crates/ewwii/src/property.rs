@@ -91,7 +91,7 @@ macro_rules! apply_property {
                 if let Some(tmpl) = template {
                     // quick template handling
                     // (template can only be passed by plugins as of rn)
-                    let mut recv = crate::property::handle_template(tmpl);
+                    let mut recv = $crate::property::handle_template(tmpl);
                     glib::MainContext::default().spawn_local(async move {
                         while recv.changed().await.is_ok() {
                             let raw = recv.borrow().clone();
@@ -109,7 +109,7 @@ macro_rules! apply_property {
                     }
 
                     if let Some(mut receiver) =
-                        crate::updates::api::VarWatcherAPI::subscribe(&var_name)
+                        $crate::updates::api::VarWatcherAPI::subscribe(&var_name)
                     {
                         glib::MainContext::default().spawn_local(async move {
                             while receiver.changed().await.is_ok() {
@@ -136,7 +136,7 @@ macro_rules! apply_property_watch {
                 let var_value = $crate::updates::api::VarWatcherAPI::state_of(&var_name);
 
                 if let Some(tmpl) = template {
-                    let mut recv = crate::property::handle_template(tmpl);
+                    let mut recv = $crate::property::handle_template(tmpl);
                     glib::MainContext::default().spawn_local(async move {
                         while recv.changed().await.is_ok() {
                             let raw = recv.borrow().clone();
@@ -153,7 +153,7 @@ macro_rules! apply_property_watch {
                         $body
                     }
 
-                    if let Some(mut receiver) = crate::updates::api::VarWatcherAPI::subscribe(&var_name) {
+                    if let Some(mut receiver) = $crate::updates::api::VarWatcherAPI::subscribe(&var_name) {
                         gtk4::glib::MainContext::default().spawn_local(async move {
                             while receiver.changed().await.is_ok() {
                                 let raw = receiver.borrow().clone();

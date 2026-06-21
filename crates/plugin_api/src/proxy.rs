@@ -108,8 +108,11 @@ extern "C" {
     fn ffi_gateway(ptr: *const u8, len: usize);
 }
 
+/// # SAFETY
+///
+/// Unsafe is necessary across FFI
 #[no_mangle]
-pub extern "C" fn plugin_callback_handler(
+pub unsafe extern "C" fn plugin_callback_handler(
     id: u64,
     arg_ptr: *const u8,
     arg_len: usize,
@@ -174,8 +177,11 @@ pub extern "C" fn plugin_callback_handler(
     }
 }
 
+/// # SAFETY
+///
+/// Unsafe is necessary across FFI
 #[no_mangle]
-pub extern "C" fn plugin_free_buffer(ptr: *mut u8, len: usize) {
+pub unsafe extern "C" fn plugin_free_buffer(ptr: *mut u8, len: usize) {
     if !ptr.is_null() {
         unsafe {
             let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));

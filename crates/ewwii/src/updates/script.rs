@@ -56,7 +56,7 @@ pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) 
                 let (tx, mut rx) = mpsc::channel::<String>(32);
                 tokio::spawn(stream_cmd_lines(shell, cmd, tx, shutdown_rx));
 
-                while let Some(_) = rx.recv().await {
+                while rx.recv().await.is_some() {
                     parser.handle_callback(&run);
                 }
             });
