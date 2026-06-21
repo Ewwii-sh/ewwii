@@ -16,15 +16,12 @@ pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) 
     let every_prop = soft_retreive_prop(props, EVERY_KEY, "");
     let on_prop = soft_retreive_prop(props, ON_KEY, "");
 
-    let every_sec = match get_duration_prop(&every_prop, EVERY_KEY) {
-        Ok(d) => Some(d),
-        Err(_) => None,
-    };
+    let every_sec = get_duration_prop(&every_prop, EVERY_KEY).ok();
     let on_cmd = match get_string_prop(&on_prop, ON_KEY) {
         Ok(c) => Some(unwrap_static(ON_KEY, c)),
         Err(_) => None,
     };
-    let run = match get_callback_prop(&props, RUN_KEY) {
+    let run = match get_callback_prop(props, RUN_KEY) {
         Ok(r) => r,
         Err(_) => {
             log::error!("Script requires 'run' property to function.");
@@ -66,11 +63,9 @@ pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) 
         }
         (Some(_), Some(_)) => {
             log::error!("Either 'every' or 'on' needs to be provided: got both.");
-            return;
         }
         (None, None) => {
             log::error!("Either 'every' or 'on' needs to be provided for Script to work.");
-            return;
         }
     }
 }

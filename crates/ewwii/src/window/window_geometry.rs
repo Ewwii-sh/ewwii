@@ -22,8 +22,7 @@ impl FromStr for Coords {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (sx, sy) =
-            s.split_once(|c: char| c == 'x' || c == '*').ok_or(Error::MalformedCoords)?;
+        let (sx, sy) = s.split_once(['x', '*']).ok_or(Error::MalformedCoords)?;
         Ok(Coords { x: sx.parse()?, y: sy.parse()? })
     }
 }

@@ -28,7 +28,7 @@ impl NbclConfigParser {
     pub fn eval_code(&mut self, code: &str, file_id: Option<&str>) -> Result<WidgetNode> {
         let source_ast = self
             .engine
-            .parse_str(&code)
+            .parse_str(code)
             .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id, None)))?;
         let (tree, ctx) = self
             .engine
@@ -95,9 +95,9 @@ impl NbclConfigParser {
 
         if let Some(ctx) = &self.ctx {
             if let Err(e) = self.engine.call_function(
-                &name,
+                name,
                 vec![Value::Object("WidgetCtrl".into(), Box::new(Value::Str(String::new())))],
-                &ctx,
+                ctx,
             ) {
                 log::error!("Failed to call function: {}", e);
             }

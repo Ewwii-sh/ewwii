@@ -240,20 +240,15 @@ pub fn get_vec_string_prop(prop: &Property, key: &str) -> Result<Vec<PropValue<S
 }
 
 fn parse_duration_str(key_str: &str) -> Option<Duration> {
-    if key_str.ends_with("ms") {
-        let num = &key_str[..key_str.len() - 2];
+    if let Some(num) = key_str.strip_suffix("ms") {
         num.parse::<u64>().ok().map(Duration::from_millis)
-    } else if key_str.ends_with("min") {
-        let num = &key_str[..key_str.len() - 3];
+    } else if let Some(num) = key_str.strip_suffix("min") {
         num.parse::<u64>().ok().map(|m| Duration::from_secs(m * 60))
-    } else if key_str.ends_with("m") {
-        let num = &key_str[..key_str.len() - 1];
+    } else if let Some(num) = key_str.strip_suffix("m") {
         num.parse::<u64>().ok().map(|m| Duration::from_secs(m * 60))
-    } else if key_str.ends_with("h") {
-        let num = &key_str[..key_str.len() - 1];
+    } else if let Some(num) = key_str.strip_suffix("h") {
         num.parse::<u64>().ok().map(|h| Duration::from_secs(h * 3600))
-    } else if key_str.ends_with("s") {
-        let num = &key_str[..key_str.len() - 1];
+    } else if let Some(num) = key_str.strip_suffix("s") {
         num.parse::<u64>().ok().map(Duration::from_secs)
     } else {
         let num = &key_str[..key_str.len()];

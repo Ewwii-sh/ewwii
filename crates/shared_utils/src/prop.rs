@@ -90,9 +90,7 @@ impl Property {
             Value::Bool(v) => Self::Bool(v),
             Value::Float(v) => Self::Float(v),
             Value::Str(v) => Self::String(v),
-            Value::List(v) => {
-                Self::Array(v.into_iter().map(Self::from_value).collect())
-            }
+            Value::List(v) => Self::Array(v.into_iter().map(Self::from_value).collect()),
             Value::Map(v) => Self::Map(PropertyMap::from_nbcl_map(v)),
             Value::Lambda(v) => Self::Callback(Callback { name: v, handle: None }),
             Value::Object(n, v) => {

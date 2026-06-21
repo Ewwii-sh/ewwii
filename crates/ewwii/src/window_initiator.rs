@@ -55,7 +55,7 @@ impl WindowInitiator {
             name: window_def.name.clone(),
             resizable: properties.get("resizable").and_then(|d| d.as_bool()).unwrap_or(true),
             stacking: match properties.get("stacking") {
-                Some(d) => WindowStacking::from_str(&d.as_str().unwrap_or_default())?,
+                Some(d) => WindowStacking::from_str(d.as_str().unwrap_or_default())?,
                 None => WindowStacking::Foreground, // or error
             },
         })
@@ -76,12 +76,12 @@ fn parse_geometry(
     let anchor = map
         .get("anchor")
         .and_then(|v| v.as_str())
-        .map(|dyn_value| anchor_point_from_str(&dyn_value))
+        .map(|dyn_value| anchor_point_from_str(dyn_value))
         .transpose()?;
 
     let mut geom = WindowGeometry {
-        offset: get_coords_from_map(&map, "x", "y")?,
-        size: get_coords_from_map(&map, "width", "height")?,
+        offset: get_coords_from_map(map, "x", "y")?,
+        size: get_coords_from_map(map, "width", "height")?,
         anchor_point: anchor
             .unwrap_or(AnchorPoint { x: AnchorAlignment::CENTER, y: AnchorAlignment::START }),
     };
@@ -102,14 +102,14 @@ fn get_coords_from_map(map: &PropertyMap, x_key: &str, y_key: &str) -> Result<Co
     let key1 = map
         .get(x_key)
         .and_then(|v| v.as_str())
-        .map(|s| NumWithUnit::from_str(&s))
+        .map(|s| NumWithUnit::from_str(s))
         .transpose()?
         .unwrap_or_else(NumWithUnit::default);
 
     let key2 = map
         .get(y_key)
         .and_then(|v| v.as_str())
-        .map(|s| NumWithUnit::from_str(&s))
+        .map(|s| NumWithUnit::from_str(s))
         .transpose()?
         .unwrap_or_else(NumWithUnit::default);
 

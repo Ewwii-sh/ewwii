@@ -54,9 +54,9 @@ impl TryFromProperty for X11StrutDefinitionExpr {
     fn try_from_prop(p: &Property) -> Option<Self> {
         let map = p.as_map()?;
 
-        let distance = map.get("distance").and_then(|v| NumWithUnit::try_from_prop(v))?;
+        let distance = map.get("distance").and_then(NumWithUnit::try_from_prop)?;
 
-        let side = map.get("side").and_then(|v| NumWithUnit::try_from_prop(v));
+        let side = map.get("side").and_then(NumWithUnit::try_from_prop);
 
         Some(Self { side, distance })
     }
@@ -189,7 +189,7 @@ impl X11BackendWindowOptionsDef {
             window_type: match properties.get("windowtype") {
                 Some(dynval) => {
                     let s = dynval.as_str().unwrap();
-                    X11WindowType::from_str(&s)?
+                    X11WindowType::from_str(s)?
                 }
                 None => X11WindowType::default(),
             },
