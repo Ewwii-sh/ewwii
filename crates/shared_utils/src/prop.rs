@@ -85,13 +85,13 @@ pub struct Callback {
 
 impl Property {
     pub fn from_value(value: Value) -> Self {
-        return match value {
+        match value {
             Value::Int(v) => Self::Int(v),
             Value::Bool(v) => Self::Bool(v),
             Value::Float(v) => Self::Float(v),
             Value::Str(v) => Self::String(v),
             Value::List(v) => {
-                Self::Array(v.into_iter().map(|inner| Self::from_value(inner)).collect())
+                Self::Array(v.into_iter().map(Self::from_value).collect())
             }
             Value::Map(v) => Self::Map(PropertyMap::from_nbcl_map(v)),
             Value::Lambda(v) => Self::Callback(Callback { name: v, handle: None }),
@@ -130,7 +130,7 @@ impl Property {
             }
             Value::Null => Self::None,
             _ => Self::None,
-        };
+        }
     }
 
     /// Returns the bool value if the property is a Bool
@@ -258,7 +258,7 @@ impl Hash for Property {
     fn hash<H: Hasher>(&self, state: &mut H) {
         core::mem::discriminant(self).hash(state);
         match self {
-            Self::None => {}.hash(state),
+            Self::None => 0_u8.hash(state),
             Self::Bool(b) => b.hash(state),
             Self::Int(i) => i.hash(state),
             // Convert float to bits for hashing as it doesnt supports it
