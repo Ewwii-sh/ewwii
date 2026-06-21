@@ -11,8 +11,9 @@ pub static GLOBAL_VAR_STORE: LazySync<HashMap<String, String>> =
 pub static VAR_WATCHERS: LazySync<HashMap<String, watch::Sender<String>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
-static PENDING_SUBSCRIBERS: LazyLock<HashMap<String, Vec<oneshot::Sender<watch::Receiver<String>>>>>
-= Lazy::new(|| RwLock::new(HashMap::new()));
+static PENDING_SUBSCRIBERS: LazyLock<
+    HashMap<String, Vec<oneshot::Sender<watch::Receiver<String>>>>,
+> = Lazy::new(|| RwLock::new(HashMap::new()));
 
 pub struct VarWatcherAPI;
 

@@ -73,11 +73,8 @@ fn parse_geometry(
 ) -> Result<WindowGeometry> {
     let map = val.as_map().unwrap();
 
-    let anchor = map
-        .get("anchor")
-        .and_then(|v| v.as_str())
-        .map(anchor_point_from_str)
-        .transpose()?;
+    let anchor =
+        map.get("anchor").and_then(|v| v.as_str()).map(anchor_point_from_str).transpose()?;
 
     let mut geom = WindowGeometry {
         offset: get_coords_from_map(map, "x", "y")?,

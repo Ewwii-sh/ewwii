@@ -914,7 +914,9 @@ fn initialize_window<B: DisplayBackend>(
 
                 glib::MainContext::default().spawn_local(async move {
                     loop {
-                        if let Ok(Some(x11rb::protocol::Event::ConfigureNotify(_ev))) = conn_clone.poll_for_event() {
+                        if let Ok(Some(x11rb::protocol::Event::ConfigureNotify(_ev))) =
+                            conn_clone.poll_for_event()
+                        {
                             let _ = apply_window_position(
                                 conn_clone.clone(),
                                 geometry,

@@ -7,8 +7,8 @@ use crate::{
     enum_parse,
     window::{coords, coords::NumWithUnit},
 };
-use ewwii_shared_utils::prop::{Property, PropertyMap};
 use coords::Error as CoordError;
+use ewwii_shared_utils::prop::{Property, PropertyMap};
 
 pub trait TryFromProperty: Sized {
     fn try_from_prop(p: &Property) -> Option<Self>;
