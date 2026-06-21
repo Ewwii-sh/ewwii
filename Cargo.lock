@@ -455,7 +455,6 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "shell-words",
  "simple-signal",
  "smart-default",
  "static_assertions",
@@ -477,7 +476,6 @@ dependencies = [
  "log",
  "nbcl",
  "nix",
- "rand 0.10.0",
  "regex",
  "tokio",
 ]
@@ -1839,12 +1837,6 @@ dependencies = [
  "cpufeatures 0.2.17",
  "digest",
 ]
-
-[[package]]
-name = "shell-words"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc6fe69c597f9c37bfeeeeeb33da3530379845f10be461a66d16d03eca2ded77"
 
 [[package]]
 name = "signal-hook-registry"

@@ -28,7 +28,7 @@ fn make_bound<T>(var: GlobalVar, parser: fn(&str) -> Option<T>) -> PropValue<T>
 where
     T: Clone + 'static + Default,
 {
-    let initial_val = var.initial.as_str().and_then(|s| parser(s)).unwrap_or(T::default());
+    let initial_val = var.initial.as_str().and_then(parser).unwrap_or_default();
 
     PropValue::Bound { var_name: var.name, initial: initial_val, parser, template: var.template }
 }
@@ -91,8 +91,7 @@ pub fn soft_retreive_prop(props: &PropertyMap, key: &str, default: &str) -> Prop
     if let Some(value) = props.get(key) {
         value.clone()
     } else {
-        let value = Property::String(default.to_string());
-        value
+        Property::String(default.to_string())
     }
 }
 
@@ -100,8 +99,7 @@ pub fn soft_retreive_prop_bool(props: &PropertyMap, key: &str, default: bool) ->
     if let Some(value) = props.get(key) {
         value.clone()
     } else {
-        let value = Property::Bool(default);
-        value
+        Property::Bool(default)
     }
 }
 
@@ -222,7 +220,7 @@ pub fn get_vec_string_prop(prop: &Property, key: &str) -> Result<Vec<PropValue<S
         prop.as_array().ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
 
     array
-        .into_iter()
+        .iter()
         .map(|d| {
             if let Some(var) = d.as_global_var() {
                 let initial = var.initial.as_str().map(String::from).unwrap_or_default();

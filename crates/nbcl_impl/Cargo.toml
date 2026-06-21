@@ -18,6 +18,5 @@ tokio = { workspace = true, features = ["full"] }
 log.workspace = true
 nix.workspace = true
 # error handling
-rand.workspace = true
 codespan-reporting.workspace = true
 regex.workspace = true

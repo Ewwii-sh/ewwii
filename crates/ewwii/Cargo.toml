@@ -52,7 +52,6 @@ simple-signal.workspace = true
 tokio = { workspace = true, features = ["full"] }
 unescape.workspace = true
 wait-timeout.workspace = true
-shell-words.workspace = true
 # Plugin loading
 libloading = "0.8.9"
 semver = "1.0.28"
