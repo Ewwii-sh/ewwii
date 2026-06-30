@@ -91,6 +91,7 @@ pub enum PluginRequest {
     // Dynamic Runtime
     InjectCss(String, String, u64),
     RemoveCss(u64),
+    InjectNbclBootstrap(String),
     Emit(String),
     Listen(String, String, u64),
     RegisterSignal(String, String),
@@ -348,6 +349,11 @@ impl EwwiiAPI for HostProxy {
 
     fn remove_css(&self, idx: u64) {
         let req = PluginRequest::RemoveCss(idx);
+        self.call_host(req);
+    }
+
+    fn inject_nbcl_boostrap(&self, source: &str) {
+        let req = PluginRequest::InjectNbclBootstrap(source.to_string());
         self.call_host(req);
     }
 
