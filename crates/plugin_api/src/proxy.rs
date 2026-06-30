@@ -352,7 +352,7 @@ impl EwwiiAPI for HostProxy {
         self.call_host(req);
     }
 
-    fn inject_nbcl_boostrap(&self, source: &str) {
+    fn inject_nbcl_bootstrap(&self, source: &str) {
         let req = PluginRequest::InjectNbclBootstrap(source.to_string());
         self.call_host(req);
     }

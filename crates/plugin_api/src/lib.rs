@@ -332,7 +332,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     /// );
     /// ```
-    fn inject_nbcl_boostrap(&self, source: &str);
+    fn inject_nbcl_bootstrap(&self, source: &str);
 
     /// Emit a message to a buffer which other plugins can see.
     ///
