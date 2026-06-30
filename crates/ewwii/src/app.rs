@@ -158,6 +158,7 @@ pub struct App<B: DisplayBackend> {
     pub custom_css_providers: Vec<Option<gtk4::CssProvider>>,
     pub gdk_display: Option<gtk4::gdk::Display>,
     pub plugin_buffer: plugin::PluginBuffer,
+    pub nbcl_bootstrap: String,
     pub reloading: bool,
 
     /// Sender to send [`DaemonCommand`]s
@@ -237,7 +238,7 @@ impl<B: DisplayBackend> App<B> {
                 wait_for_monitor_model().await;
                 let mut errors = Vec::new();
 
-                let config_result = config::read_from_ewwii_paths(&self.paths);
+                let config_result = config::read_from_ewwii_paths(&self.paths, self.nbcl_bootstrap.clone());
 
                 if let Err(e) = config_result.and_then(|new_config| self.load_config(new_config)) {
                     errors.push(e)

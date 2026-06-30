@@ -314,6 +314,26 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```
     fn remove_css(&self, idx: u64);
 
+    /// Inject to bootstrap before every source.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.bootstrap", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         host.inject_nbcl_boostrap("print('Hi!')");
+    ///     }
+    /// );
+    /// ```
+    fn inject_nbcl_boostrap(&self, source: &str);
+
     /// Emit a message to a buffer which other plugins can see.
     ///
     /// # Example

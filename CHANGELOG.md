@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `ewwii-reloaded-windows` signal emission.
 - `remove_css` plugin API to remove css injected with `inject_css`.
 - `get_runtime_paths` plugin API to get runtime paths.
+- `inject_nbcl_bootstrap` plugin API.
 
 ### Changed
 

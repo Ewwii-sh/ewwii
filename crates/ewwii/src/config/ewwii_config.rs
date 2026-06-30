@@ -52,15 +52,12 @@ impl ConfigEngine {
     }
 }
 
-// Extending RhaiParseConfig for parsing
 fn parse_source(
     config_parser: &mut NbclConfigParser,
     source: String,
     config_path: PathBuf,
 ) -> Result<WidgetNode, String> {
     let configlang_path_opt_str = config_path.to_str();
-
-    // config_parser.register_poll_listen_globals(&source).map_err(|e| e.to_string())?;
 
     let node =
         config_parser.eval_code(&source, configlang_path_opt_str).map_err(|e| e.to_string())?;
@@ -75,8 +72,8 @@ thread_local! {
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_ewwii_paths(ewwii_paths: &EwwiiPaths) -> Result<EwwiiConfig> {
-    EwwiiConfig::read_from_dir(ewwii_paths)
+pub fn read_from_ewwii_paths(ewwii_paths: &EwwiiPaths, boostrap: String) -> Result<EwwiiConfig> {
+    EwwiiConfig::read_from_dir(ewwii_paths, boostrap)
 }
 
 /// Ewwii configuration structure.
@@ -96,7 +93,7 @@ pub struct WindowDefinition {
 
 impl EwwiiConfig {
     /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`], reading the main config file.
-    pub fn read_from_dir(ewwii_paths: &EwwiiPaths) -> Result<Self> {
+    pub fn read_from_dir(ewwii_paths: &EwwiiPaths, boostrap: String) -> Result<Self> {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
             let config_parser = parser.as_mut().context("Config parser not initialized")?;
@@ -108,7 +105,10 @@ impl EwwiiConfig {
             }
 
             // get code from file
-            let config_code = crate::paths::code_from_file(&configlang_path)?;
+            let mut config_code = boostrap;
+
+            let source = crate::paths::code_from_file(&configlang_path)?;
+            config_code.push_str(&source);
 
             // get the widget tree
             let config_tree = config_parser
