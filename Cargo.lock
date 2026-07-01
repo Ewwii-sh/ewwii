@@ -1324,9 +1324,9 @@ dependencies = [
 
 [[package]]
 name = "nbcl"
-version = "0.5.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "489d15bb611da3159c12f495197a1cd9ca219584f4caaec336148ecb1c689f01"
+checksum = "bdb8478067e554606bf70742454695e4eae3b348430b86bf1f0e65f7aceb1e2b"
 dependencies = [
  "pest",
  "pest_derive",
