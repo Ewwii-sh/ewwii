@@ -25,6 +25,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
+use futures::future::FutureExt;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
@@ -37,7 +38,6 @@ use std::{
     rc::Rc,
     sync::Mutex,
 };
-use futures::future::FutureExt;
 use tokio::sync::mpsc::UnboundedSender;
 
 fn register_active_plugin(lib: libloading::Library, id: String, version: String) -> Result<()> {
@@ -241,7 +241,8 @@ impl<B: DisplayBackend> App<B> {
                 wait_for_monitor_model().await;
                 let mut errors = Vec::new();
 
-                let config_result = config::read_from_ewwii_paths(&self.paths, self.nbcl_bootstrap.clone());
+                let config_result =
+                    config::read_from_ewwii_paths(&self.paths, self.nbcl_bootstrap.clone());
 
                 if let Err(e) = config_result.and_then(|new_config| self.load_config(new_config)) {
                     errors.push(e)
@@ -964,7 +965,7 @@ fn initialize_window<B: DisplayBackend>(
     Ok(EwwiiWindow {
         name: window_init.name.clone(),
         gtk_window: window,
-        waited_close: window_init.waited_close.clone(),
+        waited_close: window_init.waited_close,
         delete_event_handler_id: None,
         destroy_event_handler_id: None,
     })

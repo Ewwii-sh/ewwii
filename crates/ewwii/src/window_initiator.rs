@@ -1,4 +1,3 @@
-use anyhow::{anyhow, Result};
 use crate::{
     config::WindowDefinition,
     window::{
@@ -11,6 +10,7 @@ use crate::{
     },
     window_arguments::WindowArguments,
 };
+use anyhow::{anyhow, Result};
 use ewwii_shared_utils::prop::{Property, PropertyMap};
 use ewwii_shared_utils::prop_utils::get_duration_prop;
 use std::str::FromStr;

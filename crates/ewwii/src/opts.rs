@@ -327,10 +327,7 @@ impl ActionWithServer {
                 })
             }
             ActionWithServer::NbclRun { expr } => {
-                return with_response_channel(|sender| app::DaemonCommand::NbclRun {
-                    expr,
-                    sender,
-                })
+                return with_response_channel(|sender| app::DaemonCommand::NbclRun { expr, sender })
             }
             ActionWithServer::OpenInspector => app::DaemonCommand::OpenInspector,
 
