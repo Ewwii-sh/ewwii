@@ -140,7 +140,12 @@ impl WidgetRegistry {
         let widget =
             self.widgets.values().find(|widget| widget.widget().widget_name() == widget_name)?;
 
-        let value: glib::Value = widget.widget().property_value(property);
+        let widget_obj = widget.widget();
+        let value: glib::Value = if widget_obj.find_property(property).is_some() {
+            widget_obj.property_value(property)
+        } else {
+            return None
+        };
 
         if let Ok(s) = value.get::<String>() {
             return Some(s);
