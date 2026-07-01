@@ -106,22 +106,16 @@ impl BackendWindowOptionsDef {
 
     // pass rhai map from WindowDefinition here
     pub fn from_map(map: &PropertyMap) -> Result<Self> {
-        // let get = |key: &str| map.get(key).cloned();
-
-        let struts = Self::get_optional(map, "reserve");
-        let window_type = Self::get_optional(map, "windowtype");
-        let focusable = Self::get_optional(map, "focusable");
-
         let x11 = X11BackendWindowOptionsDef {
             sticky: Self::get_optional(map, "sticky"),
-            struts,
-            window_type,
+            struts: Self::get_optional(map, "reserve"),
+            window_type: Self::get_optional(map, "windowtype"),
             wm_ignore: Self::get_optional(map, "wm_ignore"),
         };
 
         let wayland = WlBackendWindowOptionsDef {
             exclusive: Self::get_optional(map, "exclusive"),
-            focusable,
+            focusable: Self::get_optional(map, "focusable"),
             namespace: Self::get_optional(map, "namespace"),
             force_normal: Self::get_optional(map, "force_normal"),
         };

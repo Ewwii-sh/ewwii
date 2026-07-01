@@ -37,6 +37,7 @@ use std::{
     rc::Rc,
     sync::Mutex,
 };
+use futures::future::FutureExt;
 use tokio::sync::mpsc::UnboundedSender;
 
 fn register_active_plugin(lib: libloading::Library, id: String, version: String) -> Result<()> {
@@ -108,6 +109,7 @@ pub enum DaemonCommand {
 pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
+    pub waited_close: Option<Duration>,
     pub delete_event_handler_id: Option<glib::SignalHandlerId>,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
@@ -117,6 +119,7 @@ impl std::fmt::Debug for EwwiiWindow {
         f.debug_struct("EwwiiWindow")
             .field("name", &self.name)
             .field("gtk_window", &"<GtkWindow>")
+            .field("waited_close", &self.waited_close)
             .field("widget_reg_store", &"<WidgetRegistry>")
             .field("delete_event_handler_id", &self.delete_event_handler_id)
             .field("destroy_event_handler_id", &self.destroy_event_handler_id)
@@ -402,8 +405,26 @@ impl<B: DisplayBackend> App<B> {
             format!("Tried to close window with id '{instance_id}', but no such window was open")
         })?;
 
-        // let scope_index = ewwii_window.scope_index;
-        ewwii_window.close();
+        if let Some(wc) = ewwii_window.waited_close {
+            log::info!("Waiting {:?} before closing window.", wc);
+
+            let (abort_tx, mut abort_rx) = futures::channel::oneshot::channel::<()>();
+            self.window_close_timer_abort_senders.insert(instance_id.to_string(), abort_tx);
+
+            glib::MainContext::default().spawn_local(async move {
+                futures::select! {
+                    _ = glib::timeout_future(wc).fuse() => {
+                        log::info!("GLib timeout expired. Closing window.");
+                        ewwii_window.close();
+                    }
+                    _ = &mut abort_rx => {
+                        log::info!("Close window timer aborted via channel.");
+                    }
+                }
+            });
+        } else {
+            ewwii_window.close();
+        }
 
         if auto_reopen {
             self.failed_windows.insert(instance_id.to_string());
@@ -448,6 +469,7 @@ impl<B: DisplayBackend> App<B> {
                 "window definition name did not equal the called window"
             );
 
+            // setup initiator
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
             if !self.reloading && self.open_windows.is_empty() {
@@ -464,6 +486,7 @@ impl<B: DisplayBackend> App<B> {
                 self.plugin_buffer.emit("ewwii-started-signals");
             }
 
+            // load widgets
             let root_widget = {
                 // builds the widget and populates widget registry
                 let mut maybe_registry = self.widget_reg_store.lock().unwrap();
@@ -938,6 +961,7 @@ fn initialize_window<B: DisplayBackend>(
     Ok(EwwiiWindow {
         name: window_init.name.clone(),
         gtk_window: window,
+        waited_close: window_init.waited_close.clone(),
         delete_event_handler_id: None,
         destroy_event_handler_id: None,
     })
