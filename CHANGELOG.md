@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `get_runtime_paths` plugin API to get runtime paths.
 - `inject_nbcl_bootstrap` plugin API.
 - `waited_close` property to windows.
+- `nbcl-run` command to run nbcl expressions.
 
 ### Changed
 
@@ -23,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Plugin buffer crashing ewwii.
 - Property get widget control panicing ewwii.
+
+### Removed
+
+- `call-fns` command.
 
 ## [0.9.0] - 2026-06-13
 

@@ -183,7 +183,7 @@ pub enum ActionWithServer {
     #[command(name = "list-plugins")]
     ListPlugins,
 
-    /// Print out the widget structure as seen by ewwii.
+    /// Print out the widget structure as seen by ewwii
     ///
     /// This may be useful if you are facing issues with how ewwii is interpreting your configuration,
     /// and to provide additional context to the ewwii developers if you are filing a bug.
@@ -192,7 +192,7 @@ pub enum ActionWithServer {
     // /// Print out the scope graph structure in graphviz dot format.
     // #[command(name = "graph")]
     // ShowGraph,
-    /// Control widgets through CLI.
+    /// Control widgets through CLI
     #[command(name = "widget-control", alias = "wc")]
     WidgetControl {
         #[command(subcommand)]
@@ -207,12 +207,14 @@ pub enum ActionWithServer {
         mappings: HashMap<String, String>,
     },
 
-    /// Call nbcl functions.
-    #[command(name = "call-fns")]
-    CallNbclFns {
-        /// Nbcl functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
+    /// Run an nbcl expression
+    #[command(name = "nbcl-run")]
+    NbclRun {
+        /// Nbcl expr to run.
+        ///
+        /// Format: nbcl-run "my_fn(args)"
         #[arg(required = true)]
-        calls: Vec<String>,
+        expr: String,
     },
 }
 
@@ -324,9 +326,9 @@ impl ActionWithServer {
                     sender,
                 })
             }
-            ActionWithServer::CallNbclFns { calls } => {
-                return with_response_channel(|sender| app::DaemonCommand::CallNbclFns {
-                    calls,
+            ActionWithServer::NbclRun { expr } => {
+                return with_response_channel(|sender| app::DaemonCommand::NbclRun {
+                    expr,
                     sender,
                 })
             }

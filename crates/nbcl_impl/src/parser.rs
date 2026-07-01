@@ -63,6 +63,26 @@ impl NbclConfigParser {
         Ok(node.setup_dyn_ids("root"))
     }
 
+    pub fn run_nbcl_expr(&self, expr: &str) -> Result<()> {
+        let Some(ref eval_ctx) = self.ctx else {
+            anyhow::bail!("Nbcl evaluation context not found.");
+        };
+
+        let source_ast = self
+            .engine
+            .parse_str(expr)
+            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, expr, Some("<expr>"), None)))?;
+
+        let mut tmp_ectx = eval_ctx.clone();
+
+        self
+            .engine
+            .eval_ast_with_eval_ctx(source_ast, &mut tmp_ectx)
+            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, expr, Some("<expr>"), Some(tmp_ectx.clone()))))?;
+
+        Ok(())
+    }
+
     pub fn call_nbcl_function(&self, expr: &str) -> Result<()> {
         let Some(ref ctx) = self.ctx else {
             anyhow::bail!("Nbcl context not found.");
