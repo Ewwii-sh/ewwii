@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `remove_css` plugin API to remove css injected with `inject_css`.
 - `get_runtime_paths` plugin API to get runtime paths.
 - `inject_nbcl_bootstrap` plugin API.
+- `waited_close` property to windows.
 
 ### Changed
 

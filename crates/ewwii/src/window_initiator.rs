@@ -1,25 +1,20 @@
 use anyhow::{anyhow, Result};
-// use ewwii_shared_utils::{AttrName, VarName};
-// use std::collections::HashMap;
-// use rhai::Map;
-
 use crate::{
     config::WindowDefinition,
     window::{
         backend_window_options::BackendWindowOptions,
-        // coords::Coords,
         coords::NumWithUnit,
         monitor::MonitorIdentifier,
         window_definition::WindowStacking,
         window_geometry::{AnchorAlignment, AnchorPoint},
-        // monitor,
         window_geometry::{Coords, WindowGeometry},
     },
     window_arguments::WindowArguments,
 };
-
 use ewwii_shared_utils::prop::{Property, PropertyMap};
+use ewwii_shared_utils::prop_utils::get_duration_prop;
 use std::str::FromStr;
+use std::time::Duration;
 
 /// This stores all the information required to create a window and is created
 /// via combining information from the [`WindowDefinition`] and the [`WindowInitiator`]
@@ -28,6 +23,7 @@ pub struct WindowInitiator {
     pub backend_options: BackendWindowOptions,
     pub geometry: Option<WindowGeometry>,
     pub monitor: Option<MonitorIdentifier>,
+    pub waited_close: Option<Duration>,
     pub name: String,
     pub resizable: bool,
     pub stacking: WindowStacking,
@@ -41,6 +37,10 @@ impl WindowInitiator {
             // Some(geo) => Some(geo.eval(&vars)?.override_if_given(args.anchor, args.pos, args.size)),
             None => None,
         };
+        let waited_close = match properties.get("waited_close") {
+            Some(val) => Some(get_duration_prop(val, "waited_close")?),
+            None => None,
+        };
         let monitor = args.monitor.clone().or_else(|| {
             properties
                 .get("monitor")?
@@ -52,6 +52,7 @@ impl WindowInitiator {
             backend_options: window_def.backend_options.eval(properties.clone())?,
             geometry,
             monitor,
+            waited_close,
             name: window_def.name.clone(),
             resizable: properties.get("resizable").and_then(|d| d.as_bool()).unwrap_or(true),
             stacking: match properties.get("stacking") {
@@ -71,7 +72,7 @@ fn parse_geometry(
     args: &WindowArguments,
     override_geom: bool,
 ) -> Result<WindowGeometry> {
-    let map = val.as_map().unwrap();
+    let map = val.as_map().expect("geometry property to be a map.");
 
     let anchor =
         map.get("anchor").and_then(|v| v.as_str()).map(anchor_point_from_str).transpose()?;
