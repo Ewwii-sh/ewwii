@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Plugin buffer crashing ewwii.
+- Property get widget control panicing ewwii.
 
 ## [0.9.0] - 2026-06-13
 
