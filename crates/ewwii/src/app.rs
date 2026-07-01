@@ -99,8 +99,8 @@ pub enum DaemonCommand {
         mappings: HashMap<String, String>,
         sender: DaemonResponseSender,
     },
-    CallNbclFns {
-        calls: Vec<String>,
+    NbclRun {
+        expr: String,
         sender: DaemonResponseSender,
     },
 }
@@ -375,8 +375,8 @@ impl<B: DisplayBackend> App<B> {
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
-            DaemonCommand::CallNbclFns { calls, sender } => {
-                match self.call_nbcl_fns(calls) {
+            DaemonCommand::NbclRun { expr, sender } => {
+                match self.run_nbcl_expr(expr) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
@@ -596,6 +596,11 @@ impl<B: DisplayBackend> App<B> {
         log::info!("Reloading windows");
         log::trace!("loading config: {:#?}", config);
 
+        // clean widget store
+        if let Ok(mut wreg) = self.widget_reg_store.lock() {
+            *wreg = None;
+        }
+
         self.reloading = true;
         let result = (|| -> Result<()> {
             self.ewwii_config.replace_data(config);
@@ -752,18 +757,16 @@ impl<B: DisplayBackend> App<B> {
         Ok(())
     }
 
-    pub fn call_nbcl_fns(&self, calls: Vec<String>) -> Result<()> {
+    pub fn run_nbcl_expr(&self, expr: String) -> Result<()> {
         EWWII_CONFIG_PARSER.with(move |p| -> anyhow::Result<()> {
             let parser = p.borrow();
             match parser.as_ref().unwrap() {
                 ConfigEngine::Default(nbcl) => {
-                    for fn_call in calls {
-                        nbcl.call_nbcl_function(&fn_call)?;
-                    }
+                    nbcl.run_nbcl_expr(&expr)?;
                     Ok(())
                 }
                 ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
-                    "Calling nbcl functions is only supported with the Nbcl config engine"
+                    "Running nbcl expressions is only supported with the Nbcl config engine"
                 )),
             }
         })?;
