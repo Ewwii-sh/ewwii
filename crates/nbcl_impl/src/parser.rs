@@ -3,13 +3,13 @@ use anyhow::{anyhow, Result};
 use ewwii_plugin_api::IpcRequest;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
-use nbcl::{context::Context, NbclEngine, Value};
+use nbcl::{context::EvalContext, NbclEngine, Value};
 use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Clone)]
 pub struct NbclConfigParser {
     pub engine: NbclEngine,
-    pub ctx: Option<Context>,
+    pub ctx: Option<EvalContext>,
 }
 
 impl NbclConfigParser {
@@ -26,17 +26,20 @@ impl NbclConfigParser {
     }
 
     pub fn eval_code(&mut self, code: &str, file_id: Option<&str>) -> Result<WidgetNode> {
+        let mut eval_ctx = EvalContext::from(&self.engine);
+
         let source_ast = self
             .engine
             .parse_str(code)
             .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id, None)))?;
-        let (tree, ctx) = self
+
+        let tree = self
             .engine
-            .evaluate_ast_for_ctx(source_ast)
-            .map_err(|e| anyhow!(errors::handle_nbcl_err(e.err, code, file_id, Some(e.ctx))))?;
+            .eval_ast_with_eval_ctx(source_ast, &mut eval_ctx)
+            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id, Some(eval_ctx.clone()))))?;
 
         // set the context
-        self.ctx = Some(ctx);
+        self.ctx = Some(eval_ctx);
 
         // translate the tree
         let wnode = WidgetNode::Tree(translate::to_widgetnode(tree.root_nodes)?);
