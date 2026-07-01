@@ -33,10 +33,9 @@ impl NbclConfigParser {
             .parse_str(code)
             .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id, None)))?;
 
-        let tree = self
-            .engine
-            .eval_ast_with_eval_ctx(source_ast, &mut eval_ctx)
-            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id, Some(eval_ctx.clone()))))?;
+        let tree = self.engine.eval_ast_with_eval_ctx(source_ast, &mut eval_ctx).map_err(|e| {
+            anyhow!(errors::handle_nbcl_err(e, code, file_id, Some(eval_ctx.clone())))
+        })?;
 
         // set the context
         self.ctx = Some(eval_ctx);
@@ -75,10 +74,9 @@ impl NbclConfigParser {
 
         let mut tmp_ectx = eval_ctx.clone();
 
-        self
-            .engine
-            .eval_ast_with_eval_ctx(source_ast, &mut tmp_ectx)
-            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, expr, Some("<expr>"), Some(tmp_ectx.clone()))))?;
+        self.engine.eval_ast_with_eval_ctx(source_ast, &mut tmp_ectx).map_err(|e| {
+            anyhow!(errors::handle_nbcl_err(e, expr, Some("<expr>"), Some(tmp_ectx.clone())))
+        })?;
 
         Ok(())
     }

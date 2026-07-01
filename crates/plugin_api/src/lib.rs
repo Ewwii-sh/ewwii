@@ -328,7 +328,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///     PluginInfo::new("test.example.bootstrap", "1.0.0"),
     ///     host,
     ///     {
-    ///         host.inject_nbcl_boostrap("print('Hi!')");
+    ///         host.inject_nbcl_bootstrap("print('Hi!')");
     ///     }
     /// );
     /// ```
