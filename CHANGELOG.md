@@ -15,10 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `inject_nbcl_bootstrap` plugin API.
 - `waited_close` property to windows.
 - `nbcl-run` command to run nbcl expressions.
+- `onrelease` property to eventbox and button.
+- `onmiddlerelease` property to eventbox and button.
+- `onrightrelease` property to eventbox and button.
 
 ### Changed
 
 - `inject_css` plugin API to return a handle.
+- `onclick`, `onmiddleclick`, and `onrightclick` to fire immedeately on press.
 
 ### Fixed
 
