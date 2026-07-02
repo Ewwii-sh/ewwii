@@ -388,6 +388,11 @@ struct EventBoxCtrlData {
     onmiddleclick_cmd: String,
     onrightclick_cmd: String,
 
+    // gesture controller data (2)
+    onrelease_cmd: String,
+    onmiddlerelease_cmd: String,
+    onrightrelease_cmd: String,
+
     // scroll controoler data
     onscroll_cmd: String,
 
@@ -497,10 +502,32 @@ impl EwwiiWidget for EventBoxWidget {
             #[weak]
             gtk_widget,
             #[strong]
+            controller_data,
+            #[strong]
             press_coords,
-            move |_, _, x, y| {
+            move |gesture, _, x, y| {
                 press_coords.set((x, y));
                 gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
+
+                let controller = controller_data.borrow();
+                let button = gesture.current_button();
+
+                match button {
+                    1 => {
+                        run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str])
+                    }
+                    2 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onmiddleclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    3 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onrightclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    _ => {}
+                }
             }
         ));
 
@@ -526,16 +553,16 @@ impl EwwiiWidget for EventBoxWidget {
 
                 match button {
                     1 => {
-                        run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str])
+                        run_command(controller.cmd_timeout, &controller.onrelease_cmd, &[] as &[&str])
                     }
                     2 => run_command(
                         controller.cmd_timeout,
-                        &controller.onmiddleclick_cmd,
+                        &controller.onmiddlerelease_cmd,
                         &[] as &[&str],
                     ),
                     3 => run_command(
                         controller.cmd_timeout,
-                        &controller.onrightclick_cmd,
+                        &controller.onrightrelease_cmd,
                         &[] as &[&str],
                     ),
                     _ => {}
@@ -753,6 +780,24 @@ impl EwwiiWidget for EventBoxWidget {
                 // onrightclick - command to run when the widget is rightclicked
                 bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onrightclick_cmd = v;
+                });
+            }
+            "onrelease" => {
+                let controller_data = self.controller.clone();
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
+                    controller_data.borrow_mut().onrelease_cmd = v;
+                });
+            }
+            "onmiddlerelease" => {
+                let controller_data = self.controller.clone();
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
+                    controller_data.borrow_mut().onmiddlerelease_cmd = v;
+                });
+            }
+            "onrightrelease" => {
+                let controller_data = self.controller.clone();
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
+                    controller_data.borrow_mut().onrightrelease_cmd = v;
                 });
             }
             "onkeypress" => {
@@ -1349,6 +1394,9 @@ struct ButtonWidget {
     onclick_cmd: Rc<RefCell<String>>,
     onmiddleclick_cmd: Rc<RefCell<String>>,
     onrightclick_cmd: Rc<RefCell<String>>,
+    onrelease_cmd: Rc<RefCell<String>>,
+    onmiddlerelease_cmd: Rc<RefCell<String>>,
+    onrightrelease_cmd: Rc<RefCell<String>>,
     cmd_timeout: Rc<RefCell<Duration>>,
 }
 
@@ -1381,24 +1429,18 @@ impl EwwiiWidget for ButtonWidget {
         });
 
         let press_coords = Rc::new(Cell::new((0.0f64, 0.0f64)));
-
-        gesture_controller.connect_pressed(glib::clone!(
-            #[strong]
-            press_coords,
-            move |_, _, x, y| {
-                press_coords.set((x, y));
-            }
-        ));
-
         let cmd_timeout = self.cmd_timeout.clone();
         let onclick_cmd = self.onclick_cmd.clone();
         let onmiddleclick_cmd = self.onmiddleclick_cmd.clone();
         let onrightclick_cmd = self.onrightclick_cmd.clone();
-
+        let onrelease_cmd = self.onrelease_cmd.clone();
+        let onmiddlerelease_cmd = self.onmiddlerelease_cmd.clone();
+        let onrightrelease_cmd = self.onrightrelease_cmd.clone();
         let gtk_widget = self.gtk_widget.clone();
-        gesture_controller.connect_released(glib::clone!(
-            #[weak]
-            gtk_widget,
+
+        gesture_controller.connect_pressed(glib::clone!(
+            #[strong]
+            press_coords,
             #[strong]
             cmd_timeout,
             #[strong]
@@ -1407,6 +1449,38 @@ impl EwwiiWidget for ButtonWidget {
             onmiddleclick_cmd,
             #[strong]
             onrightclick_cmd,
+            move |gesture, _, x, y| {
+                press_coords.set((x, y));
+
+                let button = gesture.current_button();
+                match button {
+                    1 => run_command(*cmd_timeout.borrow(), &onclick_cmd.borrow(), &[] as &[&str]),
+                    2 => run_command(
+                        *cmd_timeout.borrow(),
+                        &onmiddleclick_cmd.borrow(),
+                        &[] as &[&str],
+                    ),
+                    3 => run_command(
+                        *cmd_timeout.borrow(),
+                        &onrightclick_cmd.borrow(),
+                        &[] as &[&str],
+                    ),
+                    _ => {}
+                }
+            }
+        ));
+
+        gesture_controller.connect_released(glib::clone!(
+            #[weak]
+            gtk_widget,
+            #[strong]
+            cmd_timeout,
+            #[strong]
+            onrelease_cmd,
+            #[strong]
+            onmiddlerelease_cmd,
+            #[strong]
+            onrightrelease_cmd,
             #[strong]
             press_coords,
             move |gesture, _, x, y| {
@@ -1422,15 +1496,15 @@ impl EwwiiWidget for ButtonWidget {
                 let button = gesture.current_button();
 
                 match button {
-                    1 => run_command(*cmd_timeout.borrow(), &onclick_cmd.borrow(), &[] as &[&str]),
+                    1 => run_command(*cmd_timeout.borrow(), &onrelease_cmd.borrow(), &[] as &[&str]),
                     2 => run_command(
                         *cmd_timeout.borrow(),
-                        &onmiddleclick_cmd.borrow(),
+                        &onmiddlerelease_cmd.borrow(),
                         &[] as &[&str],
                     ),
                     3 => run_command(
                         *cmd_timeout.borrow(),
-                        &onrightclick_cmd.borrow(),
+                        &onrightrelease_cmd.borrow(),
                         &[] as &[&str],
                     ),
                     _ => {}
@@ -1483,6 +1557,24 @@ impl EwwiiWidget for ButtonWidget {
                 let onrightclick_cmd = self.onrightclick_cmd.clone();
                 bind_property!(&value, &key, get_string_prop, [onrightclick_cmd], |v: String| {
                     *onrightclick_cmd.borrow_mut() = v;
+                });
+            }
+            "onrelease" => {
+                let onrelease_cmd = self.onrelease_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onrelease_cmd], |v: String| {
+                    *onrelease_cmd.borrow_mut() = v;
+                });
+            }
+            "onmiddlerelease" => {
+                let onmiddlerelease_cmd = self.onmiddlerelease_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onmiddlerelease_cmd], |v: String| {
+                    *onmiddlerelease_cmd.borrow_mut() = v;
+                });
+            }
+            "onrightrelease" => {
+                let onrightrelease_cmd = self.onrightrelease_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onrightrelease_cmd], |v: String| {
+                    *onrightrelease_cmd.borrow_mut() = v;
                 });
             }
             "label" => {
