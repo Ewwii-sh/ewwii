@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - `inject_css` plugin API to return a handle.
-- `onclick`, `onmiddleclick`, and `onrightclick` to fire immedeately on press.
+- `onclick`, `onmiddleclick`, and `onrightclick` to fire immediately on press.
 
 ### Fixed
 
