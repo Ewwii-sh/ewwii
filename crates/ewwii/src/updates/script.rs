@@ -13,14 +13,15 @@ pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) 
     const ON_KEY: &str = "on";
     const RUN_KEY: &str = "run";
 
-    let every_prop = soft_retreive_prop(props, EVERY_KEY, "");
-    let on_prop = soft_retreive_prop(props, ON_KEY, "");
+    let every_prop = retreive_prop(props, EVERY_KEY).ok();
+    let on_prop = retreive_prop(props, ON_KEY).ok();
 
-    let every_sec = get_duration_prop(&every_prop, EVERY_KEY).ok();
-    let on_cmd = match get_string_prop(&on_prop, ON_KEY) {
-        Ok(c) => Some(unwrap_static(ON_KEY, c)),
-        Err(_) => None,
-    };
+    let every_sec = every_prop
+        .and_then(|prop| get_duration_prop(prop, EVERY_KEY).ok());
+    let on_cmd = on_prop
+        .and_then(|prop| get_string_prop(prop, ON_KEY).ok())
+        .map(|c| unwrap_static(ON_KEY, c));
+
     let run = match get_callback_prop(props, RUN_KEY) {
         Ok(r) => r,
         Err(_) => {
