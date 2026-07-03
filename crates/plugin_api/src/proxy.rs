@@ -4,7 +4,7 @@
 use crate::{
     ConfigCallbackFn, ConfigInfo, EwwiiAPI, FutureResult, IpcRequest, LibraryFnFFI, LibraryItem,
     LibraryItemFFI, ListenHandleFn, NativeFn, NbclType, ParseFn, PluginError, PluginValue,
-    RuntimePaths, SignalUpdateFn,
+    RuntimePaths, SignalUpdateFn, EmitInfo,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
@@ -92,7 +92,7 @@ pub enum PluginRequest {
     InjectCss(String, String, u64),
     RemoveCss(u64),
     InjectNbclBootstrap(String),
-    Emit(String),
+    Emit(String, String),
     Listen(String, String, u64),
     RegisterSignal(String, String),
     UpdateSignal(String, String),
@@ -139,7 +139,8 @@ pub unsafe extern "C" fn plugin_callback_handler(
             }
         }
         Some(CallbackHandler::ListenHandleFn(f)) => {
-            f();
+            let value: EmitInfo = bincode::deserialize(bytes).unwrap_or_default();
+            f(value);
             return std::ptr::null_mut();
         }
         Some(CallbackHandler::SignalUpdateFn(f)) => {
@@ -357,8 +358,8 @@ impl EwwiiAPI for HostProxy {
         self.call_host(req);
     }
 
-    fn emit(&self, signal: &str) {
-        let req = PluginRequest::Emit(signal.to_string());
+    fn emit(&self, signal: &str, data: String) {
+        let req = PluginRequest::Emit(signal.to_string(), data);
         self.call_host(req);
     }
 

@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `inject_css` plugin API to return a handle.
 - `onclick`, `onmiddleclick`, and `onrightclick` to fire immediately on press.
+- `emit` plugin API to accept a data.
+- `listen` plugin API to pass emitted data to ListenHandleFn.
 
 ### Fixed
 

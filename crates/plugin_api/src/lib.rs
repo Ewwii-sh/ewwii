@@ -348,11 +348,12 @@ pub trait EwwiiAPI: Send + Sync {
     ///     PluginInfo::new("test.example.emit", "1.0.0"),
     ///     host,
     ///     {
-    ///         host.emit("emit-loaded");
+    ///         let data = "secert-data".to_string(); // or can be json
+    ///         host.emit("emit-loaded", data);
     ///     }
     /// );
     /// ```
-    fn emit(&self, signal: &str);
+    fn emit(&self, signal: &str, data: String);
 
     /// Listen to a message emitted by a plugin or ewwii in the buffer.
     ///
@@ -370,11 +371,12 @@ pub trait EwwiiAPI: Send + Sync {
     ///     host,
     ///     {
     ///         let host_clone = host.clone();
-    ///         host.listen("emit-loaded", ListenHandleFn::new(move || {
-    ///             // Assuming you would listen to
-    ///             // signals emitted by plugins
-    ///             // to do calls to host (i.e ewwii).
-    ///             host_clone.emit("emit-loaded-received");
+    ///         host.listen("emit-loaded", ListenHandleFn::new(move |info| {
+    ///             println!(info.pid); // Plugin ID (Verify its right plugin)
+    ///             println!(info.data) // Data it emitted
+    ///
+    ///             // example of doing host calls:
+    ///             host_clone.emit("emit-loaded-received", "received!".to_string());
     ///         }));
     ///     }
     /// );

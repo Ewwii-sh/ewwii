@@ -5,7 +5,7 @@ use crate::display_backend::DisplayBackend;
 use crate::opts::WidgetControlAction;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{
-    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths, WidgetControlType,
+    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths, WidgetControlType, EmitInfo,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
@@ -66,13 +66,23 @@ impl PluginBuffer {
         self.subscribers.push(PluginSubscriber { signal, plugin_id, callback_id })
     }
 
-    pub fn emit<S: AsRef<str>>(&self, signal: S) {
+    pub fn emit<S1, S2>(&self, signal: S1, data: S2)
+    where
+        S1: AsRef<str>,
+        S2: Into<String>
+    {
+        let data_string: String = data.into();
+
         for subscriber in &self.subscribers {
             if signal.as_ref() != subscriber.signal {
                 continue;
             }
 
-            let arg_bytes = Vec::new();
+            let emit_info = EmitInfo {
+                pid: subscriber.plugin_id.clone(),
+                data: data_string.clone(),
+            };
+            let arg_bytes = bincode::serialize(&emit_info).unwrap_or_default();
             call_plugin_handler(&subscriber.plugin_id, subscriber.callback_id, arg_bytes);
         }
     }
@@ -324,8 +334,8 @@ impl<B: DisplayBackend> App<B> {
             PluginRequest::InjectNbclBootstrap(source) => {
                 self.nbcl_bootstraps.push(source);
             }
-            PluginRequest::Emit(signal) => {
-                self.plugin_buffer.emit(signal);
+            PluginRequest::Emit(signal, data) => {
+                self.plugin_buffer.emit(signal, data);
             }
             PluginRequest::Listen(plugin_id, signal, callback_id) => {
                 self.plugin_buffer.subscribe(signal, plugin_id, callback_id);
