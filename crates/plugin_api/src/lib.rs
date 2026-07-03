@@ -10,6 +10,7 @@
 //!
 //! There are two ways to define a plugin: the **Recommended Macro** for
 //! standard plugins, and the **Manual Implementation** for full control.
+//! Either way, you will be working with the [`EwwiiAPI`] trait.
 //!
 //! ### 1. Recommended: Using `auto_plugin!`
 //!
@@ -24,6 +25,7 @@
 //!     PluginInfo::new("com.app.example", "1.0.0"),
 //!     host,
 //!     {
+//!         // host is 'EwwiiAPI'
 //!         host.log("Plugin says Hello!");
 //!     }
 //! );
