@@ -484,7 +484,7 @@ impl<B: DisplayBackend> App<B> {
                     crate::updates::handle_state_changes(parser, signals_vec);
                 });
 
-                self.plugin_buffer.emit("ewwii-started-signals");
+                self.plugin_buffer.emit("ewwii-started-signals", "true");
             }
 
             // load widgets
@@ -500,7 +500,7 @@ impl<B: DisplayBackend> App<B> {
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
 
-            self.plugin_buffer.emit("ewwii-init-window");
+            self.plugin_buffer.emit("ewwii-init-window", "true");
 
             let gtk_close_handler = {
                 let app_evt_sender = self.app_evt_send.clone();
@@ -625,7 +625,7 @@ impl<B: DisplayBackend> App<B> {
         })();
         self.reloading = false;
 
-        self.plugin_buffer.emit("ewwii-reloaded-windows");
+        self.plugin_buffer.emit("ewwii-reloaded-windows", "true");
 
         result
     }

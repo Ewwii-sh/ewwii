@@ -116,7 +116,7 @@ pub fn initialize_server<B: DisplayBackend>(
     match read_config {
         Ok(new_config) => {
             app.ewwii_config = new_config;
-            app.plugin_buffer.emit("ewwii-config-loaded");
+            app.plugin_buffer.emit("ewwii-config-loaded", "true");
         }
         Err(err) => {
             error_handling_ctx::print_error(err);
@@ -128,7 +128,7 @@ pub fn initialize_server<B: DisplayBackend>(
 
     if let Some(display) = &app.gdk_display {
         gtk4::style_context_add_provider_for_display(display, &app.css_provider, 900);
-        app.plugin_buffer.emit("ewwii-applied-styles");
+        app.plugin_buffer.emit("ewwii-applied-styles", "true");
     }
 
     if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {
