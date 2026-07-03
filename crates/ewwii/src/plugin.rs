@@ -322,7 +322,7 @@ impl<B: DisplayBackend> App<B> {
                 }
             }
             PluginRequest::InjectNbclBootstrap(source) => {
-                self.nbcl_bootstrap = source;
+                self.nbcl_bootstraps.push(source);
             }
             PluginRequest::Emit(signal) => {
                 self.plugin_buffer.emit(signal);

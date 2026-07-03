@@ -72,8 +72,8 @@ thread_local! {
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_ewwii_paths(ewwii_paths: &EwwiiPaths, boostrap: String) -> Result<EwwiiConfig> {
-    EwwiiConfig::read_from_dir(ewwii_paths, boostrap)
+pub fn read_from_ewwii_paths(ewwii_paths: &EwwiiPaths, bootstraps: Vec<String>) -> Result<EwwiiConfig> {
+    EwwiiConfig::read_from_dir(ewwii_paths, bootstraps)
 }
 
 /// Ewwii configuration structure.
@@ -93,7 +93,7 @@ pub struct WindowDefinition {
 
 impl EwwiiConfig {
     /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`], reading the main config file.
-    pub fn read_from_dir(ewwii_paths: &EwwiiPaths, boostrap: String) -> Result<Self> {
+    pub fn read_from_dir(ewwii_paths: &EwwiiPaths, bootstraps: Vec<String>) -> Result<Self> {
         EWWII_CONFIG_PARSER.with(|p| {
             let mut parser = p.borrow_mut();
             let config_parser = parser.as_mut().context("Config parser not initialized")?;
@@ -105,7 +105,10 @@ impl EwwiiConfig {
             }
 
             // get code from file
-            let mut config_code = boostrap;
+            let mut config_code = String::new();
+            for bootstrap in bootstraps.into_iter().rev() {
+                config_code.push_str(&bootstrap);
+            }
 
             let source = crate::paths::code_from_file(&configlang_path)?;
             config_code.push_str(&source);
