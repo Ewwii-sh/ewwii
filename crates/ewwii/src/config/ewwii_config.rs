@@ -106,7 +106,7 @@ impl EwwiiConfig {
 
             // get code from file
             let mut config_code = String::new();
-            for bootstrap in bootstraps.into_iter().rev() {
+            for bootstrap in bootstraps {
                 config_code.push_str(&bootstrap);
             }
 
