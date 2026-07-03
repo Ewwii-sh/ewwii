@@ -89,7 +89,7 @@ pub fn initialize_server<B: DisplayBackend>(
         custom_css_providers: Vec::new(),
         gdk_display: gtk4::gdk::Display::default(),
         plugin_buffer: plugin::PluginBuffer::new(),
-        nbcl_bootstrap: String::new(),
+        nbcl_bootstraps: Vec::new(),
         reloading: false,
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
@@ -111,7 +111,7 @@ pub fn initialize_server<B: DisplayBackend>(
         app.handle_plugin_request(request);
     }
 
-    let read_config = config::read_from_ewwii_paths(&app.paths, app.nbcl_bootstrap.clone());
+    let read_config = config::read_from_ewwii_paths(&app.paths, app.nbcl_bootstraps.clone());
 
     match read_config {
         Ok(new_config) => {
