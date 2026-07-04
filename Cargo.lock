@@ -477,6 +477,7 @@ dependencies = [
  "nbcl",
  "nix",
  "regex",
+ "serde_json",
  "tokio",
 ]
 
