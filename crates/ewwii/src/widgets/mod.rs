@@ -4,5 +4,6 @@ pub mod ewwii_image;
 pub mod ewwii_label;
 pub mod graph;
 pub mod transform;
+pub mod animation;
 pub mod widget_definitions;
 pub mod widget_definitions_helper;

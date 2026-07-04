@@ -35,6 +35,7 @@ impl WidgetNode {
             | WidgetNode::Transform { props }
             | WidgetNode::EventBox { props, .. }
             | WidgetNode::ToolTip { props, .. }
+            | WidgetNode::Animation { props, .. }
             | WidgetNode::GtkUI { props }
             | WidgetNode::DefWindow { props, .. }
             | WidgetNode::Poll { props, .. }
@@ -114,6 +115,10 @@ impl WidgetNode {
             WidgetNode::ToolTip { props, children } => WidgetNode::ToolTip {
                 props: with_dyn_id(props.clone(), parent_path),
                 children: process_children(children, parent_path, "tooltip"),
+            },
+            WidgetNode::Animation { props, children } => WidgetNode::Animation {
+                props: with_dyn_id(props.clone(), parent_path),
+                children: process_children(children, parent_path, "animation"),
             },
 
             // == Top-level container for multiple widgets ==

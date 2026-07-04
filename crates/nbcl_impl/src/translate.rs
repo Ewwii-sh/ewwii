@@ -55,6 +55,7 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
             "Stack" => handle_with_children!(Stack, node),
             "EventBox" => handle_with_children!(EventBox, node),
             "ToolTip" => handle_with_children!(ToolTip, node),
+            "Animation" => handle_with_children!(Animation, node),
 
             // Special
             "GtkUI" => handle_primitive!(GtkUI, node),

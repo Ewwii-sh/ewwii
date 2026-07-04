@@ -29,6 +29,7 @@ use std::{
 use crate::widgets::circular_progressbar::CircProg;
 use crate::widgets::ewwii_image::EwwiiImage;
 use crate::widgets::ewwii_label::EwwiiLabel;
+use crate::widgets::animation::AnimationWidget;
 use crate::widgets::graph::{Graph, RenderType};
 
 pub trait EwwiiWidget {
@@ -375,6 +376,80 @@ impl EwwiiWidget for TooltipWidget {
         resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
     }
 }
+
+#[derive(Default)]
+struct AnimationWrapperWidget {
+    gtk_widget: AnimationWidget,
+}
+
+impl EwwiiWidget for AnimationWrapperWidget {
+    fn widget(&self) -> &gtk4::Widget {
+        self.gtk_widget.upcast_ref()
+    }
+
+    fn build(
+        &mut self,
+        props: &PropertyMap,
+        children: &[WidgetNode],
+        widget_registry: &mut WidgetRegistry,
+    ) -> Result<gtk4::Widget> {
+        let count = children.len();
+        if count < 1 {
+            bail!("animation must contain exactly 1 child");
+        } else if count > 1 {
+            bail!("animation must contain exactly 1 child, but got more");
+        }
+
+        let content_node = children.get(0).cloned().ok_or_else(|| anyhow!("missing content"))?;
+        let content_widget = build_gtk_widget(&WidgetInput::Node(content_node), widget_registry)?;
+        self.gtk_widget = AnimationWidget::new(&content_widget);
+
+        for (key, value) in props {
+            self.update_prop(key, value);
+        }
+
+        Ok(self.gtk_widget.clone().upcast())
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "hover" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.set_hover(v);
+                });
+            }
+            "hoverlost" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.set_hoverlost(v);
+                });
+            }
+            "click" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.set_click(v);
+                });
+            }
+            "release" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.set_release(v);
+                });
+            }
+            "trigger" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.trigger(&v);
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
+
 
 #[derive(SmartDefault)]
 struct EventBoxCtrlData {
@@ -2650,6 +2725,20 @@ pub(super) fn build_tooltip(
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Box>().expect("Tooltip was expected to be a Box."))
+}
+
+pub(super) fn build_animation(
+    props: &PropertyMap,
+    children: &[WidgetNode],
+    widget_registry: &mut WidgetRegistry,
+) -> Result<AnimationWidget> {
+    let mut widget = AnimationWrapperWidget::default();
+    let gtk_widget = widget.build(props, children, widget_registry)?;
+
+    let id = hash_props_and_type(props, "Animation");
+    widget_registry.widgets.insert(id, Box::new(widget));
+
+    Ok(gtk_widget.downcast::<AnimationWidget>().expect("Animation was expected to be an AnimationWidget."))
 }
 
 pub(super) fn build_event_box(
