@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Plugin buffer crashing ewwii.
 - `property-get` widget control panicing ewwii.
 - `Script` data source not working.
+- Property handlers not being cleared on reload.
 
 ### Removed
 

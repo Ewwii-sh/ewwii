@@ -474,17 +474,7 @@ impl<B: DisplayBackend> App<B> {
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
             if !self.reloading && self.open_windows.is_empty() {
-                // Start the global variables
-                let signals_vec =
-                    crate::updates::retreive_signals(self.ewwii_config.get_root_node()?.as_ref());
-
-                EWWII_CONFIG_PARSER.with(|p| {
-                    let parser_raw = p.borrow();
-                    let parser = parser_raw.as_ref().unwrap();
-                    crate::updates::handle_state_changes(parser, signals_vec);
-                });
-
-                self.plugin_buffer.emit("ewwii-started-signals", "true");
+                self.restart_signals()?;
             }
 
             // load widgets
@@ -608,6 +598,7 @@ impl<B: DisplayBackend> App<B> {
         self.reloading = true;
         let result = (|| -> Result<()> {
             self.ewwii_config.replace_data(config);
+            self.restart_signals()?;
 
             let open_window_ids: Vec<String> = self
                 .open_windows
@@ -761,6 +752,25 @@ impl<B: DisplayBackend> App<B> {
         for (variable, value) in mappings {
             VarWatcherAPI::update_with_broadcast(&variable, value);
         }
+
+        Ok(())
+    }
+
+    pub fn restart_signals(&self) -> Result<()> {
+        // stop the globals
+        crate::updates::kill_state_change_handler();
+
+        // Start the global variables
+        let signals_vec =
+            crate::updates::retreive_signals(self.ewwii_config.get_root_node()?.as_ref());
+
+        EWWII_CONFIG_PARSER.with(|p| {
+            let parser_raw = p.borrow();
+            let parser = parser_raw.as_ref().unwrap();
+            crate::updates::handle_state_changes(parser, signals_vec);
+        });
+
+        self.plugin_buffer.emit("ewwii-started-signals", "true");
 
         Ok(())
     }
