@@ -52,6 +52,7 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     register_with_children!("Stack", None);
     register_with_children!("EventBox", None);
     register_with_children!("ToolTip", Some((2, 2)));
+    register_with_children!("Animation", Some((1, 1)));
 
     // == Special widget & tools ==
     engine.register_node(NativeNodeSchema {

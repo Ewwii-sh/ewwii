@@ -40,6 +40,7 @@ pub enum WidgetNode {
 
     // Special
     GtkUI { props: PropertyMap },
+    Animation { props: PropertyMap, children: Vec<WidgetNode> },
 
     // Top-level macros
     DefWindow { name: String, props: PropertyMap, node: Box<WidgetNode> },
