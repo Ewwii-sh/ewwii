@@ -374,8 +374,8 @@ pub trait EwwiiAPI: Send + Sync {
     ///     {
     ///         let host_clone = host.clone();
     ///         host.listen("emit-loaded", ListenHandleFn::new(move |info| {
-    ///             println!(info.pid); // Plugin ID (Verify its right plugin)
-    ///             println!(info.data) // Data it emitted
+    ///             println!("{}", info.pid); // Plugin ID (Verify its right plugin)
+    ///             println!("{}", info.data); // Data it emitted
     ///
     ///             // example of doing host calls:
     ///             host_clone.emit("emit-loaded-received", "received!".to_string());
