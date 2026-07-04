@@ -32,7 +32,7 @@ mod ipc_server;
 mod opts;
 mod paths;
 mod plugin;
-mod property;
+mod property_macro;
 mod server;
 mod updates;
 mod util;

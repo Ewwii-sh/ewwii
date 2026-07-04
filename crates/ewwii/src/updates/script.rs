@@ -22,13 +22,14 @@ pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) 
         .and_then(|prop| get_string_prop(prop, ON_KEY).ok())
         .map(|c| unwrap_static(ON_KEY, c));
 
-    let run = match get_callback_prop(props, RUN_KEY) {
+    let mut run = match get_callback_prop(props, RUN_KEY) {
         Ok(r) => r,
         Err(_) => {
             log::error!("Script requires 'run' property to function.");
             return;
         }
     };
+    run.set_handle(Some("<script>".to_string()));
 
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
     SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());

@@ -107,16 +107,51 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     });
 }
 
-pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequest>) {
+pub fn register_all_fns(
+    engine: &mut NbclEngine,
+    ipc_tx: UnboundedSender<IpcRequest>,
+) {
     engine.register_native_fn(
         "global",
         vec![Type::Str],
         Type::Object("GlobalVar".to_string()),
         |mut args| {
-            let data = vec![args.remove(0), Value::Str(String::new()), Value::Str(String::new())];
+            let data = vec![
+                // name
+                args.remove(0),
+                // template
+                Value::Str(String::new()),
+                // initial
+                Value::Str(String::new()),
+                // mutation
+                Value::Str(String::new()),
+            ];
 
             Ok(Value::Object("GlobalVar".to_string(), Box::new(Value::List(data))))
         },
+    );
+
+    engine.register_native_fn(
+        "mutate",
+        vec![Type::Object("GlobalVar".to_string()), Type::Lambda],
+        Type::Object("GlobalVar".to_string()),
+        |mut args| {
+            let mut glob_var = args.remove(0);
+            let lamda = args.remove(0);
+            let Value::Lambda(lamda_name) = lamda else {
+                return Err(crate::runtime_err!("expected second param of mutate() to be lamda"));
+            };
+
+            match glob_var {
+                Value::Object(_, ref mut data) => {
+                    if let Value::List(ref mut inner_data) = **data {
+                        inner_data[3] = Value::Str(lamda_name);
+                    }
+                    Ok(glob_var)
+                }
+                _ => Err(crate::runtime_err!("unexpected value shape in concat()")),
+            }
+        }
     );
 
     engine.register_native_fn(

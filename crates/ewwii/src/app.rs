@@ -602,6 +602,9 @@ impl<B: DisplayBackend> App<B> {
             *wreg = None;
         }
 
+        // clear property handlers
+        crate::property_macro::close_all_property_tasks();
+
         self.reloading = true;
         let result = (|| -> Result<()> {
             self.ewwii_config.replace_data(config);

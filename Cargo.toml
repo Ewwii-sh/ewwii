@@ -36,7 +36,7 @@ pretty_env_logger = "0.5.0"
 rand = "0.10.0"
 regex = "1.10.5"
 serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
 simple-signal = "1.1"
 smart-default = "0.7.1"
 static_assertions = "1.1.0"

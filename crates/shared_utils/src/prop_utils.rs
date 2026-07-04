@@ -11,6 +11,7 @@ pub enum PropValue<T> {
         initial: T,
         parser: fn(&str) -> Option<T>,
         template: Option<TemplateExpr>,
+        mutation: Option<Callback>
     },
 }
 
@@ -30,7 +31,7 @@ where
 {
     let initial_val = var.initial.as_str().and_then(parser).unwrap_or_default();
 
-    PropValue::Bound { var_name: var.name, initial: initial_val, parser, template: var.template }
+    PropValue::Bound { var_name: var.name, initial: initial_val, parser, template: var.template, mutation: var.mutation }
 }
 
 // === Typed parsers with logging ===
@@ -171,6 +172,7 @@ pub fn get_f64_prop(prop: &Property, key: &str) -> Result<PropValue<f64>> {
             initial,
             parser: parse_f64,
             template: var.template.clone(),
+            mutation: var.mutation.clone(),
         });
     }
 
@@ -196,6 +198,7 @@ pub fn get_i32_prop(prop: &Property, key: &str) -> Result<PropValue<i32>> {
             initial,
             parser: parse_i32,
             template: var.template.clone(),
+            mutation: var.mutation.clone(),
         });
     }
 
@@ -229,6 +232,7 @@ pub fn get_vec_string_prop(prop: &Property, key: &str) -> Result<Vec<PropValue<S
                     initial,
                     parser: parse_string,
                     template: var.template.clone(),
+                    mutation: var.mutation.clone(),
                 })
             } else {
                 d.as_str().map(String::from).map(PropValue::Static).ok_or_else(|| {

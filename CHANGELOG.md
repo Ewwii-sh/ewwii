@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `onrelease` property to eventbox and button.
 - `onmiddlerelease` property to eventbox and button.
 - `onrightrelease` property to eventbox and button.
+- `mutate` function to mutate value of signals (globals).
 
 ### Changed
 

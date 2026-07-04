@@ -81,49 +81,60 @@ impl NbclConfigParser {
         Ok(())
     }
 
-    pub fn call_nbcl_function(&self, expr: &str) -> Result<()> {
-        let Some(ref ctx) = self.ctx else {
-            anyhow::bail!("Nbcl context not found.");
+    pub fn handle_callback(&self, callback: &Callback) {
+        let Some(handle) = &callback.handle else {
+            log::error!("Callback handle is missing!");
+            return;
+        };
+        let name = &callback.name;
+        let Some(ctx) = &self.ctx else {
+            log::error!("Evaluation context not found for callback!");
+            return;
         };
 
-        let (fn_name, args_str) =
-            expr.split_once('(').ok_or_else(|| anyhow::anyhow!("Invalid expression: {}", expr))?;
-        let fn_name = fn_name.trim();
-        let args_str = args_str.trim_end_matches(')');
+        match handle.as_ref() {
+            "<mutate>" => {
+                let Some(data_vec) = &callback.data else {
+                    log::error!("Data is required for <mutate>");
+                    return;
+                };
+                let sig_val = Value::Str(data_vec[0].clone());
 
-        let args: Vec<Value> = args_str
-            .split(',')
-            .filter(|s| !s.trim().is_empty())
-            .map(|s| {
-                let s = s.trim();
-                if let Ok(i) = s.parse::<i64>() {
-                    Value::Int(i)
-                } else if let Ok(f) = s.parse::<f64>() {
-                    Value::Float(f)
-                } else {
-                    Value::Str(s.to_string())
+                match self.engine.call_function(name, vec![sig_val], ctx) {
+                    Ok(value) => {
+                        if let Some(ret) = &callback.ret {
+                            let Value::Str(value_str) = value else {
+                                log::error!("Return value of mutate closure/lambda must be a string.");
+                                return;
+                            };
+
+                            *ret.borrow_mut() = value_str;
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("Failed to call function: {}", e)
+                    }
                 }
-            })
-            .collect();
-
-        self.engine.call_function(fn_name, args, ctx)?;
-
-        Ok(())
-    }
-
-    pub fn handle_callback(&self, callback: &Callback) {
-        let name = &callback.name;
-
-        if let Some(ctx) = &self.ctx {
-            if let Err(e) = self.engine.call_function(
-                name,
-                vec![Value::Object("WidgetCtrl".into(), Box::new(Value::Str(String::new())))],
-                ctx,
-            ) {
-                log::error!("Failed to call function: {}", e);
             }
-        } else {
-            log::error!("Nbcl config must be evaluated at least once before callback.");
+            "<script>" => {
+                if let Err(e) = self.engine.call_function(
+                    name,
+                    vec![Value::Object("WidgetCtrl".into(), Box::new(Value::Str(String::new())))],
+                    ctx,
+                ) {
+                    log::error!("Failed to call function: {}", e);
+                }
+            }
+            _ => {
+                log::warn!("Known callback. Calling without any paramters.");
+                if let Err(e) = self.engine.call_function(
+                    name,
+                    vec![],
+                    ctx,
+                ) {
+                    log::error!("Failed to call function: {}", e);
+                }
+            }
         }
     }
 
