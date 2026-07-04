@@ -4,6 +4,8 @@ use nbcl::Value;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::hash::{Hash, Hasher};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 /// A deterministic, serializable collection of widget properties.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Hash)]
@@ -81,10 +83,46 @@ pub enum Property {
 }
 
 /// A callback function
-#[derive(Debug, Clone, Serialize, Deserialize, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Callback {
+    /// Name of the callback
     pub name: String,
-    pub handle: Option<u64>,
+    /// Optional handle of the callback
+    pub handle: Option<String>,
+    /// Retrun value retreived by ewwii
+    pub ret: Option<Rc<RefCell<String>>>,
+    /// Vector of data ewwii can pass to the callback
+    pub data: Option<Rc<Vec<String>>>,
+}
+
+impl Callback {
+    /// Create a new callback
+    pub fn new(name: String, handle: Option<String>) -> Self {
+        Self {
+            name,
+            handle,
+            ret: None,
+            data: None,
+        }
+    }
+
+    /// Set the name of the callback
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    /// Set the handle of the callback
+    pub fn set_handle(&mut self, handle: Option<String>) {
+        self.handle = handle;
+    }
+}
+
+impl Hash for Callback {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+        self.handle.hash(state);
+        // no hashing for return
+    }
 }
 
 impl Property {
@@ -96,7 +134,7 @@ impl Property {
             Value::Str(v) => Self::String(v),
             Value::List(v) => Self::Array(v.into_iter().map(Self::from_value).collect()),
             Value::Map(v) => Self::Map(PropertyMap::from_nbcl_map(v)),
-            Value::Lambda(v) => Self::Callback(Callback { name: v, handle: None }),
+            Value::Lambda(v) => Self::Callback(Callback::new(v, None)),
             Value::Object(n, v) => {
                 // Handle Variants
                 match n.as_ref() {
@@ -109,6 +147,10 @@ impl Property {
                         };
                         let initial = Self::from_value(data.remove(0));
                         let raw_string = match data.remove(0) {
+                            Value::Str(s) => s,
+                            _ => String::new(),
+                        };
+                        let lambda_name = match data.remove(0) {
                             Value::Str(s) => s,
                             _ => String::new(),
                         };
@@ -125,7 +167,14 @@ impl Property {
                             }
                         };
 
-                        Self::GlobalVar(Box::new(GlobalVar { name, initial, template }))
+                        let mutation;
+                        if !lambda_name.is_empty() {
+                            mutation = Some(Callback::new(lambda_name, Some("<mutate>".to_string())));
+                        } else {
+                            mutation = None;
+                        }
+
+                        Self::GlobalVar(Box::new(GlobalVar { name, initial, template, mutation }))
                     }
                     _ => Self::None,
                 }

@@ -3,6 +3,26 @@ use crate::updates::SHUTDOWN_REGISTRY;
 use ewwii_shared_utils::template::TemplateExpr;
 use gtk4::glib;
 use tokio::sync::watch;
+use std::cell::RefCell;
+
+thread_local! {
+    static ACTIVE_TASKS: RefCell<Vec<glib::JoinHandle<()>>> = const { RefCell::new(Vec::new()) };
+}
+
+pub fn close_all_property_tasks() {
+    ACTIVE_TASKS.with(|tasks| {
+        let mut tasks_mut = tasks.borrow_mut();
+        for handle in tasks_mut.drain(..) {
+            handle.abort();
+        }
+    });
+}
+
+pub fn register_task(handle: glib::JoinHandle<()>) {
+    ACTIVE_TASKS.with(|tasks| {
+        tasks.borrow_mut().push(handle);
+    });
+}
 
 pub fn handle_template(template: TemplateExpr) -> watch::Receiver<String> {
     let watched_vars = template.collect_vars();
@@ -85,14 +105,14 @@ macro_rules! apply_property {
             PropValue::Static(val) => {
                 setter(val);
             }
-            PropValue::Bound { var_name, initial, parser, template } => {
+            PropValue::Bound { var_name, initial, parser, template, mutation } => {
                 let var_value = $crate::updates::api::VarWatcherAPI::state_of(&var_name);
 
                 if let Some(tmpl) = template {
                     // quick template handling
                     // (template can only be passed by plugins as of rn)
-                    let mut recv = $crate::property::handle_template(tmpl);
-                    glib::MainContext::default().spawn_local(async move {
+                    let mut recv = $crate::property_macro::handle_template(tmpl);
+                    let handle = glib::MainContext::default().spawn_local(async move {
                         while recv.changed().await.is_ok() {
                             let raw = recv.borrow().clone();
                             if let Some(v) = parser(&raw) {
@@ -100,6 +120,7 @@ macro_rules! apply_property {
                             }
                         }
                     });
+                    $crate::property_macro::register_task(handle);
                 } else {
                     // no template (default)
                     if let Some(v) = (!var_value.is_empty()).then(|| parser(&var_value)).flatten() {
@@ -111,14 +132,36 @@ macro_rules! apply_property {
                     if let Some(mut receiver) =
                         $crate::updates::api::VarWatcherAPI::subscribe(&var_name)
                     {
-                        glib::MainContext::default().spawn_local(async move {
+                        let handle = glib::MainContext::default().spawn_local(async move {
                             while receiver.changed().await.is_ok() {
                                 let raw = receiver.borrow().clone();
-                                if let Some(v) = parser(&raw) {
-                                    setter(v);
+                                if let Some(mut m) = mutation.clone() {
+                                    let ret = Rc::new(RefCell::new(String::new()));
+                                    let data = Rc::new(vec![raw]);
+
+                                    m.ret = Some(ret.clone());
+                                    m.data = Some(data);
+
+                                    $crate::config::ewwii_config::EWWII_CONFIG_PARSER.with(|p| {
+                                        let parser_raw = p.borrow();
+                                        let parser = parser_raw.as_ref().unwrap();
+
+                                        parser.handle_callback(&m);
+                                    });
+
+                                    let new_raw = ret.borrow();
+                                    if let Some(v) = parser(&new_raw) {
+                                        setter(v);
+                                    }
+                                } else {
+                                    if let Some(v) = parser(&raw) {
+                                        setter(v);
+                                    }
                                 }
                             }
                         });
+
+                        $crate::property_macro::register_task(handle);
                     }
                 }
             }
@@ -132,19 +175,40 @@ macro_rules! apply_property_watch {
         $(let $clone = $clone.clone();)*
 
         match $prop {
-            PropValue::Bound { var_name, initial, parser, template } => {
+            PropValue::Bound { var_name, initial, parser, template, mutation } => {
                 let var_value = $crate::updates::api::VarWatcherAPI::state_of(&var_name);
 
                 if let Some(tmpl) = template {
-                    let mut recv = $crate::property::handle_template(tmpl);
-                    glib::MainContext::default().spawn_local(async move {
+                    let mut recv = $crate::property_macro::handle_template(tmpl);
+                    let handle = glib::MainContext::default().spawn_local(async move {
                         while recv.changed().await.is_ok() {
                             let raw = recv.borrow().clone();
-                            if let Some($v) = parser(&raw) {
-                                $body
+                            if let Some(mut m) = mutation.clone() {
+                                let ret = Rc::new(RefCell::new(String::new()));
+                                let data = Rc::new(vec![raw]);
+
+                                m.ret = Some(ret.clone());
+                                m.data = Some(data);
+
+                                $crate::config::ewwii_config::EWWII_CONFIG_PARSER.with(|p| {
+                                    let parser_raw = p.borrow();
+                                    let parser = parser_raw.as_ref().unwrap();
+
+                                    parser.handle_callback(&m);
+                                });
+
+                                let new_raw = ret.borrow();
+                                if let Some($v) = parser(&new_raw) {
+                                    $body
+                                }
+                            } else {
+                                if let Some($v) = parser(&raw) {
+                                    $body
+                                }
                             }
                         }
                     });
+                    $crate::property_macro::register_task(handle);
                 } else {
                     if let Some($v) = (!var_value.is_empty()).then(|| parser(&var_value)).flatten() {
                         $body
@@ -154,7 +218,7 @@ macro_rules! apply_property_watch {
                     }
 
                     if let Some(mut receiver) = $crate::updates::api::VarWatcherAPI::subscribe(&var_name) {
-                        gtk4::glib::MainContext::default().spawn_local(async move {
+                        let handle = glib::MainContext::default().spawn_local(async move {
                             while receiver.changed().await.is_ok() {
                                 let raw = receiver.borrow().clone();
                                 if let Some($v) = parser(&raw) {
@@ -162,6 +226,7 @@ macro_rules! apply_property_watch {
                                 }
                             }
                         });
+                        $crate::property_macro::register_task(handle);
                     }
                 }
             }

@@ -209,7 +209,7 @@ impl CustomConfigEngine {
     pub fn handle_callback(&self, callback: &Callback) {
         if let Some(cfg_cb) = self.cfg_callback_id {
             let arg_bytes =
-                bincode::serialize(&(callback.name.clone(), callback.handle.unwrap_or_default()))
+                bincode::serialize(&(callback.name.clone(), callback.handle.clone().unwrap_or_default()))
                     .unwrap_or_default();
             if call_plugin_handler(&self.id, cfg_cb, arg_bytes).is_none() {
                 log::error!("Failed calling callback handler.");
