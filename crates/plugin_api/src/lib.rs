@@ -127,8 +127,11 @@ pub trait EwwiiAPI: Send + Sync {
     ///             prop: "label".to_string(),
     ///         }));
     ///
-    ///         let result = future_result.resolve(); // Result<T, E>
-    ///         // do stuff with result...
+    ///         future_result.resolve_async(|res| {
+    ///             if res.is_ok() {
+    ///                 // do stuff with result...
+    ///             }
+    ///         });
     ///     }
     /// );
     /// ```
@@ -308,9 +311,13 @@ pub trait EwwiiAPI: Send + Sync {
     ///     host,
     ///     {
     ///         let future_idx = host.inject_css("* { all: unset }");
-    ///         let idx = future_idx.resolve().expect("css provider idx");
     ///
-    ///         host.remove_css(idx);
+    ///         let host_clone = host.clone();
+    ///         future_idx.resolve_async(move |res| {
+    ///             if res.is_ok() {
+    ///                 host_clone.remove_css(idx);
+    ///             }
+    ///         });
     ///     }
     /// );
     /// ```
@@ -476,7 +483,11 @@ pub trait EwwiiAPI: Send + Sync {
     ///     host,
     ///     {
     ///         let future_result = host.signal_value("example");
-    ///         let value = future_result.resolve(); // Result<T, E>
+    ///         future_result.resolve_async(move |res| {
+    ///             if res.is_ok() {
+    ///                 // ...
+    ///             }
+    ///         });
     ///     }
     /// );
     /// ```
@@ -497,7 +508,11 @@ pub trait EwwiiAPI: Send + Sync {
     ///     host,
     ///     {
     ///         let frt_paths = host.get_runtime_paths();
-    ///         let rt_paths = frt_paths.resolve(); // Result<T, E>
+    ///         frt_paths.resolve_async(move |res| {
+    ///             if res.is_ok() {
+    ///                 // ...
+    ///             }
+    ///         });
     ///     }
     /// );
     /// ```
