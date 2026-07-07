@@ -2683,6 +2683,76 @@ impl EwwiiWidget for ScrolledWindowWidget {
     }
 }
 
+
+#[derive(Default)]
+struct AspectFrameWidget {
+    gtk_widget: gtk4::AspectFrame,
+}
+
+impl EwwiiWidget for AspectFrameWidget {
+    fn widget(&self) -> &gtk4::Widget {
+        self.gtk_widget.upcast_ref()
+    }
+
+    fn build(
+        &mut self,
+        props: &PropertyMap,
+        children: &[WidgetNode],
+        widget_registry: &mut WidgetRegistry,
+    ) -> Result<gtk4::Widget> {
+        for (key, value) in props {
+            self.update_prop(key, value);
+        }
+
+        let count = children.len();
+
+        if count < 1 {
+            bail!("scrolled window must contain exactly one element");
+        } else if count > 1 {
+            bail!("scrolled window contain exactly one element, but got more");
+        }
+
+        let child = children.first().cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+        let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
+        self.gtk_widget.set_child(Some(&child_widget));
+
+        Ok(self.gtk_widget.clone().upcast())
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "ratio" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                    gtk_widget.set_ratio(v as f32);
+                });
+            }
+            "xalign" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                    gtk_widget.set_xalign(v as f32);
+                });
+            }
+            "yalign" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                    gtk_widget.set_yalign(v as f32);
+                });
+            }
+            "obey_child" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                    gtk_widget.set_obey_child(v);
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
+
+
 // === Widget Registration === //
 
 pub(super) fn build_gtk_box(
@@ -3017,6 +3087,21 @@ pub(super) fn build_gtk_scale(
 
     Ok(gtk_widget.downcast::<gtk4::Scale>().expect("Scale was expected to be a Scale"))
 }
+
+pub(super) fn build_gtk_aspect_frame(
+    props: &PropertyMap,
+    children: &[WidgetNode],
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk4::AspectFrame> {
+    let mut widget = AspectFrameWidget::default();
+    let gtk_widget = widget.build(props, children, widget_registry)?;
+
+    let id = hash_props_and_type(props, "AspectFrame");
+    widget_registry.widgets.insert(id, Box::new(widget));
+
+    Ok(gtk_widget.downcast::<gtk4::AspectFrame>().expect("AspectFrameWidget was expected to be an AspectFrame"))
+}
+
 
 pub(super) fn build_gtk_scrolledwindow(
     props: &PropertyMap,

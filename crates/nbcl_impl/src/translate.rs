@@ -52,6 +52,7 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
             "Revealer" => handle_with_children!(Revealer, node),
             "Scroll" => handle_with_children!(Scroll, node),
             "OverLay" => handle_with_children!(OverLay, node),
+            "AspectFrame" => handle_with_children!(AspectFrame, node),
             "Stack" => handle_with_children!(Stack, node),
             "EventBox" => handle_with_children!(EventBox, node),
             "ToolTip" => handle_with_children!(ToolTip, node),
