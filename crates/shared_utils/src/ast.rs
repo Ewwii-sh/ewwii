@@ -29,6 +29,7 @@ pub enum WidgetNode {
     Scroll { props: PropertyMap, children: Vec<WidgetNode> },
     OverLay { props: PropertyMap, children: Vec<WidgetNode> },
     Stack { props: PropertyMap, children: Vec<WidgetNode> },
+    AspectFrame { props: PropertyMap, children: Vec<WidgetNode> },
     Calendar { props: PropertyMap },
     ColorButton { props: PropertyMap },
     ColorChooser { props: PropertyMap },

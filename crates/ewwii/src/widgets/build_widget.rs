@@ -76,6 +76,9 @@ fn build_gtk_widget_from_node(
         WidgetNode::Stack { props, children } => {
             build_gtk_stack(props, children, widget_reg)?.upcast()
         }
+        WidgetNode::AspectFrame { props, children } => {
+            build_gtk_aspect_frame(props, children, widget_reg)?.upcast()
+        }
         WidgetNode::Animation { props, children } => {
             build_animation(props, children, widget_reg)?.upcast()
         }

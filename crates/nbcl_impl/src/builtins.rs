@@ -48,6 +48,7 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     register_with_children!("Expander", Some((1, 1)));
     register_with_children!("Revealer", Some((0, 1)));
     register_with_children!("Scroll", Some((1, 1)));
+    register_with_children!("AspectFrame", Some((1, 1)));
     register_with_children!("OverLay", None);
     register_with_children!("Stack", None);
     register_with_children!("EventBox", None);

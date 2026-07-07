@@ -26,6 +26,7 @@ impl WidgetNode {
             | WidgetNode::Revealer { props, .. }
             | WidgetNode::Scroll { props, .. }
             | WidgetNode::OverLay { props, .. }
+            | WidgetNode::AspectFrame { props, .. }
             | WidgetNode::Stack { props, .. }
             | WidgetNode::Calendar { props }
             | WidgetNode::ColorButton { props }
@@ -103,6 +104,10 @@ impl WidgetNode {
             WidgetNode::OverLay { props, children } => WidgetNode::OverLay {
                 props: with_dyn_id(props.clone(), parent_path),
                 children: process_children(children, parent_path, "overlay"),
+            },
+            WidgetNode::AspectFrame { props, children } => WidgetNode::AspectFrame {
+                props: with_dyn_id(props.clone(), parent_path),
+                children: process_children(children, parent_path, "aspect_frame"),
             },
             WidgetNode::Stack { props, children } => WidgetNode::Stack {
                 props: with_dyn_id(props.clone(), parent_path),
