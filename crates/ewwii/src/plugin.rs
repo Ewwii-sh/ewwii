@@ -2,10 +2,10 @@ use crate::app::{App, DaemonCommand};
 use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
-use crate::opts::WidgetControlCommand;
+use crate::opts::{WidgetControlCommand, WidgetAction};
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{
-    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths, WidgetControlType, EmitInfo,
+    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths, WidgetControlType, EmitInfo, WidgetActionType
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
@@ -467,6 +467,36 @@ impl<B: DisplayBackend> App<B> {
         let handle = tokio::runtime::Handle::current();
         match req {
             IpcRequest::WidgetControl(wc_type) => match wc_type {
+                WidgetControlType::Action(action_type) => {
+                    match action_type {
+                        WidgetActionType::Scroll { widget, value } => {
+                            let (sender, _recv) = daemon_response::create_pair();
+                            let command = DaemonCommand::WidgetControl {
+                                command: WidgetControlCommand::Action {
+                                    action: WidgetAction::Scroll { widget, value }
+                                },
+                                sender,
+                            };
+                            handle.block_on(async {
+                                self.handle_command(command).await;
+                            });
+                        }
+                        WidgetActionType::Focus(widget) => {
+                            let (sender, _recv) = daemon_response::create_pair();
+                            let command = DaemonCommand::WidgetControl {
+                                command: WidgetControlCommand::Action {
+                                    action: WidgetAction::Focus { widget }
+                                },
+                                sender,
+                            };
+                            handle.block_on(async {
+                                self.handle_command(command).await;
+                            });
+                        }
+                    }
+
+                    None
+                }
                 WidgetControlType::Remove(w) => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
