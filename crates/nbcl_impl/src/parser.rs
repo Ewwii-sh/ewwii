@@ -54,8 +54,8 @@ impl NbclConfigParser {
         // translate the tree
         let mut all_nodes = translate::to_widgetnode(tree.root_nodes)?;
 
-        if all_nodes.len() <= 1 {
-            anyhow::bail!("Snippet must resolve to exactly 1 widget.");
+        if all_nodes.len() != 1 {
+            anyhow::bail!("Snippet must resolve to exactly 1 widget, but found {}", all_nodes.len());
         }
 
         let node = all_nodes.remove(0);
