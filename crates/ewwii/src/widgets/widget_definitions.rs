@@ -218,7 +218,11 @@ impl WidgetRegistry {
             if let Some(widget) = self.widgets.get(&id) {
                 if let Some(scrollable) = widget.widget().dynamic_cast_ref::<gtk4::ScrolledWindow>() {
                     let adjustment = scrollable.vadjustment();
-                    adjustment.set_value(value);
+                    let clamped_percent = value.clamp(0.0, 1.0);
+                    let total_range = adjustment.upper() - adjustment.page_size();
+                    let target_value = total_range * clamped_percent;
+
+                    adjustment.set_value(target_value);
                     return true;
                 }
             }
