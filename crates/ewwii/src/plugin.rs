@@ -2,7 +2,7 @@ use crate::app::{App, DaemonCommand};
 use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
-use crate::opts::WidgetControlAction;
+use crate::opts::WidgetControlCommand;
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{
     IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths, WidgetControlType, EmitInfo,
@@ -470,7 +470,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::Remove(w) => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::Remove { names: vec![w] },
+                        command: WidgetControlCommand::Remove { names: vec![w] },
                         sender,
                     };
                     handle.block_on(async {
@@ -482,7 +482,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::Create { parent, codes } => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::Create {
+                        command: WidgetControlCommand::Create {
                             nbcl_codes: codes,
                             parent_name: parent,
                         },
@@ -497,7 +497,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::PropertyGet { prop, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::PropertyGet {
+                        command: WidgetControlCommand::PropertyGet {
                             property: prop,
                             widget_name: widget,
                         },
@@ -514,7 +514,7 @@ impl<B: DisplayBackend> App<B> {
 
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::PropertyUpdate {
+                        command: WidgetControlCommand::PropertyUpdate {
                             property_and_value: p2v,
                             widget_name: widget,
                         },
@@ -529,7 +529,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::AddClass { class, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::AddClass { class, widget_name: widget },
+                        command: WidgetControlCommand::AddClass { class, widget_name: widget },
                         sender,
                     };
                     handle.block_on(async {
@@ -541,7 +541,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::RemoveClass { class, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::RemoveClass { class, widget_name: widget },
+                        command: WidgetControlCommand::RemoveClass { class, widget_name: widget },
                         sender,
                     };
                     handle.block_on(async {
