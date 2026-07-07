@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `property-get` widget control panicing ewwii.
 - `Script` data source not working.
 - Property handlers not being cleared on reload.
+- Widget control create not working.
 
 ### Removed
 
