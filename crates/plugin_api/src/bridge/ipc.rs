@@ -20,6 +20,8 @@ pub enum IpcRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WidgetControlType {
+    /// Perform an action on a widget
+    Action(WidgetActionType),
     /// Remove a widget
     Remove(String),
     /// Create a widget
@@ -32,4 +34,15 @@ pub enum WidgetControlType {
     AddClass { widget: String, class: String },
     /// Remove the class of a widget
     RemoveClass { widget: String, class: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum WidgetActionType {
+    /// Scroll a widget (must be ScrolledWindow)
+    Scroll {
+        widget: String,
+        value: f64,
+    },
+    /// Focus a widget
+    Focus(String)
 }
