@@ -208,6 +208,39 @@ impl WidgetRegistry {
 
         false
     }
+
+    pub fn scroll_widget(&self, widget_name: &str, value: f64) -> bool {
+        if let Some((&id, _)) = self
+            .widgets
+            .iter()
+            .find(|(_, widget)| widget.widget().widget_name().as_str() == widget_name)
+        {
+            if let Some(widget) = self.widgets.get(&id) {
+                if let Some(scrollable) = widget.widget().dynamic_cast_ref::<gtk4::ScrolledWindow>() {
+                    let adjustment = scrollable.vadjustment();
+                    adjustment.set_value(value);
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
+    pub fn focus_widget(&self, widget_name: &str) -> bool {
+        if let Some((&id, _)) = self
+            .widgets
+            .iter()
+            .find(|(_, widget)| widget.widget().widget_name().as_str() == widget_name)
+        {
+            if let Some(widget) = self.widgets.get(&id) {
+                widget.widget().grab_focus();
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
 // === Widget Definition === //

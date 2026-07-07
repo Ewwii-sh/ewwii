@@ -9,7 +9,7 @@ use crate::{
         WidgetExt,
     },
     paths::EwwiiPaths,
-    // dynval::DynVal,
+    opts::{WidgetControlCommand, WidgetAction},
     widgets::{
         build_widget::build_gtk_widget, build_widget::WidgetInput,
         widget_definitions::WidgetRegistry,
@@ -92,7 +92,7 @@ pub enum DaemonCommand {
     ListActiveWindows(DaemonResponseSender),
     ListPlugins(DaemonResponseSender),
     WidgetControl {
-        action: crate::opts::WidgetControlAction,
+        command: WidgetControlCommand,
         sender: DaemonResponseSender,
     },
     Update {
@@ -370,8 +370,8 @@ impl<B: DisplayBackend> App<B> {
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
-            DaemonCommand::WidgetControl { action, sender } => {
-                match self.perform_widget_control(action) {
+            DaemonCommand::WidgetControl { command, sender } => {
+                match self.perform_widget_control(command) {
                     Ok(s) => sender.send_success(s)?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
@@ -634,10 +634,34 @@ impl<B: DisplayBackend> App<B> {
     /// Perform widget control based on the action
     pub fn perform_widget_control(
         &mut self,
-        action: crate::opts::WidgetControlAction,
+        command: WidgetControlCommand,
     ) -> Result<String> {
-        match action {
-            crate::opts::WidgetControlAction::Remove { names } => {
+        match command {
+            WidgetControlCommand::Action { action } => {
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        match action {
+                            WidgetAction::Scroll { widget, value } => {
+                                let success = widget_registry.scroll_widget(&widget, value);
+                                if success {
+                                    log::error!("'{}' widget not found or is not a ScrolledWindow", widget);
+                                }
+                            }
+                            WidgetAction::Focus { widget } => {
+                                let success = widget_registry.focus_widget(&widget);
+                                if success {
+                                    log::error!("Failed to find widget with name '{}'", widget);
+                                }
+                            }
+                        }
+                    } else {
+                        log::error!("Widget registry is empty");
+                    }
+                } else {
+                    log::error!("Failed to acquire lock on widget registry");
+                }
+            }
+            WidgetControlCommand::Remove { names } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         for name in names {
@@ -650,7 +674,7 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::Create { nbcl_codes, parent_name } => {
+            WidgetControlCommand::Create { nbcl_codes, parent_name } => {
                 for nbcl_code in nbcl_codes {
                     let widget_node = EWWII_CONFIG_PARSER.with(|p| {
                         let mut parser = p.borrow_mut();
@@ -680,7 +704,7 @@ impl<B: DisplayBackend> App<B> {
                     }
                 }
             }
-            crate::opts::WidgetControlAction::PropertyGet { property, widget_name } => {
+            WidgetControlCommand::PropertyGet { property, widget_name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         let property_value = widget_registry
@@ -697,7 +721,7 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::PropertyUpdate {
+            WidgetControlCommand::PropertyUpdate {
                 property_and_value,
                 widget_name,
             } => {
@@ -720,7 +744,7 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::AddClass { class, widget_name } => {
+            WidgetControlCommand::AddClass { class, widget_name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         widget_registry.update_class_of_widget_by_name(&widget_name, &class, false);
@@ -731,7 +755,7 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::RemoveClass { class, widget_name } => {
+            WidgetControlCommand::RemoveClass { class, widget_name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         widget_registry.update_class_of_widget_by_name(&widget_name, &class, true);

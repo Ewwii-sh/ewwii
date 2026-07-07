@@ -196,7 +196,7 @@ pub enum ActionWithServer {
     #[command(name = "widget-control", alias = "wc")]
     WidgetControl {
         #[command(subcommand)]
-        action: WidgetControlAction,
+        command: WidgetControlCommand,
     },
 
     /// Update the value of a variable, in a running ewwii instance
@@ -220,7 +220,14 @@ pub enum ActionWithServer {
 
 /// Subcommands for widget control
 #[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq)]
-pub enum WidgetControlAction {
+pub enum WidgetControlCommand {
+    /// Perform an action on a widget
+    Action {
+        /// The widget action to perform
+        #[command(subcommand)]
+        action: WidgetAction,
+    },
+
     /// Remove widget by name
     Remove {
         /// Names of the widgets to remove
@@ -281,6 +288,23 @@ pub enum WidgetControlAction {
     },
 }
 
+/// Perform an action on a widget
+#[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq)]
+pub enum WidgetAction {
+    /// Scroll a widget to a value
+    Scroll {
+        /// Widget to scroll
+        widget: String,
+        /// Value to scroll to (0 top, 1 bottom)
+        value: f64
+    },
+    /// Focus a  widget
+    Focus {
+        /// Widget to focus
+        widget: String
+    }
+}
+
 impl Opt {
     pub fn from_env() -> Self {
         let raw: RawOpt = RawOpt::parse();
@@ -314,9 +338,9 @@ impl ActionWithServer {
         self,
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
-            ActionWithServer::WidgetControl { action } => {
+            ActionWithServer::WidgetControl { command } => {
                 return with_response_channel(|sender| app::DaemonCommand::WidgetControl {
-                    action,
+                    command,
                     sender,
                 })
             }

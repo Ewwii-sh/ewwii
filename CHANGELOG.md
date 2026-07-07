@@ -19,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `onmiddlerelease` property to eventbox and button.
 - `onrightrelease` property to eventbox and button.
 - `mutate` function to mutate value of signals (globals).
+- `widget-control action` command.
 - `Animation` special widget.
+- `AspectFrame` widget.
 - `core.json` library.
 
 ### Changed
