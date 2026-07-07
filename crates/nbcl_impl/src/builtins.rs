@@ -109,10 +109,7 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     });
 }
 
-pub fn register_all_fns(
-    engine: &mut NbclEngine,
-    ipc_tx: UnboundedSender<IpcRequest>,
-) {
+pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequest>) {
     engine.register_native_fn(
         "global",
         vec![Type::Str],
@@ -153,7 +150,7 @@ pub fn register_all_fns(
                 }
                 _ => Err(crate::runtime_err!("unexpected value shape in concat()")),
             }
-        }
+        },
     );
 
     engine.register_native_fn(

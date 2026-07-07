@@ -1,6 +1,6 @@
 use gtk4::prelude::*;
 use gtk4::subclass::prelude::*;
-use gtk4::{glib, gsk, graphene};
+use gtk4::{glib, graphene, gsk};
 use std::cell::{Cell, RefCell};
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
@@ -44,7 +44,8 @@ impl AnimationWidget {
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub enum Easing {
-    #[default] Linear,
+    #[default]
+    Linear,
     EaseIn,
     EaseOut,
     EaseInOut,
@@ -99,8 +100,10 @@ fn parse_stage_string(input: &str, width: f32, height: f32) -> TargetGroup {
     let mut easing = Easing::Linear;
 
     for token in input.split('+') {
-        let parts: Vec<&str> = token.trim().split_whitespace().collect();
-        if parts.is_empty() { continue; }
+        let parts: Vec<&str> = token.split_whitespace().collect();
+        if parts.is_empty() {
+            continue;
+        }
 
         let name_raw = parts[0];
         if name_raw.starts_with("scale") {
@@ -130,9 +133,13 @@ fn parse_stage_string(input: &str, width: f32, height: f32) -> TargetGroup {
 
         if parts.len() > 1 {
             if parts[1].ends_with("ms") {
-                if let Ok(ms) = parts[1].trim_end_matches("ms").parse::<u64>() { duration = Duration::from_millis(ms); }
+                if let Ok(ms) = parts[1].trim_end_matches("ms").parse::<u64>() {
+                    duration = Duration::from_millis(ms);
+                }
             } else if parts[1].ends_with('s') {
-                if let Ok(s) = parts[1].trim_end_matches('s').parse::<f32>() { duration = Duration::from_secs_f32(s); }
+                if let Ok(s) = parts[1].trim_end_matches('s').parse::<f32>() {
+                    duration = Duration::from_secs_f32(s);
+                }
             }
         }
         if parts.len() > 2 {
@@ -151,7 +158,9 @@ fn parse_stage_string(input: &str, width: f32, height: f32) -> TargetGroup {
 // splits chains by semicolon ";"
 fn parse_chain_sequence(input: &str, width: f32, height: f32) -> VecDeque<TargetGroup> {
     let mut chain = VecDeque::new();
-    if input.is_empty() { return chain; }
+    if input.is_empty() {
+        return chain;
+    }
 
     for stage in input.split(';') {
         let trimmed = stage.trim();
@@ -168,12 +177,18 @@ mod imp {
     #[derive(glib::Properties)]
     #[properties(wrapper_type = super::AnimationWidget)]
     pub struct AnimationWidget {
-        #[property(get, set)] pub open: RefCell<String>,
-        #[property(get, set)] pub close: RefCell<String>,
-        #[property(get, set)] pub hover: RefCell<String>,
-        #[property(get, set)] pub hoverlost: RefCell<String>,
-        #[property(get, set)] pub click: RefCell<String>,
-        #[property(get, set)] pub release: RefCell<String>,
+        #[property(get, set)]
+        pub open: RefCell<String>,
+        #[property(get, set)]
+        pub close: RefCell<String>,
+        #[property(get, set)]
+        pub hover: RefCell<String>,
+        #[property(get, set)]
+        pub hoverlost: RefCell<String>,
+        #[property(get, set)]
+        pub click: RefCell<String>,
+        #[property(get, set)]
+        pub release: RefCell<String>,
 
         pub child: RefCell<Option<gtk4::Widget>>,
 
@@ -260,7 +275,9 @@ mod imp {
             let height = self.obj().height() as f32;
 
             let chain = parse_chain_sequence(sequence, width, height);
-            if chain.is_empty() { return; }
+            if chain.is_empty() {
+                return;
+            }
 
             *self.queue.borrow_mut() = chain;
             self.pop_next_stage();
@@ -281,8 +298,20 @@ mod imp {
                 let seq_frag = &target_group.raw_sequence_fragment;
                 if seq_frag.contains("slide-in-") {
                     for prop in &target_group.properties {
-                        if let AnimProperty::TranslateX(_) = prop { self.start_tx.set(if seq_frag.contains("left") { -width } else { width }); }
-                        if let AnimProperty::TranslateY(_) = prop { self.start_ty.set(if seq_frag.contains("up") { -height } else { height }); }
+                        if let AnimProperty::TranslateX(_) = prop {
+                            self.start_tx.set(if seq_frag.contains("left") {
+                                -width
+                            } else {
+                                width
+                            });
+                        }
+                        if let AnimProperty::TranslateY(_) = prop {
+                            self.start_ty.set(if seq_frag.contains("up") {
+                                -height
+                            } else {
+                                height
+                            });
+                        }
                     }
                 }
 
@@ -307,35 +336,57 @@ mod imp {
     }
 
     impl ObjectImpl for AnimationWidget {
-        fn properties() -> &'static [glib::ParamSpec] { Self::derived_properties() }
-        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) { self.derived_set_property(id, value, pspec); }
-        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value { self.derived_property(id, pspec) }
+        fn properties() -> &'static [glib::ParamSpec] {
+            Self::derived_properties()
+        }
+        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
+            self.derived_set_property(id, value, pspec);
+        }
+        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+            self.derived_property(id, pspec)
+        }
 
         fn constructed(&self) {
             self.parent_constructed();
             let obj = self.obj();
 
             let motion = gtk4::EventControllerMotion::new();
-            motion.connect_enter(glib::clone!(#[weak(rename_to = imp)] self, move |_, _, _| {
-                let f = imp.hover.borrow().clone();
-                imp.transition_to_sequence(&f);
-            }));
-            motion.connect_leave(glib::clone!(#[weak(rename_to = imp)] self, move |_| {
-                let f = imp.hoverlost.borrow().clone();
-                imp.transition_to_sequence(&f);
-            }));
+            motion.connect_enter(glib::clone!(
+                #[weak(rename_to = imp)]
+                self,
+                move |_, _, _| {
+                    let f = imp.hover.borrow().clone();
+                    imp.transition_to_sequence(&f);
+                }
+            ));
+            motion.connect_leave(glib::clone!(
+                #[weak(rename_to = imp)]
+                self,
+                move |_| {
+                    let f = imp.hoverlost.borrow().clone();
+                    imp.transition_to_sequence(&f);
+                }
+            ));
             obj.add_controller(motion.clone());
             *self.hover_controller.borrow_mut() = Some(motion);
 
             let gesture = gtk4::GestureClick::new();
-            gesture.connect_pressed(glib::clone!(#[weak(rename_to = imp)] self, move |_, _, _, _| {
-                let f = imp.click.borrow().clone();
-                imp.transition_to_sequence(&f);
-            }));
-            gesture.connect_released(glib::clone!(#[weak(rename_to = imp)] self, move |_, _, _, _| {
-                let f = imp.release.borrow().clone();
-                imp.transition_to_sequence(&f);
-            }));
+            gesture.connect_pressed(glib::clone!(
+                #[weak(rename_to = imp)]
+                self,
+                move |_, _, _, _| {
+                    let f = imp.click.borrow().clone();
+                    imp.transition_to_sequence(&f);
+                }
+            ));
+            gesture.connect_released(glib::clone!(
+                #[weak(rename_to = imp)]
+                self,
+                move |_, _, _, _| {
+                    let f = imp.release.borrow().clone();
+                    imp.transition_to_sequence(&f);
+                }
+            ));
             obj.add_controller(gesture.clone());
             *self.click_controller.borrow_mut() = Some(gesture);
 
@@ -348,11 +399,21 @@ mod imp {
                     let norm = (elapsed.as_secs_f32() / duration.as_secs_f32()).min(1.0);
                     let t = imp.easing.get().apply(norm);
 
-                    imp.cur_scale.set(imp.start_scale.get() + (imp.tar_scale.get() - imp.start_scale.get()) * t);
-                    imp.cur_rotate.set(imp.start_rotate.get() + (imp.tar_rotate.get() - imp.start_rotate.get()) * t);
-                    imp.cur_opacity.set(imp.start_opacity.get() + (imp.tar_opacity.get() - imp.start_opacity.get()) * t);
-                    imp.cur_tx.set(imp.start_tx.get() + (imp.tar_tx.get() - imp.start_tx.get()) * t);
-                    imp.cur_ty.set(imp.start_ty.get() + (imp.tar_ty.get() - imp.start_ty.get()) * t);
+                    imp.cur_scale.set(
+                        imp.start_scale.get() + (imp.tar_scale.get() - imp.start_scale.get()) * t,
+                    );
+                    imp.cur_rotate.set(
+                        imp.start_rotate.get()
+                            + (imp.tar_rotate.get() - imp.start_rotate.get()) * t,
+                    );
+                    imp.cur_opacity.set(
+                        imp.start_opacity.get()
+                            + (imp.tar_opacity.get() - imp.start_opacity.get()) * t,
+                    );
+                    imp.cur_tx
+                        .set(imp.start_tx.get() + (imp.tar_tx.get() - imp.start_tx.get()) * t);
+                    imp.cur_ty
+                        .set(imp.start_ty.get() + (imp.tar_ty.get() - imp.start_ty.get()) * t);
 
                     widget.queue_draw();
 
@@ -376,11 +437,16 @@ mod imp {
         }
 
         fn measure(&self, orientation: gtk4::Orientation, for_size: i32) -> (i32, i32, i32, i32) {
-            self.child.borrow().as_ref().map_or((0, 0, -1, -1), |c| c.measure(orientation, for_size))
+            self.child
+                .borrow()
+                .as_ref()
+                .map_or((0, 0, -1, -1), |c| c.measure(orientation, for_size))
         }
 
         fn size_allocate(&self, width: i32, height: i32, baseline: i32) {
-            if let Some(ref c) = *self.child.borrow() { c.allocate(width, height, baseline, None); }
+            if let Some(ref c) = *self.child.borrow() {
+                c.allocate(width, height, baseline, None);
+            }
         }
 
         fn snapshot(&self, snapshot: &gtk4::Snapshot) {
@@ -390,7 +456,10 @@ mod imp {
 
                 let mut transform = gsk::Transform::new();
 
-                transform = transform.translate(&graphene::Point::new(w / 2.0 + self.cur_tx.get(), h / 2.0 + self.cur_ty.get()));
+                transform = transform.translate(&graphene::Point::new(
+                    w / 2.0 + self.cur_tx.get(),
+                    h / 2.0 + self.cur_ty.get(),
+                ));
                 transform = transform.rotate(self.cur_rotate.get());
                 transform = transform.scale(self.cur_scale.get(), self.cur_scale.get());
                 transform = transform.translate(&graphene::Point::new(-w / 2.0, -h / 2.0));
@@ -411,4 +480,3 @@ mod imp {
         }
     }
 }
-

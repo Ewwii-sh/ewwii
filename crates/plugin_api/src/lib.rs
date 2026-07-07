@@ -314,7 +314,7 @@ pub trait EwwiiAPI: Send + Sync {
     ///
     ///         let host_clone = host.clone();
     ///         future_idx.resolve_async(move |res| {
-    ///             if res.is_ok() {
+    ///             if let Ok(idx) = res {
     ///                 host_clone.remove_css(idx);
     ///             }
     ///         });

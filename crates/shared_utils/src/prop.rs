@@ -2,9 +2,9 @@ use crate::template::TemplateExpr;
 use crate::variables::GlobalVar;
 use nbcl::Value;
 use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 use std::hash::{Hash, Hasher};
-use std::cell::RefCell;
 use std::rc::Rc;
 
 /// A deterministic, serializable collection of widget properties.
@@ -98,12 +98,7 @@ pub struct Callback {
 impl Callback {
     /// Create a new callback
     pub fn new(name: String, handle: Option<String>) -> Self {
-        Self {
-            name,
-            handle,
-            ret: None,
-            data: None,
-        }
+        Self { name, handle, ret: None, data: None }
     }
 
     /// Set the name of the callback
@@ -167,12 +162,11 @@ impl Property {
                             }
                         };
 
-                        let mutation;
-                        if !lambda_name.is_empty() {
-                            mutation = Some(Callback::new(lambda_name, Some("<mutate>".to_string())));
+                        let mutation = if !lambda_name.is_empty() {
+                            Some(Callback::new(lambda_name, Some("<mutate>".to_string())))
                         } else {
-                            mutation = None;
-                        }
+                            None
+                        };
 
                         Self::GlobalVar(Box::new(GlobalVar { name, initial, template, mutation }))
                     }

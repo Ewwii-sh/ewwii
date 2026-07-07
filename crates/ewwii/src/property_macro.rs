@@ -1,11 +1,11 @@
 use crate::updates::api::VarWatcherAPI;
 use crate::updates::SHUTDOWN_REGISTRY;
-use ewwii_shared_utils::template::TemplateExpr;
 use ewwii_shared_utils::prop::Callback;
+use ewwii_shared_utils::template::TemplateExpr;
 use gtk4::glib;
-use tokio::sync::watch;
 use std::cell::RefCell;
 use std::rc::Rc;
+use tokio::sync::watch;
 
 thread_local! {
     static ACTIVE_TASKS: RefCell<Vec<glib::JoinHandle<()>>> = const { RefCell::new(Vec::new()) };
@@ -146,8 +146,11 @@ macro_rules! apply_property {
                     $crate::property_macro::register_task(handle);
                 } else {
                     // no template (default)
-                    let resolved_init = $crate::property_macro::mutate_raw(mutation.clone(), var_value.clone());
-                    if let Some(v) = (!var_value.is_empty()).then(|| parser(&resolved_init)).flatten() {
+                    let resolved_init =
+                        $crate::property_macro::mutate_raw(mutation.clone(), var_value.clone());
+                    if let Some(v) =
+                        (!var_value.is_empty()).then(|| parser(&resolved_init)).flatten()
+                    {
                         setter(v);
                     } else {
                         setter(initial);
@@ -160,7 +163,8 @@ macro_rules! apply_property {
                         let handle = glib::MainContext::default().spawn_local(async move {
                             while receiver.changed().await.is_ok() {
                                 let raw = receiver.borrow().clone();
-                                let resolved_raw = $crate::property_macro::mutate_raw(mutation_clone.clone(), raw);
+                                let resolved_raw =
+                                    $crate::property_macro::mutate_raw(mutation_clone.clone(), raw);
                                 if let Some(v) = parser(&resolved_raw) {
                                     setter(v);
                                 }

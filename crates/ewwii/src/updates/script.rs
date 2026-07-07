@@ -16,8 +16,7 @@ pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) 
     let every_prop = retreive_prop(props, EVERY_KEY).ok();
     let on_prop = retreive_prop(props, ON_KEY).ok();
 
-    let every_sec = every_prop
-        .and_then(|prop| get_duration_prop(prop, EVERY_KEY).ok());
+    let every_sec = every_prop.and_then(|prop| get_duration_prop(prop, EVERY_KEY).ok());
     let on_cmd = on_prop
         .and_then(|prop| get_string_prop(prop, ON_KEY).ok())
         .map(|c| unwrap_static(ON_KEY, c));

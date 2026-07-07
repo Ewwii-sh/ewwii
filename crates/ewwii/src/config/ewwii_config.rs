@@ -72,7 +72,10 @@ thread_local! {
 
 /// Load an [`EwwiiConfig`] from the config dir of the given [`crate::EwwiiPaths`],
 /// resetting and applying the global YuckFiles object in [`crate::error_handling_ctx`].
-pub fn read_from_ewwii_paths(ewwii_paths: &EwwiiPaths, bootstraps: Vec<String>) -> Result<EwwiiConfig> {
+pub fn read_from_ewwii_paths(
+    ewwii_paths: &EwwiiPaths,
+    bootstraps: Vec<String>,
+) -> Result<EwwiiConfig> {
     EwwiiConfig::read_from_dir(ewwii_paths, bootstraps)
 }
 
