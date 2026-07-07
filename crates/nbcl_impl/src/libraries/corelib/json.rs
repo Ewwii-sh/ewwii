@@ -19,8 +19,8 @@ pub fn parse_json(mut args: Vec<Value>) -> Result<Value> {
         return Err(runtime_err!("parse_json() expects a json string"));
     };
 
-    let raw_json: serde_json::Value = serde_json::from_str(&json)
-        .map_err(|e| runtime_err!("Failed to parse JSON: {}", e))?;
+    let raw_json: serde_json::Value =
+        serde_json::from_str(&json).map_err(|e| runtime_err!("Failed to parse JSON: {}", e))?;
 
     Ok(convert_json_to_value(raw_json))
 }
@@ -41,10 +41,7 @@ fn convert_json_to_value(json: serde_json::Value) -> Value {
             Value::List(arr.into_iter().map(convert_json_to_value).collect())
         }
         serde_json::Value::Object(obj) => {
-            let pairs = obj
-                .into_iter()
-                .map(|(k, v)| (k, convert_json_to_value(v)))
-                .collect();
+            let pairs = obj.into_iter().map(|(k, v)| (k, convert_json_to_value(v))).collect();
             Value::Map(pairs)
         }
     }

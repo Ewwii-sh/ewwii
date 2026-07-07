@@ -8,8 +8,8 @@ use crate::{
         Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt,
         WidgetExt,
     },
+    opts::{WidgetAction, WidgetControlCommand},
     paths::EwwiiPaths,
-    opts::{WidgetControlCommand, WidgetAction},
     widgets::{
         build_widget::build_gtk_widget, build_widget::WidgetInput,
         widget_definitions::WidgetRegistry,
@@ -632,10 +632,7 @@ impl<B: DisplayBackend> App<B> {
     }
 
     /// Perform widget control based on the action
-    pub fn perform_widget_control(
-        &mut self,
-        command: WidgetControlCommand,
-    ) -> Result<String> {
+    pub fn perform_widget_control(&mut self, command: WidgetControlCommand) -> Result<String> {
         match command {
             WidgetControlCommand::Action { action } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
@@ -644,7 +641,10 @@ impl<B: DisplayBackend> App<B> {
                             WidgetAction::Scroll { widget, value } => {
                                 let success = widget_registry.scroll_widget(&widget, value);
                                 if success {
-                                    log::error!("'{}' widget not found or is not a ScrolledWindow", widget);
+                                    log::error!(
+                                        "'{}' widget not found or is not a ScrolledWindow",
+                                        widget
+                                    );
                                 }
                             }
                             WidgetAction::Focus { widget } => {
@@ -721,10 +721,7 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            WidgetControlCommand::PropertyUpdate {
-                property_and_value,
-                widget_name,
-            } => {
+            WidgetControlCommand::PropertyUpdate { property_and_value, widget_name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         for (key, value) in &property_and_value {

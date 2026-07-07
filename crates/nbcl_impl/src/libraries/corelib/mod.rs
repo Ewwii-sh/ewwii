@@ -1,7 +1,7 @@
 mod command;
 mod env;
-mod regex;
 mod json;
+mod regex;
 
 use nbcl::{
     library::{Library, LibraryItem},

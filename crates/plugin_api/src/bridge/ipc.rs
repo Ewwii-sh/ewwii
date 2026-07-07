@@ -39,10 +39,7 @@ pub enum WidgetControlType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WidgetActionType {
     /// Scroll a widget (must be ScrolledWindow)
-    Scroll {
-        widget: String,
-        value: f64,
-    },
+    Scroll { widget: String, value: f64 },
     /// Focus a widget
-    Focus(String)
+    Focus(String),
 }

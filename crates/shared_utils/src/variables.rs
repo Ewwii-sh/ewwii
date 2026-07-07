@@ -1,4 +1,4 @@
-use crate::prop::{Property, Callback};
+use crate::prop::{Callback, Property};
 use crate::template::TemplateExpr;
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;

@@ -11,7 +11,7 @@ pub enum PropValue<T> {
         initial: T,
         parser: fn(&str) -> Option<T>,
         template: Option<TemplateExpr>,
-        mutation: Option<Callback>
+        mutation: Option<Callback>,
     },
 }
 
@@ -31,7 +31,13 @@ where
 {
     let initial_val = var.initial.as_str().and_then(parser).unwrap_or_default();
 
-    PropValue::Bound { var_name: var.name, initial: initial_val, parser, template: var.template, mutation: var.mutation }
+    PropValue::Bound {
+        var_name: var.name,
+        initial: initial_val,
+        parser,
+        template: var.template,
+        mutation: var.mutation,
+    }
 }
 
 // === Typed parsers with logging ===

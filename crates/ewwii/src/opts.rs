@@ -296,13 +296,13 @@ pub enum WidgetAction {
         /// Widget to scroll
         widget: String,
         /// Value to scroll to (0 top, 1 bottom)
-        value: f64
+        value: f64,
     },
     /// Focus a  widget
     Focus {
         /// Widget to focus
-        widget: String
-    }
+        widget: String,
+    },
 }
 
 impl Opt {

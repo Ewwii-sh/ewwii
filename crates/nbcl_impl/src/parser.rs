@@ -55,7 +55,10 @@ impl NbclConfigParser {
         let mut all_nodes = translate::to_widgetnode(tree.root_nodes)?;
 
         if all_nodes.len() != 1 {
-            anyhow::bail!("Snippet must resolve to exactly 1 widget, but found {}", all_nodes.len());
+            anyhow::bail!(
+                "Snippet must resolve to exactly 1 widget, but found {}",
+                all_nodes.len()
+            );
         }
 
         let node = all_nodes.remove(0);
@@ -104,7 +107,9 @@ impl NbclConfigParser {
                     Ok(value) => {
                         if let Some(ret) = &callback.ret {
                             let Value::Str(value_str) = value else {
-                                log::error!("Return value of mutate closure/lambda must be a string.");
+                                log::error!(
+                                    "Return value of mutate closure/lambda must be a string."
+                                );
                                 return;
                             };
 
@@ -127,11 +132,7 @@ impl NbclConfigParser {
             }
             _ => {
                 log::warn!("Known callback. Calling without any paramters.");
-                if let Err(e) = self.engine.call_function(
-                    name,
-                    vec![],
-                    ctx,
-                ) {
+                if let Err(e) = self.engine.call_function(name, vec![], ctx) {
                     log::error!("Failed to call function: {}", e);
                 }
             }

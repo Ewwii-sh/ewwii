@@ -2,10 +2,11 @@ use crate::app::{App, DaemonCommand};
 use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
-use crate::opts::{WidgetControlCommand, WidgetAction};
+use crate::opts::{WidgetAction, WidgetControlCommand};
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{
-    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths, WidgetControlType, EmitInfo, WidgetActionType
+    EmitInfo, IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths,
+    WidgetActionType, WidgetControlType,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
@@ -69,7 +70,7 @@ impl PluginBuffer {
     pub fn emit<S1, S2>(&self, signal: S1, data: S2)
     where
         S1: AsRef<str>,
-        S2: Into<String>
+        S2: Into<String>,
     {
         let data_string: String = data.into();
 
@@ -78,10 +79,8 @@ impl PluginBuffer {
                 continue;
             }
 
-            let emit_info = EmitInfo {
-                pid: subscriber.plugin_id.clone(),
-                data: data_string.clone(),
-            };
+            let emit_info =
+                EmitInfo { pid: subscriber.plugin_id.clone(), data: data_string.clone() };
             let arg_bytes = bincode::serialize(&emit_info).unwrap_or_default();
             call_plugin_handler(&subscriber.plugin_id, subscriber.callback_id, arg_bytes);
         }
@@ -208,9 +207,11 @@ impl CustomConfigEngine {
 
     pub fn handle_callback(&self, callback: &Callback) {
         if let Some(cfg_cb) = self.cfg_callback_id {
-            let arg_bytes =
-                bincode::serialize(&(callback.name.clone(), callback.handle.clone().unwrap_or_default()))
-                    .unwrap_or_default();
+            let arg_bytes = bincode::serialize(&(
+                callback.name.clone(),
+                callback.handle.clone().unwrap_or_default(),
+            ))
+            .unwrap_or_default();
             if call_plugin_handler(&self.id, cfg_cb, arg_bytes).is_none() {
                 log::error!("Failed calling callback handler.");
             }
@@ -473,7 +474,7 @@ impl<B: DisplayBackend> App<B> {
                             let (sender, _recv) = daemon_response::create_pair();
                             let command = DaemonCommand::WidgetControl {
                                 command: WidgetControlCommand::Action {
-                                    action: WidgetAction::Scroll { widget, value }
+                                    action: WidgetAction::Scroll { widget, value },
                                 },
                                 sender,
                             };
@@ -485,7 +486,7 @@ impl<B: DisplayBackend> App<B> {
                             let (sender, _recv) = daemon_response::create_pair();
                             let command = DaemonCommand::WidgetControl {
                                 command: WidgetControlCommand::Action {
-                                    action: WidgetAction::Focus { widget }
+                                    action: WidgetAction::Focus { widget },
                                 },
                                 sender,
                             };

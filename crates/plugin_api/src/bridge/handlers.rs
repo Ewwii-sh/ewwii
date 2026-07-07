@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use serde::{Serialize, Deserialize};
 
 // cfg callback
 pub type ConfigCallbackFn = Arc<dyn Fn(&str, &str) + Send + Sync>;

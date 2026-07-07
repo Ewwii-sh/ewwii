@@ -26,10 +26,10 @@ use std::{
 
 // custom widgets
 // use crate::widgets::{circular_progressbar::CircProg, transform::Transform};
+use crate::widgets::animation::AnimationWidget;
 use crate::widgets::circular_progressbar::CircProg;
 use crate::widgets::ewwii_image::EwwiiImage;
 use crate::widgets::ewwii_label::EwwiiLabel;
-use crate::widgets::animation::AnimationWidget;
 use crate::widgets::graph::{Graph, RenderType};
 
 pub trait EwwiiWidget {
@@ -216,7 +216,8 @@ impl WidgetRegistry {
             .find(|(_, widget)| widget.widget().widget_name().as_str() == widget_name)
         {
             if let Some(widget) = self.widgets.get(&id) {
-                if let Some(scrollable) = widget.widget().dynamic_cast_ref::<gtk4::ScrolledWindow>() {
+                if let Some(scrollable) = widget.widget().dynamic_cast_ref::<gtk4::ScrolledWindow>()
+                {
                     let adjustment = scrollable.vadjustment();
                     let clamped_percent = value.clamp(0.0, 1.0);
                     let total_range = adjustment.upper() - adjustment.page_size();
@@ -437,7 +438,7 @@ impl EwwiiWidget for AnimationWrapperWidget {
             bail!("animation must contain exactly 1 child, but got more");
         }
 
-        let content_node = children.get(0).cloned().ok_or_else(|| anyhow!("missing content"))?;
+        let content_node = children.first().cloned().ok_or_else(|| anyhow!("missing content"))?;
         let content_widget = build_gtk_widget(&WidgetInput::Node(content_node), widget_registry)?;
         self.gtk_widget = AnimationWidget::new(&content_widget);
 
@@ -486,7 +487,6 @@ impl EwwiiWidget for AnimationWrapperWidget {
         }
     }
 }
-
 
 #[derive(SmartDefault)]
 struct EventBoxCtrlData {
@@ -664,9 +664,11 @@ impl EwwiiWidget for EventBoxWidget {
                 let button = gesture.current_button();
 
                 match button {
-                    1 => {
-                        run_command(controller.cmd_timeout, &controller.onrelease_cmd, &[] as &[&str])
-                    }
+                    1 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onrelease_cmd,
+                        &[] as &[&str],
+                    ),
                     2 => run_command(
                         controller.cmd_timeout,
                         &controller.onmiddlerelease_cmd,
@@ -1608,7 +1610,9 @@ impl EwwiiWidget for ButtonWidget {
                 let button = gesture.current_button();
 
                 match button {
-                    1 => run_command(*cmd_timeout.borrow(), &onrelease_cmd.borrow(), &[] as &[&str]),
+                    1 => {
+                        run_command(*cmd_timeout.borrow(), &onrelease_cmd.borrow(), &[] as &[&str])
+                    }
                     2 => run_command(
                         *cmd_timeout.borrow(),
                         &onmiddlerelease_cmd.borrow(),
@@ -1679,9 +1683,15 @@ impl EwwiiWidget for ButtonWidget {
             }
             "onmiddlerelease" => {
                 let onmiddlerelease_cmd = self.onmiddlerelease_cmd.clone();
-                bind_property!(&value, &key, get_string_prop, [onmiddlerelease_cmd], |v: String| {
-                    *onmiddlerelease_cmd.borrow_mut() = v;
-                });
+                bind_property!(
+                    &value,
+                    &key,
+                    get_string_prop,
+                    [onmiddlerelease_cmd],
+                    |v: String| {
+                        *onmiddlerelease_cmd.borrow_mut() = v;
+                    }
+                );
             }
             "onrightrelease" => {
                 let onrightrelease_cmd = self.onrightrelease_cmd.clone();
@@ -2720,7 +2730,6 @@ impl EwwiiWidget for ScrolledWindowWidget {
     }
 }
 
-
 #[derive(Default)]
 struct AspectFrameWidget {
     gtk_widget: gtk4::AspectFrame,
@@ -2789,7 +2798,6 @@ impl EwwiiWidget for AspectFrameWidget {
     }
 }
 
-
 // === Widget Registration === //
 
 pub(super) fn build_gtk_box(
@@ -2845,7 +2853,9 @@ pub(super) fn build_animation(
     let id = hash_props_and_type(props, "Animation");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget.downcast::<AnimationWidget>().expect("Animation was expected to be an AnimationWidget."))
+    Ok(gtk_widget
+        .downcast::<AnimationWidget>()
+        .expect("Animation was expected to be an AnimationWidget."))
 }
 
 pub(super) fn build_event_box(
@@ -3136,9 +3146,10 @@ pub(super) fn build_gtk_aspect_frame(
     let id = hash_props_and_type(props, "AspectFrame");
     widget_registry.widgets.insert(id, Box::new(widget));
 
-    Ok(gtk_widget.downcast::<gtk4::AspectFrame>().expect("AspectFrameWidget was expected to be an AspectFrame"))
+    Ok(gtk_widget
+        .downcast::<gtk4::AspectFrame>()
+        .expect("AspectFrameWidget was expected to be an AspectFrame"))
 }
-
 
 pub(super) fn build_gtk_scrolledwindow(
     props: &PropertyMap,
