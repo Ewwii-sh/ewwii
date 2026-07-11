@@ -75,6 +75,17 @@ pub use gtk4;
 
 pub const API_VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "\0");
 
+/// Initialize GTK in the plugin scope to allow working with it.
+#[cfg(feature = "widgets")]
+#[cfg_attr(docsrs, doc(cfg(feature = "widgets")))]
+pub fn init_gtk() {
+    if !gtk4::is_initialized() {
+        unsafe {
+            gtk4::set_initialized();
+        }
+    }
+}
+
 /// The shared trait defining the Ewwii plugin API
 pub trait EwwiiAPI: Send + Sync {
     // == General Stuff == //
@@ -296,6 +307,8 @@ pub trait EwwiiAPI: Send + Sync {
     ///     PluginInfo::new("test.example.static-widget", "1.0.0"),
     ///     host,
     ///     {
+    ///         ewwii_plugin_api::init_gtk();
+    ///
     ///         let my_box = gtk4::Box::default();
     ///         let box_general = my_box.upcast::<gtk4::Widget>();
     ///         host.register_static_widget("awesome-widget", box_general);
