@@ -59,6 +59,8 @@
 //! export_plugin!(MyPlugin);
 //! ```
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 mod bridge;
 mod export_macros;
 
@@ -273,6 +275,32 @@ pub trait EwwiiAPI: Send + Sync {
     /// );
     /// ```
     fn register_config_engine(&self, info: ConfigInfo, parser: ParseFn);
+
+    /// Register a static widget into ewwii.
+    ///
+    /// A static widget is a simple widget that does not accept any
+    /// properties or children provided by ewwii and runs entirely on its own terms. It can be used
+    /// for widgets thats only purpose is showing data.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{auto_plugin, PluginInfo, gtk4};
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.static-widget", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         let my_box = gtk4::Box::default();
+    ///         let box_general = my_box.upcast::<gtk4::Widget>();
+    ///         host.register_static_widget("awesome-widget", box_general);
+    ///     }
+    /// );
+    /// ```
+    #[cfg(feature = "widgets")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "widgets")))]
+    fn register_static_widget(&self, name: &str, widget: gtk4::Widget);
 
     // === Dynamic Runtime === //
 

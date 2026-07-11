@@ -4,10 +4,12 @@ use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
 use crate::opts::{WidgetAction, WidgetControlCommand};
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
+use crate::widgets::widget_definitions::EWWII_PLUGIN_WIDGETS;
 use ewwii_plugin_api::{
     EmitInfo, IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths,
     WidgetActionType, WidgetControlType,
 };
+use gtk4::glib::translate::FromGlibPtrFull;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
 use nbcl::library::Library as NbclLibrary;
@@ -295,6 +297,23 @@ impl<B: DisplayBackend> App<B> {
                 EWWII_CONFIG_PARSER.with(|p| {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
                 });
+            }
+            PluginRequest::RegisterStaticWidget { name, widget_ptr } => {
+                unsafe {
+                    let raw_ptr = widget_ptr as *mut gtk4::ffi::GtkWidget;
+
+                    if raw_ptr.is_null() {
+                        log::error!("Received null widget pointer from plugin");
+                        return;
+                    }
+
+                    let widget = gtk4::Widget::from_glib_full(raw_ptr);
+
+                    EWWII_PLUGIN_WIDGETS.with(move |w| {
+                        let mut widget_list = w.borrow_mut();
+                        widget_list.insert(name, widget);
+                    });
+                }
             }
             PluginRequest::InjectCss(css, plugin_id, callback_id) => {
                 if let Some(display) = &self.gdk_display {

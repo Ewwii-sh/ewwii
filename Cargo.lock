@@ -487,6 +487,7 @@ version = "1.4.0"
 dependencies = [
  "bincode",
  "ewwii_shared_utils",
+ "gtk4",
  "rand 0.10.0",
  "serde",
 ]
