@@ -41,6 +41,7 @@ pub enum WidgetNode {
 
     // Special
     GtkUI { props: PropertyMap },
+    Custom { props: PropertyMap, children: Vec<WidgetNode> },
     Animation { props: PropertyMap, children: Vec<WidgetNode> },
 
     // Top-level macros

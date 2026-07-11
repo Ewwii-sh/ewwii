@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `mutate` function to mutate value of signals (globals).
 - `widget-control action` command.
 - `Animation` special widget.
+- `Custom` special widget.
 - `AspectFrame` widget.
 - `core.json` library.
 

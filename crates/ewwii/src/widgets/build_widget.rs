@@ -82,6 +82,9 @@ fn build_gtk_widget_from_node(
         WidgetNode::Animation { props, children } => {
             build_animation(props, children, widget_reg)?.upcast()
         }
+        WidgetNode::Custom { props, children } => {
+            build_custom_widget(props, children, widget_reg)?.upcast()
+        }
         // WIDGET_NAME_SYSTRAY => build_systray(node)?.upcast(),
         unknown => {
             return Err(anyhow::anyhow!("Cannot build GTK widget from node: {:?}", unknown));

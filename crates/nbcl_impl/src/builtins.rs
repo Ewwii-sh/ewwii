@@ -56,6 +56,8 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     register_with_children!("Animation", Some((1, 1)));
 
     // == Special widget & tools ==
+
+    register_with_children!("Custom", None);
     engine.register_node(NativeNodeSchema {
         type_name: "GtkUI".into(),
         enforce_id: false,
