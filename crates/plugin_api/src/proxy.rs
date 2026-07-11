@@ -87,6 +87,10 @@ pub enum PluginRequest {
         main_file: String,
         callback_id: u64,
     },
+    RegisterStaticWidget {
+        name: String,
+        widget_ptr: usize,
+    },
 
     // Dynamic Runtime
     InjectCss(String, String, u64),
@@ -329,6 +333,21 @@ impl EwwiiAPI for HostProxy {
         };
 
         self.call_host(req)
+    }
+
+    #[cfg(feature = "widgets")]
+    fn register_static_widget(&self, name: &str, widget: gtk4::Widget) {
+        use gtk4::glib::translate::ToGlibPtr;
+
+        let raw_ptr = widget.to_glib_full();
+        let widget_ptr = raw_ptr as usize;
+
+        let req = PluginRequest::RegisterStaticWidget {
+            name: name.to_string(),
+            widget_ptr,
+        };
+
+        self.call_host(req);
     }
 
     // === Dynamic Runtime === //

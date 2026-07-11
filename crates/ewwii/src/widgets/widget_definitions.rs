@@ -32,6 +32,10 @@ use crate::widgets::ewwii_image::EwwiiImage;
 use crate::widgets::ewwii_label::EwwiiLabel;
 use crate::widgets::graph::{Graph, RenderType};
 
+thread_local! {
+    pub static EWWII_PLUGIN_WIDGETS: RefCell<HashMap<String, gtk4::Widget>> = RefCell::new(HashMap::new());
+}
+
 pub trait EwwiiWidget {
     fn widget(&self) -> &gtk4::Widget;
     fn build(
