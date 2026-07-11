@@ -2862,6 +2862,32 @@ pub(super) fn build_animation(
         .expect("Animation was expected to be an AnimationWidget."))
 }
 
+pub(super) fn build_custom_widget(
+    props: &PropertyMap,
+    _children: &[WidgetNode],
+    _widget_registry: &mut WidgetRegistry
+) -> Result<gtk4::Box> {
+    let container = gtk4::Box::default();
+    let Property::String(widget_name) = retreive_prop(props, "name")? else {
+        bail!("Custom widget name must be a string.");
+    };
+
+    EWWII_PLUGIN_WIDGETS.with(glib::clone!(
+        #[strong] container,
+        #[strong] widget_name,
+        move |w| {
+            let widget_list = w.borrow();
+            if let Some(widget) = widget_list.get(&widget_name) {
+                container.append(widget);
+            } else {
+                log::warn!("Widget with name '{}' not found.", widget_name);
+            }
+        }
+    ));
+
+    Ok(container)
+}
+
 pub(super) fn build_event_box(
     props: &PropertyMap,
     children: &[WidgetNode],

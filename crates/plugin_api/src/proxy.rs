@@ -339,7 +339,7 @@ impl EwwiiAPI for HostProxy {
     fn register_static_widget(&self, name: &str, widget: gtk4::Widget) {
         use gtk4::glib::translate::ToGlibPtr;
 
-        let raw_ptr = widget.to_glib_full();
+        let raw_ptr: *mut gtk4::ffi::GtkWidget = widget.to_glib_full();
         let widget_ptr = raw_ptr as usize;
 
         let req = PluginRequest::RegisterStaticWidget {

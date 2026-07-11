@@ -60,6 +60,7 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
 
             // Special
             "GtkUI" => handle_primitive!(GtkUI, node),
+            "Custom" => handle_with_children!(Custom, node),
 
             // Main
             "Poll" => {

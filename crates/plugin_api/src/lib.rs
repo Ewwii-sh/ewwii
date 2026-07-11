@@ -69,6 +69,10 @@ pub mod proxy;
 pub use bridge::*;
 pub use ewwii_shared_utils as shared_utils;
 
+#[cfg(feature = "widgets")]
+#[cfg_attr(docsrs, doc(cfg(feature = "widgets")))]
+pub use gtk4;
+
 pub const API_VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "\0");
 
 /// The shared trait defining the Ewwii plugin API
