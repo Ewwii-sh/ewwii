@@ -64,4 +64,10 @@ This project is a fork of [Eww](https://github.com/elkowar/eww) (MIT License).
 
 If you find this project interesting, be sure to leave a star!
 
-![Star History](https://api.star-history.com/svg?repos=Ewwii-sh/ewwii&type=Date)
+<a href="https://www.star-history.com/?repos=ewwii-sh%2Fewwii&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ewwii-sh/ewwii&type=date&theme=dark&legend=top-left&sealed_token=wZZeyTWZKYrPeOkgnAvWiCcTiFD9B0MxbN49dm4v2kNv5ZtADbJ7XFiK5OMZv9eS5EidcBh5DLw5oKLWsx697Ojh2iJ1-wlYVi88Tiei6WRjXaiGeh7_bolQ-BVNvJRgpucnmRyBtPhyUxfZ-ZAaTc0bAISyuQxODsc4VQ69lCrh0N8IgOJdx6NeOn4S" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ewwii-sh/ewwii&type=date&legend=top-left&sealed_token=wZZeyTWZKYrPeOkgnAvWiCcTiFD9B0MxbN49dm4v2kNv5ZtADbJ7XFiK5OMZv9eS5EidcBh5DLw5oKLWsx697Ojh2iJ1-wlYVi88Tiei6WRjXaiGeh7_bolQ-BVNvJRgpucnmRyBtPhyUxfZ-ZAaTc0bAISyuQxODsc4VQ69lCrh0N8IgOJdx6NeOn4S" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ewwii-sh/ewwii&type=date&legend=top-left&sealed_token=wZZeyTWZKYrPeOkgnAvWiCcTiFD9B0MxbN49dm4v2kNv5ZtADbJ7XFiK5OMZv9eS5EidcBh5DLw5oKLWsx697Ojh2iJ1-wlYVi88Tiei6WRjXaiGeh7_bolQ-BVNvJRgpucnmRyBtPhyUxfZ-ZAaTc0bAISyuQxODsc4VQ69lCrh0N8IgOJdx6NeOn4S" />
+ </picture>
+</a>
