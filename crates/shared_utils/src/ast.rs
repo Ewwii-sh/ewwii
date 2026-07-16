@@ -75,9 +75,7 @@ pub fn hash_props_and_type(props: &PropertyMap, widget_type_str: &str) -> u64 {
 
 pub fn hash_props(props: &PropertyMap) -> u64 {
     let mut hasher = AHasher::default();
-
     props.hash(&mut hasher);
-
     hasher.finish()
 }
 
