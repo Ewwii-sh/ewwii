@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `onclick`, `onmiddleclick`, and `onrightclick` to fire immediately on press.
 - `emit` plugin API to accept a data.
 - `listen` plugin API to pass emitted data to ListenHandleFn.
+- Scale widget `onchange` to pass `{1}` that is the value rounded.
 
 ### Fixed
 

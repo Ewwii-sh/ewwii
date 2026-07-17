@@ -2579,7 +2579,8 @@ impl EwwiiWidget for ScaleWidget {
                                 let onchange_cmd = scale_dat_mut.onchange_cmd.clone();
                                 drop(scale_dat_mut);
 
-                                run_command(cmd_timeout, &onchange_cmd, &[value]);
+                                let value_round = value.round();
+                                run_command(cmd_timeout, &onchange_cmd, &[value, value_round]);
                             }
                         }
                     }
