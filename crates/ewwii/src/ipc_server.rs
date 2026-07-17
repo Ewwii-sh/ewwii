@@ -1,13 +1,10 @@
 use crate::{app, opts};
 use anyhow::{Context, Result};
-// use std::path::PathBuf;
 use std::time::Duration;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     sync::mpsc::*,
 };
-
-/// ewwii ipc
 
 pub async fn run_ewwii_server<P: AsRef<std::path::Path>>(
     evt_send: UnboundedSender<app::DaemonCommand>,

@@ -4,7 +4,7 @@ use std::process::Command;
 
 pub fn scan(_args: Vec<Value>) -> Result<Value> {
     let output = Command::new("nmcli")
-        .args(&["-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi"])
+        .args(["-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi"])
         .output()
         .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
 
@@ -17,10 +17,11 @@ pub fn scan(_args: Vec<Value>) -> Result<Value> {
         if parts.len() != 3 {
             continue;
         }
-        let mut map = Vec::new();
-        map.push(("ssid".into(), Value::Str(parts[0].into())));
-        map.push(("signal".into(), Value::Str(parts[1].into())));
-        map.push(("security".into(), Value::Str(parts[2].into())));
+        let map = vec![
+            ("ssid".into(), Value::Str(parts[0].into())),
+            ("signal".into(), Value::Str(parts[1].into())),
+            ("security".into(), Value::Str(parts[2].into())),
+        ];
         result.push(Value::Map(map));
     }
     Ok(Value::List(result))
@@ -28,7 +29,7 @@ pub fn scan(_args: Vec<Value>) -> Result<Value> {
 
 pub fn current_connection(_args: Vec<Value>) -> Result<Value> {
     let output = Command::new("nmcli")
-        .args(&["-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"])
+        .args(["-t", "-f", "ACTIVE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"])
         .output()
         .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
     let stdout = String::from_utf8(output.stdout)
@@ -62,7 +63,7 @@ pub fn connect(args: Vec<Value>) -> Result<Value> {
     if status.success() {
         Ok(Value::Null)
     } else {
-        Err(runtime_err!("Failed to connect to {}", ssid).into())
+        Err(runtime_err!("Failed to connect to {}", ssid))
     }
 }
 
@@ -80,7 +81,7 @@ pub fn connect_without_password(args: Vec<Value>) -> Result<Value> {
     if status.success() {
         Ok(Value::Null)
     } else {
-        Err(runtime_err!("Failed to connect to {}", ssid).into())
+        Err(runtime_err!("Failed to connect to {}", ssid))
     }
 }
 
@@ -89,7 +90,7 @@ pub fn disconnect(_args: Vec<Value>) -> Result<Value> {
 
     // Get current active SSID
     let output = Command::new("nmcli")
-        .args(&["-t", "-f", "active,ssid", "dev", "wifi"])
+        .args(["-t", "-f", "active,ssid", "dev", "wifi"])
         .output()
         .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
 
@@ -103,7 +104,7 @@ pub fn disconnect(_args: Vec<Value>) -> Result<Value> {
         .ok_or(runtime_err!("No active Wi-Fi connection"))?;
 
     let status = Command::new("nmcli")
-        .args(&["connection", "down", "id", ssid])
+        .args(["connection", "down", "id", ssid])
         .status()
         .map_err(|e| runtime_err!("Failed to disconnect from {}: {e}", ssid))?;
 
@@ -116,7 +117,7 @@ pub fn disconnect(_args: Vec<Value>) -> Result<Value> {
 
 pub fn disable_adapter(_args: Vec<Value>) -> Result<Value> {
     let status = Command::new("nmcli")
-        .args(&["networking", "off"])
+        .args(["networking", "off"])
         .status()
         .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
     if status.success() {
@@ -128,7 +129,7 @@ pub fn disable_adapter(_args: Vec<Value>) -> Result<Value> {
 
 pub fn enable_adapter(_args: Vec<Value>) -> Result<Value> {
     let status = Command::new("nmcli")
-        .args(&["networking", "on"])
+        .args(["networking", "on"])
         .status()
         .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
     if status.success() {
@@ -140,7 +141,7 @@ pub fn enable_adapter(_args: Vec<Value>) -> Result<Value> {
 
 pub fn get_adapter_connectivity(_args: Vec<Value>) -> Result<Value> {
     let output = Command::new("nmcli")
-        .args(&["networking", "connectivity"])
+        .args(["networking", "connectivity"])
         .output()
         .map_err(|e| runtime_err!("Failed to run nmcli: {e}"))?;
 

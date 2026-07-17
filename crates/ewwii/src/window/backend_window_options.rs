@@ -5,15 +5,10 @@ use anyhow::Result;
 use super::window_definition::EnumParseError;
 use crate::{
     enum_parse,
-    // diag_error::{DiagResult, DiagError, DiagResultExt},
-    // parser::{ast::Ast, ast_iterator::AstIterator, from_ast::FromAstElementContent},
     window::{coords, coords::NumWithUnit},
 };
-// use ewwii_shared_utils::{Span, VarName};
-
-// use crate::dynval::{DynVal, FromDynVal, ConversionError};
+use coords::Error as CoordError;
 use ewwii_shared_utils::prop::{Property, PropertyMap};
-// use crate::error::{DiagError, DiagResultExt};
 
 pub trait TryFromProperty: Sized {
     fn try_from_prop(p: &Property) -> Option<Self>;
@@ -54,9 +49,9 @@ impl TryFromProperty for X11StrutDefinitionExpr {
     fn try_from_prop(p: &Property) -> Option<Self> {
         let map = p.as_map()?;
 
-        let distance = map.get("distance").and_then(|v| NumWithUnit::try_from_prop(v))?;
+        let distance = map.get("distance").and_then(NumWithUnit::try_from_prop)?;
 
-        let side = map.get("side").and_then(|v| NumWithUnit::try_from_prop(v));
+        let side = map.get("side").and_then(NumWithUnit::try_from_prop);
 
         Some(Self { side, distance })
     }
@@ -66,10 +61,12 @@ impl TryFromProperty for X11StrutDefinitionExpr {
 pub enum Error {
     #[error("Missing required field: {0}")]
     MissingField(&'static str),
+
     #[error(transparent)]
-    EnumParseError(#[from] EnumParseError),
+    EnumParse(#[from] EnumParseError),
+
     #[error(transparent)]
-    CoordsError(#[from] coords::Error),
+    Coords(#[from] CoordError),
 }
 
 /// Backend-specific options of a window
@@ -109,22 +106,16 @@ impl BackendWindowOptionsDef {
 
     // pass rhai map from WindowDefinition here
     pub fn from_map(map: &PropertyMap) -> Result<Self> {
-        // let get = |key: &str| map.get(key).cloned();
-
-        let struts = Self::get_optional(map, "reserve");
-        let window_type = Self::get_optional(map, "windowtype");
-        let focusable = Self::get_optional(map, "focusable");
-
         let x11 = X11BackendWindowOptionsDef {
             sticky: Self::get_optional(map, "sticky"),
-            struts,
-            window_type,
+            struts: Self::get_optional(map, "reserve"),
+            window_type: Self::get_optional(map, "windowtype"),
             wm_ignore: Self::get_optional(map, "wm_ignore"),
         };
 
         let wayland = WlBackendWindowOptionsDef {
             exclusive: Self::get_optional(map, "exclusive"),
-            focusable,
+            focusable: Self::get_optional(map, "focusable"),
             namespace: Self::get_optional(map, "namespace"),
             force_normal: Self::get_optional(map, "force_normal"),
         };
@@ -189,7 +180,7 @@ impl X11BackendWindowOptionsDef {
             window_type: match properties.get("windowtype") {
                 Some(dynval) => {
                     let s = dynval.as_str().unwrap();
-                    X11WindowType::from_str(&s)?
+                    X11WindowType::from_str(s)?
                 }
                 None => X11WindowType::default(),
             },

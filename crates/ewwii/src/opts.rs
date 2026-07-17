@@ -183,7 +183,7 @@ pub enum ActionWithServer {
     #[command(name = "list-plugins")]
     ListPlugins,
 
-    /// Print out the widget structure as seen by ewwii.
+    /// Print out the widget structure as seen by ewwii
     ///
     /// This may be useful if you are facing issues with how ewwii is interpreting your configuration,
     /// and to provide additional context to the ewwii developers if you are filing a bug.
@@ -192,11 +192,11 @@ pub enum ActionWithServer {
     // /// Print out the scope graph structure in graphviz dot format.
     // #[command(name = "graph")]
     // ShowGraph,
-    /// Control widgets through CLI.
+    /// Control widgets through CLI
     #[command(name = "widget-control", alias = "wc")]
     WidgetControl {
         #[command(subcommand)]
-        action: WidgetControlAction,
+        command: WidgetControlCommand,
     },
 
     /// Update the value of a variable, in a running ewwii instance
@@ -207,18 +207,27 @@ pub enum ActionWithServer {
         mappings: HashMap<String, String>,
     },
 
-    /// Call nbcl functions.
-    #[command(name = "call-fns")]
-    CallNbclFns {
-        /// Nbcl functions to call. Format: call-fns "fn_name1(args)" "fn_name2(args)"
+    /// Run an nbcl expression
+    #[command(name = "nbcl-run")]
+    NbclRun {
+        /// Nbcl expr to run.
+        ///
+        /// Format: nbcl-run "my_fn(args)"
         #[arg(required = true)]
-        calls: Vec<String>,
+        expr: String,
     },
 }
 
 /// Subcommands for widget control
 #[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq)]
-pub enum WidgetControlAction {
+pub enum WidgetControlCommand {
+    /// Perform an action on a widget
+    Action {
+        /// The widget action to perform
+        #[command(subcommand)]
+        action: WidgetAction,
+    },
+
     /// Remove widget by name
     Remove {
         /// Names of the widgets to remove
@@ -279,6 +288,23 @@ pub enum WidgetControlAction {
     },
 }
 
+/// Perform an action on a widget
+#[derive(Subcommand, Debug, Serialize, Deserialize, PartialEq)]
+pub enum WidgetAction {
+    /// Scroll a widget to a value
+    Scroll {
+        /// Widget to scroll
+        widget: String,
+        /// Value to scroll to (0 top, 1 bottom)
+        value: f64,
+    },
+    /// Focus a  widget
+    Focus {
+        /// Widget to focus
+        widget: String,
+    },
+}
+
 impl Opt {
     pub fn from_env() -> Self {
         let raw: RawOpt = RawOpt::parse();
@@ -302,32 +328,6 @@ impl From<RawOpt> for Opt {
     }
 }
 
-/// Parse a window-name:window-id pair of the form `name:id` or `name` into a tuple of `(name, id)`.
-// fn parse_window_config_and_id(s: &str) -> Result<(String, String)> {
-//     let (name, id) = s.split_once(':').unwrap_or((s, s));
-
-//     Ok((name.to_string(), id.to_string()))
-// }
-
-/// Parse a window-id specific variable value declaration with the syntax `window-id:variable_name="new_value"`
-/// into a tuple of `(id, variable_name, new_value)`.
-// fn parse_window_id_args(s: &str) -> Result<(String, VarName, DynVal)> {
-//     // Parse the = first so we know if an id has not been given
-//     let (name, value) = parse_var_update_arg(s)?;
-
-//     let (id, var_name) = name.0.split_once(':').unwrap_or(("", &name.0));
-
-//     Ok((id.to_string(), var_name.into(), value))
-// }
-
-/// Split the input string at `=`, parsing the value into a [`DynVal`].
-// fn parse_var_update_arg(s: &str) -> Result<(VarName, DynVal)> {
-//     let (name, value) = s
-//         .split_once('=')
-//         .with_context(|| format!("arguments must be in the shape `variable_name=\"new_value\"`, but got: {}", s))?;
-//     Ok((name.into(), DynVal::from_string(value.to_owned())))
-// }
-
 impl ActionWithServer {
     pub fn can_start_daemon(&self) -> bool {
         // matches!(self, ActionWithServer::OpenWindow { .. } | ActionWithServer::OpenMany { .. })
@@ -338,9 +338,9 @@ impl ActionWithServer {
         self,
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
-            ActionWithServer::WidgetControl { action } => {
+            ActionWithServer::WidgetControl { command } => {
                 return with_response_channel(|sender| app::DaemonCommand::WidgetControl {
-                    action,
+                    command,
                     sender,
                 })
             }
@@ -350,11 +350,8 @@ impl ActionWithServer {
                     sender,
                 })
             }
-            ActionWithServer::CallNbclFns { calls } => {
-                return with_response_channel(|sender| app::DaemonCommand::CallNbclFns {
-                    calls,
-                    sender,
-                })
+            ActionWithServer::NbclRun { expr } => {
+                return with_response_channel(|sender| app::DaemonCommand::NbclRun { expr, sender })
             }
             ActionWithServer::OpenInspector => app::DaemonCommand::OpenInspector,
 

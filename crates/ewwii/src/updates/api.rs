@@ -2,14 +2,17 @@ use once_cell::sync::Lazy;
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
 use tokio::sync::{oneshot, watch};
 
-pub static GLOBAL_VAR_STORE: Lazy<Arc<RwLock<HashMap<String, String>>>> =
+type LazySync<T> = Lazy<Arc<RwLock<T>>>;
+type LazyLock<T> = Lazy<RwLock<T>>;
+
+pub static GLOBAL_VAR_STORE: LazySync<HashMap<String, String>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
-pub static VAR_WATCHERS: Lazy<Arc<RwLock<HashMap<String, watch::Sender<String>>>>> =
+pub static VAR_WATCHERS: LazySync<HashMap<String, watch::Sender<String>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
-static PENDING_SUBSCRIBERS: Lazy<
-    RwLock<HashMap<String, Vec<oneshot::Sender<watch::Receiver<String>>>>>,
+static PENDING_SUBSCRIBERS: LazyLock<
+    HashMap<String, Vec<oneshot::Sender<watch::Receiver<String>>>>,
 > = Lazy::new(|| RwLock::new(HashMap::new()));
 
 pub struct VarWatcherAPI;
@@ -36,23 +39,6 @@ impl VarWatcherAPI {
     pub fn subscribe(var_name: &str) -> Option<watch::Receiver<String>> {
         VAR_WATCHERS.read().unwrap().get(var_name).map(|tx| tx.subscribe())
     }
-
-    /// Lazily Subscribe to a variable
-    // pub async fn lazy_subscribe(var_name: &str) -> watch::Receiver<String> {
-    //     if let Some(rx) = VAR_WATCHERS.read().unwrap().get(var_name).map(|tx| tx.subscribe()) {
-    //         return rx;
-    //     }
-    //
-    //     let (tx, rx) = oneshot::channel();
-    //     PENDING_SUBSCRIBERS.write().unwrap().entry(var_name.to_string()).or_default().push(tx);
-    //
-    //     rx.await.unwrap()
-    // }
-
-    /// Update a variable in the store
-    // pub fn update_store(var_name: &str, val: String) {
-    //     GLOBAL_VAR_STORE.write().unwrap().insert(var_name.to_owned(), val);
-    // }
 
     /// Update the store and broadcast
     pub fn update_with_broadcast(var_name: &str, val: String) {

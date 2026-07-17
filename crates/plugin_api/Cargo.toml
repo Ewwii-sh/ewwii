@@ -1,6 +1,6 @@
 [package]
 name = "ewwii_plugin_api"
-version = "1.3.0"
+version = "1.4.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -8,8 +8,16 @@ description = "A shared library for building plugins for ewwii"
 repository = "https://github.com/byson94/ewwii"
 homepage = "https://ewwii-sh.github.io/"
 
+[features]
+widgets = ["gtk4"]
+
 [dependencies]
 bincode.workspace = true
 serde.workspace = true
 rand.workspace = true
 ewwii_shared_utils.workspace = true
+gtk4 = { workspace = true, optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

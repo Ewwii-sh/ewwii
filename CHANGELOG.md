@@ -7,9 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+### Added
+
+- `ewwii-reloaded-windows` signal emission.
+- `remove_css` plugin API to remove css injected with `inject_css`.
+- `get_runtime_paths` plugin API to get runtime paths.
+- `inject_nbcl_bootstrap` plugin API.
+- `register_static_widget` plugin API.
+- `waited_close` property to windows.
+- `nbcl-run` command to run nbcl expressions.
+- `onrelease` property to eventbox and button.
+- `onmiddlerelease` property to eventbox and button.
+- `onrightrelease` property to eventbox and button.
+- `mutate` function to mutate value of signals (globals).
+- `widget-control action` command.
+- `Animation` special widget.
+- `Custom` special widget.
+- `AspectFrame` widget.
+- `core.json` library.
+
+### Changed
+
+- `inject_css` plugin API to return a handle.
+- `onclick`, `onmiddleclick`, and `onrightclick` to fire immediately on press.
+- `emit` plugin API to accept a data.
+- `listen` plugin API to pass emitted data to ListenHandleFn.
+- Scale widget `onchange` to pass `{1}` that is the value rounded.
+
 ### Fixed
 
-- Dummy receiver not being stored for plugin buffer.
+- Plugin buffer crashing ewwii.
+- `property-get` widget control panicing ewwii.
+- `Script` data source not working.
+- Property handlers not being cleared on reload.
+- Widget control create not working.
+
+### Removed
+
+- `call-fns` command.
 
 ## [0.9.0] - 2026-06-13
 

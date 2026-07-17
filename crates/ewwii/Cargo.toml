@@ -1,6 +1,6 @@
 [package]
 name = "ewwii"
-version = "0.9.0"
+version = "0.10.0"
 authors = ["byson94 <byson94wastaken@gmail.com>"]
 description = "Widgets for everyone made better!"
 license = "GPL-3.0-or-later"
@@ -52,7 +52,6 @@ simple-signal.workspace = true
 tokio = { workspace = true, features = ["full"] }
 unescape.workspace = true
 wait-timeout.workspace = true
-shell-words.workspace = true
 # Plugin loading
 libloading = "0.8.9"
 semver = "1.0.28"

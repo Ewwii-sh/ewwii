@@ -1,3 +1,4 @@
+pub mod animation;
 pub mod build_widget;
 pub mod circular_progressbar;
 pub mod ewwii_image;

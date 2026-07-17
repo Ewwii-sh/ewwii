@@ -26,6 +26,7 @@ impl WidgetNode {
             | WidgetNode::Revealer { props, .. }
             | WidgetNode::Scroll { props, .. }
             | WidgetNode::OverLay { props, .. }
+            | WidgetNode::AspectFrame { props, .. }
             | WidgetNode::Stack { props, .. }
             | WidgetNode::Calendar { props }
             | WidgetNode::ColorButton { props }
@@ -35,6 +36,8 @@ impl WidgetNode {
             | WidgetNode::Transform { props }
             | WidgetNode::EventBox { props, .. }
             | WidgetNode::ToolTip { props, .. }
+            | WidgetNode::Animation { props, .. }
+            | WidgetNode::Custom { props, .. }
             | WidgetNode::GtkUI { props }
             | WidgetNode::DefWindow { props, .. }
             | WidgetNode::Poll { props, .. }
@@ -103,6 +106,10 @@ impl WidgetNode {
                 props: with_dyn_id(props.clone(), parent_path),
                 children: process_children(children, parent_path, "overlay"),
             },
+            WidgetNode::AspectFrame { props, children } => WidgetNode::AspectFrame {
+                props: with_dyn_id(props.clone(), parent_path),
+                children: process_children(children, parent_path, "aspect_frame"),
+            },
             WidgetNode::Stack { props, children } => WidgetNode::Stack {
                 props: with_dyn_id(props.clone(), parent_path),
                 children: process_children(children, parent_path, "stack"),
@@ -114,6 +121,14 @@ impl WidgetNode {
             WidgetNode::ToolTip { props, children } => WidgetNode::ToolTip {
                 props: with_dyn_id(props.clone(), parent_path),
                 children: process_children(children, parent_path, "tooltip"),
+            },
+            WidgetNode::Animation { props, children } => WidgetNode::Animation {
+                props: with_dyn_id(props.clone(), parent_path),
+                children: process_children(children, parent_path, "animation"),
+            },
+            WidgetNode::Custom { props, children } => WidgetNode::Custom {
+                props: with_dyn_id(props.clone(), parent_path),
+                children: process_children(children, parent_path, "custom"),
             },
 
             // == Top-level container for multiple widgets ==

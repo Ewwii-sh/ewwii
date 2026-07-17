@@ -10,6 +10,7 @@
 //!
 //! There are two ways to define a plugin: the **Recommended Macro** for
 //! standard plugins, and the **Manual Implementation** for full control.
+//! Either way, you will be working with the [`EwwiiAPI`] trait.
 //!
 //! ### 1. Recommended: Using `auto_plugin!`
 //!
@@ -24,6 +25,7 @@
 //!     PluginInfo::new("com.app.example", "1.0.0"),
 //!     host,
 //!     {
+//!         // host is 'EwwiiAPI'
 //!         host.log("Plugin says Hello!");
 //!     }
 //! );
@@ -57,6 +59,8 @@
 //! export_plugin!(MyPlugin);
 //! ```
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 mod bridge;
 mod export_macros;
 
@@ -65,7 +69,22 @@ pub mod proxy;
 pub use bridge::*;
 pub use ewwii_shared_utils as shared_utils;
 
+#[cfg(feature = "widgets")]
+#[cfg_attr(docsrs, doc(cfg(feature = "widgets")))]
+pub use gtk4;
+
 pub const API_VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "\0");
+
+/// Initialize GTK in the plugin scope to allow working with it.
+#[cfg(feature = "widgets")]
+#[cfg_attr(docsrs, doc(cfg(feature = "widgets")))]
+pub fn init_gtk() {
+    if !gtk4::is_initialized() {
+        unsafe {
+            gtk4::set_initialized();
+        }
+    }
+}
 
 /// The shared trait defining the Ewwii plugin API
 pub trait EwwiiAPI: Send + Sync {
@@ -125,8 +144,11 @@ pub trait EwwiiAPI: Send + Sync {
     ///             prop: "label".to_string(),
     ///         }));
     ///
-    ///         let result = future_result.resolve(); // Result<T, E>
-    ///         // do stuff with result...
+    ///         future_result.resolve_async(|res| {
+    ///             if res.is_ok() {
+    ///                 // do stuff with result...
+    ///             }
+    ///         });
     ///     }
     /// );
     /// ```
@@ -269,6 +291,34 @@ pub trait EwwiiAPI: Send + Sync {
     /// ```
     fn register_config_engine(&self, info: ConfigInfo, parser: ParseFn);
 
+    /// Register a static widget into ewwii.
+    ///
+    /// A static widget is a simple widget that does not accept any
+    /// properties or children provided by ewwii and runs entirely on its own terms. It can be used
+    /// for widgets thats only purpose is showing data.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{auto_plugin, PluginInfo, gtk4};
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.static-widget", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         ewwii_plugin_api::init_gtk();
+    ///
+    ///         let my_box = gtk4::Box::default();
+    ///         let box_general = my_box.upcast::<gtk4::Widget>();
+    ///         host.register_static_widget("awesome-widget", box_general);
+    ///     }
+    /// );
+    /// ```
+    #[cfg(feature = "widgets")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "widgets")))]
+    fn register_static_widget(&self, name: &str, widget: gtk4::Widget);
+
     // === Dynamic Runtime === //
 
     /// Inject custom CSS into the engine.
@@ -289,7 +339,54 @@ pub trait EwwiiAPI: Send + Sync {
     ///     }
     /// );
     /// ```
-    fn inject_css(&self, css: &str);
+    fn inject_css(&self, css: &str) -> FutureResult<u64>;
+
+    /// Remove a CSS injected into the engine.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.remove-inject", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         let future_idx = host.inject_css("* { all: unset }");
+    ///
+    ///         let host_clone = host.clone();
+    ///         future_idx.resolve_async(move |res| {
+    ///             if let Ok(idx) = res {
+    ///                 host_clone.remove_css(idx);
+    ///             }
+    ///         });
+    ///     }
+    /// );
+    /// ```
+    fn remove_css(&self, idx: u64);
+
+    /// Inject to bootstrap before every source.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.bootstrap", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         host.inject_nbcl_bootstrap("print('Hi!')");
+    ///     }
+    /// );
+    /// ```
+    fn inject_nbcl_bootstrap(&self, source: &str);
 
     /// Emit a message to a buffer which other plugins can see.
     ///
@@ -305,11 +402,12 @@ pub trait EwwiiAPI: Send + Sync {
     ///     PluginInfo::new("test.example.emit", "1.0.0"),
     ///     host,
     ///     {
-    ///         host.emit("emit-loaded");
+    ///         let data = "secert-data".to_string(); // or can be json
+    ///         host.emit("emit-loaded", data);
     ///     }
     /// );
     /// ```
-    fn emit(&self, signal: &str);
+    fn emit(&self, signal: &str, data: String);
 
     /// Listen to a message emitted by a plugin or ewwii in the buffer.
     ///
@@ -327,11 +425,12 @@ pub trait EwwiiAPI: Send + Sync {
     ///     host,
     ///     {
     ///         let host_clone = host.clone();
-    ///         host.listen("emit-loaded", ListenHandleFn::new(move || {
-    ///             // Assuming you would listen to
-    ///             // signals emitted by plugins
-    ///             // to do calls to host (i.e ewwii).
-    ///             host_clone.emit("emit-loaded-received");
+    ///         host.listen("emit-loaded", ListenHandleFn::new(move |info| {
+    ///             println!("{}", info.pid); // Plugin ID (Verify its right plugin)
+    ///             println!("{}", info.data); // Data it emitted
+    ///
+    ///             // example of doing host calls:
+    ///             host_clone.emit("emit-loaded-received", "received!".to_string());
     ///         }));
     ///     }
     /// );
@@ -346,6 +445,7 @@ pub trait EwwiiAPI: Send + Sync {
     /// - ewwii-applied-styles
     /// - ewwii-started-signals
     /// - ewwii-init-window
+    /// - ewwii-reloaded-windows
     ///
     fn listen(&self, signal: &str, handle: ListenHandleFn);
 
@@ -428,11 +528,40 @@ pub trait EwwiiAPI: Send + Sync {
     ///     host,
     ///     {
     ///         let future_result = host.signal_value("example");
-    ///         let value = future_result.resolve(); // Result<T, E>
+    ///         future_result.resolve_async(move |res| {
+    ///             if res.is_ok() {
+    ///                 // ...
+    ///             }
+    ///         });
     ///     }
     /// );
     /// ```
     fn signal_value(&self, name: &str) -> FutureResult<String>;
+
+    /// Get the runtime paths like configuration directories and ipc socket file.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ewwii_plugin_api::{
+    ///     auto_plugin, PluginInfo,
+    /// };
+    ///
+    /// auto_plugin!(
+    ///     DummyStructure,
+    ///     PluginInfo::new("test.example.paths", "1.0.0"),
+    ///     host,
+    ///     {
+    ///         let frt_paths = host.get_runtime_paths();
+    ///         frt_paths.resolve_async(move |res| {
+    ///             if res.is_ok() {
+    ///                 // ...
+    ///             }
+    ///         });
+    ///     }
+    /// );
+    /// ```
+    fn get_runtime_paths(&self) -> FutureResult<RuntimePaths>;
 
     // === Handlers === //
 

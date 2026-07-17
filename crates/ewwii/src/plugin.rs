@@ -2,11 +2,14 @@ use crate::app::{App, DaemonCommand};
 use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
-use crate::opts::WidgetControlAction;
+use crate::opts::{WidgetAction, WidgetControlCommand};
 use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
+use crate::widgets::widget_definitions::EWWII_PLUGIN_WIDGETS;
 use ewwii_plugin_api::{
-    IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, WidgetControlType,
+    EmitInfo, IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths,
+    WidgetActionType, WidgetControlType,
 };
+use gtk4::glib::translate::FromGlibPtrFull;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
 use nbcl::library::Library as NbclLibrary;
@@ -48,12 +51,46 @@ pub struct ActivePlugin {
 pub static ACTIVE_PLUGINS: Lazy<RwLock<Vec<ActivePlugin>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
 pub struct PluginBuffer {
-    pub tx: tokio::sync::broadcast::Sender<String>,
-    pub _rx: tokio::sync::broadcast::Receiver<String>
+    pub subscribers: Vec<PluginSubscriber>,
+}
+
+pub struct PluginSubscriber {
+    signal: String,
+    plugin_id: String,
+    callback_id: u64,
+}
+
+impl PluginBuffer {
+    pub fn new() -> Self {
+        Self { subscribers: Vec::new() }
+    }
+
+    pub fn subscribe(&mut self, signal: String, plugin_id: String, callback_id: u64) {
+        self.subscribers.push(PluginSubscriber { signal, plugin_id, callback_id })
+    }
+
+    pub fn emit<S1, S2>(&self, signal: S1, data: S2)
+    where
+        S1: AsRef<str>,
+        S2: Into<String>,
+    {
+        let data_string: String = data.into();
+
+        for subscriber in &self.subscribers {
+            if signal.as_ref() != subscriber.signal {
+                continue;
+            }
+
+            let emit_info =
+                EmitInfo { pid: subscriber.plugin_id.clone(), data: data_string.clone() };
+            let arg_bytes = bincode::serialize(&emit_info).unwrap_or_default();
+            call_plugin_handler(&subscriber.plugin_id, subscriber.callback_id, arg_bytes);
+        }
+    }
 }
 
 fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
-    let res = match any {
+    match any {
         NbclValue::Null => PluginValue::Null,
         NbclValue::Str(v) => PluginValue::String(v),
         NbclValue::Int(v) => PluginValue::Int(v),
@@ -63,9 +100,7 @@ fn nbclvalue_to_plugin_value(any: NbclValue) -> PluginValue {
             PluginValue::Array(v.into_iter().map(nbclvalue_to_plugin_value).collect())
         }
         _ => PluginValue::Null,
-    };
-
-    return res;
+    }
 }
 
 fn plugin_value_to_nbcl(val: PluginValue) -> NbclValue {
@@ -174,10 +209,12 @@ impl CustomConfigEngine {
 
     pub fn handle_callback(&self, callback: &Callback) {
         if let Some(cfg_cb) = self.cfg_callback_id {
-            let arg_bytes =
-                bincode::serialize(&(callback.name.clone(), callback.handle.unwrap_or_default()))
-                    .unwrap_or_default();
-            if let None = call_plugin_handler(&self.id, cfg_cb, arg_bytes) {
+            let arg_bytes = bincode::serialize(&(
+                callback.name.clone(),
+                callback.handle.clone().unwrap_or_default(),
+            ))
+            .unwrap_or_default();
+            if call_plugin_handler(&self.id, cfg_cb, arg_bytes).is_none() {
                 log::error!("Failed calling callback handler.");
             }
         } else {
@@ -261,37 +298,67 @@ impl<B: DisplayBackend> App<B> {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
                 });
             }
-            PluginRequest::InjectCss(css) => {
-                let provider = gtk4::CssProvider::new();
-                provider.load_from_string(&css);
-                self.custom_css_providers.push(provider);
-            }
-            PluginRequest::Emit(signal) => {
-                if let Err(e) = self.plugin_buffer.tx.send(signal) {
-                    log::error!("Failed to emit signal: {e}");
+            PluginRequest::RegisterStaticWidget { name, widget_ptr } => {
+                unsafe {
+                    let raw_ptr = widget_ptr as *mut gtk4::ffi::GtkWidget;
+
+                    if raw_ptr.is_null() {
+                        log::error!("Received null widget pointer from plugin");
+                        return;
+                    }
+
+                    let widget = gtk4::Widget::from_glib_full(raw_ptr);
+
+                    EWWII_PLUGIN_WIDGETS.with(move |w| {
+                        let mut widget_list = w.borrow_mut();
+                        widget_list.insert(name, widget);
+                    });
                 }
             }
-            PluginRequest::Listen(plugin_id, signal, callback_id) => {
-                let mut rx = self.plugin_buffer.tx.subscribe();
+            PluginRequest::InjectCss(css, plugin_id, callback_id) => {
+                if let Some(display) = &self.gdk_display {
+                    let provider = gtk4::CssProvider::new();
+                    provider.load_from_string(&css);
 
-                tokio::spawn(async move {
-                    loop {
-                        match rx.recv().await {
-                            Ok(msg) => {
-                                if msg == signal {
-                                    let arg_bytes = Vec::new();
-                                    call_plugin_handler(&plugin_id, callback_id, arg_bytes);
-                                }
-                            }
-                            Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
-                                log::warn!("Listener {} lagged by {} messages", callback_id, n);
-                            }
-                            Err(tokio::sync::broadcast::error::RecvError::Closed) => {
-                                break;
-                            }
+                    let mut free_space = None;
+
+                    for (idx, maybe_provider) in self.custom_css_providers.iter().enumerate() {
+                        if maybe_provider.is_none() {
+                            free_space = Some(idx);
                         }
                     }
-                });
+
+                    gtk4::style_context_add_provider_for_display(display, &provider, 910);
+                    let idx;
+
+                    if let Some(free_space) = free_space {
+                        self.custom_css_providers[free_space] = Some(provider);
+                        idx = free_space;
+                    } else {
+                        self.custom_css_providers.push(Some(provider));
+                        idx = self.custom_css_providers.len() - 1;
+                    }
+
+                    let arg_bytes = bincode::serialize(&idx).unwrap_or_default();
+                    call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+                }
+            }
+            PluginRequest::RemoveCss(idx) => {
+                let idx = idx as usize;
+                if let Some(provider) = self.custom_css_providers[idx].take() {
+                    if let Some(display) = &self.gdk_display {
+                        gtk4::style_context_remove_provider_for_display(display, &provider);
+                    }
+                }
+            }
+            PluginRequest::InjectNbclBootstrap(source) => {
+                self.nbcl_bootstraps.push(source);
+            }
+            PluginRequest::Emit(signal, data) => {
+                self.plugin_buffer.emit(signal, data);
+            }
+            PluginRequest::Listen(plugin_id, signal, callback_id) => {
+                self.plugin_buffer.subscribe(signal, plugin_id, callback_id);
             }
             PluginRequest::RegisterSignal(name, initial) => {
                 crate::updates::api::VarWatcherAPI::register(&name, initial);
@@ -318,6 +385,16 @@ impl<B: DisplayBackend> App<B> {
             }
             PluginRequest::SignalValue(plugin_id, name, callback_id) => {
                 let value = crate::updates::api::VarWatcherAPI::state_of(&name);
+                let arg_bytes = bincode::serialize(&value).unwrap_or_default();
+                call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+            }
+            PluginRequest::GetRuntimePaths(plugin_id, callback_id) => {
+                let value = RuntimePaths {
+                    log_file: self.paths.log_file.to_string_lossy().to_string(),
+                    log_dir: self.paths.log_dir.to_string_lossy().to_string(),
+                    ipc_socket_file: self.paths.ipc_socket_file.to_string_lossy().to_string(),
+                    config_dir: self.paths.config_dir.to_string_lossy().to_string(),
+                };
                 let arg_bytes = bincode::serialize(&value).unwrap_or_default();
                 call_plugin_handler(&plugin_id, callback_id, arg_bytes);
             }
@@ -357,7 +434,6 @@ impl<B: DisplayBackend> App<B> {
                     log::error!(
                         "Registering nbcl functions is only supported with the Nbcl config engine"
                     );
-                    return;
                 }
             }
         })
@@ -383,7 +459,7 @@ impl<B: DisplayBackend> App<B> {
                             let params =
                                 func.params.into_iter().map(plugin_nbcltype_to_nbcltype).collect();
 
-                            let callback_id = func.callback_id.clone();
+                            let callback_id = func.callback_id;
                             let plugin_id = plugin_id.clone();
                             lib_item = lib_item.with_fn(&name, params, ret, move |args| {
                                 let result =
@@ -402,7 +478,6 @@ impl<B: DisplayBackend> App<B> {
                     log::error!(
                         "Registering nbcl functions is only supported with the Nbcl config engine"
                     );
-                    return;
                 }
             }
         })
@@ -412,10 +487,40 @@ impl<B: DisplayBackend> App<B> {
         let handle = tokio::runtime::Handle::current();
         match req {
             IpcRequest::WidgetControl(wc_type) => match wc_type {
+                WidgetControlType::Action(action_type) => {
+                    match action_type {
+                        WidgetActionType::Scroll { widget, value } => {
+                            let (sender, _recv) = daemon_response::create_pair();
+                            let command = DaemonCommand::WidgetControl {
+                                command: WidgetControlCommand::Action {
+                                    action: WidgetAction::Scroll { widget, value },
+                                },
+                                sender,
+                            };
+                            handle.block_on(async {
+                                self.handle_command(command).await;
+                            });
+                        }
+                        WidgetActionType::Focus(widget) => {
+                            let (sender, _recv) = daemon_response::create_pair();
+                            let command = DaemonCommand::WidgetControl {
+                                command: WidgetControlCommand::Action {
+                                    action: WidgetAction::Focus { widget },
+                                },
+                                sender,
+                            };
+                            handle.block_on(async {
+                                self.handle_command(command).await;
+                            });
+                        }
+                    }
+
+                    None
+                }
                 WidgetControlType::Remove(w) => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::Remove { names: vec![w] },
+                        command: WidgetControlCommand::Remove { names: vec![w] },
                         sender,
                     };
                     handle.block_on(async {
@@ -427,7 +532,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::Create { parent, codes } => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::Create {
+                        command: WidgetControlCommand::Create {
                             nbcl_codes: codes,
                             parent_name: parent,
                         },
@@ -442,7 +547,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::PropertyGet { prop, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::PropertyGet {
+                        command: WidgetControlCommand::PropertyGet {
                             property: prop,
                             widget_name: widget,
                         },
@@ -459,7 +564,7 @@ impl<B: DisplayBackend> App<B> {
 
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::PropertyUpdate {
+                        command: WidgetControlCommand::PropertyUpdate {
                             property_and_value: p2v,
                             widget_name: widget,
                         },
@@ -474,7 +579,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::AddClass { class, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::AddClass { class, widget_name: widget },
+                        command: WidgetControlCommand::AddClass { class, widget_name: widget },
                         sender,
                     };
                     handle.block_on(async {
@@ -486,7 +591,7 @@ impl<B: DisplayBackend> App<B> {
                 WidgetControlType::RemoveClass { class, widget } => {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
-                        action: WidgetControlAction::RemoveClass { class, widget_name: widget },
+                        command: WidgetControlCommand::RemoveClass { class, widget_name: widget },
                         sender,
                     };
                     handle.block_on(async {
