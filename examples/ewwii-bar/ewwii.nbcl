@@ -37,8 +37,8 @@ component Workspaces () {
 
         for i in 1..9 {
             Button {
-                onclick = "i3-msg workspace ${i}"
-                label = "${i}"
+                onclick = f"i3-msg workspace ${i}"
+                label = f"${i}"
             }
         }
     }

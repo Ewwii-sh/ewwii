@@ -8,8 +8,8 @@ use crate::{
         Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt,
         WidgetExt,
     },
+    opts::{WidgetAction, WidgetControlCommand},
     paths::EwwiiPaths,
-    // dynval::DynVal,
     widgets::{
         build_widget::build_gtk_widget, build_widget::WidgetInput,
         widget_definitions::WidgetRegistry,
@@ -25,6 +25,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
+use futures::future::FutureExt;
 use gdk::Monitor;
 use gtk4::Window;
 use gtk4::{gdk, glib};
@@ -91,15 +92,15 @@ pub enum DaemonCommand {
     ListActiveWindows(DaemonResponseSender),
     ListPlugins(DaemonResponseSender),
     WidgetControl {
-        action: crate::opts::WidgetControlAction,
+        command: WidgetControlCommand,
         sender: DaemonResponseSender,
     },
     Update {
         mappings: HashMap<String, String>,
         sender: DaemonResponseSender,
     },
-    CallNbclFns {
-        calls: Vec<String>,
+    NbclRun {
+        expr: String,
         sender: DaemonResponseSender,
     },
 }
@@ -108,6 +109,7 @@ pub enum DaemonCommand {
 pub struct EwwiiWindow {
     pub name: String,
     pub gtk_window: Window,
+    pub waited_close: Option<Duration>,
     pub delete_event_handler_id: Option<glib::SignalHandlerId>,
     pub destroy_event_handler_id: Option<glib::SignalHandlerId>,
 }
@@ -117,6 +119,7 @@ impl std::fmt::Debug for EwwiiWindow {
         f.debug_struct("EwwiiWindow")
             .field("name", &self.name)
             .field("gtk_window", &"<GtkWindow>")
+            .field("waited_close", &self.waited_close)
             .field("widget_reg_store", &"<WidgetRegistry>")
             .field("delete_event_handler_id", &self.delete_event_handler_id)
             .field("destroy_event_handler_id", &self.destroy_event_handler_id)
@@ -131,10 +134,10 @@ impl EwwiiWindow {
     pub fn close(self) {
         log::info!("Closing gtk window {}", self.name);
 
-        for handler_id_opt in [self.destroy_event_handler_id, self.delete_event_handler_id] {
-            if let Some(handler_id) = handler_id_opt {
-                self.gtk_window.disconnect(handler_id);
-            }
+        for handler_id in
+            [self.destroy_event_handler_id, self.delete_event_handler_id].into_iter().flatten()
+        {
+            self.gtk_window.disconnect(handler_id);
         }
 
         self.gtk_window.close();
@@ -155,8 +158,10 @@ pub struct App<B: DisplayBackend> {
     /// The user's css provider.
     pub css_provider: gtk4::CssProvider,
     /// This will be set by the plugins.
-    pub custom_css_providers: Vec<gtk4::CssProvider>,
+    pub custom_css_providers: Vec<Option<gtk4::CssProvider>>,
+    pub gdk_display: Option<gtk4::gdk::Display>,
     pub plugin_buffer: plugin::PluginBuffer,
+    pub nbcl_bootstraps: Vec<String>,
     pub reloading: bool,
 
     /// Sender to send [`DaemonCommand`]s
@@ -236,7 +241,8 @@ impl<B: DisplayBackend> App<B> {
                 wait_for_monitor_model().await;
                 let mut errors = Vec::new();
 
-                let config_result = config::read_from_ewwii_paths(&self.paths);
+                let config_result =
+                    config::read_from_ewwii_paths(&self.paths, self.nbcl_bootstraps.clone());
 
                 if let Err(e) = config_result.and_then(|new_config| self.load_config(new_config)) {
                     errors.push(e)
@@ -364,14 +370,14 @@ impl<B: DisplayBackend> App<B> {
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
-            DaemonCommand::WidgetControl { action, sender } => {
-                match self.perform_widget_control(action) {
+            DaemonCommand::WidgetControl { command, sender } => {
+                match self.perform_widget_control(command) {
                     Ok(s) => sender.send_success(s)?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
-            DaemonCommand::CallNbclFns { calls, sender } => {
-                match self.call_nbcl_fns(calls) {
+            DaemonCommand::NbclRun { expr, sender } => {
+                match self.run_nbcl_expr(expr) {
                     Ok(_) => sender.send_success(String::new())?,
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
@@ -400,8 +406,26 @@ impl<B: DisplayBackend> App<B> {
             format!("Tried to close window with id '{instance_id}', but no such window was open")
         })?;
 
-        // let scope_index = ewwii_window.scope_index;
-        ewwii_window.close();
+        if let Some(wc) = ewwii_window.waited_close {
+            log::info!("Waiting {:?} before closing window.", wc);
+
+            let (abort_tx, mut abort_rx) = futures::channel::oneshot::channel::<()>();
+            self.window_close_timer_abort_senders.insert(instance_id.to_string(), abort_tx);
+
+            glib::MainContext::default().spawn_local(async move {
+                futures::select! {
+                    _ = glib::timeout_future(wc).fuse() => {
+                        log::info!("GLib timeout expired. Closing window.");
+                        ewwii_window.close();
+                    }
+                    _ = &mut abort_rx => {
+                        log::info!("Close window timer aborted via channel.");
+                    }
+                }
+            });
+        } else {
+            ewwii_window.close();
+        }
 
         if auto_reopen {
             self.failed_windows.insert(instance_id.to_string());
@@ -446,24 +470,14 @@ impl<B: DisplayBackend> App<B> {
                 "window definition name did not equal the called window"
             );
 
+            // setup initiator
             let initiator = WindowInitiator::new(&window_def, window_args)?;
 
             if !self.reloading && self.open_windows.is_empty() {
-                // Start the global variables
-                let signals_vec =
-                    crate::updates::retreive_signals(self.ewwii_config.get_root_node()?.as_ref());
-
-                EWWII_CONFIG_PARSER.with(|p| {
-                    let parser_raw = p.borrow();
-                    let parser = parser_raw.as_ref().unwrap();
-                    crate::updates::handle_state_changes(parser, signals_vec);
-                });
-
-                if let Err(e) = self.plugin_buffer.tx.send("ewwii-started-signals".to_string()) {
-                    log::error!("Ewwii failed to emit signal: {e}");
-                }
+                self.restart_signals()?;
             }
 
+            // load widgets
             let root_widget = {
                 // builds the widget and populates widget registry
                 let mut maybe_registry = self.widget_reg_store.lock().unwrap();
@@ -476,9 +490,7 @@ impl<B: DisplayBackend> App<B> {
             let monitor = get_gdk_monitor(initiator.monitor.clone())?;
             let mut ewwii_window = initialize_window::<B>(&initiator, monitor, root_widget)?;
 
-            if let Err(e) = self.plugin_buffer.tx.send("ewwii-init-window".to_string()) {
-                log::error!("Ewwii failed to emit signal: {e}");
-            }
+            self.plugin_buffer.emit("ewwii-init-window", "true");
 
             let gtk_close_handler = {
                 let app_evt_sender = self.app_evt_send.clone();
@@ -575,9 +587,18 @@ impl<B: DisplayBackend> App<B> {
         log::info!("Reloading windows");
         log::trace!("loading config: {:#?}", config);
 
+        // clean widget store
+        if let Ok(mut wreg) = self.widget_reg_store.lock() {
+            *wreg = None;
+        }
+
+        // clear property handlers
+        crate::property_macro::close_all_property_tasks();
+
         self.reloading = true;
         let result = (|| -> Result<()> {
             self.ewwii_config.replace_data(config);
+            self.restart_signals()?;
 
             let open_window_ids: Vec<String> = self
                 .open_windows
@@ -598,23 +619,49 @@ impl<B: DisplayBackend> App<B> {
         })();
         self.reloading = false;
 
+        self.plugin_buffer.emit("ewwii-reloaded-windows", "true");
+
         result
     }
 
     /// Load a given CSS string into the gtk css provider
     pub fn load_css(&mut self, _file_id: usize, css: &str) -> Result<()> {
-        self.css_provider.load_from_string(&css);
+        self.css_provider.load_from_string(css);
 
         Ok(())
     }
 
     /// Perform widget control based on the action
-    pub fn perform_widget_control(
-        &mut self,
-        action: crate::opts::WidgetControlAction,
-    ) -> Result<String> {
-        match action {
-            crate::opts::WidgetControlAction::Remove { names } => {
+    pub fn perform_widget_control(&mut self, command: WidgetControlCommand) -> Result<String> {
+        match command {
+            WidgetControlCommand::Action { action } => {
+                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
+                    if let Some(widget_registry) = maybe_registry.as_mut() {
+                        match action {
+                            WidgetAction::Scroll { widget, value } => {
+                                let success = widget_registry.scroll_widget(&widget, value);
+                                if success {
+                                    log::error!(
+                                        "'{}' widget not found or is not a ScrolledWindow",
+                                        widget
+                                    );
+                                }
+                            }
+                            WidgetAction::Focus { widget } => {
+                                let success = widget_registry.focus_widget(&widget);
+                                if success {
+                                    log::error!("Failed to find widget with name '{}'", widget);
+                                }
+                            }
+                        }
+                    } else {
+                        log::error!("Widget registry is empty");
+                    }
+                } else {
+                    log::error!("Failed to acquire lock on widget registry");
+                }
+            }
+            WidgetControlCommand::Remove { names } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         for name in names {
@@ -627,7 +674,7 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::Create { nbcl_codes, parent_name } => {
+            WidgetControlCommand::Create { nbcl_codes, parent_name } => {
                 for nbcl_code in nbcl_codes {
                     let widget_node = EWWII_CONFIG_PARSER.with(|p| {
                         let mut parser = p.borrow_mut();
@@ -657,7 +704,7 @@ impl<B: DisplayBackend> App<B> {
                     }
                 }
             }
-            crate::opts::WidgetControlAction::PropertyGet { property, widget_name } => {
+            WidgetControlCommand::PropertyGet { property, widget_name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         let property_value = widget_registry
@@ -674,17 +721,18 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::PropertyUpdate {
-                property_and_value,
-                widget_name,
-            } => {
+            WidgetControlCommand::PropertyUpdate { property_and_value, widget_name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         for (key, value) in &property_and_value {
-                            widget_registry.update_property_by_name(
+                            let success = widget_registry.update_property_by_name(
                                 &widget_name,
                                 (key.clone(), value.clone()),
                             );
+
+                            if !success {
+                                anyhow::bail!("Widget with name '{}' not found", &widget_name);
+                            }
                         }
                     } else {
                         log::error!("Widget registry is empty");
@@ -693,7 +741,7 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::AddClass { class, widget_name } => {
+            WidgetControlCommand::AddClass { class, widget_name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         widget_registry.update_class_of_widget_by_name(&widget_name, &class, false);
@@ -704,7 +752,7 @@ impl<B: DisplayBackend> App<B> {
                     log::error!("Failed to acquire lock on widget registry");
                 }
             }
-            crate::opts::WidgetControlAction::RemoveClass { class, widget_name } => {
+            WidgetControlCommand::RemoveClass { class, widget_name } => {
                 if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
                     if let Some(widget_registry) = maybe_registry.as_mut() {
                         widget_registry.update_class_of_widget_by_name(&widget_name, &class, true);
@@ -729,18 +777,35 @@ impl<B: DisplayBackend> App<B> {
         Ok(())
     }
 
-    pub fn call_nbcl_fns(&self, calls: Vec<String>) -> Result<()> {
+    pub fn restart_signals(&self) -> Result<()> {
+        // stop the globals
+        crate::updates::kill_state_change_handler();
+
+        // Start the global variables
+        let signals_vec =
+            crate::updates::retreive_signals(self.ewwii_config.get_root_node()?.as_ref());
+
+        EWWII_CONFIG_PARSER.with(|p| {
+            let parser_raw = p.borrow();
+            let parser = parser_raw.as_ref().unwrap();
+            crate::updates::handle_state_changes(parser, signals_vec);
+        });
+
+        self.plugin_buffer.emit("ewwii-started-signals", "true");
+
+        Ok(())
+    }
+
+    pub fn run_nbcl_expr(&self, expr: String) -> Result<()> {
         EWWII_CONFIG_PARSER.with(move |p| -> anyhow::Result<()> {
             let parser = p.borrow();
             match parser.as_ref().unwrap() {
                 ConfigEngine::Default(nbcl) => {
-                    for fn_call in calls {
-                        nbcl.call_nbcl_function(&fn_call)?;
-                    }
+                    nbcl.run_nbcl_expr(&expr)?;
                     Ok(())
                 }
                 ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
-                    "Calling nbcl functions is only supported with the Nbcl config engine"
+                    "Running nbcl expressions is only supported with the Nbcl config engine"
                 )),
             }
         })?;
@@ -915,15 +980,15 @@ fn initialize_window<B: DisplayBackend>(
 
                 glib::MainContext::default().spawn_local(async move {
                     loop {
-                        if let Ok(event) = conn_clone.poll_for_event() {
-                            if let Some(x11rb::protocol::Event::ConfigureNotify(_ev)) = event {
-                                let _ = apply_window_position(
-                                    conn_clone.clone(),
-                                    geometry,
-                                    monitor_geometry,
-                                    &window_clone,
-                                );
-                            }
+                        if let Ok(Some(x11rb::protocol::Event::ConfigureNotify(_ev))) =
+                            conn_clone.poll_for_event()
+                        {
+                            let _ = apply_window_position(
+                                conn_clone.clone(),
+                                geometry,
+                                monitor_geometry,
+                                &window_clone,
+                            );
                         }
                         glib::timeout_future(std::time::Duration::from_millis(10)).await;
                     }
@@ -938,6 +1003,7 @@ fn initialize_window<B: DisplayBackend>(
     Ok(EwwiiWindow {
         name: window_init.name.clone(),
         gtk_window: window,
+        waited_close: window_init.waited_close,
         delete_event_handler_id: None,
         destroy_event_handler_id: None,
     })

@@ -2,9 +2,9 @@
 //! that are used to redirect API calls to host after serialization
 
 use crate::{
-    ConfigCallbackFn, ConfigInfo, EwwiiAPI, FutureResult, IpcRequest, LibraryFnFFI, LibraryItem,
-    LibraryItemFFI, ListenHandleFn, NativeFn, NbclType, ParseFn, PluginError, PluginValue,
-    SignalUpdateFn,
+    ConfigCallbackFn, ConfigInfo, EmitInfo, EwwiiAPI, FutureResult, IpcRequest, LibraryFnFFI,
+    LibraryItem, LibraryItemFFI, ListenHandleFn, NativeFn, NbclType, ParseFn, PluginError,
+    PluginValue, RuntimePaths, SignalUpdateFn,
 };
 use ewwii_shared_utils::ast::WidgetNode;
 use serde::{Deserialize, Serialize};
@@ -36,7 +36,10 @@ pub enum CallbackHandler {
     ListenHandleFn(ListenHandleFn),
     SignalUpdateFn(SignalUpdateFn),
     ConfigCallbackFn(ConfigCallbackFn),
+
     ManualHandleStr(ManualHandle<String>),
+    ManualHandleU64(ManualHandle<u64>),
+    ManualHandleRtPaths(ManualHandle<RuntimePaths>),
 }
 
 /// Represents the possible response types returned by a plugin callback.
@@ -84,15 +87,22 @@ pub enum PluginRequest {
         main_file: String,
         callback_id: u64,
     },
+    RegisterStaticWidget {
+        name: String,
+        widget_ptr: usize,
+    },
 
     // Dynamic Runtime
-    InjectCss(String),
-    Emit(String),
+    InjectCss(String, String, u64),
+    RemoveCss(u64),
+    InjectNbclBootstrap(String),
+    Emit(String, String),
     Listen(String, String, u64),
     RegisterSignal(String, String),
     UpdateSignal(String, String),
     OnSignalUpdate(String, String, u64),
     SignalValue(String, String, u64),
+    GetRuntimePaths(String, u64),
 
     // Handlers
     ConfigCallbackHandle(u64),
@@ -103,8 +113,11 @@ extern "C" {
     fn ffi_gateway(ptr: *const u8, len: usize);
 }
 
+/// # SAFETY
+///
+/// Unsafe is necessary across FFI
 #[no_mangle]
-pub extern "C" fn plugin_callback_handler(
+pub unsafe extern "C" fn plugin_callback_handler(
     id: u64,
     arg_ptr: *const u8,
     arg_len: usize,
@@ -130,7 +143,8 @@ pub extern "C" fn plugin_callback_handler(
             }
         }
         Some(CallbackHandler::ListenHandleFn(f)) => {
-            f();
+            let value: EmitInfo = bincode::deserialize(bytes).unwrap_or_default();
+            f(value);
             return std::ptr::null_mut();
         }
         Some(CallbackHandler::SignalUpdateFn(f)) => {
@@ -148,6 +162,16 @@ pub extern "C" fn plugin_callback_handler(
             f(value);
             return std::ptr::null_mut();
         }
+        Some(CallbackHandler::ManualHandleU64(f)) => {
+            let value: u64 = bincode::deserialize(bytes).unwrap_or_default();
+            f(value);
+            return std::ptr::null_mut();
+        }
+        Some(CallbackHandler::ManualHandleRtPaths(f)) => {
+            let value: RuntimePaths = bincode::deserialize(bytes).unwrap_or_default();
+            f(value);
+            return std::ptr::null_mut();
+        }
         None => return std::ptr::null_mut(),
     };
 
@@ -159,8 +183,11 @@ pub extern "C" fn plugin_callback_handler(
     }
 }
 
+/// # SAFETY
+///
+/// Unsafe is necessary across FFI
 #[no_mangle]
-pub extern "C" fn plugin_free_buffer(ptr: *mut u8, len: usize) {
+pub unsafe extern "C" fn plugin_free_buffer(ptr: *mut u8, len: usize) {
     if !ptr.is_null() {
         unsafe {
             let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));
@@ -308,15 +335,50 @@ impl EwwiiAPI for HostProxy {
         self.call_host(req)
     }
 
-    // === Dynamic Runtime === //
+    #[cfg(feature = "widgets")]
+    fn register_static_widget(&self, name: &str, widget: gtk4::Widget) {
+        use gtk4::glib::translate::ToGlibPtr;
 
-    fn inject_css(&self, css: &str) {
-        let req = PluginRequest::InjectCss(css.to_string());
+        let raw_ptr: *mut gtk4::ffi::GtkWidget = widget.to_glib_full();
+        let widget_ptr = raw_ptr as usize;
+
+        let req = PluginRequest::RegisterStaticWidget {
+            name: name.to_string(),
+            widget_ptr,
+        };
+
         self.call_host(req);
     }
 
-    fn emit(&self, signal: &str) {
-        let req = PluginRequest::Emit(signal.to_string());
+    // === Dynamic Runtime === //
+
+    fn inject_css(&self, css: &str) -> FutureResult<u64> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let handle = ManualHandle::new(move |value: u64| {
+            let _ = tx.send(value);
+        });
+
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::ManualHandleU64(handle));
+
+        let req = PluginRequest::InjectCss(css.to_string(), self.get_id().to_string(), id);
+        self.call_host(req);
+
+        FutureResult { channel: rx }
+    }
+
+    fn remove_css(&self, idx: u64) {
+        let req = PluginRequest::RemoveCss(idx);
+        self.call_host(req);
+    }
+
+    fn inject_nbcl_bootstrap(&self, source: &str) {
+        let req = PluginRequest::InjectNbclBootstrap(source.to_string());
+        self.call_host(req);
+    }
+
+    fn emit(&self, signal: &str, data: String) {
+        let req = PluginRequest::Emit(signal.to_string(), data);
         self.call_host(req);
     }
 
@@ -356,6 +418,21 @@ impl EwwiiAPI for HostProxy {
         get_callbacks().lock().unwrap().insert(id, CallbackHandler::ManualHandleStr(handle));
 
         let req = PluginRequest::SignalValue(self.get_id().to_string(), name.to_string(), id);
+        self.call_host(req);
+
+        FutureResult { channel: rx }
+    }
+
+    fn get_runtime_paths(&self) -> FutureResult<RuntimePaths> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        let handle = ManualHandle::new(move |value: RuntimePaths| {
+            let _ = tx.send(value);
+        });
+
+        let id = rand::random::<u64>();
+        get_callbacks().lock().unwrap().insert(id, CallbackHandler::ManualHandleRtPaths(handle));
+
+        let req = PluginRequest::GetRuntimePaths(self.get_id().to_string(), id);
         self.call_host(req);
 
         FutureResult { channel: rx }

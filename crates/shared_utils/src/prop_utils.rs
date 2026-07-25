@@ -11,6 +11,7 @@ pub enum PropValue<T> {
         initial: T,
         parser: fn(&str) -> Option<T>,
         template: Option<TemplateExpr>,
+        mutation: Option<Callback>,
     },
 }
 
@@ -28,9 +29,15 @@ fn make_bound<T>(var: GlobalVar, parser: fn(&str) -> Option<T>) -> PropValue<T>
 where
     T: Clone + 'static + Default,
 {
-    let initial_val = var.initial.as_str().and_then(|s| parser(s)).unwrap_or(T::default());
+    let initial_val = var.initial.as_str().and_then(parser).unwrap_or_default();
 
-    PropValue::Bound { var_name: var.name, initial: initial_val, parser, template: var.template }
+    PropValue::Bound {
+        var_name: var.name,
+        initial: initial_val,
+        parser,
+        template: var.template,
+        mutation: var.mutation,
+    }
 }
 
 // === Typed parsers with logging ===
@@ -91,8 +98,7 @@ pub fn soft_retreive_prop(props: &PropertyMap, key: &str, default: &str) -> Prop
     if let Some(value) = props.get(key) {
         value.clone()
     } else {
-        let value = Property::String(default.to_string());
-        value
+        Property::String(default.to_string())
     }
 }
 
@@ -100,8 +106,7 @@ pub fn soft_retreive_prop_bool(props: &PropertyMap, key: &str, default: bool) ->
     if let Some(value) = props.get(key) {
         value.clone()
     } else {
-        let value = Property::Bool(default);
-        value
+        Property::Bool(default)
     }
 }
 
@@ -173,6 +178,7 @@ pub fn get_f64_prop(prop: &Property, key: &str) -> Result<PropValue<f64>> {
             initial,
             parser: parse_f64,
             template: var.template.clone(),
+            mutation: var.mutation.clone(),
         });
     }
 
@@ -198,6 +204,7 @@ pub fn get_i32_prop(prop: &Property, key: &str) -> Result<PropValue<i32>> {
             initial,
             parser: parse_i32,
             template: var.template.clone(),
+            mutation: var.mutation.clone(),
         });
     }
 
@@ -222,7 +229,7 @@ pub fn get_vec_string_prop(prop: &Property, key: &str) -> Result<Vec<PropValue<S
         prop.as_array().ok_or_else(|| anyhow!("Expected property `{}` to be a vec", key))?;
 
     array
-        .into_iter()
+        .iter()
         .map(|d| {
             if let Some(var) = d.as_global_var() {
                 let initial = var.initial.as_str().map(String::from).unwrap_or_default();
@@ -231,6 +238,7 @@ pub fn get_vec_string_prop(prop: &Property, key: &str) -> Result<Vec<PropValue<S
                     initial,
                     parser: parse_string,
                     template: var.template.clone(),
+                    mutation: var.mutation.clone(),
                 })
             } else {
                 d.as_str().map(String::from).map(PropValue::Static).ok_or_else(|| {
@@ -242,20 +250,15 @@ pub fn get_vec_string_prop(prop: &Property, key: &str) -> Result<Vec<PropValue<S
 }
 
 fn parse_duration_str(key_str: &str) -> Option<Duration> {
-    if key_str.ends_with("ms") {
-        let num = &key_str[..key_str.len() - 2];
+    if let Some(num) = key_str.strip_suffix("ms") {
         num.parse::<u64>().ok().map(Duration::from_millis)
-    } else if key_str.ends_with("min") {
-        let num = &key_str[..key_str.len() - 3];
+    } else if let Some(num) = key_str.strip_suffix("min") {
         num.parse::<u64>().ok().map(|m| Duration::from_secs(m * 60))
-    } else if key_str.ends_with("m") {
-        let num = &key_str[..key_str.len() - 1];
+    } else if let Some(num) = key_str.strip_suffix("m") {
         num.parse::<u64>().ok().map(|m| Duration::from_secs(m * 60))
-    } else if key_str.ends_with("h") {
-        let num = &key_str[..key_str.len() - 1];
+    } else if let Some(num) = key_str.strip_suffix("h") {
         num.parse::<u64>().ok().map(|h| Duration::from_secs(h * 3600))
-    } else if key_str.ends_with("s") {
-        let num = &key_str[..key_str.len() - 1];
+    } else if let Some(num) = key_str.strip_suffix("s") {
         num.parse::<u64>().ok().map(Duration::from_secs)
     } else {
         let num = &key_str[..key_str.len()];

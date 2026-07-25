@@ -55,14 +55,9 @@ pub fn format_error(err: &anyhow::Error) -> String {
 pub fn anyhow_err_to_diagnostic(err: &anyhow::Error) -> Option<Diagnostic<usize>> {
     if let Some(err) = err.downcast_ref::<DiagError>() {
         Some(err.0.clone())
-    } else if let Some(err) = err.downcast_ref::<ConversionError>() {
-        Some(Diagnostic::error().with_message(format!("conversion error: {}", err)))
-    // } else if let Some(err) = err.downcast_ref::<ValidationError>() {
-    //     Some(Diagnostic::error().with_message(format!("validation error: {}", err)))
-    // } else if let Some(err) = err.downcast_ref::<EvalError>() {
-    //     Some(Diagnostic::error().with_message(format!("evaluation error: {}", err)))
     } else {
-        None
+        err.downcast_ref::<ConversionError>()
+            .map(|err| Diagnostic::error().with_message(format!("conversion error: {}", err)))
     }
 }
 

@@ -52,23 +52,26 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
             "Revealer" => handle_with_children!(Revealer, node),
             "Scroll" => handle_with_children!(Scroll, node),
             "OverLay" => handle_with_children!(OverLay, node),
+            "AspectFrame" => handle_with_children!(AspectFrame, node),
             "Stack" => handle_with_children!(Stack, node),
             "EventBox" => handle_with_children!(EventBox, node),
             "ToolTip" => handle_with_children!(ToolTip, node),
+            "Animation" => handle_with_children!(Animation, node),
 
             // Special
             "GtkUI" => handle_primitive!(GtkUI, node),
+            "Custom" => handle_with_children!(Custom, node),
 
             // Main
             "Poll" => {
-                let name = node.id.with_context(|| format!("Poll has no <id>"))?;
+                let name = node.id.with_context(|| "Poll has no <id>".to_string())?;
                 let props = PropertyMap::from_nbcl(node.props);
 
                 WidgetNode::Poll { var: name, props }
             }
 
             "Listen" => {
-                let name = node.id.with_context(|| format!("Listen has no <id>"))?;
+                let name = node.id.with_context(|| "Listen has no <id>".to_string())?;
                 let props = PropertyMap::from_nbcl(node.props);
 
                 WidgetNode::Listen { var: name, props }
@@ -80,7 +83,7 @@ pub fn to_widgetnode(nodes: Vec<ResolvedNode>) -> Result<Vec<WidgetNode>> {
             }
 
             "Window" => {
-                let name = node.id.with_context(|| format!("Window has no <id>"))?;
+                let name = node.id.with_context(|| "Window has no <id>".to_string())?;
                 let props = PropertyMap::from_nbcl(node.props);
                 // we ensured that only 1 child is
                 // provided in builtins.rs file.
