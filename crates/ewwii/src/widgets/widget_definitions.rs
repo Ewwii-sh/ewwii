@@ -3,7 +3,7 @@
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use crate::{apply_property, apply_property_watch, bind_property};
 use anyhow::{anyhow, bail, Result};
-use ewwii_shared_utils::ast::{hash_props_and_type, WidgetNode};
+use ewwii_shared_utils::ast::{hash_props, WidgetNode};
 use ewwii_shared_utils::prop::{Property, PropertyMap};
 use gtk4::gdk::DragAction;
 use gtk4::{self, prelude::*};
@@ -26,10 +26,15 @@ use std::{
 
 // custom widgets
 // use crate::widgets::{circular_progressbar::CircProg, transform::Transform};
+use crate::widgets::animation::AnimationWidget;
 use crate::widgets::circular_progressbar::CircProg;
 use crate::widgets::ewwii_image::EwwiiImage;
 use crate::widgets::ewwii_label::EwwiiLabel;
 use crate::widgets::graph::{Graph, RenderType};
+
+thread_local! {
+    pub static EWWII_PLUGIN_WIDGETS: RefCell<HashMap<String, gtk4::Widget>> = RefCell::new(HashMap::new());
+}
 
 pub trait EwwiiWidget {
     fn widget(&self) -> &gtk4::Widget;
@@ -140,7 +145,12 @@ impl WidgetRegistry {
         let widget =
             self.widgets.values().find(|widget| widget.widget().widget_name() == widget_name)?;
 
-        let value: glib::Value = widget.widget().property_value(property);
+        let widget_obj = widget.widget();
+        let value: glib::Value = if widget_obj.find_property(property).is_some() {
+            widget_obj.property_value(property)
+        } else {
+            return None;
+        };
 
         if let Ok(s) = value.get::<String>() {
             return Some(s);
@@ -172,10 +182,14 @@ impl WidgetRegistry {
             .find(|(_, widget)| widget.widget().widget_name().as_str() == widget_name)
         {
             if let Some(widget) = self.widgets.get_mut(&id) {
-                widget.update_prop(&property_and_value.0, &Property::String(property_and_value.1))
+                widget.update_prop(&property_and_value.0, &Property::String(property_and_value.1));
+                return true;
             }
+
+            log::debug!("[prop_update] Failed to get widget from ID.");
         }
 
+        log::debug!("[prop_update] Failed to find widget.");
         false
     }
 
@@ -196,6 +210,44 @@ impl WidgetRegistry {
                 } else {
                     widget.widget().remove_css_class(class);
                 }
+            }
+        }
+
+        false
+    }
+
+    pub fn scroll_widget(&self, widget_name: &str, value: f64) -> bool {
+        if let Some((&id, _)) = self
+            .widgets
+            .iter()
+            .find(|(_, widget)| widget.widget().widget_name().as_str() == widget_name)
+        {
+            if let Some(widget) = self.widgets.get(&id) {
+                if let Some(scrollable) = widget.widget().dynamic_cast_ref::<gtk4::ScrolledWindow>()
+                {
+                    let adjustment = scrollable.vadjustment();
+                    let clamped_percent = value.clamp(0.0, 1.0);
+                    let total_range = adjustment.upper() - adjustment.page_size();
+                    let target_value = total_range * clamped_percent;
+
+                    adjustment.set_value(target_value);
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
+    pub fn focus_widget(&self, widget_name: &str) -> bool {
+        if let Some((&id, _)) = self
+            .widgets
+            .iter()
+            .find(|(_, widget)| widget.widget().widget_name().as_str() == widget_name)
+        {
+            if let Some(widget) = self.widgets.get(&id) {
+                widget.widget().grab_focus();
+                return true;
             }
         }
 
@@ -294,7 +346,7 @@ impl EwwiiWidget for OverlayWidget {
         }
 
         let mut children = children
-            .into_iter()
+            .iter()
             .map(|child| build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry));
 
         // we have more than one child, we can unwrap
@@ -309,11 +361,7 @@ impl EwwiiWidget for OverlayWidget {
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
-        match key {
-            _ => {
-                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
-            }
-        }
+        resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
     }
 }
 
@@ -347,7 +395,7 @@ impl EwwiiWidget for TooltipWidget {
             bail!("tooltip must contain exactly 2 children, but got more");
         }
 
-        let tooltip_node = children.get(0).cloned().ok_or_else(|| anyhow!("missing tooltip"))?;
+        let tooltip_node = children.first().cloned().ok_or_else(|| anyhow!("missing tooltip"))?;
         let content_node = children.get(1).cloned().ok_or_else(|| anyhow!("missing content"))?;
 
         // The visible child immediately
@@ -370,7 +418,76 @@ impl EwwiiWidget for TooltipWidget {
     }
 
     fn update_prop(&mut self, key: &str, value: &Property) {
+        resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+    }
+}
+
+#[derive(Default)]
+struct AnimationWrapperWidget {
+    gtk_widget: AnimationWidget,
+}
+
+impl EwwiiWidget for AnimationWrapperWidget {
+    fn widget(&self) -> &gtk4::Widget {
+        self.gtk_widget.upcast_ref()
+    }
+
+    fn build(
+        &mut self,
+        props: &PropertyMap,
+        children: &[WidgetNode],
+        widget_registry: &mut WidgetRegistry,
+    ) -> Result<gtk4::Widget> {
+        let count = children.len();
+        if count < 1 {
+            bail!("animation must contain exactly 1 child");
+        } else if count > 1 {
+            bail!("animation must contain exactly 1 child, but got more");
+        }
+
+        let content_node = children.first().cloned().ok_or_else(|| anyhow!("missing content"))?;
+        let content_widget = build_gtk_widget(&WidgetInput::Node(content_node), widget_registry)?;
+        self.gtk_widget = AnimationWidget::new(&content_widget);
+
+        for (key, value) in props {
+            self.update_prop(key, value);
+        }
+
+        Ok(self.gtk_widget.clone().upcast())
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
+            "hover" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.set_hover(v);
+                });
+            }
+            "hoverlost" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.set_hoverlost(v);
+                });
+            }
+            "click" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.set_click(v);
+                });
+            }
+            "release" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.set_release(v);
+                });
+            }
+            "trigger" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
+                    gtk_widget.trigger(&v);
+                });
+            }
             _ => {
                 resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
             }
@@ -389,6 +506,11 @@ struct EventBoxCtrlData {
     onclick_cmd: String,
     onmiddleclick_cmd: String,
     onrightclick_cmd: String,
+
+    // gesture controller data (2)
+    onrelease_cmd: String,
+    onmiddlerelease_cmd: String,
+    onrightrelease_cmd: String,
 
     // scroll controoler data
     onscroll_cmd: String,
@@ -499,10 +621,32 @@ impl EwwiiWidget for EventBoxWidget {
             #[weak]
             gtk_widget,
             #[strong]
+            controller_data,
+            #[strong]
             press_coords,
-            move |_, _, x, y| {
+            move |gesture, _, x, y| {
                 press_coords.set((x, y));
                 gtk_widget.set_state_flags(gtk4::StateFlags::ACTIVE, false);
+
+                let controller = controller_data.borrow();
+                let button = gesture.current_button();
+
+                match button {
+                    1 => {
+                        run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str])
+                    }
+                    2 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onmiddleclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    3 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onrightclick_cmd,
+                        &[] as &[&str],
+                    ),
+                    _ => {}
+                }
             }
         ));
 
@@ -527,17 +671,19 @@ impl EwwiiWidget for EventBoxWidget {
                 let button = gesture.current_button();
 
                 match button {
-                    1 => {
-                        run_command(controller.cmd_timeout, &controller.onclick_cmd, &[] as &[&str])
-                    }
+                    1 => run_command(
+                        controller.cmd_timeout,
+                        &controller.onrelease_cmd,
+                        &[] as &[&str],
+                    ),
                     2 => run_command(
                         controller.cmd_timeout,
-                        &controller.onmiddleclick_cmd,
+                        &controller.onmiddlerelease_cmd,
                         &[] as &[&str],
                     ),
                     3 => run_command(
                         controller.cmd_timeout,
-                        &controller.onrightclick_cmd,
+                        &controller.onrightrelease_cmd,
                         &[] as &[&str],
                     ),
                     _ => {}
@@ -671,7 +817,7 @@ impl EwwiiWidget for EventBoxWidget {
             bail!("event box must contain exactly one element, but got more");
         }
 
-        let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+        let child = children.first().cloned().ok_or_else(|| anyhow!("missing child 0"))?;
         let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
         gtk_widget.append(&child_widget);
 
@@ -682,7 +828,7 @@ impl EwwiiWidget for EventBoxWidget {
         match key {
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 self.controller.borrow_mut().cmd_timeout = new_timeout;
             }
             "onscroll" => {
@@ -757,6 +903,24 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().onrightclick_cmd = v;
                 });
             }
+            "onrelease" => {
+                let controller_data = self.controller.clone();
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
+                    controller_data.borrow_mut().onrelease_cmd = v;
+                });
+            }
+            "onmiddlerelease" => {
+                let controller_data = self.controller.clone();
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
+                    controller_data.borrow_mut().onmiddlerelease_cmd = v;
+                });
+            }
+            "onrightrelease" => {
+                let controller_data = self.controller.clone();
+                bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
+                    controller_data.borrow_mut().onrightrelease_cmd = v;
+                });
+            }
             "onkeypress" => {
                 let controller_data = self.controller.clone();
                 // onkeypress - command to run when a key is pressed
@@ -819,7 +983,7 @@ impl EwwiiWidget for FlowBoxWidget {
             move |_, flow_child: &gtk4::FlowBoxChild| {
                 if let Some(child) = flow_child.child() {
                     let widget_name = child.widget_name();
-                    run_command(*cmd_timeout.borrow(), &*onaccept_cmd.borrow(), &[widget_name]);
+                    run_command(*cmd_timeout.borrow(), &onaccept_cmd.borrow(), &[widget_name]);
                 } else {
                     log::error!("Failed to get the child of FlowBoxChild.");
                 }
@@ -830,13 +994,10 @@ impl EwwiiWidget for FlowBoxWidget {
             self.update_prop(key, value);
         }
 
-        let mut index = 0;
-
-        for child in children {
+        for (index, child) in children.iter().enumerate() {
             let child_widget =
                 build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry)?;
-            self.gtk_widget.insert(&child_widget, index);
-            index += 1;
+            self.gtk_widget.insert(&child_widget, index as i32);
         }
 
         Ok(self.gtk_widget.clone().upcast())
@@ -879,7 +1040,7 @@ impl EwwiiWidget for FlowBoxWidget {
             }
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.cmd_timeout.borrow_mut() = new_timeout;
             }
             "onaccept" => {
@@ -922,7 +1083,7 @@ impl EwwiiWidget for StackWidget {
         }
 
         let children = children
-            .into_iter()
+            .iter()
             .map(|child| build_gtk_widget(&WidgetInput::BorrowedNode(child), widget_registry));
 
         for (i, child) in children.enumerate() {
@@ -1093,7 +1254,7 @@ impl EwwiiWidget for GraphWidget {
             }
             "time_range" => {
                 let widget = self.gtk_widget.clone();
-                if let Ok(time_range) = get_duration_prop(&value, &key) {
+                if let Ok(time_range) = get_duration_prop(value, key) {
                     let millis = time_range.as_millis();
                     let millis_u32 = match u32::try_from(millis) {
                         Ok(m) => m,
@@ -1354,6 +1515,9 @@ struct ButtonWidget {
     onclick_cmd: Rc<RefCell<String>>,
     onmiddleclick_cmd: Rc<RefCell<String>>,
     onrightclick_cmd: Rc<RefCell<String>>,
+    onrelease_cmd: Rc<RefCell<String>>,
+    onmiddlerelease_cmd: Rc<RefCell<String>>,
+    onrightrelease_cmd: Rc<RefCell<String>>,
     cmd_timeout: Rc<RefCell<Duration>>,
 }
 
@@ -1386,24 +1550,18 @@ impl EwwiiWidget for ButtonWidget {
         });
 
         let press_coords = Rc::new(Cell::new((0.0f64, 0.0f64)));
-
-        gesture_controller.connect_pressed(glib::clone!(
-            #[strong]
-            press_coords,
-            move |_, _, x, y| {
-                press_coords.set((x, y));
-            }
-        ));
-
         let cmd_timeout = self.cmd_timeout.clone();
         let onclick_cmd = self.onclick_cmd.clone();
         let onmiddleclick_cmd = self.onmiddleclick_cmd.clone();
         let onrightclick_cmd = self.onrightclick_cmd.clone();
-
+        let onrelease_cmd = self.onrelease_cmd.clone();
+        let onmiddlerelease_cmd = self.onmiddlerelease_cmd.clone();
+        let onrightrelease_cmd = self.onrightrelease_cmd.clone();
         let gtk_widget = self.gtk_widget.clone();
-        gesture_controller.connect_released(glib::clone!(
-            #[weak]
-            gtk_widget,
+
+        gesture_controller.connect_pressed(glib::clone!(
+            #[strong]
+            press_coords,
             #[strong]
             cmd_timeout,
             #[strong]
@@ -1412,6 +1570,38 @@ impl EwwiiWidget for ButtonWidget {
             onmiddleclick_cmd,
             #[strong]
             onrightclick_cmd,
+            move |gesture, _, x, y| {
+                press_coords.set((x, y));
+
+                let button = gesture.current_button();
+                match button {
+                    1 => run_command(*cmd_timeout.borrow(), &onclick_cmd.borrow(), &[] as &[&str]),
+                    2 => run_command(
+                        *cmd_timeout.borrow(),
+                        &onmiddleclick_cmd.borrow(),
+                        &[] as &[&str],
+                    ),
+                    3 => run_command(
+                        *cmd_timeout.borrow(),
+                        &onrightclick_cmd.borrow(),
+                        &[] as &[&str],
+                    ),
+                    _ => {}
+                }
+            }
+        ));
+
+        gesture_controller.connect_released(glib::clone!(
+            #[weak]
+            gtk_widget,
+            #[strong]
+            cmd_timeout,
+            #[strong]
+            onrelease_cmd,
+            #[strong]
+            onmiddlerelease_cmd,
+            #[strong]
+            onrightrelease_cmd,
             #[strong]
             press_coords,
             move |gesture, _, x, y| {
@@ -1427,15 +1617,17 @@ impl EwwiiWidget for ButtonWidget {
                 let button = gesture.current_button();
 
                 match button {
-                    1 => run_command(*cmd_timeout.borrow(), &*onclick_cmd.borrow(), &[] as &[&str]),
+                    1 => {
+                        run_command(*cmd_timeout.borrow(), &onrelease_cmd.borrow(), &[] as &[&str])
+                    }
                     2 => run_command(
                         *cmd_timeout.borrow(),
-                        &*onmiddleclick_cmd.borrow(),
+                        &onmiddlerelease_cmd.borrow(),
                         &[] as &[&str],
                     ),
                     3 => run_command(
                         *cmd_timeout.borrow(),
-                        &*onrightclick_cmd.borrow(),
+                        &onrightrelease_cmd.borrow(),
                         &[] as &[&str],
                     ),
                     _ => {}
@@ -1451,13 +1643,9 @@ impl EwwiiWidget for ButtonWidget {
             move |_, _, code, _| {
                 match code {
                     // return
-                    36 => {
-                        run_command(*cmd_timeout.borrow(), &*onclick_cmd.borrow(), &[] as &[&str])
-                    }
+                    36 => run_command(*cmd_timeout.borrow(), &onclick_cmd.borrow(), &[] as &[&str]),
                     // space
-                    65 => {
-                        run_command(*cmd_timeout.borrow(), &*onclick_cmd.borrow(), &[] as &[&str])
-                    }
+                    65 => run_command(*cmd_timeout.borrow(), &onclick_cmd.borrow(), &[] as &[&str]),
                     _ => {}
                 }
             }
@@ -1473,7 +1661,7 @@ impl EwwiiWidget for ButtonWidget {
         match key {
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.cmd_timeout.borrow_mut() = new_timeout;
             }
             "onclick" => {
@@ -1492,6 +1680,30 @@ impl EwwiiWidget for ButtonWidget {
                 let onrightclick_cmd = self.onrightclick_cmd.clone();
                 bind_property!(&value, &key, get_string_prop, [onrightclick_cmd], |v: String| {
                     *onrightclick_cmd.borrow_mut() = v;
+                });
+            }
+            "onrelease" => {
+                let onrelease_cmd = self.onrelease_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onrelease_cmd], |v: String| {
+                    *onrelease_cmd.borrow_mut() = v;
+                });
+            }
+            "onmiddlerelease" => {
+                let onmiddlerelease_cmd = self.onmiddlerelease_cmd.clone();
+                bind_property!(
+                    &value,
+                    &key,
+                    get_string_prop,
+                    [onmiddlerelease_cmd],
+                    |v: String| {
+                        *onmiddlerelease_cmd.borrow_mut() = v;
+                    }
+                );
+            }
+            "onrightrelease" => {
+                let onrightrelease_cmd = self.onrightrelease_cmd.clone();
+                bind_property!(&value, &key, get_string_prop, [onrightrelease_cmd], |v: String| {
+                    *onrightrelease_cmd.borrow_mut() = v;
                 });
             }
             "label" => {
@@ -1671,7 +1883,7 @@ impl EwwiiWidget for InputWidget {
             move |widget| {
                 run_command(
                     *timeout.borrow(),
-                    &*onchange_cmd.borrow(),
+                    &onchange_cmd.borrow(),
                     &[widget.text().to_string()],
                 );
             }
@@ -1685,7 +1897,7 @@ impl EwwiiWidget for InputWidget {
             move |widget| {
                 run_command(
                     *timeout.borrow(),
-                    &*onaccept_cmd.borrow(),
+                    &onaccept_cmd.borrow(),
                     &[widget.text().to_string()],
                 );
             }
@@ -1716,7 +1928,7 @@ impl EwwiiWidget for InputWidget {
             }
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -1774,7 +1986,7 @@ impl EwwiiWidget for CalendarWidget {
             move |w| {
                 run_command(
                     *timeout.borrow(),
-                    &*onclick_cmd.borrow(),
+                    &onclick_cmd.borrow(),
                     &[w.day(), w.month(), w.year()],
                 );
             }
@@ -1849,7 +2061,7 @@ impl EwwiiWidget for CalendarWidget {
             }
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onclick" => {
@@ -1915,7 +2127,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
         match key {
             "items" => {
                 let gtk_widget = self.gtk_widget.clone();
-                if let Ok(items) = get_vec_string_prop(&value, &key) {
+                if let Ok(items) = get_vec_string_prop(value, key) {
                     let current_items: Rc<RefCell<Vec<String>>> =
                         Rc::new(RefCell::new(items.iter().map(|p| p.initial_value()).collect()));
 
@@ -1942,7 +2154,7 @@ impl EwwiiWidget for ComboBoxTextWidget {
             }
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -1987,7 +2199,7 @@ impl EwwiiWidget for ExpanderWidget {
             bail!("expander must contain exactly one element, but got more");
         }
 
-        let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+        let child = children.first().cloned().ok_or_else(|| anyhow!("missing child 0"))?;
         let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
         self.gtk_widget.set_child(Some(&child_widget));
 
@@ -2078,8 +2290,7 @@ impl EwwiiWidget for RevealerWidget {
                 });
             }
             "duration" => {
-                let duration =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(500));
+                let duration = get_duration_prop(value, key).unwrap_or(Duration::from_millis(500));
                 self.gtk_widget.set_transition_duration(duration.as_millis() as u32);
             }
             _ => {
@@ -2132,7 +2343,7 @@ impl EwwiiWidget for CheckboxWidget {
 
                 run_command(
                     *timeout.borrow(),
-                    if widget.is_active() { &oncheck } else { &onuncheck },
+                    if widget.is_active() { oncheck } else { onuncheck },
                     &[] as &[&str],
                 );
             }
@@ -2151,7 +2362,7 @@ impl EwwiiWidget for CheckboxWidget {
             }
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchecked" => {
@@ -2226,7 +2437,7 @@ impl EwwiiWidget for ColorButtonWidget {
             }
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -2292,7 +2503,7 @@ impl EwwiiWidget for ColorChooserEwwiiWidget {
             }
             "timeout" => {
                 let new_timeout =
-                    get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+                    get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.timeout.borrow_mut() = new_timeout;
             }
             "onchange" => {
@@ -2368,7 +2579,8 @@ impl EwwiiWidget for ScaleWidget {
                                 let onchange_cmd = scale_dat_mut.onchange_cmd.clone();
                                 drop(scale_dat_mut);
 
-                                run_command(cmd_timeout, &onchange_cmd, &[value]);
+                                let value_round = value.round();
+                                run_command(cmd_timeout, &onchange_cmd, &[value, value_round]);
                             }
                         }
                     }
@@ -2431,7 +2643,7 @@ impl EwwiiWidget for ScaleWidget {
             }
             _ => {
                 match resolve_range_attrs(
-                    &self.gtk_widget.upcast_ref::<gtk4::Range>(),
+                    self.gtk_widget.upcast_ref::<gtk4::Range>(),
                     key,
                     value,
                     self.range_dat.clone(),
@@ -2478,7 +2690,7 @@ impl EwwiiWidget for ScrolledWindowWidget {
             bail!("scrolled window contain exactly one element, but got more");
         }
 
-        let child = children.get(0).cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+        let child = children.first().cloned().ok_or_else(|| anyhow!("missing child 0"))?;
         let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
         self.gtk_widget.set_child(Some(&child_widget));
 
@@ -2526,17 +2738,85 @@ impl EwwiiWidget for ScrolledWindowWidget {
     }
 }
 
+#[derive(Default)]
+struct AspectFrameWidget {
+    gtk_widget: gtk4::AspectFrame,
+}
+
+impl EwwiiWidget for AspectFrameWidget {
+    fn widget(&self) -> &gtk4::Widget {
+        self.gtk_widget.upcast_ref()
+    }
+
+    fn build(
+        &mut self,
+        props: &PropertyMap,
+        children: &[WidgetNode],
+        widget_registry: &mut WidgetRegistry,
+    ) -> Result<gtk4::Widget> {
+        for (key, value) in props {
+            self.update_prop(key, value);
+        }
+
+        let count = children.len();
+
+        if count < 1 {
+            bail!("scrolled window must contain exactly one element");
+        } else if count > 1 {
+            bail!("scrolled window contain exactly one element, but got more");
+        }
+
+        let child = children.first().cloned().ok_or_else(|| anyhow!("missing child 0"))?;
+        let child_widget = build_gtk_widget(&WidgetInput::Node(child), widget_registry)?;
+        self.gtk_widget.set_child(Some(&child_widget));
+
+        Ok(self.gtk_widget.clone().upcast())
+    }
+
+    fn update_prop(&mut self, key: &str, value: &Property) {
+        match key {
+            "ratio" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                    gtk_widget.set_ratio(v as f32);
+                });
+            }
+            "xalign" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                    gtk_widget.set_xalign(v as f32);
+                });
+            }
+            "yalign" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_f64_prop, [gtk_widget], |v: f64| {
+                    gtk_widget.set_yalign(v as f32);
+                });
+            }
+            "obey_child" => {
+                let gtk_widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
+                    gtk_widget.set_obey_child(v);
+                });
+            }
+            _ => {
+                resolve_widget_attrs(&self.gtk_widget.clone().upcast::<gtk4::Widget>(), key, value)
+            }
+        }
+    }
+}
+
 // === Widget Registration === //
 
 pub(super) fn build_gtk_box(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = BoxWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Box");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Box>().expect("Box was expected to be a box."))
@@ -2544,13 +2824,13 @@ pub(super) fn build_gtk_box(
 
 pub(super) fn build_gtk_overlay(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Overlay> {
     let mut widget = OverlayWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Overlay");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Overlay>().expect("Overlay was expected to be an overlay."))
@@ -2558,40 +2838,82 @@ pub(super) fn build_gtk_overlay(
 
 pub(super) fn build_tooltip(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = TooltipWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Tooltip");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Box>().expect("Tooltip was expected to be a Box."))
 }
 
+pub(super) fn build_animation(
+    props: &PropertyMap,
+    children: &[WidgetNode],
+    widget_registry: &mut WidgetRegistry,
+) -> Result<AnimationWidget> {
+    let mut widget = AnimationWrapperWidget::default();
+    let gtk_widget = widget.build(props, children, widget_registry)?;
+
+    let id = hash_props(props);
+    widget_registry.widgets.insert(id, Box::new(widget));
+
+    Ok(gtk_widget
+        .downcast::<AnimationWidget>()
+        .expect("Animation was expected to be an AnimationWidget."))
+}
+
+pub(super) fn build_custom_widget(
+    props: &PropertyMap,
+    _children: &[WidgetNode],
+    _widget_registry: &mut WidgetRegistry
+) -> Result<gtk4::Box> {
+    let container = gtk4::Box::default();
+    let Property::String(widget_name) = retreive_prop(props, "name")? else {
+        bail!("Custom widget name must be a string.");
+    };
+
+    EWWII_PLUGIN_WIDGETS.with(glib::clone!(
+        #[strong] container,
+        #[strong] widget_name,
+        move |w| {
+            let widget_list = w.borrow();
+            if let Some(widget) = widget_list.get(&widget_name) {
+                container.append(widget);
+            } else {
+                log::warn!("Widget with name '{}' not found.", widget_name);
+            }
+        }
+    ));
+
+    Ok(container)
+}
+
 pub(super) fn build_event_box(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let mut widget = EventBoxWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "EventBox");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
     Ok(gtk_widget.downcast::<gtk4::Box>().expect("Eventbox was expected to be a Box."))
 }
 
 pub(crate) fn build_gtk_flowbox(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::FlowBox> {
     let mut widget = FlowBoxWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "FlowBox");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::FlowBox>().expect("FlowBox was expected to be a FlowBox."))
@@ -2599,13 +2921,13 @@ pub(crate) fn build_gtk_flowbox(
 
 pub(super) fn build_gtk_stack(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Stack> {
     let mut widget = StackWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Stack");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Stack>().expect("Stack was expected to be a stack."))
@@ -2618,7 +2940,7 @@ pub(super) fn build_circular_progress_bar(
     let mut widget = CircularProgressWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "CircularProgress");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2633,7 +2955,7 @@ pub(super) fn build_graph(
     let mut widget = GraphWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Graph");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<Graph>().expect("Graph was expected to be a Graph"))
@@ -2646,7 +2968,7 @@ pub(super) fn build_gtk_progress(
     let mut widget = ProgressWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Progress");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2661,7 +2983,7 @@ pub(super) fn build_image(
     let mut widget = ImageWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Image");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<EwwiiImage>().expect("EwwiiImage was expected to be EwwiiImage"))
@@ -2674,7 +2996,7 @@ pub(super) fn build_gtk_button(
     let mut widget = ButtonWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Button");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Button>().expect("Button was expected to be a Button"))
@@ -2687,7 +3009,7 @@ pub(super) fn build_gtk_label(
     let mut widget = LabelWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Label");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<EwwiiLabel>().expect("EwwiiLabel was expected to be EwwiiLabel"))
@@ -2700,7 +3022,7 @@ pub(super) fn build_gtk_input(
     let mut widget = InputWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Input");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Entry>().expect("Entry was expected to be an Entry"))
@@ -2713,7 +3035,7 @@ pub(super) fn build_gtk_calendar(
     let mut widget = CalendarWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Calendar");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Calendar>().expect("Calendar was expected to be a Calendar"))
@@ -2727,7 +3049,7 @@ pub(super) fn build_gtk_combo_box_text(
     let mut widget = ComboBoxTextWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "ComboBoxText");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2744,8 +3066,8 @@ pub(super) fn build_gtk_ui_file(props: &PropertyMap) -> Result<gtk4::Widget> {
     let path_prop = retreive_prop(props, PATH_KEY)?;
     let main_id_prop = retreive_prop(props, ID_KEY)?;
 
-    let path = unwrap_static(PATH_KEY, get_string_prop(&path_prop, PATH_KEY)?);
-    let main_id = unwrap_static(ID_KEY, get_string_prop(&main_id_prop, ID_KEY)?);
+    let path = unwrap_static(PATH_KEY, get_string_prop(path_prop, PATH_KEY)?);
+    let main_id = unwrap_static(ID_KEY, get_string_prop(main_id_prop, ID_KEY)?);
 
     if !std::path::Path::new(&path).exists() {
         return Err(anyhow::anyhow!("UI file not found: {}", path));
@@ -2762,26 +3084,26 @@ pub(super) fn build_gtk_ui_file(props: &PropertyMap) -> Result<gtk4::Widget> {
 
 pub(super) fn build_gtk_expander(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Expander> {
     let mut widget = ExpanderWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Expander");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
     Ok(gtk_widget.downcast::<gtk4::Expander>().expect("Expander was expected to be an Expander"))
 }
 
 pub(super) fn build_gtk_revealer(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Revealer> {
     let mut widget = RevealerWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Revealer");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Revealer>().expect("Revealer was expected to be a Revealer"))
@@ -2794,7 +3116,7 @@ pub(super) fn build_gtk_checkbox(
     let mut widget = CheckboxWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Checkbox");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2810,7 +3132,7 @@ pub(super) fn build_gtk_color_button(
     let mut widget = ColorButtonWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "ColorButton");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2826,7 +3148,7 @@ pub(super) fn build_gtk_color_chooser(
     let mut widget = ColorChooserEwwiiWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "ColorChooser");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2841,21 +3163,37 @@ pub(super) fn build_gtk_scale(
     let mut widget = ScaleWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props_and_type(&props, "Scale");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Scale>().expect("Scale was expected to be a Scale"))
 }
 
+pub(super) fn build_gtk_aspect_frame(
+    props: &PropertyMap,
+    children: &[WidgetNode],
+    widget_registry: &mut WidgetRegistry,
+) -> Result<gtk4::AspectFrame> {
+    let mut widget = AspectFrameWidget::default();
+    let gtk_widget = widget.build(props, children, widget_registry)?;
+
+    let id = hash_props(props);
+    widget_registry.widgets.insert(id, Box::new(widget));
+
+    Ok(gtk_widget
+        .downcast::<gtk4::AspectFrame>()
+        .expect("AspectFrameWidget was expected to be an AspectFrame"))
+}
+
 pub(super) fn build_gtk_scrolledwindow(
     props: &PropertyMap,
-    children: &Vec<WidgetNode>,
+    children: &[WidgetNode],
     widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::ScrolledWindow> {
     let mut widget = ScrolledWindowWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props_and_type(&props, "ScrolledWindow");
+    let id = hash_props(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -3011,7 +3349,7 @@ fn resolve_range_attrs(
             });
         }
         "timeout" => {
-            let new_timeout = get_duration_prop(&value, &key).unwrap_or(Duration::from_millis(200));
+            let new_timeout = get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
             range_dat.borrow_mut().cmd_timeout = new_timeout;
         }
         "onchange" => {

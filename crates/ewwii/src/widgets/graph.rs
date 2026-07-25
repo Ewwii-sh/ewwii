@@ -455,10 +455,10 @@ mod imp {
                 if history[points_to_keep_off_canvas].0 < visible_start {
                     if let Some(val) = history.pop_front() {
                         // Value dropped: min/max values need recalc?
-                        if self.min_value_cached.get().map_or(false, |min| min == val.1) {
+                        if self.min_value_cached.get() == Some(val.1) {
                             self.min_value_cached.set(None);
                         }
-                        if self.max_value_cached.get().map_or(false, |max| max == val.1) {
+                        if self.max_value_cached.get() == Some(val.1) {
                             self.max_value_cached.set(None);
                         }
                     }

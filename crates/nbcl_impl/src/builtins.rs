@@ -48,12 +48,16 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     register_with_children!("Expander", Some((1, 1)));
     register_with_children!("Revealer", Some((0, 1)));
     register_with_children!("Scroll", Some((1, 1)));
+    register_with_children!("AspectFrame", Some((1, 1)));
     register_with_children!("OverLay", None);
     register_with_children!("Stack", None);
     register_with_children!("EventBox", None);
     register_with_children!("ToolTip", Some((2, 2)));
+    register_with_children!("Animation", Some((1, 1)));
 
     // == Special widget & tools ==
+
+    register_with_children!("Custom", None);
     engine.register_node(NativeNodeSchema {
         type_name: "GtkUI".into(),
         enforce_id: false,
@@ -113,13 +117,41 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
         vec![Type::Str],
         Type::Object("GlobalVar".to_string()),
         |mut args| {
-            let mut data = Vec::new();
-
-            data.push(args.remove(0));
-            data.push(Value::Str(String::new()));
-            data.push(Value::Str(String::new()));
+            let data = vec![
+                // name
+                args.remove(0),
+                // template
+                Value::Str(String::new()),
+                // initial
+                Value::Str(String::new()),
+                // mutation
+                Value::Str(String::new()),
+            ];
 
             Ok(Value::Object("GlobalVar".to_string(), Box::new(Value::List(data))))
+        },
+    );
+
+    engine.register_native_fn(
+        "mutate",
+        vec![Type::Object("GlobalVar".to_string()), Type::Lambda],
+        Type::Object("GlobalVar".to_string()),
+        |mut args| {
+            let mut glob_var = args.remove(0);
+            let lamda = args.remove(0);
+            let Value::Lambda(lamda_name) = lamda else {
+                return Err(crate::runtime_err!("expected second param of mutate() to be lamda"));
+            };
+
+            match glob_var {
+                Value::Object(_, ref mut data) => {
+                    if let Value::List(ref mut inner_data) = **data {
+                        inner_data[3] = Value::Str(lamda_name);
+                    }
+                    Ok(glob_var)
+                }
+                _ => Err(crate::runtime_err!("unexpected value shape in concat()")),
+            }
         },
     );
 

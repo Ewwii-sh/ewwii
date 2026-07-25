@@ -1,14 +1,14 @@
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFiles;
 use codespan_reporting::term::{self, termcolor::Buffer};
-use nbcl::context::Context;
+use nbcl::context::EvalContext;
 use nbcl::error::{NbclError, Span};
 
 pub fn handle_nbcl_err(
     err: NbclError,
     code: &str,
     file_id: Option<&str>,
-    maybe_ctx: Option<Context>,
+    maybe_ctx: Option<EvalContext>,
 ) -> String {
     let mut file_id: Option<String> = file_id.map(str::to_string);
     if let Some(ctx) = maybe_ctx {

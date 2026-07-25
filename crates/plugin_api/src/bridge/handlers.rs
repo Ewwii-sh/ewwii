@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 // cfg callback
@@ -19,18 +20,26 @@ impl ConfigCallbackFnExt for ConfigCallbackFn {
 }
 
 // listen handle
-pub type ListenHandleFn = Arc<dyn Fn() + Send + Sync>;
+#[derive(Default, Serialize, Deserialize)]
+pub struct EmitInfo {
+    /// Plugin ID
+    pub pid: String,
+    /// Data plugin emitted
+    pub data: String,
+}
+
+pub type ListenHandleFn = Arc<dyn Fn(EmitInfo) + Send + Sync>;
 
 pub trait ListenHandleFnExt {
     fn new<F>(f: F) -> Self
     where
-        F: Fn() + Send + Sync + 'static;
+        F: Fn(EmitInfo) + Send + Sync + 'static;
 }
 
 impl ListenHandleFnExt for ListenHandleFn {
     fn new<F>(f: F) -> Self
     where
-        F: Fn() + Send + Sync + 'static,
+        F: Fn(EmitInfo) + Send + Sync + 'static,
     {
         Arc::new(f)
     }

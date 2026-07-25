@@ -1,10 +1,10 @@
 use crate::{
     app::{self, App, DaemonCommand},
-    config, plugin,
+    config,
     config::ewwii_config::{ConfigEngine, EWWII_CONFIG_PARSER},
     daemon_response,
     display_backend::DisplayBackend,
-    error_handling_ctx, ipc_server, EwwiiPaths,
+    error_handling_ctx, ipc_server, plugin, EwwiiPaths,
 };
 use anyhow::{Context, Result};
 use ewwii_plugin_api::IpcRequest;
@@ -38,7 +38,7 @@ pub fn initialize_server<B: DisplayBackend>(
     let (ipc_tx, mut ipc_rx) = tokio::sync::mpsc::unbounded_channel::<IpcRequest>();
     EWWII_CONFIG_PARSER.with(|p| {
         let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new(ipc_tx);
-        *p.borrow_mut() = Some(ConfigEngine::Default(config_parser));
+        *p.borrow_mut() = Some(ConfigEngine::Default(Box::new(config_parser)));
     });
 
     let ewwii_plugins = paths.get_plugin_paths();
@@ -87,10 +87,9 @@ pub fn initialize_server<B: DisplayBackend>(
         instance_id_to_args: HashMap::new(),
         css_provider: gtk4::CssProvider::new(),
         custom_css_providers: Vec::new(),
-        plugin_buffer: {
-            let (tx, _rx) = tokio::sync::broadcast::channel(64);
-            plugin::PluginBuffer { tx, _rx }
-        },
+        gdk_display: gtk4::gdk::Display::default(),
+        plugin_buffer: plugin::PluginBuffer::new(),
+        nbcl_bootstraps: Vec::new(),
         reloading: false,
         app_evt_send: ui_send.clone(),
         window_close_timer_abort_senders: HashMap::new(),
@@ -112,14 +111,12 @@ pub fn initialize_server<B: DisplayBackend>(
         app.handle_plugin_request(request);
     }
 
-    let read_config = config::read_from_ewwii_paths(&app.paths);
+    let read_config = config::read_from_ewwii_paths(&app.paths, app.nbcl_bootstraps.clone());
 
     match read_config {
         Ok(new_config) => {
             app.ewwii_config = new_config;
-            if let Err(e) = app.plugin_buffer.tx.send("ewwii-config-loaded".to_string()) {
-                log::error!("Ewwii failed to emit signal: {e}");
-            }
+            app.plugin_buffer.emit("ewwii-config-loaded", "true");
         }
         Err(err) => {
             error_handling_ctx::print_error(err);
@@ -129,14 +126,9 @@ pub fn initialize_server<B: DisplayBackend>(
         }
     };
 
-    if let Some(display) = gtk4::gdk::Display::default() {
-        gtk4::style_context_add_provider_for_display(&display, &app.css_provider, 900);
-        for css_provider in &app.custom_css_providers {
-            gtk4::style_context_add_provider_for_display(&display, css_provider, 910);
-        }
-        if let Err(e) = app.plugin_buffer.tx.send("ewwii-applied-styles".to_string()) {
-            log::error!("Ewwii failed to emit signal: {e}");
-        }
+    if let Some(display) = &app.gdk_display {
+        gtk4::style_context_add_provider_for_display(display, &app.css_provider, 900);
+        app.plugin_buffer.emit("ewwii-applied-styles", "true");
     }
 
     if let Ok((file_id, css)) = config::scss::parse_scss_from_config(app.paths.get_config_dir()) {

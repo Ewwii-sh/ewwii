@@ -29,6 +29,7 @@ pub enum WidgetNode {
     Scroll { props: PropertyMap, children: Vec<WidgetNode> },
     OverLay { props: PropertyMap, children: Vec<WidgetNode> },
     Stack { props: PropertyMap, children: Vec<WidgetNode> },
+    AspectFrame { props: PropertyMap, children: Vec<WidgetNode> },
     Calendar { props: PropertyMap },
     ColorButton { props: PropertyMap },
     ColorChooser { props: PropertyMap },
@@ -40,6 +41,8 @@ pub enum WidgetNode {
 
     // Special
     GtkUI { props: PropertyMap },
+    Custom { props: PropertyMap, children: Vec<WidgetNode> },
+    Animation { props: PropertyMap, children: Vec<WidgetNode> },
 
     // Top-level macros
     DefWindow { name: String, props: PropertyMap, node: Box<WidgetNode> },
@@ -59,7 +62,7 @@ pub fn hash_props_and_type(props: &PropertyMap, widget_type_str: &str) -> u64 {
     let dyn_id = {
         let key = "dyn_id".to_string();
         if let Some(value) = props.get(&key) {
-            get_string_prop(&value, &key).map(|p| unwrap_static(&key, p)).unwrap_or_default()
+            get_string_prop(value, &key).map(|p| unwrap_static(&key, p)).unwrap_or_default()
         } else {
             String::new()
         }
@@ -72,9 +75,7 @@ pub fn hash_props_and_type(props: &PropertyMap, widget_type_str: &str) -> u64 {
 
 pub fn hash_props(props: &PropertyMap) -> u64 {
     let mut hasher = AHasher::default();
-
     props.hash(&mut hasher);
-
     hasher.finish()
 }
 

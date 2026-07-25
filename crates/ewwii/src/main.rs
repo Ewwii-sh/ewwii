@@ -32,7 +32,7 @@ mod ipc_server;
 mod opts;
 mod paths;
 mod plugin;
-mod property;
+mod property_macro;
 mod server;
 mod updates;
 mod util;
@@ -137,7 +137,7 @@ fn run<B: DisplayBackend>(opts: opts::Opt, ewwii_binary_name: String) -> Result<
 
     let should_restart = match &opts.action {
         opts::Action::ShellCompletions { .. } => unreachable!(),
-        opts::Action::Daemon { .. } => opts.restart,
+        opts::Action::Daemon => opts.restart,
         opts::Action::WithServer(action) => opts.restart && action.can_start_daemon(),
         opts::Action::ClientOnly(_) => false,
     };

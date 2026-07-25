@@ -1,5 +1,6 @@
 mod command;
 mod env;
+mod json;
 mod regex;
 
 use nbcl::{
@@ -25,6 +26,10 @@ pub fn register_core_lib(engine: &mut NbclEngine) {
         .with_fn("find_all", vec![Type::Str, Type::Str], Type::List, regex::find_all)
         .with_fn("replace", vec![Type::Str, Type::Str, Type::Str], Type::Str, regex::replace);
 
-    let core_lib = Library::new("core".into(), vec![command, env, regex]);
+    let json = LibraryItem::define("json")
+        .with_fn("stringify", vec![Type::Map], Type::Str, json::to_json)
+        .with_fn("parse", vec![Type::Str], Type::Map, json::parse_json);
+
+    let core_lib = Library::new("core".into(), vec![command, env, regex, json]);
     engine.register_library(core_lib);
 }

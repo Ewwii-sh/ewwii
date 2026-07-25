@@ -3,13 +3,13 @@ use anyhow::{anyhow, Result};
 use ewwii_plugin_api::IpcRequest;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
-use nbcl::{context::Context, NbclEngine, Value};
+use nbcl::{context::EvalContext, NbclEngine, Value};
 use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Clone)]
 pub struct NbclConfigParser {
     pub engine: NbclEngine,
-    pub ctx: Option<Context>,
+    pub ctx: Option<EvalContext>,
 }
 
 impl NbclConfigParser {
@@ -26,17 +26,19 @@ impl NbclConfigParser {
     }
 
     pub fn eval_code(&mut self, code: &str, file_id: Option<&str>) -> Result<WidgetNode> {
+        let mut eval_ctx = EvalContext::from(&self.engine);
+
         let source_ast = self
             .engine
-            .parse_str(&code)
+            .parse_str(code)
             .map_err(|e| anyhow!(errors::handle_nbcl_err(e, code, file_id, None)))?;
-        let (tree, ctx) = self
-            .engine
-            .evaluate_ast_for_ctx(source_ast)
-            .map_err(|e| anyhow!(errors::handle_nbcl_err(e.err, code, file_id, Some(e.ctx))))?;
+
+        let tree = self.engine.eval_ast_with_eval_ctx(source_ast, &mut eval_ctx).map_err(|e| {
+            anyhow!(errors::handle_nbcl_err(e, code, file_id, Some(eval_ctx.clone())))
+        })?;
 
         // set the context
-        self.ctx = Some(ctx);
+        self.ctx = Some(eval_ctx);
 
         // translate the tree
         let wnode = WidgetNode::Tree(translate::to_widgetnode(tree.root_nodes)?);
@@ -52,57 +54,88 @@ impl NbclConfigParser {
         // translate the tree
         let mut all_nodes = translate::to_widgetnode(tree.root_nodes)?;
 
-        if all_nodes.len() <= 1 {
-            anyhow::bail!("Snippet must resolve to exactly 1 widget.");
+        if all_nodes.len() != 1 {
+            anyhow::bail!(
+                "Snippet must resolve to exactly 1 widget, but found {}",
+                all_nodes.len()
+            );
         }
 
         let node = all_nodes.remove(0);
         Ok(node.setup_dyn_ids("root"))
     }
 
-    pub fn call_nbcl_function(&self, expr: &str) -> Result<()> {
-        let Some(ref ctx) = self.ctx else {
-            anyhow::bail!("Nbcl context not found.");
+    pub fn run_nbcl_expr(&self, expr: &str) -> Result<()> {
+        let Some(ref eval_ctx) = self.ctx else {
+            anyhow::bail!("Nbcl evaluation context not found.");
         };
 
-        let (fn_name, args_str) =
-            expr.split_once('(').ok_or_else(|| anyhow::anyhow!("Invalid expression: {}", expr))?;
-        let fn_name = fn_name.trim();
-        let args_str = args_str.trim_end_matches(')');
+        let source_ast = self
+            .engine
+            .parse_str(expr)
+            .map_err(|e| anyhow!(errors::handle_nbcl_err(e, expr, Some("<expr>"), None)))?;
 
-        let args: Vec<Value> = args_str
-            .split(',')
-            .filter(|s| !s.trim().is_empty())
-            .map(|s| {
-                let s = s.trim();
-                if let Ok(i) = s.parse::<i64>() {
-                    Value::Int(i)
-                } else if let Ok(f) = s.parse::<f64>() {
-                    Value::Float(f)
-                } else {
-                    Value::Str(s.to_string())
-                }
-            })
-            .collect();
+        let mut tmp_ectx = eval_ctx.clone();
 
-        self.engine.call_function(fn_name, args, ctx)?;
+        self.engine.eval_ast_with_eval_ctx(source_ast, &mut tmp_ectx).map_err(|e| {
+            anyhow!(errors::handle_nbcl_err(e, expr, Some("<expr>"), Some(tmp_ectx.clone())))
+        })?;
 
         Ok(())
     }
 
     pub fn handle_callback(&self, callback: &Callback) {
+        let Some(handle) = &callback.handle else {
+            log::error!("Callback handle is missing!");
+            return;
+        };
         let name = &callback.name;
+        let Some(ctx) = &self.ctx else {
+            log::error!("Evaluation context not found for callback!");
+            return;
+        };
 
-        if let Some(ctx) = &self.ctx {
-            if let Err(e) = self.engine.call_function(
-                &name,
-                vec![Value::Object("WidgetCtrl".into(), Box::new(Value::Str(String::new())))],
-                &ctx,
-            ) {
-                log::error!("Failed to call function: {}", e);
+        match handle.as_ref() {
+            "<mutate>" => {
+                let Some(data_vec) = &callback.data else {
+                    log::error!("Data is required for <mutate>");
+                    return;
+                };
+                let sig_val = Value::Str(data_vec[0].clone());
+
+                match self.engine.call_function(name, vec![sig_val], ctx) {
+                    Ok(value) => {
+                        if let Some(ret) = &callback.ret {
+                            let Value::Str(value_str) = value else {
+                                log::error!(
+                                    "Return value of mutate closure/lambda must be a string."
+                                );
+                                return;
+                            };
+
+                            *ret.borrow_mut() = value_str;
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("Failed to call function: {}", e)
+                    }
+                }
             }
-        } else {
-            log::error!("Nbcl config must be evaluated at least once before callback.");
+            "<script>" => {
+                if let Err(e) = self.engine.call_function(
+                    name,
+                    vec![Value::Object("WidgetCtrl".into(), Box::new(Value::Str(String::new())))],
+                    ctx,
+                ) {
+                    log::error!("Failed to call function: {}", e);
+                }
+            }
+            _ => {
+                log::warn!("Known callback. Calling without any paramters.");
+                if let Err(e) = self.engine.call_function(name, vec![], ctx) {
+                    log::error!("Failed to call function: {}", e);
+                }
+            }
         }
     }
 

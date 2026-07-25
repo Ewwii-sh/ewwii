@@ -131,6 +131,6 @@ impl std::fmt::Display for EwwiiPaths {
 }
 
 pub fn code_from_file<P: AsRef<Path>>(file_path: P) -> Result<String> {
-    Ok(std::fs::read_to_string(&file_path)
-        .map_err(|e| anyhow::anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))?)
+    std::fs::read_to_string(&file_path)
+        .map_err(|e| anyhow::anyhow!("Failed to read {:?}: {}", file_path.as_ref(), e))
 }
