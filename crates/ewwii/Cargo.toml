@@ -20,8 +20,8 @@ ewwii_shared_utils.workspace = true
 ewwii_nbcl_impl.workspace = true
 ewwii_plugin_api.workspace = true
 
-gtk4-layer-shell = { version = "0.6.3", optional = true }
-gdk4-x11 = { version = "0.10.1", optional = true }
+gtk4-layer-shell = { version = "0.8.1", optional = true }
+gdk4-x11 = { version = "0.11.4", optional = true }
 x11rb = { version = "0.13.1", features = ["randr"], optional = true }
 dhat = { version = "0.3.3", optional = true }
 
@@ -38,6 +38,7 @@ extend.workspace = true
 futures.workspace = true
 smart-default.workspace = true
 gtk4.workspace = true
+adw.workspace = true
 itertools.workspace = true
 log.workspace = true
 nix = { workspace = true, features = ["process", "fs", "signal"] }
