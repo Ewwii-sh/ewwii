@@ -257,6 +257,10 @@ impl WidgetRegistry {
 
 // === Widget Definition === //
 
+/**
+ * @define Box
+ * @desc A container for holding multiple widgets either horizontally or vertically.
+ */
 #[derive(Default)]
 struct BoxWidget {
     gtk_widget: gtk4::Box,
@@ -291,6 +295,13 @@ impl EwwiiWidget for BoxWidget {
 
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
+            /**
+             * @prop orientation
+             * @type string
+             * @desc The orientation of the box.
+             * @options horizontal vertical
+             * @default horizontal
+             */
             "orientation" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
@@ -299,12 +310,24 @@ impl EwwiiWidget for BoxWidget {
                     }
                 });
             }
+            /**
+             * @prop spacing
+             * @type integer
+             * @desc Spacing among the widgets.
+             * @default 0
+             */
             "spacing" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_i64_prop, [gtk_widget], |v: i64| {
                     gtk_widget.set_spacing(v as i32)
                 });
             }
+            /**
+             * @prop space_evenly
+             * @type boolean
+             * @desc Whether to space the widgets evenly.
+             * @default true
+             */
             "space_evenly" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
@@ -318,6 +341,10 @@ impl EwwiiWidget for BoxWidget {
     }
 }
 
+/**
+ * @define Overlay
+ * @desc An overlay widget.
+ */
 #[derive(Default)]
 struct OverlayWidget {
     gtk_widget: gtk4::Overlay,
@@ -365,6 +392,10 @@ impl EwwiiWidget for OverlayWidget {
     }
 }
 
+/**
+ * @define Tooltip
+ * @desc A tooltip widget.
+ */
 #[derive(Default)]
 struct TooltipWidget {
     gtk_widget: gtk4::Box,
@@ -422,6 +453,11 @@ impl EwwiiWidget for TooltipWidget {
     }
 }
 
+/**
+ * @define Animation
+ * @case special
+ * @desc Animation widget used to animate child widget.
+ */
 #[derive(Default)]
 struct AnimationWrapperWidget {
     gtk_widget: AnimationWidget,
@@ -458,30 +494,55 @@ impl EwwiiWidget for AnimationWrapperWidget {
 
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
+            /**
+             * @prop hover
+             * @type string
+             * @desc Animation to run on hover.
+             */
             "hover" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     gtk_widget.set_hover(v);
                 });
             }
+            /**
+             * @prop hoverlost
+             * @type string
+             * @desc Animation to run when hover is lost.
+             */
             "hoverlost" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     gtk_widget.set_hoverlost(v);
                 });
             }
+            /**
+             * @prop click
+             * @type string
+             * @desc Animation to run when clicked.
+             */
             "click" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     gtk_widget.set_click(v);
                 });
             }
+            /**
+             * @prop release
+             * @type string
+             * @desc Animation to run when click is released.
+             */
             "release" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
                     gtk_widget.set_release(v);
                 });
             }
+            /**
+             * @prop trigger
+             * @type string
+             * @desc Animation to trigger right now (must ONLY be set using widget control).
+             */
             "trigger" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
@@ -495,6 +556,10 @@ impl EwwiiWidget for AnimationWrapperWidget {
     }
 }
 
+/**
+ * @define EventBox
+ * @desc A flexible container widget that can intercept events.
+ */
 #[derive(SmartDefault)]
 struct EventBoxCtrlData {
     // hover controller data
@@ -826,11 +891,22 @@ impl EwwiiWidget for EventBoxWidget {
 
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
+            /**
+             * @prop timeout
+             * @type string
+             * @desc After how much time a command should time out.
+             * @default 200ms
+             */
             "timeout" => {
                 let new_timeout =
                     get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 self.controller.borrow_mut().cmd_timeout = new_timeout;
             }
+            /**
+             * @prop onscroll
+             * @type string
+             * @desc Shell command to execute when user scrolls over the widget ($0 is the direction).
+             */
             "onscroll" => {
                 // onscroll - event to execute when the user scrolls with the mouse over the widget. The placeholder `{}` used in the command will be replaced with either `up` or `down`.
                 let controller_data = self.controller.clone();
@@ -838,6 +914,11 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().onscroll_cmd = v;
                 });
             }
+            /**
+             * @prop onhover
+             * @type string
+             * @desc Shell command to execute when user hovers over the widget.
+             */
             "onhover" => {
                 // onhover - event to execute when the user hovers over the widget
                 let controller_data = self.controller.clone();
@@ -845,6 +926,11 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().onhover_cmd = v;
                 });
             }
+            /**
+             * @prop onhoverlost
+             * @type string
+             * @desc Shell command to execute when user stops hovering over the widget.
+             */
             "onhoverlost" => {
                 // onhoverlost - event to execute when the user loses hover over the widget
                 let controller_data = self.controller.clone();
@@ -852,6 +938,11 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().onhoverlost_cmd = v;
                 });
             }
+            /**
+             * @prop cursor
+             * @type string
+             * @desc What the cursor should be when hovering over this widget.
+             */
             "cursor" => {
                 // cursor - Cursor to show while hovering
                 let controller_data = self.controller.clone();
@@ -859,6 +950,11 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().hover_cursor = v;
                 });
             }
+            /**
+             * @prop ondropped
+             * @type string
+             * @desc Shell command to execute when data is dropped on this widget ($0 is the value dropped).
+             */
             "ondropped" => {
                 let controller_data = self.controller.clone();
                 // ondropped - Command to execute when something is dropped on top of this element. The placeholder `{}` used in the command will be replaced with the uri to the dropped thing.
@@ -866,6 +962,12 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().ondropped_cmd = v;
                 });
             }
+            /**
+             * @prop drag_type
+             * @type string
+             * @desc The type of value that should be dragged from this widget
+             * @options text file
+             */
             "drag_type" => {
                 // dragtype - Type of value that should be dragged from this widget. Possible values: $dragtype
                 let controller_data = self.controller.clone();
@@ -875,6 +977,11 @@ impl EwwiiWidget for EventBoxWidget {
                     }
                 });
             }
+            /**
+             * @prop dragvalue
+             * @type string
+             * @desc The value that will be dragged from this widget.
+             */
             "dragvalue" => {
                 let controller_data = self.controller.clone();
                 // dragvalue - URI that will be provided when dragging from this widget
@@ -882,6 +989,11 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().dragvalue = Some(v);
                 });
             }
+            /**
+             * @prop onclick
+             * @type string
+             * @desc The command to execute when this widget is clicked.
+             */
             "onclick" => {
                 let controller_data = self.controller.clone();
                 // onclick - command to run when the widget is clicked
@@ -889,6 +1001,11 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().onclick_cmd = v;
                 });
             }
+            /**
+             * @prop onmiddleclick
+             * @type string
+             * @desc Command to execute when this widget is clicked with middle mouse button.
+             */
             "onmiddleclick" => {
                 let controller_data = self.controller.clone();
                 // onmiddleclick - command to run when the widget is middleclicked
@@ -896,6 +1013,11 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().onmiddleclick_cmd = v;
                 });
             }
+            /**
+             * @prop onrightclick
+             * @type string
+             * @desc Command to execute which this widget is clicked with right mouse button.
+             */
             "onrightclick" => {
                 let controller_data = self.controller.clone();
                 // onrightclick - command to run when the widget is rightclicked
@@ -903,24 +1025,44 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().onrightclick_cmd = v;
                 });
             }
+            /**
+             * @prop onrelease
+             * @type string
+             * @desc Command to execute when a click is released over this widget.
+             */
             "onrelease" => {
                 let controller_data = self.controller.clone();
                 bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onrelease_cmd = v;
                 });
             }
+            /**
+             * @prop onmiddlerelease
+             * @type string
+             * @desc Command to execute when a middle click is released over this widget.
+             */
             "onmiddlerelease" => {
                 let controller_data = self.controller.clone();
                 bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onmiddlerelease_cmd = v;
                 });
             }
+            /**
+             * @prop onrightrelease
+             * @type string
+             * @desc Command to execute when a right click is released over this widget.
+             */
             "onrightrelease" => {
                 let controller_data = self.controller.clone();
                 bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onrightrelease_cmd = v;
                 });
             }
+            /**
+             * @prop onkeypress
+             * @type string
+             * @desc Command to execute when a key is pressed ($0 is the key pressed).
+             */
             "onkeypress" => {
                 let controller_data = self.controller.clone();
                 // onkeypress - command to run when a key is pressed
@@ -928,19 +1070,16 @@ impl EwwiiWidget for EventBoxWidget {
                     controller_data.borrow_mut().onkeypress_cmd = Some(v);
                 });
             }
+            /**
+             * @prop onkeyrelease
+             * @type string
+             * @desc Command to execute when a key is released ($0 is the key released).
+             */
             "onkeyrelease" => {
                 // onkeyrelease - command to run when a key is released
                 let controller_data = self.controller.clone();
                 bind_property!(&value, &key, get_string_prop, [controller_data], |v: String| {
                     controller_data.borrow_mut().onkeyrelease_cmd = Some(v);
-                });
-            }
-            "orientation" => {
-                let gtk_widget = self.gtk_widget.clone();
-                bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
-                    if let Ok(o) = parse_orientation(&v) {
-                        gtk_widget.set_orientation(o);
-                    }
                 });
             }
             _ => {
@@ -950,6 +1089,10 @@ impl EwwiiWidget for EventBoxWidget {
     }
 }
 
+/**
+ * @define FlowBox
+ * @desc A flow box.
+ */
 #[derive(Default)]
 struct FlowBoxWidget {
     gtk_widget: gtk4::FlowBox,
@@ -1005,6 +1148,12 @@ impl EwwiiWidget for FlowBoxWidget {
 
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
+            /**
+             * @prop default_select
+             * @type integer
+             * @desc Default child to select.
+             * @default 0
+             */
             "default_select" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_i32_prop, [gtk_widget], |dsv: i32| {
@@ -1016,6 +1165,13 @@ impl EwwiiWidget for FlowBoxWidget {
                     }
                 });
             }
+            /**
+             * @prop orientation
+             * @type string
+             * @desc Orientation of the flow box.
+             * @options horizontal vertical
+             * @default horizontal
+             */
             "orientation" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
@@ -1024,12 +1180,24 @@ impl EwwiiWidget for FlowBoxWidget {
                     }
                 });
             }
+            /**
+             * @prop space_evenly
+             * @type boolean
+             * @desc Whether to space the children widget's evenly.
+             * @default true
+             */
             "space_evenly" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [gtk_widget], |v: bool| {
                     gtk_widget.set_homogeneous(v);
                 });
             }
+            /**
+             * @prop selection_model
+             * @type string
+             * @desc The selection model of the flow box.
+             * @options none single browse multiple
+             */
             "selection_model" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
@@ -1038,11 +1206,22 @@ impl EwwiiWidget for FlowBoxWidget {
                     }
                 });
             }
+            /**
+             * @prop timeout
+             * @type string
+             * @desc Timeout of the command executed.
+             * @default 200ms
+             */
             "timeout" => {
                 let new_timeout =
                     get_duration_prop(value, key).unwrap_or(Duration::from_millis(200));
                 *self.cmd_timeout.borrow_mut() = new_timeout;
             }
+            /**
+             * @prop onaccept
+             * @type string
+             * @desc Command to run when a widget is accepted ($0 is widget name).
+             */
             "onaccept" => {
                 let onaccept_cmd = self.onaccept_cmd.clone();
                 bind_property!(&value, &key, get_string_prop, [onaccept_cmd], |v: String| {
@@ -1056,6 +1235,10 @@ impl EwwiiWidget for FlowBoxWidget {
     }
 }
 
+/**
+ * @define Stack
+ * @desc A stack of widgets.
+ */
 #[derive(Default)]
 struct StackWidget {
     gtk_widget: gtk4::Stack,
@@ -1096,12 +1279,25 @@ impl EwwiiWidget for StackWidget {
 
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
+            /**
+             * @prop selected
+             * @type integer
+             * @desc The currently selected child.
+             * @default 0
+             */
             "selected" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_i32_prop, [gtk_widget], |v: i32| {
                     gtk_widget.set_visible_child_name(&v.to_string());
                 });
             }
+
+            /**
+             * @prop transition
+             * @type string
+             * @desc Transition animation to play when changing between children.
+             * @options slideright slideleft slideup slidedown crossfade none
+             */
             "transition" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [gtk_widget], |v: String| {
@@ -1110,6 +1306,12 @@ impl EwwiiWidget for StackWidget {
                     }
                 });
             }
+            /**
+             * @prop transition_duration
+             * @type integer
+             * @desc The duration of the transition.
+             * @default 500
+             */
             "transition_duration" => {
                 let gtk_widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_i32_prop, [gtk_widget], |v: i32| {
@@ -1123,6 +1325,10 @@ impl EwwiiWidget for StackWidget {
     }
 }
 
+/**
+ * @define CircularProgress
+ * @desc A circular progress bar.
+ */
 #[derive(Default)]
 struct CircularProgressWidget {
     gtk_widget: CircProg,
@@ -1150,30 +1356,57 @@ impl EwwiiWidget for CircularProgressWidget {
 
     fn update_prop(&mut self, key: &str, value: &Property) {
         match key {
+            /**
+             * @prop value
+             * @type float
+             * @desc The value of the progress bar.
+             */
             "value" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
                     widget.set_property("value", v.clamp(0.0, 100.0));
                 });
             }
+            /**
+             * @prop start_at
+             * @type float
+             * @desc The value to start at.
+             * @default 0
+             */
             "start_at" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
                     widget.set_property("start-at", v.clamp(0.0, 100.0));
                 });
             }
+            /**
+             * @prop thickness
+             * @type float
+             * @desc The thickness of the progress bar.
+             */
             "thickness" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |v: f64| {
                     widget.set_property("thickness", v);
                 });
             }
+            /**
+             * @prop clockwise
+             * @type boolean
+             * @desc Whether the progress bar should go clockwise or anti-clockwise.
+             * @default true
+             */
             "clockwise" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [widget], |v: bool| {
                     widget.set_property("clockwise", v);
                 });
             }
+            /**
+             * @prop fg_color
+             * @type string
+             * @desc Foreground color of the widget.
+             */
             "fg_color" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [widget], |v: String| {
@@ -1182,6 +1415,11 @@ impl EwwiiWidget for CircularProgressWidget {
                     }
                 });
             }
+            /**
+             * @prop bg_color
+             * @type string
+             * @desc Background color of the widget.
+             */
             "bg_color" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [widget], |v: String| {
@@ -1197,6 +1435,10 @@ impl EwwiiWidget for CircularProgressWidget {
     }
 }
 
+/**
+ * @define Graph
+ * @desc A graph widget.
+ */
 #[derive(Default)]
 struct GraphWidget {
     gtk_widget: Graph,
@@ -1242,6 +1484,11 @@ impl EwwiiWidget for GraphWidget {
         };
 
         match key {
+            /**
+             * @prop value
+             * @type float
+             * @desc The value of the graph.
+             */
             "value" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |value: f64| {
@@ -1252,6 +1499,12 @@ impl EwwiiWidget for GraphWidget {
                     widget.set_property("value", value);
                 });
             }
+            /**
+             * @prop time_range
+             * @type string
+             * @desc The time range of the graph.
+             * @default 200
+             */
             "time_range" => {
                 let widget = self.gtk_widget.clone();
                 if let Ok(time_range) = get_duration_prop(value, key) {
@@ -1271,6 +1524,11 @@ impl EwwiiWidget for GraphWidget {
                     widget.set_property("time-range", millis_u32);
                 }
             }
+            /**
+             * @prop min
+             * @type float
+             * @desc Minimum value of the graph.
+             */
             "min" => {
                 let min_val = self.min_val.clone();
                 bind_property!(&value, &key, get_f64_prop, [min_val, apply_min_max], |v: f64| {
@@ -1278,6 +1536,11 @@ impl EwwiiWidget for GraphWidget {
                     apply_min_max();
                 });
             }
+            /**
+             * @prop max
+             * @type float
+             * @desc Maximum value of the graph.
+             */
             "max" => {
                 let max_val = self.max_val.clone();
                 bind_property!(&value, &key, get_f64_prop, [max_val, apply_min_max], |v: f64| {
@@ -1285,12 +1548,26 @@ impl EwwiiWidget for GraphWidget {
                     apply_min_max();
                 });
             }
+            /**
+             * @prop dynamic
+             * @type boolean
+             * @desc Whether the graph should be dynamic.
+             * @default true
+             */
             "dynamic" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [widget], |dynamic: bool| {
                     widget.set_property("dynamic", dynamic);
                 });
             }
+
+            /**
+             * @prop type
+             * @type string
+             * @desc The type of the graph widget.
+             * @options line step-line fill step-fill
+             * @default line
+             */
             "type" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [widget], |render_type: String| {
@@ -1303,6 +1580,12 @@ impl EwwiiWidget for GraphWidget {
                     };
                 });
             }
+
+            /**
+             * @prop thickness
+             * @type float
+             * @desc The thickness of the graph.
+             */
             "thickness" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_f64_prop, [widget], |thickness: f64| {
@@ -1314,6 +1597,12 @@ impl EwwiiWidget for GraphWidget {
                     widget.set_property("thickness", thickness);
                 });
             }
+            /**
+             * @prop line_style
+             * @type string
+             * @desc The style of the line.
+             * @options miter bevel round
+             */
             "line_style" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [widget], |line_style: String| {
@@ -1331,6 +1620,12 @@ impl EwwiiWidget for GraphWidget {
                     };
                 });
             }
+            /**
+             * @prop flip_x
+             * @type boolean
+             * @desc Whether the x axis should go from high to low.
+             * @default false
+             */
             "flip_x" => {
                 let widget = self.gtk_widget.clone();
                 // flip-x - whether the x axis should go from high to low
@@ -1338,6 +1633,12 @@ impl EwwiiWidget for GraphWidget {
                     widget.set_property("flip-x", flip_x);
                 });
             }
+            /**
+             * @prop flip_y
+             * @type boolean
+             * @desc Whether the y axis should go from high to low.
+             * @default false
+             */
             "flip_y" => {
                 let widget = self.gtk_widget.clone();
                 // flip-y - whether the y axis should go from high to low
@@ -1345,6 +1646,12 @@ impl EwwiiWidget for GraphWidget {
                     widget.set_property("flip-y", flip_y);
                 });
             }
+            /**
+             * @prop vertical
+             * @type boolean
+             * @desc If set to true, the x an dy axis will be exchanged.
+             * @default false
+             */
             "vertical" => {
                 let widget = self.gtk_widget.clone();
                 // vertical - if set to true, the x and y axes will be exchanged
@@ -1352,6 +1659,12 @@ impl EwwiiWidget for GraphWidget {
                     widget.set_property("vertical", vertical);
                 });
             }
+            /**
+             * @prop animate
+             * @type boolean
+             * @desc Whether to animate the graph or not.
+             * @default true
+             */
             "animate" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_bool_prop, [widget], |animate: bool| {
@@ -3201,27 +3514,29 @@ pub(super) fn build_gtk_scrolledwindow(
         .expect("ScrolledWindow was expected to be a ScrolledWindow"))
 }
 
-// commented out because i dont think its needed...
-// /// Deprecated attributes from top of widget hierarchy
-// static DEPRECATED_ATTRS: Lazy<HashSet<&str>> =
-//     Lazy::new(|| ["timeout", "onscroll", "onhover", "cursor"].iter().cloned().collect());
-
-/// Code that applies css/scss to widgets.
+/**
+ * @define All
+ * @rank 1
+ * @desc Properties applicable to all widgets.
+ */
 fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: &Property) {
-    // // checking deprecated keys
-    // // see eww issue #251 (https://github.com/elkowar/eww/issues/251)
-    // for deprecated in DEPRECATED_ATTRS.iter() {
-    //     if props.contains_key(*deprecated) {
-    //         eprintln!("Warning: attribute `{}` is deprecated and ignored", deprecated);
-    //     }
-    // }
-
     match key {
+        /**
+         * @prop visible
+         * @type boolean
+         * @desc Whether this widget should be visible or not.
+         * @default true
+         */
         "visible" => {
             bind_property!(&value, "visible", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_visible(v);
             });
         }
+        /**
+         * @prop class
+         * @type string
+         * @desc The CSS classes to apply to this widget (space separated).
+         */
         "class" => {
             bind_property!(&value, "class", get_string_prop, [gtk_widget], |class_str: String| {
                 // remove all classes
@@ -3235,6 +3550,11 @@ fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: &Property) 
                 }
             });
         }
+        /**
+         * @prop style
+         * @type string
+         * @desc SCSS styling to apply to this widget.
+         */
         "style" => {
             bind_property!(&value, "style", get_string_prop, [gtk_widget], |style_str: String| {
                 let css_provider = gtk4::CssProvider::new();
@@ -3246,6 +3566,11 @@ fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: &Property) 
                 }
             });
         }
+        /**
+         * @prop css
+         * @type string
+         * @desc CSS styling to apply to this widget.
+         */
         "css" => {
             bind_property!(&value, "css", get_string_prop, [gtk_widget], |css_str: String| {
                 let css_provider = gtk4::CssProvider::new();
@@ -3256,6 +3581,13 @@ fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: &Property) 
                 }
             });
         }
+        /**
+         * @prop valign
+         * @type string
+         * @desc Vertical alignment of widget.
+         * @options fill baseline center start end
+         * @default start
+         */
         "valign" => {
             bind_property!(&value, "valign", get_string_prop, [gtk_widget], |valign: String| {
                 if let Ok(a) = parse_align(&valign) {
@@ -3263,6 +3595,13 @@ fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: &Property) 
                 }
             });
         }
+        /**
+         * @prop halign
+         * @type string
+         * @desc Horizontal alignment of widget.
+         * @options fill baseline center start end
+         * @default start
+         */
         "halign" => {
             bind_property!(&value, "halign", get_string_prop, [gtk_widget], |halign: String| {
                 if let Ok(a) = parse_align(&halign) {
@@ -3270,46 +3609,98 @@ fn resolve_widget_attrs(gtk_widget: &gtk4::Widget, key: &str, value: &Property) 
                 }
             });
         }
+        /**
+         * @prop vexpand
+         * @type boolean
+         * @desc Whether to vertically expand the widget to fill spaces.
+         * @default false
+         */
         "vexpand" => {
             bind_property!(&value, "vexpand", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_vexpand(v);
             });
         }
+        /**
+         * @prop hexpand
+         * @type boolean
+         * @desc Whether to horizontally expand the widget to fill spaces.
+         * @default false
+         */
         "hexpand" => {
             bind_property!(&value, "hexpand", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_hexpand(v);
             });
         }
+        /**
+         * @prop width
+         * @type integer
+         * @desc Width of the widget (-1 automatic).
+         * @default -1
+         */
         "width" => {
             bind_property!(&value, "width", get_i32_prop, [gtk_widget], |w: i32| {
                 gtk_widget.set_width_request(w);
             });
         }
+        /**
+         * @prop height
+         * @type integer
+         * @desc Height of the widget (-1 automatic).
+         * @default -1
+         */
         "height" => {
             bind_property!(&value, "height", get_i32_prop, [gtk_widget], |h: i32| {
                 gtk_widget.set_height_request(h);
             });
         }
+        /**
+         * @prop active
+         * @type boolean
+         * @desc Whether this widget should be active to input.
+         * @default true
+         */
         "active" => {
             bind_property!(&value, "active", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_sensitive(v);
             });
         }
+        /**
+         * @prop tooltip
+         * @type string
+         * @desc Tooltip to show when you hover the widget.
+         */
         "tooltip" => {
             bind_property!(&value, "tooltip", get_string_prop, [gtk_widget], |tooltip: String| {
                 gtk_widget.set_tooltip_text(Some(&tooltip));
             });
         }
+        /**
+         * @prop can_target
+         * @type boolean
+         * @desc Whether this widget can be targetted.
+         * @default true
+         */
         "can_target" => {
             bind_property!(&value, "can_target", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_can_target(v);
             });
         }
+        /**
+         * @propfocusable
+         * @type boolean
+         * @desc Whether this widget can be focused.
+         * @default true
+         */
         "focusable" => {
             bind_property!(&value, "focusable", get_bool_prop, [gtk_widget], |v: bool| {
                 gtk_widget.set_focusable(v);
             });
         }
+        /**
+         * @prop widget_name
+         * @type string
+         * @desc The name of the widget (used for widget control and more).
+         */
         "widget_name" => {
             bind_property!(&value, "widget_name", get_string_prop, [gtk_widget], |name: String| {
                 gtk_widget.set_widget_name(&name);
