@@ -1,0 +1,10 @@
+Window "animation" {
+    Animation "myc" {
+        trigger = "scale(2) 100ms ease-in"
+        hoverlost = "scale(1) 100ms ease-out"
+        click = "slide-out-left 200ms ease-in ; slide-out-right 200ms ease-out"
+
+        Label { text = "Hello, World!" style = "background-color: red;" }
+    }
+}
+

@@ -77,6 +77,7 @@ pub fn initialize_server<B: DisplayBackend>(
     }
 
     gtk4::init()?;
+    adw::init()?;
 
     let main_loop = gtk4::glib::MainLoop::new(None, false);
 
