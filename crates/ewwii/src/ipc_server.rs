@@ -37,7 +37,7 @@ async fn handle_connection(
 
     let action: opts::ActionWithServer = read_ewwii_action_from_stream(&mut stream_read).await?;
 
-    log::debug!("received command from IPC: {:?}", &action);
+    log::debug!("received command from IPC: {:?}", action);
 
     let (command, maybe_response_recv) = action.into_daemon_command();
 

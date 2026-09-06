@@ -80,10 +80,9 @@ mod platform_wayland {
                 // Sets the monitor where the surface is shown
                 if let Some(ident) = window_init.monitor.clone() {
                     let display = gdk::Display::default().expect("could not get default display");
-                    if let Some(monitor) = crate::app::get_monitor_from_display(&display, &ident) {
+                    {
+                        let monitor = crate::app::get_monitor_from_display(&display, &ident)?;
                         window.set_monitor(Some(&monitor));
-                    } else {
-                        return None;
                     }
                 };
 

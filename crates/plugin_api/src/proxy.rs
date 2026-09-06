@@ -190,7 +190,7 @@ pub unsafe extern "C" fn plugin_callback_handler(
 pub unsafe extern "C" fn plugin_free_buffer(ptr: *mut u8, len: usize) {
     if !ptr.is_null() {
         unsafe {
-            let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));
+            let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, len));
         }
     }
 }

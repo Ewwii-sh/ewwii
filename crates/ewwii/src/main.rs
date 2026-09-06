@@ -257,7 +257,7 @@ fn handle_server_command(
     );
     let mut stream = attempt_connect(paths.get_ipc_socket_file(), connect_attempts)
         .context("Failed to connect to daemon")?;
-    log::debug!("Connected to Ewwii server ({}).", &paths.get_ipc_socket_file().display());
+    log::debug!("Connected to Ewwii server ({}).", paths.get_ipc_socket_file().display());
     client::do_server_call(&mut stream, action).context("Error while forwarding command to server")
 }
 

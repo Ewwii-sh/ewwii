@@ -66,7 +66,7 @@ fn format_codespan_error(
         notes.push(format!("hint: {}", hint));
     }
 
-    let new_msg = format!("[{}] at {}:{}: {}", err_label, span.line, span.col, &message);
+    let new_msg = format!("[{}] at {}:{}: {}", err_label, span.line, span.col, message);
 
     // build the diagnostic error
     let mut labels = Vec::new();
