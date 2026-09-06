@@ -6,7 +6,7 @@ use crate::{
     error_handling_ctx,
     gtk4::prelude::{
         Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt,
-        WidgetExt,
+        WidgetExt, SurfaceExt
     },
     opts::{WidgetAction, WidgetControlCommand},
     paths::EwwiiPaths,
@@ -953,6 +953,15 @@ fn initialize_window<B: DisplayBackend>(
     // window.connect_screen_changed(on_screen_changed);
 
     window.set_child(Some(&root_widget));
+
+    if window_init.pass_input {
+        window.connect_realize(|window| {
+            if let Some(surface) = window.surface() {
+                let empty = gtk4::cairo::Region::create();
+                surface.set_input_region(&empty);
+            }
+        });
+    }
 
     gtk4::prelude::WidgetExt::realize(&window);
 

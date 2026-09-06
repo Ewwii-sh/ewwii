@@ -12,7 +12,9 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use ewwii_shared_utils::prop::{Property, PropertyMap};
-use ewwii_shared_utils::prop_utils::get_duration_prop;
+use ewwii_shared_utils::prop_utils::{
+    PropValue, get_bool_prop, get_duration_prop, unwrap_static
+};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -24,6 +26,7 @@ pub struct WindowInitiator {
     pub geometry: Option<WindowGeometry>,
     pub monitor: Option<MonitorIdentifier>,
     pub waited_close: Option<Duration>,
+    pub pass_input: bool,
     pub name: String,
     pub resizable: bool,
     pub stacking: WindowStacking,
@@ -36,6 +39,13 @@ impl WindowInitiator {
             Some(val) => Some(parse_geometry(val, args, true)?),
             // Some(geo) => Some(geo.eval(&vars)?.override_if_given(args.anchor, args.pos, args.size)),
             None => None,
+        };
+        let pass_input = match properties.get("passinput") {
+            Some(val) => {
+                let thing = get_bool_prop(val, "passinput").unwrap_or(PropValue::Static(false));
+                unwrap_static::<bool>("passinput", thing)
+            }
+            None => false,
         };
         let waited_close = match properties.get("waited_close") {
             Some(val) => Some(get_duration_prop(val, "waited_close")?),
@@ -53,6 +63,7 @@ impl WindowInitiator {
             geometry,
             monitor,
             waited_close,
+            pass_input,
             name: window_def.name.clone(),
             resizable: properties.get("resizable").and_then(|d| d.as_bool()).unwrap_or(true),
             stacking: match properties.get("stacking") {

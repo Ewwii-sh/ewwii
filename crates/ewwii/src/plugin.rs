@@ -145,7 +145,7 @@ fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) ->
             return None;
         }
 
-        let res_slice = std::ptr::from_raw_parts(res_ptr, res_len);
+        let res_slice = std::slice::from_raw_parts(res_ptr, res_len);
         let result = res_slice.to_vec();
 
         if let Ok(free_fn) =
@@ -661,7 +661,7 @@ impl<B: DisplayBackend> App<B> {
 #[unsafe(no_mangle)]
 pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize) {
     // SAFETY: Convert the raw pointer/len into a Rust slice
-    let bytes = unsafe { std::ptr::from_raw_parts(ptr, len) };
+    let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
 
     let request: PluginRequest = match bincode::deserialize(bytes) {
         Ok(req) => req,
