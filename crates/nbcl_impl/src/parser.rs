@@ -18,9 +18,7 @@ impl NbclConfigParser {
 
         builtins::register_all_nodes(&mut engine);
         builtins::register_all_fns(&mut engine, ipc_tx);
-
-        libraries::register_api_lib(&mut engine);
-        libraries::register_core_lib(&mut engine);
+        libraries::register_libs(&mut engine);
 
         Self { engine, ctx: None }
     }

@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `passinput` property to Window.
 - `open-many` command.
 
+### Changed
+
+- Renamed `core` library  to `ewwii`.
+
+### Removed
+
+- `api` NBCL library in favor of plugins.
+
 ## [0.10.0] - 2026-07-25
 
 ### Added

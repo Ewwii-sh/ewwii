@@ -8,7 +8,7 @@ use nbcl::{
     NbclEngine, Type,
 };
 
-pub fn register_core_lib(engine: &mut NbclEngine) {
+pub fn register_libs(engine: &mut NbclEngine) {
     let command = LibraryItem::define("command")
         .with_fn("run", vec![Type::Str], Type::Null, command::run)
         .with_fn("run_and_read", vec![Type::Str], Type::Str, command::run_and_read);
@@ -30,6 +30,6 @@ pub fn register_core_lib(engine: &mut NbclEngine) {
         .with_fn("stringify", vec![Type::Map], Type::Str, json::to_json)
         .with_fn("parse", vec![Type::Str], Type::Map, json::parse_json);
 
-    let core_lib = Library::new("core".into(), vec![command, env, regex, json]);
+    let core_lib = Library::new("ewwii".into(), vec![command, env, regex, json]);
     engine.register_library(core_lib);
 }
