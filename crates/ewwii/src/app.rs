@@ -322,7 +322,11 @@ impl<B: DisplayBackend> App<B> {
                                 .map(|(_, n, v)| (n.clone(), v.clone()))
                                 .collect();
 
-                            self.open_window(&WindowArguments::new_from_args(id.to_string(), config_name.clone(), window_args)?)
+                            self.open_window(&WindowArguments::new_from_args(
+                                id.to_string(),
+                                config_name.clone(),
+                                window_args,
+                            )?)
                         }
                     })
                     .filter_map(Result::err);

@@ -1,4 +1,4 @@
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 
@@ -383,7 +383,12 @@ impl ActionWithServer {
                 });
             }
             ActionWithServer::OpenMany { windows, args, should_toggle } => {
-                return with_response_channel(|sender| app::DaemonCommand::OpenMany { windows, args, should_toggle, sender });
+                return with_response_channel(|sender| app::DaemonCommand::OpenMany {
+                    windows,
+                    args,
+                    should_toggle,
+                    sender,
+                });
             }
             ActionWithServer::CloseWindows { windows } => {
                 return with_response_channel(|sender| app::DaemonCommand::CloseWindows {
@@ -456,9 +461,9 @@ fn parse_window_config_and_id(s: &str) -> Result<(String, String)> {
 /// into a tuple of `(id, variable_name, new_value)`.
 fn parse_window_id_args(s: &str) -> Result<(String, String, String)> {
     // Parse the = first so we know if an id has not been given
-    let (name, value) = s
-        .split_once('=')
-        .with_context(|| format!("arguments must be in the shape `variable_name=\"new_value\"`, but got: {}", s))?;
+    let (name, value) = s.split_once('=').with_context(|| {
+        format!("arguments must be in the shape `variable_name=\"new_value\"`, but got: {}", s)
+    })?;
 
     let (id, var_name) = name.split_once(':').unwrap_or(("", &name));
 

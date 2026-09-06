@@ -58,7 +58,7 @@ macro_rules! export_plugin {
 
         #[no_mangle]
         pub unsafe extern "C" fn ewwii_plugin_init(id_ptr: *const u8, id_len: usize) {
-            let id_bytes = unsafe { ::std::slice::from_raw_parts(id_ptr, id_len) };
+            let id_bytes = unsafe { ::std::ptr::from_raw_parts(id_ptr, id_len) };
 
             let id_cow = ::std::string::String::from_utf8_lossy(id_bytes);
             let id_str: &str = &id_cow;

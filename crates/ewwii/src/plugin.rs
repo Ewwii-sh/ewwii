@@ -3,15 +3,15 @@ use crate::config::{ConfigEngine, EWWII_CONFIG_PARSER};
 use crate::daemon_response;
 use crate::display_backend::DisplayBackend;
 use crate::opts::{WidgetAction, WidgetControlCommand};
-use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use crate::widgets::widget_definitions::EWWII_PLUGIN_WIDGETS;
+use ewwii_plugin_api::proxy::{CallbackResponse, PluginRequest};
 use ewwii_plugin_api::{
     EmitInfo, IpcRequest, LibraryItemFFI, NbclType, PluginError, PluginValue, RuntimePaths,
     WidgetActionType, WidgetControlType,
 };
-use gtk4::glib::translate::FromGlibPtrFull;
 use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
+use gtk4::glib::translate::FromGlibPtrFull;
 use nbcl::library::Library as NbclLibrary;
 use nbcl::library::LibraryItem as NbclLibraryItem;
 use nbcl::Type as ActualNbclType;
@@ -145,7 +145,7 @@ fn call_plugin_handler(plugin_id: &str, callback_id: u64, arg_bytes: Vec<u8>) ->
             return None;
         }
 
-        let res_slice = std::slice::from_raw_parts(res_ptr, res_len);
+        let res_slice = std::ptr::from_raw_parts(res_ptr, res_len);
         let result = res_slice.to_vec();
 
         if let Ok(free_fn) =
@@ -298,23 +298,21 @@ impl<B: DisplayBackend> App<B> {
                     *p.borrow_mut() = Some(ConfigEngine::Custom(custom_engine));
                 });
             }
-            PluginRequest::RegisterStaticWidget { name, widget_ptr } => {
-                unsafe {
-                    let raw_ptr = widget_ptr as *mut gtk4::ffi::GtkWidget;
+            PluginRequest::RegisterStaticWidget { name, widget_ptr } => unsafe {
+                let raw_ptr = widget_ptr as *mut gtk4::ffi::GtkWidget;
 
-                    if raw_ptr.is_null() {
-                        log::error!("Received null widget pointer from plugin");
-                        return;
-                    }
-
-                    let widget = gtk4::Widget::from_glib_full(raw_ptr);
-
-                    EWWII_PLUGIN_WIDGETS.with(move |w| {
-                        let mut widget_list = w.borrow_mut();
-                        widget_list.insert(name, widget);
-                    });
+                if raw_ptr.is_null() {
+                    log::error!("Received null widget pointer from plugin");
+                    return;
                 }
-            }
+
+                let widget = gtk4::Widget::from_glib_full(raw_ptr);
+
+                EWWII_PLUGIN_WIDGETS.with(move |w| {
+                    let mut widget_list = w.borrow_mut();
+                    widget_list.insert(name, widget);
+                });
+            },
             PluginRequest::InjectCss(css, plugin_id, callback_id) => {
                 if let Some(display) = &self.gdk_display {
                     let provider = gtk4::CssProvider::new();
@@ -663,7 +661,7 @@ impl<B: DisplayBackend> App<B> {
 #[unsafe(no_mangle)]
 pub extern "C" fn ffi_gateway(ptr: *const u8, len: usize) {
     // SAFETY: Convert the raw pointer/len into a Rust slice
-    let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
+    let bytes = unsafe { std::ptr::from_raw_parts(ptr, len) };
 
     let request: PluginRequest = match bincode::deserialize(bytes) {
         Ok(req) => req,
