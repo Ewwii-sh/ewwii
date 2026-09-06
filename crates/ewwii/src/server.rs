@@ -31,7 +31,7 @@ pub fn initialize_server<B: DisplayBackend>(
         format!("Failed to change working directory to {}", paths.get_config_dir().display())
     })?;
 
-    log::info!("Loading paths: {}", &paths);
+    log::info!("Loading paths: {}", paths);
 
     // ipc_(tx/rx) is used to allow config parser
     // to send ipc requests during evaluation.

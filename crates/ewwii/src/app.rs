@@ -234,7 +234,7 @@ impl<B: DisplayBackend> App<B> {
 
     /// Try to handle a [`DaemonCommand`] event.
     async fn try_handle_command(&mut self, event: DaemonCommand) -> Result<()> {
-        log::debug!("Handling event: {:?}", &event);
+        log::debug!("Handling event: {:?}", event);
         match event {
             DaemonCommand::NoOp => {}
             DaemonCommand::OpenInspector => {
@@ -367,7 +367,7 @@ impl<B: DisplayBackend> App<B> {
                 sender.send_success(output)?
             }
             DaemonCommand::PrintDebug(sender) => {
-                let output = format!("{:#?}", &self);
+                let output = format!("{:#?}", self);
                 sender.send_success(output)?
             }
             DaemonCommand::ShowState(sender) => {
@@ -741,7 +741,7 @@ impl<B: DisplayBackend> App<B> {
                             );
 
                             if !success {
-                                anyhow::bail!("Widget with name '{}' not found", &widget_name);
+                                anyhow::bail!("Widget with name '{}' not found", widget_name);
                             }
                         }
                     } else {
@@ -1049,8 +1049,8 @@ fn apply_window_position(
         let xid = x11_surface.xid();
 
         let aux = ConfigureWindowAux::new()
-            .x(actual_window_rect.x() as i32)
-            .y(actual_window_rect.y() as i32);
+            .x(actual_window_rect.x())
+            .y(actual_window_rect.y());
 
         conn.as_ref().configure_window(xid as XWindow, &aux)?;
         conn.as_ref().flush()?;

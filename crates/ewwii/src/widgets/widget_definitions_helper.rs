@@ -31,7 +31,7 @@ where
                 Ok(mut child) => match child.wait_timeout(timeout) {
                     // child timed out
                     Ok(None) => {
-                        log::error!("WARNING: command {} timed out", &cmd);
+                        log::error!("WARNING: command {} timed out", cmd);
                         let _ = child.kill();
                         let _ = child.wait();
                     }

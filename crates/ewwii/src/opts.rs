@@ -465,7 +465,7 @@ fn parse_window_id_args(s: &str) -> Result<(String, String, String)> {
         format!("arguments must be in the shape `variable_name=\"new_value\"`, but got: {}", s)
     })?;
 
-    let (id, var_name) = name.split_once(':').unwrap_or(("", &name));
+    let (id, var_name) = name.split_once(':').unwrap_or(("", name));
 
     Ok((id.to_string(), var_name.to_string(), value.to_string()))
 }
