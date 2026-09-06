@@ -1,4 +1,4 @@
 [toolchain]
-channel = "stable"
+channel = "1.98.0"
 components = [ "rust-src" ]
 profile = "default"
