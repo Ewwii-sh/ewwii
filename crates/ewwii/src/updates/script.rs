@@ -54,8 +54,10 @@ pub fn handle_script(parser: &ConfigEngine, props: &PropertyMap, shell: String) 
         }
         (None, Some(cmd)) => {
             glib::MainContext::default().spawn_local(async move {
-                let (tx, mut rx) = mpsc::channel::<String>(32);
-                tokio::spawn(stream_cmd_lines(shell, cmd, tx, shutdown_rx));
+                let (tx, mut rx) = mpsc::channel::<()>(32);
+                tokio::spawn(stream_cmd_lines(shell, cmd, shutdown_rx, move |_line| {
+                    let _ = tx.try_send(());
+                }));
 
                 while rx.recv().await.is_some() {
                     parser.handle_callback(&run);

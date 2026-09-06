@@ -3,23 +3,23 @@ use ewwii_shared_utils::prop::PropertyMap;
 use ewwii_shared_utils::prop_utils::*;
 use nix::libc;
 use nix::{
-    sys::signal,
+    sys::signal::{self, Signal},
     unistd::{setpgid, Pid},
 };
 use std::process::Stdio;
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;
 use tokio::process::Command;
-use tokio::signal as tokio_signal;
-use tokio::sync::mpsc;
 use tokio::sync::watch;
 
-pub async fn stream_cmd_lines(
+pub async fn stream_cmd_lines<F>(
     shell: String,
     cmd: String,
-    tx: mpsc::Sender<String>,
     mut shutdown_rx: watch::Receiver<bool>,
-) {
+    mut on_line: F,
+) where
+    F: FnMut(&str) + Send + 'static,
+{
     let mut child = unsafe {
         Command::new(shell)
             .arg("-c")
@@ -70,30 +70,43 @@ pub async fn stream_cmd_lines(
             .expect("failed to start listener process")
     };
 
-    let mut stdout_lines = BufReader::new(child.stdout.take().unwrap()).lines();
-    let mut stderr_lines = BufReader::new(child.stderr.take().unwrap()).lines();
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take();
+
+    // offload stderr in bg thread so it doesn't slow stdout
+    if let Some(stderr_stream) = stderr {
+        tokio::spawn(async move {
+            let mut err_buf = String::new();
+            let mut reader = BufReader::new(stderr_stream);
+            while let Ok(bytes_read) = reader.read_line(&mut err_buf).await {
+                if bytes_read == 0 { break; }
+                log::warn!("stream_cmd_lines stderr: {}", err_buf.trim_end());
+                err_buf.clear();
+            }
+        });
+    }
+
+    let mut reader = BufReader::with_capacity(16 * 1024, stdout);
+    let mut line_buf = String::with_capacity(256);
 
     loop {
+        line_buf.clear();
+
         tokio::select! {
-            maybe_line = stdout_lines.next_line() => {
-                match maybe_line {
-                    Ok(Some(line)) => {
-                        let val = line.trim().to_string();
-                        // Stop forwarding if the receiver was dropped
-                        if tx.send(val).await.is_err() {
-                            break;
+            biased;
+            res = reader.read_line(&mut line_buf) => {
+                match res {
+                    Ok(0) => break, // EOF
+                    Ok(_) => {
+                        let trimmed = line_buf.trim();
+                        if !trimmed.is_empty() {
+                            on_line(trimmed);
                         }
                     }
-                    Ok(None) => break,
                     Err(e) => {
-                        log::error!("stream_cmd_lines: error reading stdout: {}", e);
+                        log::error!("stream_cmd_lines read error: {e}");
                         break;
                     }
-                }
-            }
-            maybe_err = stderr_lines.next_line() => {
-                if let Ok(Some(line)) = maybe_err {
-                    log::warn!("stream_cmd_lines stderr: {}", line);
                 }
             }
             _ = shutdown_rx.changed() => {
@@ -114,60 +127,36 @@ pub fn handle_listen(var_name: String, props: &PropertyMap, shell: String) {
     let cmd = match get_string_prop(&cmd_prop, CMD_KEY) {
         Ok(c) => unwrap_static(CMD_KEY, c),
         Err(e) => {
-            log::warn!("Listen {} cmd property either missing or invalid: {}", var_name, e);
+            log::warn!("Listen {} cmd property invalid: {}", var_name, e);
             return;
         }
     };
 
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
-    SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx.clone());
-
-    // Task to catch SIGINT and SIGTERM
-    tokio::spawn({
-        let shutdown_tx = shutdown_tx.clone();
-        async move {
-            let mut sigterm_stream =
-                tokio_signal::unix::signal(tokio_signal::unix::SignalKind::terminate()).unwrap();
-
-            tokio::select! {
-                _ = tokio_signal::ctrl_c() => {
-                    log::trace!("Received SIGINT");
-                }
-                _ = sigterm_stream.recv() => {
-                    log::trace!("Received SIGTERM");
-                }
-            }
-            let _ = shutdown_tx.send(true);
-        }
-    });
+    SHUTDOWN_REGISTRY.lock().unwrap().push(shutdown_tx);
 
     tokio::spawn(async move {
-        let (tx, mut rx) = mpsc::channel::<String>(32);
+        let mut last_value = String::new();
 
-        // Spawn the generic streamer
-        tokio::spawn(stream_cmd_lines(shell, cmd, tx, shutdown_rx));
+        stream_cmd_lines(shell, cmd, shutdown_rx, move |line| {
+            if line != last_value {
+                last_value.clear();
+                last_value.push_str(line);
 
-        // Handle dedup + broadcast in this task
-        let mut last_value: Option<String> = None;
-        while let Some(val) = rx.recv().await {
-            if Some(&val) != last_value.as_ref() {
-                last_value = Some(val.clone());
-                log::debug!("[{}] listened value: {}", var_name, val);
-                VarWatcherAPI::update_with_broadcast(&var_name, val);
-            } else {
-                log::trace!("[{}] value unchanged, skipping tx", var_name);
+                log::debug!("[{var_name}] listened value: {line}");
+                VarWatcherAPI::update_with_broadcast(&var_name, line.to_string());
             }
-        }
+        })
+        .await;
     });
 }
 
 async fn terminate_child(mut child: tokio::process::Child) {
     if let Some(id) = child.id() {
-        log::debug!("Killing process with id {}", id);
-        let _ = signal::killpg(Pid::from_raw(id as i32), signal::SIGTERM);
+        let _ = signal::killpg(Pid::from_raw(id as i32), Signal::SIGTERM);
         tokio::select! {
             _ = child.wait() => { },
-            _ = tokio::time::sleep(std::time::Duration::from_secs(10)) => {
+            _ = tokio::time::sleep(std::time::Duration::from_millis(500)) => {
                 let _ = child.kill().await;
             }
         };
