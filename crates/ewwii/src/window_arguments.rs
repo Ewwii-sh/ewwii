@@ -2,6 +2,9 @@ use crate::{
     window::coords::Coords, window::monitor::MonitorIdentifier,
     window::window_geometry::AnchorPoint,
 };
+use anyhow::Result;
+use std::collections::HashMap;
+use ewwii_shared_utils::prop_utils::parse_duration_str;
 
 /// This stores the arguments given in the command line to create a window
 /// While creating a window, we combine this with information from the
@@ -21,22 +24,31 @@ pub struct WindowArguments {
 }
 
 impl WindowArguments {
-    // pub fn new_from_args(id: String, config_name: String, mut args: HashMap<VarName, DynVal>) -> Result<Self> {
-    //     let initiator = WindowArguments {
-    //         window_name: config_name,
-    //         instance_id: id,
-    //         pos: parse_value_from_args::<Coords>("pos", &mut args)?,
-    //         size: parse_value_from_args::<Coords>("size", &mut args)?,
-    //         monitor: parse_value_from_args::<MonitorIdentifier>("screen", &mut args)?,
-    //         anchor: parse_value_from_args::<AnchorPoint>("anchor", &mut args)?,
-    //         duration: parse_value_from_args::<DynVal>("duration", &mut args)?
-    //             .map(|x| x.as_duration())
-    //             .transpose()
-    //             .context("Not a valid duration")?,
-    //     };
+    pub fn new_from_args(id: String, config_name: String, args: HashMap<String, String>) -> Result<Self> {
+        let pos_str = args.get("pos");
+        let size_str = args.get("size");
+        let screen_str = args.get("screen");
+        let anchor_str = args.get("anchor");
+        let duration_str = args.get("duration");
 
-    //     Ok(initiator)
-    // }
+        let pos = pos_str.and_then(|s| s.parse::<Coords>().ok());
+        let size = size_str.and_then(|s| s.parse::<Coords>().ok());
+        let monitor = screen_str.and_then(|s| s.parse::<MonitorIdentifier>().ok());
+        let anchor = anchor_str.and_then(|s| s.parse::<AnchorPoint>().ok());
+        let duration = duration_str.and_then(|s| parse_duration_str(s));
+
+        let initiator = WindowArguments {
+            window_name: config_name,
+            instance_id: id,
+            pos,
+            size,
+            monitor,
+            anchor,
+            duration
+        };
+
+        Ok(initiator)
+    }
 
     // /// Return a hashmap of all arguments the window was passed and expected, returning
     // /// an error in case required arguments are missing or unexpected arguments are passed.

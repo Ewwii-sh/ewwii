@@ -1,6 +1,5 @@
-use anyhow::Result;
+use anyhow::{Result, Context};
 use clap::{Parser, Subcommand};
-// use shared_utils::VarName;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -130,28 +129,24 @@ pub enum ActionWithServer {
         /// Automatically close the window after a specified amount of time, i.e.: 1s
         #[arg(long, value_parser=parse_duration)]
         duration: Option<std::time::Duration>,
-        // /// Define a variable for the window, i.e.: `--arg "var_name=value"`
-        // #[arg(long = "arg", value_parser = parse_var_update_arg)]
-        // args: Option<Vec<(VarName, DynVal)>>,
     },
 
-    // TODO
-    // /// Open multiple windows at once.
-    // /// NOTE: This will in the future be part of ewwii open, and will then be removed.
-    // #[command(name = "open-many")]
-    // OpenMany {
-    //     /// List the windows to open, optionally including their id, i.e.: `--window "window_name:window_id"`
-    //     #[arg(value_parser = parse_window_config_and_id)]
-    //     windows: Vec<(String, String)>,
+    /// Open multiple windows at once.
+    #[command(name = "open-many")]
+    OpenMany {
+        /// List the windows to open, optionally including their id, i.e.: `--window "window_name:window_id"`
+        #[arg(value_parser = parse_window_config_and_id)]
+        windows: Vec<(String, String)>,
 
-    //     /// Define a variable for the window, i.e.: `--arg "window_id:var_name=value"`
-    //     // #[arg(long = "arg", value_parser = parse_window_id_args)]
-    //     // args: Vec<(String, VarName, DynVal)>,
+        /// Define a variable for the window, i.e.: `--arg "window_id:var_name=value"`
+        #[arg(long = "arg", value_parser = parse_window_id_args)]
+        args: Vec<(String, String, String)>,
 
-    //     /// If a window is already open, close it instead
-    //     #[arg(long = "toggle")]
-    //     should_toggle: bool,
-    // },
+        /// If a window is already open, close it instead
+        #[arg(long = "toggle")]
+        should_toggle: bool,
+    },
+
     /// Close the given windows
     #[command(name = "close", alias = "c")]
     CloseWindows { windows: Vec<String> },
@@ -330,8 +325,7 @@ impl From<RawOpt> for Opt {
 
 impl ActionWithServer {
     pub fn can_start_daemon(&self) -> bool {
-        // matches!(self, ActionWithServer::OpenWindow { .. } | ActionWithServer::OpenMany { .. })
-        matches!(self, ActionWithServer::OpenWindow { .. })
+        matches!(self, ActionWithServer::OpenWindow { .. } | ActionWithServer::OpenMany { .. })
     }
 
     pub fn into_daemon_command(
@@ -387,6 +381,9 @@ impl ActionWithServer {
                     sender,
                     // args,
                 });
+            }
+            ActionWithServer::OpenMany { windows, args, should_toggle } => {
+                return with_response_channel(|sender| app::DaemonCommand::OpenMany { windows, args, should_toggle, sender });
             }
             ActionWithServer::CloseWindows { windows } => {
                 return with_response_channel(|sender| app::DaemonCommand::CloseWindows {
@@ -446,6 +443,26 @@ mod serde_shell {
         let s = String::deserialize(deserializer)?;
         Shell::from_str(&s).map_err(serde::de::Error::custom)
     }
+}
+
+/// Parse a window-name:window-id pair of the form `name:id` or `name` into a tuple of `(name, id)`.
+fn parse_window_config_and_id(s: &str) -> Result<(String, String)> {
+    let (name, id) = s.split_once(':').unwrap_or((s, s));
+
+    Ok((name.to_string(), id.to_string()))
+}
+
+/// Parse a window-id specific variable value declaration with the syntax `window-id:variable_name="new_value"`
+/// into a tuple of `(id, variable_name, new_value)`.
+fn parse_window_id_args(s: &str) -> Result<(String, String, String)> {
+    // Parse the = first so we know if an id has not been given
+    let (name, value) = s
+        .split_once('=')
+        .with_context(|| format!("arguments must be in the shape `variable_name=\"new_value\"`, but got: {}", s))?;
+
+    let (id, var_name) = name.split_once(':').unwrap_or(("", &name));
+
+    Ok((id.to_string(), var_name.to_string(), value.to_string()))
 }
 
 fn parse_inject_var_map(s: &str) -> Result<HashMap<String, String>, String> {

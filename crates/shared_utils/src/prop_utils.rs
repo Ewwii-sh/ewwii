@@ -249,7 +249,7 @@ pub fn get_vec_string_prop(prop: &Property, key: &str) -> Result<Vec<PropValue<S
         .collect()
 }
 
-fn parse_duration_str(key_str: &str) -> Option<Duration> {
+pub fn parse_duration_str(key_str: &str) -> Option<Duration> {
     if let Some(num) = key_str.strip_suffix("ms") {
         num.parse::<u64>().ok().map(Duration::from_millis)
     } else if let Some(num) = key_str.strip_suffix("min") {

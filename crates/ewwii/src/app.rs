@@ -79,6 +79,12 @@ pub enum DaemonCommand {
         sender: DaemonResponseSender,
         // args: Option<Vec<(VarName, DynVal)>>,
     },
+    OpenMany {
+        windows: Vec<(String, String)>,
+        should_toggle: bool,
+        args: Vec<(String, String, String)>,
+        sender: DaemonResponseSender,
+    },
     CloseWindows {
         windows: Vec<String>,
         auto_reopen: bool,
@@ -270,26 +276,6 @@ impl<B: DisplayBackend> App<B> {
                     self.close_window(&window_name, false)?;
                 }
             }
-            // DaemonCommand::OpenMany { windows, should_toggle, sender } => {
-            //     let errors = windows
-            //         .iter()
-            //         .map(|w| {
-            //             let (config_name, id) = w;
-            //             if should_toggle && self.open_windows.contains_key(id) {
-            //                 self.close_window(id, false)
-            //             } else {
-            //                 log::debug!("Config: {}, id: {}", config_name, id);
-            //                 let window_args = args
-            //                     .iter()
-            //                     .filter(|(win_id, ..)| win_id.is_empty() || win_id == id)
-            //                     .map(|(_, n, v)| (n.clone(), v.clone()))
-            //                     .collect();
-            //                 self.open_window(&WindowArguments::new_from_args(id.to_string(), config_name.clone())?)
-            //             }
-            //         })
-            //         .filter_map(Result::err);
-            //     sender.respond_with_error_list(errors)?;
-            // }
             DaemonCommand::OpenWindow {
                 window_name,
                 instance_id,
@@ -321,6 +307,26 @@ impl<B: DisplayBackend> App<B> {
                 };
 
                 sender.respond_with_result(result)?;
+            }
+            DaemonCommand::OpenMany { windows, args, should_toggle, sender } => {
+                let errors = windows
+                    .iter()
+                    .map(|w| {
+                        let (config_name, id) = w;
+                        if should_toggle && self.open_windows.contains_key(id) {
+                            self.close_window(id, false)
+                        } else {
+                            let window_args = args
+                                .iter()
+                                .filter(|(win_id, ..)| win_id.is_empty() || win_id == id)
+                                .map(|(_, n, v)| (n.clone(), v.clone()))
+                                .collect();
+
+                            self.open_window(&WindowArguments::new_from_args(id.to_string(), config_name.clone(), window_args)?)
+                        }
+                    })
+                    .filter_map(Result::err);
+                sender.respond_with_error_list(errors)?;
             }
             DaemonCommand::CloseWindows { windows, auto_reopen, sender } => {
                 let errors = windows
