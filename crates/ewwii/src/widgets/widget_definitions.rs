@@ -2869,7 +2869,7 @@ pub(super) fn build_animation(
 pub(super) fn build_custom_widget(
     props: &PropertyMap,
     _children: &[WidgetNode],
-    _widget_registry: &mut WidgetRegistry
+    _widget_registry: &mut WidgetRegistry,
 ) -> Result<gtk4::Box> {
     let container = gtk4::Box::default();
     let Property::String(widget_name) = retreive_prop(props, "name")? else {
@@ -2877,8 +2877,10 @@ pub(super) fn build_custom_widget(
     };
 
     EWWII_PLUGIN_WIDGETS.with(glib::clone!(
-        #[strong] container,
-        #[strong] widget_name,
+        #[strong]
+        container,
+        #[strong]
+        widget_name,
         move |w| {
             let widget_list = w.borrow();
             if let Some(widget) = widget_list.get(&widget_name) {

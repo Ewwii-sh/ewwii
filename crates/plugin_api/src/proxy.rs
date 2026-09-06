@@ -123,7 +123,7 @@ pub unsafe extern "C" fn plugin_callback_handler(
     arg_len: usize,
     output_len: *mut usize,
 ) -> *mut u8 {
-    let bytes = unsafe { std::slice::from_raw_parts(arg_ptr, arg_len) };
+    let bytes = unsafe { std::ptr::from_raw_parts(arg_ptr, arg_len) };
     let callbacks = get_callbacks().lock().unwrap();
 
     let res_bytes = match callbacks.get(&id) {
@@ -190,7 +190,7 @@ pub unsafe extern "C" fn plugin_callback_handler(
 pub unsafe extern "C" fn plugin_free_buffer(ptr: *mut u8, len: usize) {
     if !ptr.is_null() {
         unsafe {
-            let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr, len));
+            let _ = Box::from_raw(std::ptr::from_raw_parts_mut(ptr, len));
         }
     }
 }
@@ -342,10 +342,7 @@ impl EwwiiAPI for HostProxy {
         let raw_ptr: *mut gtk4::ffi::GtkWidget = widget.to_glib_full();
         let widget_ptr = raw_ptr as usize;
 
-        let req = PluginRequest::RegisterStaticWidget {
-            name: name.to_string(),
-            widget_ptr,
-        };
+        let req = PluginRequest::RegisterStaticWidget { name: name.to_string(), widget_ptr };
 
         self.call_host(req);
     }

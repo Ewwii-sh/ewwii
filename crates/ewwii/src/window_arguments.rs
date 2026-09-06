@@ -3,8 +3,8 @@ use crate::{
     window::window_geometry::AnchorPoint,
 };
 use anyhow::Result;
-use std::collections::HashMap;
 use ewwii_shared_utils::prop_utils::parse_duration_str;
+use std::collections::HashMap;
 
 /// This stores the arguments given in the command line to create a window
 /// While creating a window, we combine this with information from the
@@ -24,7 +24,11 @@ pub struct WindowArguments {
 }
 
 impl WindowArguments {
-    pub fn new_from_args(id: String, config_name: String, args: HashMap<String, String>) -> Result<Self> {
+    pub fn new_from_args(
+        id: String,
+        config_name: String,
+        args: HashMap<String, String>,
+    ) -> Result<Self> {
         let pos_str = args.get("pos");
         let size_str = args.get("size");
         let screen_str = args.get("screen");
@@ -44,7 +48,7 @@ impl WindowArguments {
             size,
             monitor,
             anchor,
-            duration
+            duration,
         };
 
         Ok(initiator)
