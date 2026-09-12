@@ -111,6 +111,17 @@ impl WidgetRegistry {
             }
             // if node exists in both trees
             (Some(old_node), Some(new_node)) => {
+                // Check if the widget type changed (e.g., Label replaced by Box)
+                let type_changed = old_node.widget_type() != new_node.widget_type();
+
+                if type_changed {
+                    // Remove the old widget sub-tree
+                    Self::diff_into(Some(old_node), None, parent_id, patches);
+                    // Create the new container and its inner children
+                    Self::diff_into(None, Some(new_node), parent_id, patches);
+                    return;
+                }
+
                 let current_id = old_node.props().map(hash_dyn_id).or(parent_id);
                 if let (Some(old_props), Some(new_props)) = (old_node.props(), new_node.props()) {
                     if old_props.props_differ(new_props) {
