@@ -1,0 +1,12 @@
+[package]
+name = "widget_node_derive"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "3", features = ["full", "extra-traits"] }
+quote = "1"
+proc-macro2 = "1"

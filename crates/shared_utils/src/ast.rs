@@ -6,13 +6,14 @@
 * unless you know what you are doing.
 */
 
-use crate::prop::PropertyMap;
+use crate::prop::{Property, PropertyMap};
 use crate::prop_utils::{get_string_prop, unwrap_static};
+use widget_node_derive::WidgetNodeExt;
 use ahash::AHasher;
 use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, WidgetNodeExt)]
 pub enum WidgetNode {
     Label { props: PropertyMap },
     Box { props: PropertyMap, children: Vec<WidgetNode> },

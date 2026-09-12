@@ -9,6 +9,7 @@ repository = "https://github.com/ewwii-sh/ewwii"
 homepage = "https://ewwii-sh.github.io/"
 
 [dependencies]
+widget_node_derive.workspace = true
 anyhow.workspace = true
 log.workspace = true
 nbcl.workspace = true
