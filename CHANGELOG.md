@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `passinput` property to Window.
+- `rounded_fg` property to CircularProgress.
 - `open-many` command.
 
 ### Changed

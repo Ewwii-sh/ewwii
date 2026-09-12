@@ -79,7 +79,9 @@ pub async fn stream_cmd_lines<F>(
             let mut err_buf = String::new();
             let mut reader = BufReader::new(stderr_stream);
             while let Ok(bytes_read) = reader.read_line(&mut err_buf).await {
-                if bytes_read == 0 { break; }
+                if bytes_read == 0 {
+                    break;
+                }
                 log::warn!("stream_cmd_lines stderr: {}", err_buf.trim_end());
                 err_buf.clear();
             }

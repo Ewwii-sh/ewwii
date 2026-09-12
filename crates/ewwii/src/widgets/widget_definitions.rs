@@ -1174,6 +1174,12 @@ impl EwwiiWidget for CircularProgressWidget {
                     widget.set_property("clockwise", v);
                 });
             }
+            "rounded_fg" => {
+                let widget = self.gtk_widget.clone();
+                bind_property!(&value, &key, get_bool_prop, [widget], |v: bool| {
+                    widget.set_property("rounded-fg", v);
+                });
+            }
             "fg_color" => {
                 let widget = self.gtk_widget.clone();
                 bind_property!(&value, &key, get_string_prop, [widget], |v: String| {

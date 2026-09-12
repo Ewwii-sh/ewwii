@@ -12,9 +12,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use ewwii_shared_utils::prop::{Property, PropertyMap};
-use ewwii_shared_utils::prop_utils::{
-    PropValue, get_bool_prop, get_duration_prop, unwrap_static
-};
+use ewwii_shared_utils::prop_utils::{get_bool_prop, get_duration_prop, unwrap_static, PropValue};
 use std::str::FromStr;
 use std::time::Duration;
 
