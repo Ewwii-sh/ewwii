@@ -155,6 +155,10 @@ pub enum ActionWithServer {
     #[command(name = "reload", alias = "r")]
     Reload,
 
+    /// Hot reload the configuration
+    #[command(name = "hotreload", alias = "hr")]
+    HotReload,
+
     /// Kill the ewwii daemon
     #[command(name = "kill", alias = "k")]
     KillServer,
@@ -399,6 +403,9 @@ impl ActionWithServer {
             }
             ActionWithServer::Reload => {
                 return with_response_channel(app::DaemonCommand::ReloadConfigAndCss)
+            }
+            ActionWithServer::HotReload => {
+                return with_response_channel(app::DaemonCommand::HotReloadConfig)
             }
             ActionWithServer::ShowState => {
                 return with_response_channel(app::DaemonCommand::ShowState)
