@@ -25,6 +25,10 @@ use crate::{
 };
 use anyhow::anyhow;
 use ewwii_plugin_api as epapi;
+use ewwii_shared_utils::{
+    ast::WidgetNode,
+    prop::PropertyMap
+};
 use futures::future::FutureExt;
 use gdk::Monitor;
 use gtk4::Window;
@@ -675,16 +679,86 @@ impl<B: DisplayBackend> App<B> {
         self.restart_signals()?;
 
         // perform hot reload
-        let mut wreg = self
+        let mut wreg_lock = self
             .widget_reg_store
             .lock()
             .map_err(|e| anyhow::anyhow!("Failed to acquire widget store lock: {e}"))?;
 
         let new_node = self.ewwii_config.get_root_node()?;
-        if let Some(wreg) = wreg.as_mut() {
-            wreg.perform_hotreload(old_node, new_node)?;
-        } else {
-            anyhow::bail!("Widget registery is not initialized");
+        let (WidgetNode::Tree(old_children), WidgetNode::Tree(new_children)) =
+            (old_node.as_ref(), new_node.as_ref())
+            else {
+                anyhow::bail!("Old or New Node is not in the right structure.");
+            };
+
+        let old_windows: std::collections::HashMap<&str, (&PropertyMap, Rc<WidgetNode>)> = old_children
+            .iter()
+            .filter_map(|child| match child {
+                WidgetNode::DefWindow { name, props, node } => {
+                    Some((name.as_str(), (props, Rc::new(*node.clone()))))
+                }
+                _ => None,
+            })
+            .collect();
+
+        let new_windows: std::collections::HashMap<&str, (&PropertyMap, Rc<WidgetNode>)> = new_children
+            .iter()
+            .filter_map(|child| match child {
+                WidgetNode::DefWindow { name, props, node } => {
+                    Some((name.as_str(), (props, Rc::new(*node.clone()))))
+                }
+                _ => None,
+            })
+            .collect();
+
+        let Some(wreg) = wreg_lock.as_mut() else {
+            anyhow::bail!("Widget registry is not initialized");
+        };
+
+        let all_window_names: std::collections::HashSet<&str> = old_windows
+            .keys()
+            .chain(new_windows.keys())
+            .copied()
+            .collect();
+
+        for win_name in &all_window_names {
+            match (old_windows.get(win_name), new_windows.get(win_name)) {
+                (Some((old_props, old_node)), Some((new_props, new_node))) => {
+                    if old_props.props_differ(new_props) {
+                        log::warn!("props of {win_name} differs.");
+                    }
+                    wreg.perform_hotreload(old_node.clone(), new_node.clone())?;
+                }
+                (None, Some((_new_props, _new_node))) => {
+                    log::info!("Creating new window: {win_name}");
+                    // Handle window creation logic here
+                }
+                (Some(_), None) => {}
+                (None, None) => {}
+            }
+        }
+
+        drop(wreg_lock);
+        for win_name in all_window_names {
+            if old_windows.contains_key(win_name) && !new_windows.contains_key(win_name) {
+                log::info!("Destroying window: {win_name}");
+
+                let target_ids: Vec<String> = self
+                    .open_windows
+                    .iter()
+                    .filter_map(|(id, window)| {
+                        if window.name == win_name {
+                            Some(id.clone())
+                        } else {
+                            None
+                        }
+                    })
+                .collect();
+
+                for id in target_ids {
+                    self.close_window(&id, false)?;
+                }
+            }
         }
 
         self.plugin_buffer.emit("ewwii-hot-reloaded-windows", "true");
