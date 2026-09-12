@@ -13,6 +13,8 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
 
     let mut props_arms = Vec::new();
     let mut dyn_id_arms = Vec::new();
+    let mut dyn_id_get_arms = Vec::new();
+    let mut children_arms = Vec::new();
 
     for variant in &data_enum.variants {
         let v_ident = &variant.ident;
@@ -29,6 +31,7 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
                 let has_props = field_idents.iter().any(|&i| i == "props");
                 let has_children = field_idents.iter().any(|&i| i == "children");
                 let has_var = field_idents.iter().any(|&i| i == "var");
+                let has_node = field_idents.iter().any(|&i| i == "node");
 
                 // Generate props() match arm
                 if has_props {
@@ -38,6 +41,37 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
                 } else {
                     props_arms.push(quote! {
                         Self::#v_ident { .. } => None,
+                    });
+                }
+
+                // Generate dyn_id()
+                if has_props {
+                    dyn_id_get_arms.push(quote! {
+                        Self::#v_ident { props, .. } => {
+                            match props.get("dyn_id") {
+                                Some(Property::String(s)) => Some(s.as_str()),
+                                _ => None,
+                            }
+                        }
+                    });
+                } else {
+                    dyn_id_get_arms.push(quote! {
+                        Self::#v_ident { .. } => None,
+                    });
+                }
+
+                // Generate children() match arm
+                if has_children {
+                    children_arms.push(quote! {
+                        Self::#v_ident { children, .. } => children.as_slice(),
+                    });
+                } else if has_node {
+                    children_arms.push(quote! {
+                        Self::#v_ident { node, .. } => std::slice::from_ref(node.as_ref()),
+                    });
+                } else {
+                    children_arms.push(quote! {
+                        Self::#v_ident { .. } => &[],
                     });
                 }
 
@@ -72,7 +106,6 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
                         },
                     });
                 } else if has_props {
-                    // Standard leaf node with props only
                     dyn_id_arms.push(quote! {
                         Self::#v_ident { props } => Self::#v_ident {
                             props: with_dyn_id(props.clone(), parent_path),
@@ -80,11 +113,24 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
                     });
                 }
             }
-            Fields::Unnamed(_) => {
-                // WidgetNode::Tree(children)
+            Fields::Unnamed(fields) => {
                 props_arms.push(quote! {
                     Self::#v_ident(..) => None,
                 });
+
+                dyn_id_get_arms.push(quote! {
+                    Self::#v_ident(..) => None,
+                });
+
+                if fields.unnamed.len() == 1 {
+                    children_arms.push(quote! {
+                        Self::#v_ident(children) => children.as_slice(),
+                    });
+                } else {
+                    children_arms.push(quote! {
+                        Self::#v_ident(..) => &[],
+                    });
+                }
 
                 if v_ident == "Tree" {
                     dyn_id_arms.push(quote! {
@@ -106,6 +152,20 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
             pub fn props(&self) -> Option<&PropertyMap> {
                 match self {
                     #(#props_arms)*
+                }
+            }
+
+            /// Returns the dynamic ID stored in props, if present.
+            pub fn dyn_id(&self) -> Option<&str> {
+                match self {
+                    #(#dyn_id_get_arms)*
+                }
+            }
+
+            /// Dynamically yields references to child nodes.
+            pub fn children(&self) -> &[Self] {
+                match self {
+                    #(#children_arms)*
                 }
             }
 

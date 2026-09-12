@@ -3,7 +3,7 @@
 use crate::widgets::build_widget::{build_gtk_widget, WidgetInput};
 use crate::{apply_property, apply_property_watch, bind_property};
 use anyhow::{anyhow, bail, Result};
-use ewwii_shared_utils::ast::{hash_props, WidgetNode};
+use ewwii_shared_utils::ast::{hash_dyn_id, WidgetNode};
 use ewwii_shared_utils::prop::{Property, PropertyMap};
 use gtk4::gdk::DragAction;
 use gtk4::{self, prelude::*};
@@ -51,9 +51,119 @@ pub struct WidgetRegistry {
     pub widgets: HashMap<u64, Box<dyn EwwiiWidget>>,
 }
 
+pub enum PatchGtkWidget<'a> {
+    Create(&'a WidgetNode, u64, u64), // node, widget_id, parent_id
+    Update(u64, PropertyMap),                 // widget_id, props
+    Remove(u64),                      // widget_id
+}
+
 impl WidgetRegistry {
     pub fn new() -> Self {
         Self { widgets: HashMap::new() }
+    }
+
+    pub fn perform_hotreload(
+        &mut self,
+        old_tree: Rc<WidgetNode>,
+        new_tree: Rc<WidgetNode>,
+    ) -> Result<()> {
+        let patches = Self::diff_trees(&old_tree, &new_tree, None);
+
+        for patch_req in patches {
+            match patch_req {
+                PatchGtkWidget::Create(wdgt_node, wdgt_id, parent_id) => {
+                    self.create_widget(wdgt_node, wdgt_id, parent_id)
+                        .expect("failed to create new gtk widget");
+                }
+                PatchGtkWidget::Update(widget_id, new_props) => {
+                    self.update_props(widget_id, new_props);
+                }
+                PatchGtkWidget::Remove(widget_id) => self.remove_widget(widget_id),
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn diff_trees<'a>(
+        old: &'a WidgetNode,
+        new: &'a WidgetNode,
+        parent_id: Option<u64>,
+    ) -> Vec<PatchGtkWidget<'a>> {
+        let mut patches = Vec::new();
+        Self::diff_into(Some(old), Some(new), parent_id, &mut patches);
+        patches
+    }
+
+    fn diff_into<'a>(
+        old: Option<&'a WidgetNode>,
+        new: Option<&'a WidgetNode>,
+        parent_id: Option<u64>,
+        patches: &mut Vec<PatchGtkWidget<'a>>,
+    ) {
+        match (old, new) {
+            // Handle if the widget node starts at tree
+            (Some(WidgetNode::Tree(old_children)), Some(WidgetNode::Tree(new_children))) => {
+                let len = std::cmp::max(old_children.len(), new_children.len());
+                for i in 0..len {
+                    Self::diff_into(old_children.get(i), new_children.get(i), None, patches);
+                }
+            }
+            // if node exists in both trees
+            (Some(old_node), Some(new_node)) => {
+                let current_id = old_node.props().map(hash_dyn_id).or(parent_id);
+                if let (Some(old_props), Some(new_props)) = (old_node.props(), new_node.props()) {
+                    if old_props.props_differ(new_props) {
+                        if let Some(id) = current_id {
+                            patches.push(PatchGtkWidget::Update(id, new_props.clone()));
+                        }
+                    }
+                }
+
+                let old_children = old_node.children();
+                let new_children = new_node.children();
+                let len = std::cmp::max(old_children.len(), new_children.len());
+
+                for i in 0..len {
+                    Self::diff_into(
+                        old_children.get(i),
+                        new_children.get(i),
+                        current_id,
+                        patches,
+                    );
+                }
+            }
+
+            // if node created in new tree
+            (None, Some(new_node)) => {
+                let node_id = new_node.props().map(hash_dyn_id);
+
+                if let Some(id) = node_id {
+                    let p_id = parent_id.expect("Parent ID must exist when creating new widget");
+                    patches.push(PatchGtkWidget::Create(new_node, id, p_id));
+                }
+
+                let next_parent_id = node_id.or(parent_id);
+
+                for child in new_node.children() {
+                    Self::diff_into(None, Some(child), next_parent_id, patches);
+                }
+            }
+
+            // if node removed from old tree
+            (Some(old_node), None) => {
+                let node_id = old_node.props().map(hash_dyn_id);
+                if let Some(id) = node_id {
+                    patches.push(PatchGtkWidget::Remove(id));
+                }
+
+                for child in old_node.children() {
+                    Self::diff_into(Some(child), None, parent_id, patches);
+                }
+            }
+
+            (None, None) => {}
+        }
     }
 
     pub fn create_widget(
@@ -112,12 +222,21 @@ impl WidgetRegistry {
         Ok(())
     }
 
-    // pub fn remove_widget(&mut self, widget_id: u64) {
-    //     log::trace!("Removing '{}'", widget_id);
-    //     if let Some(widget) = self.widgets.remove(&widget_id) {
-    //         widget.unparent();
-    //     }
-    // }
+    pub fn update_props(&mut self, widget_id: u64, props: PropertyMap) {
+        log::trace!("Updating '{}'", widget_id);
+        if let Some(widget) = self.widgets.get_mut(&widget_id) {
+            for prop in &props {
+                widget.update_prop(&prop.0, &prop.1);
+            }
+        }
+    }
+
+    pub fn remove_widget(&mut self, widget_id: u64) {
+        log::trace!("Removing '{}'", widget_id);
+        if let Some(widget) = self.widgets.remove(&widget_id) {
+            widget.widget().unparent();
+        }
+    }
 
     pub fn remove_widget_by_name(&mut self, name: &str) -> bool {
         if let Some((&id, _)) =
@@ -2822,7 +2941,7 @@ pub(super) fn build_gtk_box(
     let mut widget = BoxWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Box>().expect("Box was expected to be a box."))
@@ -2836,7 +2955,7 @@ pub(super) fn build_gtk_overlay(
     let mut widget = OverlayWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Overlay>().expect("Overlay was expected to be an overlay."))
@@ -2850,7 +2969,7 @@ pub(super) fn build_tooltip(
     let mut widget = TooltipWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Box>().expect("Tooltip was expected to be a Box."))
@@ -2864,7 +2983,7 @@ pub(super) fn build_animation(
     let mut widget = AnimationWrapperWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2908,7 +3027,7 @@ pub(super) fn build_event_box(
     let mut widget = EventBoxWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
     Ok(gtk_widget.downcast::<gtk4::Box>().expect("Eventbox was expected to be a Box."))
 }
@@ -2921,7 +3040,7 @@ pub(crate) fn build_gtk_flowbox(
     let mut widget = FlowBoxWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::FlowBox>().expect("FlowBox was expected to be a FlowBox."))
@@ -2935,7 +3054,7 @@ pub(super) fn build_gtk_stack(
     let mut widget = StackWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Stack>().expect("Stack was expected to be a stack."))
@@ -2948,7 +3067,7 @@ pub(super) fn build_circular_progress_bar(
     let mut widget = CircularProgressWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2963,7 +3082,7 @@ pub(super) fn build_graph(
     let mut widget = GraphWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<Graph>().expect("Graph was expected to be a Graph"))
@@ -2976,7 +3095,7 @@ pub(super) fn build_gtk_progress(
     let mut widget = ProgressWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -2991,7 +3110,7 @@ pub(super) fn build_image(
     let mut widget = ImageWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<EwwiiImage>().expect("EwwiiImage was expected to be EwwiiImage"))
@@ -3004,7 +3123,7 @@ pub(super) fn build_gtk_button(
     let mut widget = ButtonWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Button>().expect("Button was expected to be a Button"))
@@ -3017,7 +3136,7 @@ pub(super) fn build_gtk_label(
     let mut widget = LabelWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<EwwiiLabel>().expect("EwwiiLabel was expected to be EwwiiLabel"))
@@ -3030,7 +3149,7 @@ pub(super) fn build_gtk_input(
     let mut widget = InputWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Entry>().expect("Entry was expected to be an Entry"))
@@ -3043,7 +3162,7 @@ pub(super) fn build_gtk_calendar(
     let mut widget = CalendarWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Calendar>().expect("Calendar was expected to be a Calendar"))
@@ -3057,7 +3176,7 @@ pub(super) fn build_gtk_combo_box_text(
     let mut widget = ComboBoxTextWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -3098,7 +3217,7 @@ pub(super) fn build_gtk_expander(
     let mut widget = ExpanderWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
     Ok(gtk_widget.downcast::<gtk4::Expander>().expect("Expander was expected to be an Expander"))
 }
@@ -3111,7 +3230,7 @@ pub(super) fn build_gtk_revealer(
     let mut widget = RevealerWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Revealer>().expect("Revealer was expected to be a Revealer"))
@@ -3124,7 +3243,7 @@ pub(super) fn build_gtk_checkbox(
     let mut widget = CheckboxWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -3140,7 +3259,7 @@ pub(super) fn build_gtk_color_button(
     let mut widget = ColorButtonWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -3156,7 +3275,7 @@ pub(super) fn build_gtk_color_chooser(
     let mut widget = ColorChooserEwwiiWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -3171,7 +3290,7 @@ pub(super) fn build_gtk_scale(
     let mut widget = ScaleWidget::default();
     let gtk_widget = widget.build(props, &[], widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget.downcast::<gtk4::Scale>().expect("Scale was expected to be a Scale"))
@@ -3185,7 +3304,7 @@ pub(super) fn build_gtk_aspect_frame(
     let mut widget = AspectFrameWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
@@ -3201,7 +3320,7 @@ pub(super) fn build_gtk_scrolledwindow(
     let mut widget = ScrolledWindowWidget::default();
     let gtk_widget = widget.build(props, children, widget_registry)?;
 
-    let id = hash_props(props);
+    let id = hash_dyn_id(props);
     widget_registry.widgets.insert(id, Box::new(widget));
 
     Ok(gtk_widget
