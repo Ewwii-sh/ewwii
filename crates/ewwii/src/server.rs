@@ -37,12 +37,11 @@ pub fn initialize_server<B: DisplayBackend>(
     // to send ipc requests during evaluation.
     let (ipc_tx, mut ipc_rx) = tokio::sync::mpsc::unbounded_channel::<IpcRequest>();
     EWWII_CONFIG_PARSER.with(|p| {
-        let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new(ipc_tx);
+        let config_parser = ewwii_nbcl_impl::parser::NbclConfigParser::new(ipc_tx, &paths.config_dir);
         *p.borrow_mut() = Some(ConfigEngine::Default(Box::new(config_parser)));
     });
 
     let ewwii_plugins = paths.get_plugin_paths();
-
     cleanup_log_dir(paths.get_log_dir())?;
 
     if should_daemonize {

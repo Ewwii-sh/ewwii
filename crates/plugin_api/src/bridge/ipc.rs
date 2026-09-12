@@ -14,8 +14,12 @@ pub enum IpcRequest {
     Open(String, bool),
     /// Reload config and css
     Reload,
+    /// Hot reload config
+    HotReload,
     /// Close all windows
     CloseAll,
+    /// Get path info of known files/dirs
+    PathInfo,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

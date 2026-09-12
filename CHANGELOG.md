@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `passinput` property to Window.
 - `rounded_fg` property to CircularProgress.
 - `hotreload` command.
+- `HotReload` IpcRequest to plugin API.
 - `open-many` command.
+- `nbcl` function for running nbcl as callbacks.
 
 ### Changed
 
