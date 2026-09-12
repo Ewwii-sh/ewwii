@@ -678,6 +678,7 @@ impl<B: DisplayBackend> App<B> {
             .keys()
             .chain(new_windows.keys())
             .collect();
+        let mut windows_to_reopen: Vec<String> = Vec::new();
 
         {
             let mut wreg = self
@@ -693,23 +694,36 @@ impl<B: DisplayBackend> App<B> {
                 match (old_windows.get(win_name), new_windows.get(win_name)) {
                     (Some(old_def), Some(new_def)) => {
                         if old_def.props.props_differ(&new_def.props) {
-                            let target_windows: Vec<EwwiiWindow> = self
-                                .open_windows
-                                .values()
-                                .filter_map(|window| (window.name == *win_name).then(|| window.clone()))
-                                .collect();
-                        }
+                            log::info!("Window properties changed for '{win_name}', triggering close & auto-reopen.");
 
-                        wreg_guard.perform_hotreload(
-                            old_def.root_widget.clone(),
-                            new_def.root_widget.clone(),
-                        )?;
+                            let target_ids: Vec<String> = self
+                                .open_windows
+                                .iter()
+                                .filter_map(|(id, window)| {
+                                    if window.name == *win_name {
+                                        Some(id.clone())
+                                    } else {
+                                        None
+                                    }
+                                })
+                            .collect();
+                            windows_to_reopen.extend(target_ids);
+                        } else {
+                            wreg_guard.perform_hotreload(
+                                old_def.root_widget.clone(),
+                                new_def.root_widget.clone(),
+                            )?;
+                        }
                     }
                     (None, Some(_)) => {}
                     (Some(_), None) => {}
                     (None, None) => {},
                 }
             }
+        }
+
+        for id in windows_to_reopen {
+            self.close_window(&id, true)?;
         }
 
         for &win_name in &all_window_names {
