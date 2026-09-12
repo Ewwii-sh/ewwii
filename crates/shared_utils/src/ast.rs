@@ -8,10 +8,10 @@
 
 use crate::prop::{Property, PropertyMap};
 use crate::prop_utils::{get_string_prop, unwrap_static};
-use widget_node_derive::WidgetNodeExt;
 use ahash::AHasher;
 use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};
+use widget_node_derive::WidgetNodeExt;
 
 #[derive(Debug, Clone, Serialize, Deserialize, WidgetNodeExt)]
 pub enum WidgetNode {

@@ -11,11 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `passinput` property to Window.
 - `rounded_fg` property to CircularProgress.
+- `hotreload` command.
 - `open-many` command.
 
 ### Changed
 
 - Renamed `core` library  to `ewwii`.
+- Hot reload behavior.
 
 ### Removed
 

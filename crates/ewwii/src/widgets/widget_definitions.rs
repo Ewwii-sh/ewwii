@@ -53,7 +53,7 @@ pub struct WidgetRegistry {
 
 pub enum PatchGtkWidget<'a> {
     Create(&'a WidgetNode, u64, u64), // node, widget_id, parent_id
-    Update(u64, PropertyMap),                 // widget_id, props
+    Update(u64, PropertyMap),         // widget_id, props
     Remove(u64),                      // widget_id
 }
 
@@ -136,12 +136,7 @@ impl WidgetRegistry {
                 let len = std::cmp::max(old_children.len(), new_children.len());
 
                 for i in 0..len {
-                    Self::diff_into(
-                        old_children.get(i),
-                        new_children.get(i),
-                        current_id,
-                        patches,
-                    );
+                    Self::diff_into(old_children.get(i), new_children.get(i), current_id, patches);
                 }
             }
 
@@ -237,7 +232,7 @@ impl WidgetRegistry {
         log::trace!("Updating '{}'", widget_id);
         if let Some(widget) = self.widgets.get_mut(&widget_id) {
             for prop in &props {
-                widget.update_prop(&prop.0, &prop.1);
+                widget.update_prop(prop.0, prop.1);
             }
         }
     }

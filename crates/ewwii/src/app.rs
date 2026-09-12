@@ -233,7 +233,11 @@ impl<B: DisplayBackend> App<B> {
         }
     }
 
-    async fn handle_reload_req(&mut self, sender: DaemonResponseSender, hotreload: bool) -> Result<()> {
+    async fn handle_reload_req(
+        &mut self,
+        sender: DaemonResponseSender,
+        hotreload: bool,
+    ) -> Result<()> {
         // Wait for all monitor models to be set. When a new monitor gets added, this
         // might not immediately be the case. And if we were to wait inside the
         // connect_monitor_added callback, model() never gets set. So instead we wait here.
@@ -284,9 +288,7 @@ impl<B: DisplayBackend> App<B> {
             DaemonCommand::ReloadConfigAndCss(sender) => {
                 self.handle_reload_req(sender, false).await?
             }
-            DaemonCommand::HotReloadConfig(sender) => {
-                self.handle_reload_req(sender, true).await?
-            }
+            DaemonCommand::HotReloadConfig(sender) => self.handle_reload_req(sender, true).await?,
             DaemonCommand::KillServer => {
                 log::info!("Received kill command, stopping server!");
                 self.stop_application();
@@ -674,10 +676,8 @@ impl<B: DisplayBackend> App<B> {
         self.restart_signals()?;
 
         let new_windows = self.ewwii_config.get_windows().clone();
-        let all_window_names: std::collections::HashSet<&String> = old_windows
-            .keys()
-            .chain(new_windows.keys())
-            .collect();
+        let all_window_names: std::collections::HashSet<&String> =
+            old_windows.keys().chain(new_windows.keys()).collect();
         let mut windows_to_reopen: Vec<String> = Vec::new();
 
         {
@@ -694,8 +694,6 @@ impl<B: DisplayBackend> App<B> {
                 match (old_windows.get(win_name), new_windows.get(win_name)) {
                     (Some(old_def), Some(new_def)) => {
                         if old_def.props.props_differ(&new_def.props) {
-                            log::info!("Window properties changed for '{win_name}', triggering close & auto-reopen.");
-
                             let target_ids: Vec<String> = self
                                 .open_windows
                                 .iter()
@@ -706,7 +704,7 @@ impl<B: DisplayBackend> App<B> {
                                         None
                                     }
                                 })
-                            .collect();
+                                .collect();
                             windows_to_reopen.extend(target_ids);
                         } else {
                             wreg_guard.perform_hotreload(
@@ -717,7 +715,7 @@ impl<B: DisplayBackend> App<B> {
                     }
                     (None, Some(_)) => {}
                     (Some(_), None) => {}
-                    (None, None) => {},
+                    (None, None) => {}
                 }
             }
         }
@@ -731,13 +729,15 @@ impl<B: DisplayBackend> App<B> {
                 let target_ids: Vec<String> = self
                     .open_windows
                     .iter()
-                    .filter_map(|(id, window)| {
-                        if window.name == *win_name {
-                            Some(id.clone())
-                        } else {
-                            None
-                        }
-                    })
+                    .filter_map(
+                        |(id, window)| {
+                            if window.name == *win_name {
+                                Some(id.clone())
+                            } else {
+                                None
+                            }
+                        },
+                    )
                     .collect();
 
                 for id in target_ids {

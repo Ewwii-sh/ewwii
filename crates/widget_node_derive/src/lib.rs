@@ -23,11 +23,8 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
 
         match &variant.fields {
             Fields::Named(fields) => {
-                let field_idents: Vec<_> = fields
-                    .named
-                    .iter()
-                    .map(|f| f.ident.as_ref().unwrap())
-                    .collect();
+                let field_idents: Vec<_> =
+                    fields.named.iter().map(|f| f.ident.as_ref().unwrap()).collect();
 
                 let has_props = field_idents.iter().any(|&i| i == "props");
                 let has_children = field_idents.iter().any(|&i| i == "children");
