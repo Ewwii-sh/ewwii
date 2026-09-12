@@ -60,6 +60,7 @@ fn register_active_plugin(lib: libloading::Library, id: String, version: String)
 pub enum DaemonCommand {
     NoOp,
     ReloadConfigAndCss(DaemonResponseSender),
+    HotReloadConfig(DaemonResponseSender),
     OpenInspector,
     // OpenMany {
     //     windows: Vec<(String, String)>,
@@ -232,6 +233,46 @@ impl<B: DisplayBackend> App<B> {
         }
     }
 
+    async fn handle_reload_req(&mut self, sender: DaemonResponseSender, hotreload: bool) -> Result<()> {
+        // Wait for all monitor models to be set. When a new monitor gets added, this
+        // might not immediately be the case. And if we were to wait inside the
+        // connect_monitor_added callback, model() never gets set. So instead we wait here.
+        wait_for_monitor_model().await;
+        let mut errors = Vec::new();
+
+        let config_result =
+            config::read_from_ewwii_paths(&self.paths, self.nbcl_bootstraps.clone());
+
+        match config_result {
+            Ok(new_config) => {
+                let res = if hotreload {
+                    self.perform_hotreload(new_config)
+                } else {
+                    self.load_config(new_config)
+                };
+                if let Err(e) = res {
+                    errors.push(e);
+                }
+            }
+            Err(e) => errors.push(e),
+        }
+
+        match crate::config::scss::parse_scss_from_config(self.paths.get_config_dir()) {
+            Ok((file_id, css)) => {
+                if let Err(e) = self.load_css(file_id, &css) {
+                    errors.push(anyhow!(e));
+                }
+            }
+            Err(e) => {
+                errors.push(e);
+            }
+        }
+
+        sender.respond_with_error_list(errors)?;
+
+        Ok(())
+    }
+
     /// Try to handle a [`DaemonCommand`] event.
     async fn try_handle_command(&mut self, event: DaemonCommand) -> Result<()> {
         log::debug!("Handling event: {:?}", event);
@@ -241,30 +282,10 @@ impl<B: DisplayBackend> App<B> {
                 gtk4::Window::set_interactive_debugging(true);
             }
             DaemonCommand::ReloadConfigAndCss(sender) => {
-                // Wait for all monitor models to be set. When a new monitor gets added, this
-                // might not immediately be the case. And if we were to wait inside the
-                // connect_monitor_added callback, model() never gets set. So instead we wait here.
-                wait_for_monitor_model().await;
-                let mut errors = Vec::new();
-
-                let config_result =
-                    config::read_from_ewwii_paths(&self.paths, self.nbcl_bootstraps.clone());
-
-                if let Err(e) = config_result.and_then(|new_config| self.load_config(new_config)) {
-                    errors.push(e)
-                }
-                match crate::config::scss::parse_scss_from_config(self.paths.get_config_dir()) {
-                    Ok((file_id, css)) => {
-                        if let Err(e) = self.load_css(file_id, &css) {
-                            errors.push(anyhow!(e));
-                        }
-                    }
-                    Err(e) => {
-                        errors.push(e);
-                    }
-                }
-
-                sender.respond_with_error_list(errors)?;
+                self.handle_reload_req(sender, false).await?
+            }
+            DaemonCommand::HotReloadConfig(sender) => {
+                self.handle_reload_req(sender, true).await?
             }
             DaemonCommand::KillServer => {
                 log::info!("Received kill command, stopping server!");
@@ -637,6 +658,36 @@ impl<B: DisplayBackend> App<B> {
     /// Load a given CSS string into the gtk css provider
     pub fn load_css(&mut self, _file_id: usize, css: &str) -> Result<()> {
         self.css_provider.load_from_string(css);
+
+        Ok(())
+    }
+
+    /// Perform Hot reloading
+    pub fn perform_hotreload(&mut self, config: config::EwwiiConfig) -> Result<()> {
+        log::info!("Hot Reloading windows");
+        log::trace!("loading config: {:#?}", config);
+
+        // clear property handlers
+        crate::property_macro::close_all_property_tasks();
+
+        let old_node = self.ewwii_config.get_root_node()?;
+        self.ewwii_config.replace_data(config);
+        self.restart_signals()?;
+
+        // perform hot reload
+        let mut wreg = self
+            .widget_reg_store
+            .lock()
+            .map_err(|e| anyhow::anyhow!("Failed to acquire widget store lock: {e}"))?;
+
+        let new_node = self.ewwii_config.get_root_node()?;
+        if let Some(wreg) = wreg.as_mut() {
+            wreg.perform_hotreload(old_node, new_node)?;
+        } else {
+            anyhow::bail!("Widget registery is not initialized");
+        }
+
+        self.plugin_buffer.emit("ewwii-hot-reloaded-windows", "true");
 
         Ok(())
     }

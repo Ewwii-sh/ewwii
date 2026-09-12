@@ -64,6 +64,20 @@ impl PropertyMap {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+
+    pub fn props_differ(&self, other: &Self) -> bool {
+        let mut a = serde_json::to_value(self).unwrap_or_default();
+        let mut b = serde_json::to_value(other).unwrap_or_default();
+
+        if let Some(obj) = a.as_object_mut() {
+            obj.remove("dyn_id");
+        }
+        if let Some(obj) = b.as_object_mut() {
+            obj.remove("dyn_id");
+        }
+
+        a != b
+    }
 }
 
 /// A property

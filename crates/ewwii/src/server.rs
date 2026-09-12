@@ -202,11 +202,11 @@ fn connect_monitor_added(ui_send: UnboundedSender<DaemonCommand>) {
 
 fn reload_config_and_css(ui_send: &UnboundedSender<DaemonCommand>) -> Result<()> {
     let (daemon_resp_sender, mut daemon_resp_response) = daemon_response::create_pair();
-    ui_send.send(DaemonCommand::ReloadConfigAndCss(daemon_resp_sender))?;
+    ui_send.send(DaemonCommand::HotReloadConfig(daemon_resp_sender))?;
     tokio::spawn(async move {
         match daemon_resp_response.recv().await {
             Some(daemon_response::DaemonResponse::Success(_)) => {
-                log::info!("Reloaded config successfully")
+                log::info!("Hot Reloaded config successfully")
             }
             Some(daemon_response::DaemonResponse::Failure(e)) => eprintln!("{}", e),
             None => log::error!("No response to reload configuration-reload request"),

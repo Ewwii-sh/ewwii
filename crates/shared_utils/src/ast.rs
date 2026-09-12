@@ -74,6 +74,18 @@ pub fn hash_props_and_type(props: &PropertyMap, widget_type_str: &str) -> u64 {
     hasher.finish()
 }
 
+pub fn hash_dyn_id(props: &PropertyMap) -> u64 {
+    let mut hasher = AHasher::default();
+
+    if let Some(dyn_id) = props.get("dyn_id") {
+        dyn_id.hash(&mut hasher);
+    } else {
+        props.hash(&mut hasher);
+    }
+
+    hasher.finish()
+}
+
 pub fn hash_props(props: &PropertyMap) -> u64 {
     let mut hasher = AHasher::default();
     props.hash(&mut hasher);
