@@ -3,11 +3,11 @@ use std::{
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
 };
-
+use serde::Serialize;
 use anyhow::{bail, Result};
 
 /// Stores references to all the paths relevant to ewwii, and abstracts access to these files and directories
-#[derive(Debug, Clone)]
+#[derive(Serialize, Debug, Clone)]
 pub struct EwwiiPaths {
     pub log_file: PathBuf,
     pub log_dir: PathBuf,

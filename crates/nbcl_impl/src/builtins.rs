@@ -1,7 +1,8 @@
 use ewwii_plugin_api::{IpcRequest, WidgetControlType};
 use nbcl::{NativeNodeSchema, NbclEngine, PropValidation, Type, Value};
-use std::collections::HashMap;
 use tokio::sync::mpsc::UnboundedSender;
+use std::collections::HashMap;
+use std::path::Path;
 
 pub fn register_all_nodes(engine: &mut NbclEngine) {
     // == Primitive nodes (nodes that does not take in children) ==
@@ -111,7 +112,11 @@ pub fn register_all_nodes(engine: &mut NbclEngine) {
     });
 }
 
-pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequest>) {
+pub fn register_all_fns(
+    engine: &mut NbclEngine,
+    ipc_tx: UnboundedSender<IpcRequest>,
+    config_dir: &Path,
+) {
     engine.register_native_fn(
         "global",
         vec![Type::Str],
@@ -173,6 +178,19 @@ pub fn register_all_fns(engine: &mut NbclEngine, ipc_tx: UnboundedSender<IpcRequ
                 _ => Err(crate::runtime_err!("unexpected value shape in concat()")),
             }
         },
+    );
+
+    // nbcl expression evaluator
+    let config_dir_owned = config_dir.to_string_lossy().to_string();
+    engine.register_native_fn(
+        "nbcl",
+        vec![Type::Lambda],
+        Type::Str,
+        move |mut args: Vec<Value>| {
+            // this lambda is saved by nbcl
+            let lambda = args.remove(0);
+            Ok(Value::Str(format!("ewwii -c {} nbcl-run '{}()'", config_dir_owned, lambda)))
+        }
     );
 
     // Widget control stuff

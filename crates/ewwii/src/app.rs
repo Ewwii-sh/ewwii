@@ -61,6 +61,7 @@ pub enum DaemonCommand {
     NoOp,
     ReloadConfigAndCss(DaemonResponseSender),
     HotReloadConfig(DaemonResponseSender),
+    PathInfo(DaemonResponseSender),
     OpenInspector,
     // OpenMany {
     //     windows: Vec<(String, String)>,
@@ -289,6 +290,10 @@ impl<B: DisplayBackend> App<B> {
                 self.handle_reload_req(sender, false).await?
             }
             DaemonCommand::HotReloadConfig(sender) => self.handle_reload_req(sender, true).await?,
+            DaemonCommand::PathInfo(sender) => {
+                let json = serde_json::to_string(&self.paths)?;
+                sender.send_success(json)?;
+            },
             DaemonCommand::KillServer => {
                 log::info!("Received kill command, stopping server!");
                 self.stop_application();
@@ -669,11 +674,8 @@ impl<B: DisplayBackend> App<B> {
         log::info!("Hot Reloading windows");
         log::trace!("loading config: {:#?}", config);
 
-        crate::property_macro::close_all_property_tasks();
         let old_windows = self.ewwii_config.get_windows().clone();
-
         self.ewwii_config.replace_data(config);
-        self.restart_signals()?;
 
         let new_windows = self.ewwii_config.get_windows().clone();
         let all_window_names: std::collections::HashSet<&String> =

@@ -3,7 +3,7 @@ let stringArray = [
     "🦝", "🐱", "🐵", "🦁", "🐹", "🦊"
 ]
 
-# Widget (in a function): a single animal button
+# Widget (in a component): a single animal button
 component AnimalButton (emoji) {
     Box {
         class = "animalLayout"

@@ -654,6 +654,30 @@ impl<B: DisplayBackend> App<B> {
 
                 None
             }
+            IpcRequest::HotReload => {
+                let (sender, _recv) = daemon_response::create_pair();
+                let command = DaemonCommand::HotReloadConfig(sender);
+                handle.block_on(async {
+                    self.handle_command(command).await;
+                });
+                None
+            },
+            IpcRequest::PathInfo => {
+                let (sender, mut recv) = daemon_response::create_pair();
+                let command = DaemonCommand::PathInfo(sender);
+                handle.block_on(async {
+                    self.handle_command(command).await;
+
+                    match recv.recv().await {
+                        Some(crate::DaemonResponse::Success(path)) => Some(path),
+                        Some(crate::DaemonResponse::Failure(err)) => {
+                            log::error!("Daemon error: {}", err);
+                            None
+                        }
+                        None => None,
+                    }
+                })
+            }
         }
     }
 }

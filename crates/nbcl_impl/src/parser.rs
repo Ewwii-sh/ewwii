@@ -5,6 +5,7 @@ use ewwii_shared_utils::ast::WidgetNode;
 use ewwii_shared_utils::prop::Callback;
 use nbcl::{context::EvalContext, NbclEngine, Value};
 use tokio::sync::mpsc::UnboundedSender;
+use std::path::Path;
 
 #[derive(Clone)]
 pub struct NbclConfigParser {
@@ -13,11 +14,12 @@ pub struct NbclConfigParser {
 }
 
 impl NbclConfigParser {
-    pub fn new(ipc_tx: UnboundedSender<IpcRequest>) -> Self {
+    pub fn new(ipc_tx: UnboundedSender<IpcRequest>, config_dir: &Path) -> Self {
         let mut engine = NbclEngine::new();
+        engine.set_lambda_guard(false);
 
         builtins::register_all_nodes(&mut engine);
-        builtins::register_all_fns(&mut engine, ipc_tx);
+        builtins::register_all_fns(&mut engine, ipc_tx, config_dir);
         libraries::register_libs(&mut engine);
 
         Self { engine, ctx: None }
