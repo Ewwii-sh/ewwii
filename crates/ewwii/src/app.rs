@@ -6,7 +6,7 @@ use crate::{
     error_handling_ctx,
     gtk4::prelude::{
         Cast, CastNone, DisplayExt, GtkWindowExt, ListModelExt, MonitorExt, NativeExt, ObjectExt,
-        WidgetExt, SurfaceExt
+        SurfaceExt, WidgetExt,
     },
     opts::{WidgetAction, WidgetControlCommand},
     paths::EwwiiPaths,
@@ -1048,9 +1048,7 @@ fn apply_window_position(
 
         let xid = x11_surface.xid();
 
-        let aux = ConfigureWindowAux::new()
-            .x(actual_window_rect.x())
-            .y(actual_window_rect.y());
+        let aux = ConfigureWindowAux::new().x(actual_window_rect.x()).y(actual_window_rect.y());
 
         conn.as_ref().configure_window(xid as XWindow, &aux)?;
         conn.as_ref().flush()?;

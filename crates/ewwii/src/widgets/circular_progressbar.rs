@@ -13,6 +13,7 @@ mod imp {
         pub start_at: Cell<f64>,
         pub thickness: Cell<f64>,
         pub clockwise: Cell<bool>,
+        pub rounded_fg: Cell<bool>,
         pub fg_color: Cell<gdk::RGBA>,
         pub bg_color: Cell<gdk::RGBA>,
     }
@@ -24,6 +25,7 @@ mod imp {
                 start_at: Cell::new(0.0),
                 thickness: Cell::new(8.0),
                 clockwise: Cell::new(true),
+                rounded_fg: Cell::new(false),
                 fg_color: Cell::new(gdk::RGBA::new(1.0, 0.0, 0.0, 1.0)),
                 bg_color: Cell::new(gdk::RGBA::new(0.0, 0.0, 0.0, 0.1)),
             }
@@ -65,6 +67,7 @@ mod imp {
                         .default_value(8.0)
                         .build(),
                     glib::ParamSpecBoolean::builder("clockwise").default_value(true).build(),
+                    glib::ParamSpecBoolean::builder("rounded-fg").default_value(false).build(),
                     glib::ParamSpecBoxed::builder::<gdk::RGBA>("fg-color").build(),
                     glib::ParamSpecBoxed::builder::<gdk::RGBA>("bg-color").build(),
                 ]
@@ -78,6 +81,7 @@ mod imp {
                 "start-at" => self.start_at.set(value.get().unwrap()),
                 "thickness" => self.thickness.set(value.get().unwrap()),
                 "clockwise" => self.clockwise.set(value.get().unwrap()),
+                "rounded-fg" => self.rounded_fg.set(value.get().unwrap()),
                 "fg-color" => self.fg_color.set(value.get().unwrap()),
                 "bg-color" => self.bg_color.set(value.get().unwrap()),
                 x => panic!("Tried to set inexistant property of CircProg: {}", x,),
@@ -91,6 +95,7 @@ mod imp {
                 "start-at" => self.start_at.get().to_value(),
                 "thickness" => self.thickness.get().to_value(),
                 "clockwise" => self.clockwise.get().to_value(),
+                "rounded-fg" => self.rounded_fg.get().to_value(),
                 "fg-color" => self.fg_color.get().to_value(),
                 "bg-color" => self.bg_color.get().to_value(),
                 x => panic!("Tried to get inexistant property of CircProg: {}", x,),
@@ -110,6 +115,7 @@ mod imp {
             let start_at = self.start_at.get();
             let thickness = self.thickness.get();
             let clockwise = self.clockwise.get();
+            let rounded_fg = self.rounded_fg.get();
             let fg_color = self.fg_color.get();
             let bg_color = self.bg_color.get();
 
@@ -164,18 +170,34 @@ mod imp {
             cr.fill().unwrap();
 
             // Foreground Ring
-            cr.move_to(center.0, center.1);
-            cr.arc(center.0, center.1, outer_ring, start_angle, end_angle);
             cr.set_source_rgba(
                 fg_color.red().into(),
                 fg_color.green().into(),
                 fg_color.blue().into(),
                 fg_color.alpha().into(),
             );
-            cr.move_to(center.0, center.1);
-            cr.arc(center.0, center.1, inner_ring, start_angle, end_angle);
-            cr.set_fill_rule(cairo::FillRule::EvenOdd); // Substract one circle from the other
-            cr.fill().unwrap();
+
+            if rounded_fg {
+                let mid_radius = (outer_ring + inner_ring) / 2.0;
+
+                let cap_angle_offset = (thickness / 2.0) / mid_radius;
+                let adjusted_start = start_angle + cap_angle_offset;
+                let adjusted_end = end_angle - cap_angle_offset;
+
+                if adjusted_end > adjusted_start {
+                    cr.arc(center.0, center.1, mid_radius, adjusted_start, adjusted_end);
+                    cr.set_line_width(thickness);
+                    cr.set_line_cap(cairo::LineCap::Round);
+                    cr.stroke().unwrap();
+                }
+            } else {
+                cr.move_to(center.0, center.1);
+                cr.arc(center.0, center.1, outer_ring, start_angle, end_angle);
+                cr.move_to(center.0, center.1);
+                cr.arc(center.0, center.1, inner_ring, start_angle, end_angle);
+                cr.set_fill_rule(cairo::FillRule::EvenOdd);
+                cr.fill().unwrap();
+            }
 
             cr.restore().unwrap();
         }
