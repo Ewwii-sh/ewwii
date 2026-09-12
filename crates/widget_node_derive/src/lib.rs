@@ -15,6 +15,7 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
     let mut dyn_id_arms = Vec::new();
     let mut dyn_id_get_arms = Vec::new();
     let mut children_arms = Vec::new();
+    let mut widget_type_arms = Vec::new();
 
     for variant in &data_enum.variants {
         let v_ident = &variant.ident;
@@ -32,6 +33,11 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
                 let has_children = field_idents.iter().any(|&i| i == "children");
                 let has_var = field_idents.iter().any(|&i| i == "var");
                 let has_node = field_idents.iter().any(|&i| i == "node");
+
+                // Generate type() match arm
+                widget_type_arms.push(quote! {
+                    Self::#v_ident { .. } => #v_str,
+                });
 
                 // Generate props() match arm
                 if has_props {
@@ -114,6 +120,11 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
                 }
             }
             Fields::Unnamed(fields) => {
+                // Generate type() match arm
+                widget_type_arms.push(quote! {
+                    Self::#v_ident { .. } => #v_str,
+                });
+
                 props_arms.push(quote! {
                     Self::#v_ident(..) => None,
                 });
@@ -139,6 +150,11 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
                 }
             }
             Fields::Unit => {
+                // Generate type() match arm
+                widget_type_arms.push(quote! {
+                    Self::#v_ident { .. } => #v_str,
+                });
+
                 props_arms.push(quote! {
                     Self::#v_ident => None,
                 });
@@ -148,6 +164,13 @@ pub fn derive_widget_node_ext(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #name {
+            /// Returns the lowercased string representation of the widget type.
+            pub fn widget_type(&self) -> &'static str {
+                match self {
+                    #(#widget_type_arms)*
+                }
+            }
+
             /// Returns a reference to the props Map if the variant has one.
             pub fn props(&self) -> Option<&PropertyMap> {
                 match self {
