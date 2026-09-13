@@ -18,7 +18,7 @@ component SideStuff () {
         Metric {
             label = "🔊"
             value = global("volume")
-            onchange = "pamixer --set-volume {}"
+            onchange = "pamixer --set-volume {1}"
         }
 
         Label {
