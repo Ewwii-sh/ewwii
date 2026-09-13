@@ -52,7 +52,7 @@ component Music () {
         halign = "center"
 
         Label {
-            text = global("music_var").mutate("🎵 {self}")
+            text = global("music_var").template("🎵 {self}")
         }
     }
 }
