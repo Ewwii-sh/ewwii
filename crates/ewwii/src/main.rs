@@ -41,6 +41,15 @@ mod window;
 mod window_arguments;
 mod window_initiator;
 
+#[cfg(not(feature = "dhat-heap"))]
+#[cfg(not(target_env = "msvc"))]
+use tikv_jemallocator::Jemalloc;
+
+#[cfg(not(feature = "dhat-heap"))]
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
+
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;
