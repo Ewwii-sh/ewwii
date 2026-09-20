@@ -1,19 +1,14 @@
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
-use tokio::sync::{oneshot, watch};
+use tokio::sync::watch;
 
 type LazySync<T> = Lazy<Arc<RwLock<T>>>;
-type LazyLock<T> = Lazy<RwLock<T>>;
 
 pub static GLOBAL_VAR_STORE: LazySync<HashMap<String, String>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
 pub static VAR_WATCHERS: LazySync<HashMap<String, watch::Sender<String>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
-
-static PENDING_SUBSCRIBERS: LazyLock<
-    HashMap<String, Vec<oneshot::Sender<watch::Receiver<String>>>>,
-> = Lazy::new(|| RwLock::new(HashMap::new()));
 
 pub struct VarWatcherAPI;
 
@@ -23,21 +18,15 @@ impl VarWatcherAPI {
         let (tx, _) = watch::channel(initial_value.clone());
         VAR_WATCHERS.write().unwrap().insert(var_name.to_owned(), tx);
         GLOBAL_VAR_STORE.write().unwrap().insert(var_name.to_owned(), initial_value);
-
-        // Fulfill any pending lazy subscribers
-        if let Some(pending) = PENDING_SUBSCRIBERS.write().unwrap().remove(var_name) {
-            let watcher = VAR_WATCHERS.read().unwrap();
-            if let Some(tx) = watcher.get(var_name) {
-                for sub_tx in pending {
-                    let _ = sub_tx.send(tx.subscribe());
-                }
-            }
-        }
     }
 
     /// Subscribe to a variable
-    pub fn subscribe(var_name: &str) -> Option<watch::Receiver<String>> {
-        VAR_WATCHERS.read().unwrap().get(var_name).map(|tx| tx.subscribe())
+    pub fn subscribe(var_name: &str) -> watch::Receiver<String> {
+        if let Some(tx) = VAR_WATCHERS.read().unwrap().get(var_name) {
+            return tx.subscribe();
+        }
+        Self::register(var_name, String::new());
+        VAR_WATCHERS.read().unwrap().get(var_name).unwrap().subscribe()
     }
 
     /// Update the store and broadcast
@@ -83,6 +72,5 @@ impl VarWatcherAPI {
     pub fn clear_all() {
         GLOBAL_VAR_STORE.write().unwrap().clear();
         VAR_WATCHERS.write().unwrap().clear();
-        PENDING_SUBSCRIBERS.write().unwrap().clear();
     }
 }
