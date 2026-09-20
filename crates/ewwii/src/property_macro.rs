@@ -44,14 +44,7 @@ pub fn handle_template(template: TemplateExpr) -> watch::Receiver<String> {
         let mut shutdown_rx = shutdown_rx.clone();
 
         tokio::spawn(async move {
-            let mut rx = match VarWatcherAPI::subscribe(&var_name) {
-                Some(rx) => rx,
-                None => {
-                    log::error!("Failed to subscribe to var: {}", var_name);
-                    return;
-                }
-            };
-
+            let mut rx = VarWatcherAPI::subscribe(&var_name);
             loop {
                 tokio::select! {
                     result = rx.changed() => {
@@ -156,23 +149,20 @@ macro_rules! apply_property {
                         setter(initial);
                     }
 
-                    if let Some(mut receiver) =
-                        $crate::updates::api::VarWatcherAPI::subscribe(&var_name)
-                    {
-                        let mutation_clone = mutation.clone();
-                        let handle = glib::MainContext::default().spawn_local(async move {
-                            while receiver.changed().await.is_ok() {
-                                let raw = receiver.borrow().clone();
-                                let resolved_raw =
-                                    $crate::property_macro::mutate_raw(mutation_clone.clone(), raw);
-                                if let Some(v) = parser(&resolved_raw) {
-                                    setter(v);
-                                }
+                    let mut receiver = $crate::updates::api::VarWatcherAPI::subscribe(&var_name);
+                    let mutation_clone = mutation.clone();
+                    let handle = glib::MainContext::default().spawn_local(async move {
+                        while receiver.changed().await.is_ok() {
+                            let raw = receiver.borrow().clone();
+                            let resolved_raw =
+                                $crate::property_macro::mutate_raw(mutation_clone.clone(), raw);
+                            if let Some(v) = parser(&resolved_raw) {
+                                setter(v);
                             }
-                        });
+                        }
+                    });
 
-                        $crate::property_macro::register_task(handle);
-                    }
+                    $crate::property_macro::register_task(handle);
                 }
             }
         }
@@ -228,19 +218,18 @@ macro_rules! apply_property_watch {
                         $body
                     }
 
-                    if let Some(mut receiver) = $crate::updates::api::VarWatcherAPI::subscribe(&var_name) {
-                        let mutation_clone = mutation.clone();
-                        let handle = glib::MainContext::default().spawn_local(async move {
-                            while receiver.changed().await.is_ok() {
-                                let raw = receiver.borrow().clone();
-                                let resolved_raw = $crate::property_macro::mutate_raw(mutation_clone.clone(), raw);
-                                if let Some($v) = parser(&resolved_raw) {
-                                    $body
-                                }
+                    let mut receiver = $crate::updates::api::VarWatcherAPI::subscribe(&var_name);
+                    let mutation_clone = mutation.clone();
+                    let handle = glib::MainContext::default().spawn_local(async move {
+                        while receiver.changed().await.is_ok() {
+                            let raw = receiver.borrow().clone();
+                            let resolved_raw = $crate::property_macro::mutate_raw(mutation_clone.clone(), raw);
+                            if let Some($v) = parser(&resolved_raw) {
+                                $body
                             }
-                        });
-                        $crate::property_macro::register_task(handle);
-                    }
+                        }
+                    });
+                    $crate::property_macro::register_task(handle);
                 }
             }
             PropValue::Static(_) => {}

@@ -365,21 +365,17 @@ impl<B: DisplayBackend> App<B> {
                 crate::updates::api::VarWatcherAPI::update_with_broadcast(&name, value);
             }
             PluginRequest::OnSignalUpdate(plugin_id, name, callback_id) => {
-                let maybe_rx = crate::updates::api::VarWatcherAPI::subscribe(&name);
-                if let Some(mut rx) = maybe_rx {
-                    tokio::spawn(async move {
-                        while rx.changed().await.is_ok() {
-                            let arg_bytes = {
-                                let value = rx.borrow();
-                                bincode::serialize(&*value).unwrap_or_default()
-                            };
+                let mut rx = crate::updates::api::VarWatcherAPI::subscribe(&name);
+                tokio::spawn(async move {
+                    while rx.changed().await.is_ok() {
+                        let arg_bytes = {
+                            let value = rx.borrow();
+                            bincode::serialize(&*value).unwrap_or_default()
+                        };
 
-                            call_plugin_handler(&plugin_id, callback_id, arg_bytes);
-                        }
-                    });
-                } else {
-                    log::error!("Failed to get receiver for {name}");
-                }
+                        call_plugin_handler(&plugin_id, callback_id, arg_bytes);
+                    }
+                });
             }
             PluginRequest::SignalValue(plugin_id, name, callback_id) => {
                 let value = crate::updates::api::VarWatcherAPI::state_of(&name);

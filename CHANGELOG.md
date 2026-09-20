@@ -16,9 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `open-many` command.
 - `nbcl` function for running nbcl as callbacks.
 - `--no-wait` argument to Widget Control.
+- `set_value` property that can be used to set a value to `global(x)`.
 
 ### Changed
 
+- Signal behavior to register one if it doesn't exist.
 - Renamed `core` library  to `ewwii`.
 - Hot reload behavior.
 

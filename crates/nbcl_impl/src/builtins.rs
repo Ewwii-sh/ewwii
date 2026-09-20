@@ -175,9 +175,45 @@ pub fn register_all_fns(
                     }
                     Ok(glob_var)
                 }
-                _ => Err(crate::runtime_err!("unexpected value shape in concat()")),
+                _ => Err(crate::runtime_err!("unexpected value shape in template()")),
             }
         },
+    );
+
+    let config_dir_owned = config_dir.to_string_lossy().to_string();
+    engine.register_native_fn(
+        "set_value",
+        vec![Type::Object("GlobalVar".to_string()), Type::Str],
+        Type::Null,
+        move |mut args| {
+            let mut glob_var = args.remove(0);
+            let str_val_raw = args.remove(0);
+            let Value::Str(str_val) = str_val_raw else {
+                return Err(crate::runtime_err!("Expected value to be a string."));
+            };
+
+            match glob_var {
+                Value::Object(_, ref mut data) => {
+                    if let Value::List(ref mut inner_data) = **data {
+                        let name_raw = inner_data[0].clone();
+                        let Value::Str(name) = name_raw else {
+                            return Err(crate::runtime_err!("Expected global to be a string."));
+                        };
+
+                        let _ = std::process::Command::new("ewwii")
+                            .arg("-c")
+                            .arg(config_dir_owned.clone())
+                            .arg("update")
+                            .arg(name)
+                            .arg("=")
+                            .arg(str_val)
+                            .spawn();
+                    }
+                    Ok(Value::Null)
+                }
+                _ => Err(crate::runtime_err!("unexpected value shape in set_value()")),
+            }
+        }
     );
 
     // nbcl expression evaluator
