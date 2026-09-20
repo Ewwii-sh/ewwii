@@ -154,9 +154,6 @@ pub fn initialize_server<B: DisplayBackend>(
 
         loop {
             tokio::select! {
-                // Some(scope_graph_evt) = scope_graph_evt_recv.recv() => {
-                //     app.scope_graph.borrow_mut().handle_scope_graph_event(scope_graph_evt);
-                // },
                 Some(ui_event) = ui_recv.recv() => {
                     app.handle_command(ui_event).await;
                 }
