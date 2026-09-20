@@ -22,7 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Signal behavior to register one if it doesn't exist.
 - Renamed `core` library  to `ewwii`.
-- Hot reload behavior.
 
 ### Removed
 
