@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `HotReload` IpcRequest to plugin API.
 - `open-many` command.
 - `nbcl` function for running nbcl as callbacks.
+- `--no-wait` argument to Widget Control.
 
 ### Changed
 
