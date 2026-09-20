@@ -756,133 +756,90 @@ impl<B: DisplayBackend> App<B> {
     /// Perform widget control based on the action
     pub fn perform_widget_control(&mut self, command: WidgetControlCommand) -> Result<String> {
         match command {
-            WidgetControlCommand::Action { action } => {
-                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                    if let Some(widget_registry) = maybe_registry.as_mut() {
-                        match action {
-                            WidgetAction::Scroll { widget, value } => {
-                                let success = widget_registry.scroll_widget(&widget, value);
-                                if success {
-                                    log::error!(
-                                        "'{}' widget not found or is not a ScrolledWindow",
-                                        widget
-                                    );
-                                }
-                            }
-                            WidgetAction::Focus { widget } => {
-                                let success = widget_registry.focus_widget(&widget);
-                                if success {
-                                    log::error!("Failed to find widget with name '{}'", widget);
-                                }
-                            }
-                        }
-                    } else {
-                        log::error!("Widget registry is empty");
+            WidgetControlCommand::AddClass { class, widget_name } => {
+                let mut store = self.widget_reg_store.lock()
+                    .map_err(|_| anyhow::anyhow!("Failed to lock widget store"))?;
+                let registry = store.as_mut().ok_or_else(|| anyhow::anyhow!("Widget registry is uninitialized"))?;
+
+                registry.update_class_of_widget_by_name(&widget_name, &class, false);
+            }
+            WidgetControlCommand::RemoveClass { class, widget_name } => {
+                let mut store = self.widget_reg_store.lock()
+                    .map_err(|_| anyhow::anyhow!("Failed to lock widget store"))?;
+                let registry = store.as_mut().ok_or_else(|| anyhow::anyhow!("Widget registry is uninitialized"))?;
+
+                registry.update_class_of_widget_by_name(&widget_name, &class, true);
+            }
+            WidgetControlCommand::PropertyGet { property, widget_name } => {
+                let store = self.widget_reg_store.lock()
+                    .map_err(|_| anyhow::anyhow!("Failed to lock widget store"))?;
+                let registry = store.as_ref().ok_or_else(|| anyhow::anyhow!("Widget registry is uninitialized"))?;
+
+                return registry
+                    .get_property_by_name(&widget_name, &property)
+                    .ok_or_else(|| anyhow::anyhow!("Property '{}' not found on '{}'", property, widget_name));
+                }
+            WidgetControlCommand::PropertyUpdate { property_and_value, widget_name } => {
+                let mut store = self.widget_reg_store.lock()
+                    .map_err(|_| anyhow::anyhow!("Failed to lock widget store"))?;
+                let registry = store.as_mut().ok_or_else(|| anyhow::anyhow!("Widget registry is uninitialized"))?;
+
+                for (key, value) in &property_and_value {
+                    if !registry.update_property_by_name(&widget_name, (key.clone(), value.clone())) {
+                        anyhow::bail!("Widget '{}' not found", widget_name);
                     }
-                } else {
-                    log::error!("Failed to acquire lock on widget registry");
+                }
+            }
+            WidgetControlCommand::Action { action } => {
+                let mut store = self.widget_reg_store.lock()
+                    .map_err(|_| anyhow::anyhow!("Failed to lock widget store"))?;
+                let registry = store.as_mut().ok_or_else(|| anyhow::anyhow!("Widget registry is uninitialized"))?;
+
+                match action {
+                    WidgetAction::Scroll { widget, value } => {
+                        if !registry.scroll_widget(&widget, value) {
+                            anyhow::bail!("'{}' widget not found or is not a ScrolledWindow", widget);
+                        }
+                    }
+                    WidgetAction::Focus { widget } => {
+                        if !registry.focus_widget(&widget) {
+                            anyhow::bail!("Widget '{}' not found", widget);
+                        }
+                    }
                 }
             }
             WidgetControlCommand::Remove { names } => {
-                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                    if let Some(widget_registry) = maybe_registry.as_mut() {
-                        for name in names {
-                            widget_registry.remove_widget_by_name(&name);
-                        }
-                    } else {
-                        log::error!("Widget registry is empty");
-                    }
-                } else {
-                    log::error!("Failed to acquire lock on widget registry");
+                let mut store = self.widget_reg_store.lock()
+                    .map_err(|_| anyhow::anyhow!("Failed to lock widget store"))?;
+                let registry = store.as_mut().ok_or_else(|| anyhow::anyhow!("Widget registry is uninitialized"))?;
+
+                for name in names {
+                    registry.remove_widget_by_name(&name);
                 }
             }
             WidgetControlCommand::Create { nbcl_codes, parent_name } => {
                 for nbcl_code in nbcl_codes {
                     let widget_node = EWWII_CONFIG_PARSER.with(|p| {
                         let mut parser = p.borrow_mut();
-                        match parser.as_mut().unwrap() {
+                        match parser.as_mut().ok_or_else(|| anyhow::anyhow!("Config parser not loaded"))? {
                             ConfigEngine::Default(nbcl) => nbcl.eval_code_snippet(&nbcl_code),
                             ConfigEngine::Custom(_) => Err(anyhow::anyhow!(
-                                "Dynamic widget creation is only supported with the Nbcl config engine"
+                                    "Dynamic creation only supported on Nbcl engine"
                             )),
                         }
                     })?;
-                    let wid = ewwii_shared_utils::ast::hash_props(widget_node.props().ok_or_else(
-                        || anyhow::anyhow!("Failed to retreive the properties of this widget."),
-                    )?);
 
-                    if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                        if let Some(widget_registry) = maybe_registry.as_mut() {
-                            let pid =
-                                widget_registry.get_widget_id_by_name(&parent_name).ok_or_else(
-                                    || anyhow::anyhow!("Widget '{}' not found", parent_name),
-                                )?;
-                            widget_registry.create_widget(&widget_node, wid, pid)?;
-                        } else {
-                            log::error!("Widget registry is empty");
-                        }
-                    } else {
-                        log::error!("Failed to acquire lock on widget registry");
-                    }
-                }
-            }
-            WidgetControlCommand::PropertyGet { property, widget_name } => {
-                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                    if let Some(widget_registry) = maybe_registry.as_mut() {
-                        let property_value = widget_registry
-                            .get_property_by_name(&widget_name, &property)
-                            .ok_or_else(|| {
-                                anyhow::anyhow!("Property '{}' not found or wrong type", property)
-                            })?;
+                    let props = widget_node.props().ok_or_else(|| anyhow::anyhow!("Missing props"))?;
+                    let wid = ewwii_shared_utils::ast::hash_props(props);
 
-                        return Ok(property_value);
-                    } else {
-                        log::error!("Widget registry is empty");
-                    }
-                } else {
-                    log::error!("Failed to acquire lock on widget registry");
-                }
-            }
-            WidgetControlCommand::PropertyUpdate { property_and_value, widget_name } => {
-                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                    if let Some(widget_registry) = maybe_registry.as_mut() {
-                        for (key, value) in &property_and_value {
-                            let success = widget_registry.update_property_by_name(
-                                &widget_name,
-                                (key.clone(), value.clone()),
-                            );
+                    let mut store = self.widget_reg_store.lock()
+                        .map_err(|_| anyhow::anyhow!("Failed to lock widget store"))?;
+                    let registry = store.as_mut().ok_or_else(|| anyhow::anyhow!("Widget registry is uninitialized"))?;
 
-                            if !success {
-                                anyhow::bail!("Widget with name '{}' not found", widget_name);
-                            }
-                        }
-                    } else {
-                        log::error!("Widget registry is empty");
-                    }
-                } else {
-                    log::error!("Failed to acquire lock on widget registry");
-                }
-            }
-            WidgetControlCommand::AddClass { class, widget_name } => {
-                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                    if let Some(widget_registry) = maybe_registry.as_mut() {
-                        widget_registry.update_class_of_widget_by_name(&widget_name, &class, false);
-                    } else {
-                        log::error!("Widget registry is empty");
-                    }
-                } else {
-                    log::error!("Failed to acquire lock on widget registry");
-                }
-            }
-            WidgetControlCommand::RemoveClass { class, widget_name } => {
-                if let Ok(mut maybe_registry) = self.widget_reg_store.lock() {
-                    if let Some(widget_registry) = maybe_registry.as_mut() {
-                        widget_registry.update_class_of_widget_by_name(&widget_name, &class, true);
-                    } else {
-                        log::error!("Widget registry is empty");
-                    }
-                } else {
-                    log::error!("Failed to acquire lock on widget registry");
+                    let pid = registry.get_widget_id_by_name(&parent_name)
+                        .ok_or_else(|| anyhow::anyhow!("Parent widget '{}' not found", parent_name))?;
+
+                    registry.create_widget(&widget_node, wid, pid)?;
                 }
             }
         }
