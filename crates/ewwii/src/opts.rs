@@ -196,6 +196,9 @@ pub enum ActionWithServer {
     WidgetControl {
         #[command(subcommand)]
         command: WidgetControlCommand,
+
+        #[arg(long = "no-wait")]
+        no_wait: bool,
     },
 
     /// Update the value of a variable, in a running ewwii instance
@@ -336,9 +339,10 @@ impl ActionWithServer {
         self,
     ) -> (app::DaemonCommand, Option<daemon_response::DaemonResponseReceiver>) {
         let command = match self {
-            ActionWithServer::WidgetControl { command } => {
+            ActionWithServer::WidgetControl { command, no_wait } => {
                 return with_response_channel(|sender| app::DaemonCommand::WidgetControl {
                     command,
+                    no_wait,
                     sender,
                 })
             }

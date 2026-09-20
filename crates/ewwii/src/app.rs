@@ -101,6 +101,7 @@ pub enum DaemonCommand {
     ListPlugins(DaemonResponseSender),
     WidgetControl {
         command: WidgetControlCommand,
+        no_wait: bool,
         sender: DaemonResponseSender,
     },
     Update {
@@ -408,7 +409,12 @@ impl<B: DisplayBackend> App<B> {
                     Err(e) => sender.send_failure(e.to_string())?,
                 };
             }
-            DaemonCommand::WidgetControl { command, sender } => {
+            DaemonCommand::WidgetControl { command, no_wait, sender } => {
+                if no_wait {
+                    let _ = self.perform_widget_control(command);
+                    return Ok(());
+                }
+
                 match self.perform_widget_control(command) {
                     Ok(s) => sender.send_success(s)?,
                     Err(e) => sender.send_failure(e.to_string())?,

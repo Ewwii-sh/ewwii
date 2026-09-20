@@ -493,6 +493,7 @@ impl<B: DisplayBackend> App<B> {
                                 command: WidgetControlCommand::Action {
                                     action: WidgetAction::Scroll { widget, value },
                                 },
+                                no_wait: false,
                                 sender,
                             };
                             handle.block_on(async {
@@ -505,6 +506,7 @@ impl<B: DisplayBackend> App<B> {
                                 command: WidgetControlCommand::Action {
                                     action: WidgetAction::Focus { widget },
                                 },
+                                no_wait: false,
                                 sender,
                             };
                             handle.block_on(async {
@@ -519,6 +521,7 @@ impl<B: DisplayBackend> App<B> {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
                         command: WidgetControlCommand::Remove { names: vec![w] },
+                        no_wait: false,
                         sender,
                     };
                     handle.block_on(async {
@@ -534,6 +537,7 @@ impl<B: DisplayBackend> App<B> {
                             nbcl_codes: codes,
                             parent_name: parent,
                         },
+                        no_wait: false,
                         sender,
                     };
                     handle.block_on(async {
@@ -549,6 +553,7 @@ impl<B: DisplayBackend> App<B> {
                             property: prop,
                             widget_name: widget,
                         },
+                        no_wait: false,
                         sender,
                     };
                     handle.block_on(async {
@@ -566,6 +571,7 @@ impl<B: DisplayBackend> App<B> {
                             property_and_value: p2v,
                             widget_name: widget,
                         },
+                        no_wait: false,
                         sender,
                     };
                     handle.block_on(async {
@@ -578,6 +584,7 @@ impl<B: DisplayBackend> App<B> {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
                         command: WidgetControlCommand::AddClass { class, widget_name: widget },
+                        no_wait: false,
                         sender,
                     };
                     handle.block_on(async {
@@ -590,6 +597,7 @@ impl<B: DisplayBackend> App<B> {
                     let (sender, _recv) = daemon_response::create_pair();
                     let command = DaemonCommand::WidgetControl {
                         command: WidgetControlCommand::RemoveClass { class, widget_name: widget },
+                        no_wait: false,
                         sender,
                     };
                     handle.block_on(async {
