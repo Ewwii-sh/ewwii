@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `nbcl` function for running nbcl as callbacks.
 - `--no-wait` argument to Widget Control.
 - `set_value` property that can be used to set a value to `global(x)`.
+- Support for functions like `round` in template expressions.
 
 ### Changed
 

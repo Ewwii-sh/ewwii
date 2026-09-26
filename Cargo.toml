@@ -48,6 +48,13 @@ wait-timeout = "0.2"
 syn = "2.0.107"
 quote = "1.0.41"
 proc-macro2 = "1.0.101"
+chrono = "0.4.38"
+chrono-tz = "0.10.0"
+jaq-interpret = "1.5.0"
+jaq-core = "1.5.1"
+jaq-parse = "1.0.3"
+jaq-std = "1.6.0"
+cached = "0.53.1"
 
 [profile.dev]
 split-debuginfo = "unpacked"
