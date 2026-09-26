@@ -1,10 +1,7 @@
 use cached::proc_macro::cached;
-use chrono::{Local, LocalResult, TimeZone};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fmt::Write as _;
 use std::hash::Hash;
-use std::str::FromStr;
 use std::sync::Arc;
 use jaq_interpret::FilterT;
 
@@ -486,31 +483,25 @@ pub fn eval_template_function(name: &str, args: &[String]) -> Result<String, Str
         },
         "formattime" => match args {
             [timestamp, format, timezone] => {
-                let ts = parse_i64(timestamp)?;
-                let tz = chrono_tz::Tz::from_str(timezone)
+                let ts_sec = parse_i64(timestamp)?;
+
+                let ts = jiff::Timestamp::from_second(ts_sec)
+                    .map_err(|_| "Invalid UNIX timestamp".to_string())?;
+
+                let tz = jiff::tz::TimeZone::get(timezone)
                     .map_err(|_| "Invalid timezone".to_string())?;
 
-                match tz.timestamp_opt(ts, 0) {
-                    LocalResult::Single(t) | LocalResult::Ambiguous(t, _) => {
-                        let mut buffer = String::new();
-                        let fmt = t.format(format);
-                        write!(buffer, "{}", fmt).map_err(|_| "Invalid time formatting string".to_string())?;
-                        Ok(buffer)
-                    }
-                    LocalResult::None => Err("Invalid UNIX timestamp".to_string()),
-                }
+                Ok(ts.to_zoned(tz).strftime(format).to_string())
             }
             [timestamp, format] => {
-                let ts = parse_i64(timestamp)?;
-                match Local.timestamp_opt(ts, 0) {
-                    LocalResult::Single(t) | LocalResult::Ambiguous(t, _) => {
-                        let mut buffer = String::new();
-                        let fmt = t.format(format);
-                        write!(buffer, "{}", fmt).map_err(|_| "Invalid time formatting string".to_string())?;
-                        Ok(buffer)
-                    }
-                    LocalResult::None => Err("Invalid UNIX timestamp".to_string()),
-                }
+                let ts_sec = parse_i64(timestamp)?;
+
+                let ts = jiff::Timestamp::from_second(ts_sec)
+                    .map_err(|_| "Invalid UNIX timestamp".to_string())?;
+
+                let tz = jiff::tz::TimeZone::system();
+
+                Ok(ts.to_zoned(tz).strftime(format).to_string())
             }
             _ => Err(format!("Wrong arg count for function '{}'", name)),
         },
