@@ -63,3 +63,11 @@ This project is a fork of [Eww](https://github.com/elkowar/eww) (MIT License).
 ## Stars
 
 If you find this project interesting, be sure to leave a star!
+
+<a href="https://www.star-history.com/?repos=ewwii-sh%2Fewwii&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ewwii-sh/ewwii&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ewwii-sh/ewwii&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ewwii-sh/ewwii&type=date&legend=top-left" />
+ </picture>
+</a>
